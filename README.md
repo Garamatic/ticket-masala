@@ -18,13 +18,13 @@ Dashboard-gedreven ontwerp waarbij de gebruiker (klant, stafflid) per rol de rel
 
 ### Lagen
 
-- Ticketing : toegangspoort, initiatie van cases, projecten en tickets
+- Ticketing: vormt de toegangspoort voor het aanmaken van nieuwe tickets, cases en projecten.
 
--	Case Management : een case bestaat uit een of meerdere tickets (parent, child), men kan hier de opvolging van tickets doen, de interactie in het dossier bijhouden en aan detailbeheer doen
+- Case Management: groepeert één of meerdere tickets (parent-child). Hier volgt men de voortgang, communicatie en details van een dossier op.
 
--	Project Management : een project bestaat uit een of meerdere cases (indien meerdere klanten, meerdere cases die geen hierarchische verhouding hebben, hier volgt men het overzicht van de projecten, de deadlines en de mijlpalen
+- Project Management: bundelt één of meerdere cases (bijvoorbeeld van verschillende klanten) tot een project. Hier beheert men de algemene voortgang, deadlines en mijlpalen.
 
-- AI helper : analyse, contextuele hulp en draft functionaliteit bij alle drie lagen
+- AI-helper: biedt contextbewuste ondersteuning in alle lagen door historische gegevens te analyseren en voorstellen te doen voor acties, toewijzingen en samenvattingen. De AI gebruikt lokale of cloudmodellen voor verklaarbaarheid en automatisering.
 
 ![Basis UI](docs/visual/basic-UI.png)
 
@@ -39,31 +39,36 @@ AI Helper → Alle lagen: real-time suggesties bij aanmaak, opvolging, planning 
 ## Roadmap
 
 Algemeen
+
 - [ ] Role based authentication
 - [ ] Notificaties en berichten
 - [ ] Discussies en comments
 
 Ticketing interface
+
 - [ ] Ticket aanmaakfunctie : form bij klant, medewerker, automatisch.
 - [ ] Aanpassing ticket : individueel en batch
 - [ ] Filter- en zoekfunctie
 - [ ] Quick actions
 
 Case management interface
+
 - [ ] Case Detail view
 - [ ] Linken, groeperen van tickets
 - [ ] Notities
 - [ ] Berichten
 - [ ] Documentatie en bijlagen bij case
 - [ ] Form / document generation
-    
+
 Project management interface  
+
 - [ ] Fases en mijlpalen
 - [ ] Teamleden en verantwoordelijkheden
 - [ ] Kalender
 - [ ] Analytics
 
-AI Helper 
+AI Helper
+
 - [ ] Similariteitszoektocht en contextuele vergelijking eerdere cases
 - [ ] AI suggestie automatische toewijzing
 - [ ] Explain case en context generatie
@@ -73,10 +78,8 @@ AI Helper
 
 ## Functionele en technische vereisten
 
-- [ ] Mobile first en responsive design
-- [ ] Scalable en snel beheersysteem
-- [ ] Frontend in Blazor (.NET compileren naar Javascript/HTML/CSS)
-- [ ] Backend in .NET (framework?)
-- [ ] AI-integratie met API (goedkoop of lokaal draaien van Ollama)
-- [ ] Infra: Azure oplossing + docker containers?
-
+- Frontend : Blazor WebAssembly (.NET 8)
+- Mobile first en responsive design
+- Backend : ASP .NET Core Web API
+- AI: Python microservice (Ollama / Open AI / local LLM integration)
+- Deployment: Azure + Docker

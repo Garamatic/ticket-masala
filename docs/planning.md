@@ -69,8 +69,3 @@ Vier tweewekelijkse sprints + bonus-/buffersprint
 
 - Bufferzone, bonus features en nice to haves.
 - Testing, oplossing van laatste bugs en voorbereiding presentatie
-
-
-. Rolverdeling
-
-  o Dashboard & rapportering module binnen de app (visualisatie van doorlooptijd, aantal openstaande cases, workloadverdeling)

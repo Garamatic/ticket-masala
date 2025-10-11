@@ -12,6 +12,8 @@ Light-weight beheersysteem met AI-integratie als rode draad in alle lagen.
 
 Dashboard-gedreven ontwerp waarbij de gebruiker (klant, stafflid) per rol de relevante informatie ziet. Er zijn drie views: ticketing, case en project management.
 
+![ERD-model](docs/architecture/erd-dark.drawio.png)
+
 ### Lagen
 
 - Ticketing : toegangspoort, initiatie van cases, projecten en tickets

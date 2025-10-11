@@ -1,5 +1,7 @@
 # IT-Project-25/26 - Ticket Masala
 
+![Logo](docs/visual/logo-green.png)
+
 ## Informatie
 
 - Wie : Charlotte Schröer, Maarten Görtz, Wito De Schrijver, Stef Van Impe en Juan Benjumea
@@ -23,6 +25,8 @@ Dashboard-gedreven ontwerp waarbij de gebruiker (klant, stafflid) per rol de rel
 -	Project Management : een project bestaat uit een of meerdere cases (indien meerdere klanten, meerdere cases die geen hierarchische verhouding hebben, hier volgt men het overzicht van de projecten, de deadlines en de mijlpalen
 
 - AI helper : analyse, contextuele hulp en draft functionaliteit bij alle drie lagen
+
+![Basis UI](docs/visual/basic-UI.png)
 
 ### Interconnectie van lagen
 

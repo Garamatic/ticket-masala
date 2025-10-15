@@ -11,7 +11,6 @@ namespace IT_Project2526.Models
         public required Status TicketStatus { get; set; } = Status.Pending;
         public required Category Category { get; set; } = Category.Unknown;
         public required SubCategory SubCategory { get; set; } = SubCategory.Unknown;
-        public Roadmap? Roadmap { get; set; }
         public List<Resource> Resources { get; set; } = [];
     }
 }

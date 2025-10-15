@@ -10,7 +10,12 @@
         Completed,
         Failed
     }
-
+    public enum TicketType
+    {
+        Unknown,
+        ProjectRequest,
+        Subtask
+    }
     public enum Category
     {
         Unknown,

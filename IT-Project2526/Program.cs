@@ -1,3 +1,7 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using IT_Project2526.Models;
+
 namespace IT_Project2526
 {
     public class Program
@@ -5,7 +9,15 @@ namespace IT_Project2526
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
+
+            // 1️⃣ Register DbContext
+            builder.Services.AddDbContext<ITProjectDB>(options =>
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+                .AddEntityFrameworkStores<ITProjectDB>();
             // Add services to the container.
             builder.Services.AddControllersWithViews();
 

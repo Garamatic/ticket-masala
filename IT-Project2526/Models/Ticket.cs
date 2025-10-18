@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Identity.Client;
 
 namespace IT_Project2526.Models
 {
@@ -15,12 +14,8 @@ namespace IT_Project2526.Models
 
         public Ticket? ParentTicket { get; set; }
         public List<Ticket> SubTickets { get; set; } = [];
-        public Employee? Responsible { get; set; }
-        public List<Employee> Watchers { get; set; } = [];
+        //public IdentityUser? Responsible { get; set; }
+        //public List<IdentityUser> Watchers { get; set; } = [];
         public required Customer Customer { get; set; }
-
-        public List<string> Comments { get; set; } = [];
-
-        public bool PostPoned => CompletionDate > DateTime.UtcNow;
     }
 }

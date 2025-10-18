@@ -20,7 +20,14 @@ namespace IT_Project2526
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
+            foreach (var entity in modelBuilder.Model.GetEntityTypes())
+            {
+                if (typeof(BaseModel).IsAssignableFrom(entity.ClrType))
+                {
+                    modelBuilder.Entity(entity.ClrType)
+                        .HasKey(nameof(BaseModel.Guid));
+                }
+            }
         }
 
         public DbSet<Project> Projects { get; set; }

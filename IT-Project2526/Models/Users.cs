@@ -7,7 +7,6 @@ namespace IT_Project2526.Models
         public required string Name { get; set; }
         public required string Phone { get; set; }
     }
-
     public class Guest : ApplicationUser { }
     public  class Employee : ApplicationUser
     {
@@ -17,6 +16,5 @@ namespace IT_Project2526.Models
     public class Customer : ApplicationUser
     {
         public string? Code { get; set; }
-        public ICollection<Project> Projects { get; set; } = new List<Project>();
     }
 }

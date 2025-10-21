@@ -7,6 +7,7 @@ namespace IT_Project2526.Models
         public required string Name { get; set; }
         public required string Phone { get; set; }
     }
+
     public class Guest : ApplicationUser { }
     public  class Employee : ApplicationUser
     {

@@ -8,6 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="Areas\Identity\" />
+    <Folder Include="Migrations\" />
     <Folder Include="ViewModels\" />
     <Folder Include="Views\CaseManagement\" />
     <Folder Include="Views\ProjectManagement\" />
@@ -23,6 +25,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.10">
       <PrivateAssets>all</PrivateAssets>

@@ -14,8 +14,10 @@ namespace IT_Project2526.Models
 
         public Ticket? ParentTicket { get; set; }
         public List<Ticket> SubTickets { get; set; } = [];
-        //public IdentityUser? Responsible { get; set; }
-        //public List<IdentityUser> Watchers { get; set; } = [];
+        public IdentityUser? Responsible { get; set; }
+        public List<IdentityUser> Watchers { get; set; } = [];
         public required Customer Customer { get; set; }
+
+        public List<string> Comments { get; set; } = [];
     }
 }

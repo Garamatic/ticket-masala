@@ -7,7 +7,7 @@ namespace IT_Project2526.Models
     public abstract class BaseModel
     {
         [Key]
-        public Guid Guid { get; } = Guid.NewGuid();
+        public Guid Guid { get; set; } = Guid.NewGuid();
         public DateTime CreationDate { get; } = DateTime.UtcNow;
         public DateTime? ValidUntil { get; set;}
         public Guid? CreatorGuid { get; set; }

@@ -93,6 +93,10 @@ namespace IT_Project2526.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.PrimitiveCollection<string>("Comments")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime?>("CompletionDate")
                         .HasColumnType("datetime2");
 
@@ -115,6 +119,9 @@ namespace IT_Project2526.Migrations
                     b.Property<Guid?>("ProjectGuid")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("ResponsibleId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<int>("TicketStatus")
                         .HasColumnType("int");
 
@@ -131,6 +138,8 @@ namespace IT_Project2526.Migrations
                     b.HasIndex("ParentTicketGuid");
 
                     b.HasIndex("ProjectGuid");
+
+                    b.HasIndex("ResponsibleId");
 
                     b.ToTable("Tickets");
                 });
@@ -237,6 +246,9 @@ namespace IT_Project2526.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid?>("TicketGuid")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
 
@@ -253,6 +265,8 @@ namespace IT_Project2526.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
+
+                    b.HasIndex("TicketGuid");
 
                     b.ToTable("AspNetUsers", (string)null);
 
@@ -416,9 +430,15 @@ namespace IT_Project2526.Migrations
                         .WithMany("Tasks")
                         .HasForeignKey("ProjectGuid");
 
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "Responsible")
+                        .WithMany()
+                        .HasForeignKey("ResponsibleId");
+
                     b.Navigation("Customer");
 
                     b.Navigation("ParentTicket");
+
+                    b.Navigation("Responsible");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -428,6 +448,13 @@ namespace IT_Project2526.Migrations
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUser", b =>
+                {
+                    b.HasOne("IT_Project2526.Models.Ticket", null)
+                        .WithMany("Watchers")
+                        .HasForeignKey("TicketGuid");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
@@ -482,6 +509,8 @@ namespace IT_Project2526.Migrations
             modelBuilder.Entity("IT_Project2526.Models.Ticket", b =>
                 {
                     b.Navigation("SubTickets");
+
+                    b.Navigation("Watchers");
                 });
 #pragma warning restore 612, 618
         }

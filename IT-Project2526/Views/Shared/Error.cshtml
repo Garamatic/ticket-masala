@@ -1,4 +1,4 @@
-﻿@model ErrorViewModel
+@model IT_Project2526.Models.ErrorViewModel
 @{
     ViewData["Title"] = "Error";
 }
@@ -6,7 +6,7 @@
 <h1 class="text-danger">Error.</h1>
 <h2 class="text-danger">An error occurred while processing your request.</h2>
 
-@if (Model.ShowRequestId)
+@if (Model?.ShowRequestId == true)
 {
     <p>
         <strong>Request ID:</strong> <code>@Model.RequestId</code>
@@ -20,6 +20,6 @@
 <p>
     <strong>The Development environment shouldn't be enabled for deployed applications.</strong>
     It can result in displaying sensitive information from exceptions to end users.
-    For local debugging, enable the <strong>Development</strong> environment by setting the <strong>ASPNETCORE_ENVIRONMENT</strong> environment variable to <strong>Development</strong>
+    For local debugging, enable the <strong>ASPNETCORE_ENVIRONMENT</strong> environment variable to <strong>Development</strong>
     and restarting the app.
 </p>

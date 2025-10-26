@@ -3,11 +3,11 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Collections.Generic;
 using System.Linq;
 using IT_Project2526.Models;
-using IT_Project2526.Models.ViewModels;
 using IT_Project2526;
 using System;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using IT_Project2526.ViewModels;
 
 //Database Connectie moet nog toegevoegd worden
 

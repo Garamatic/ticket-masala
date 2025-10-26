@@ -6,7 +6,7 @@
         Rejected,
         Assigned,
         InProgress,
-        Postponed,
+        //Postponed,
         Completed,
         Failed
     }

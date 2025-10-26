@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 
-namespace IT_Project2526.Models.ViewModels
+namespace IT_Project2526.ViewModels
 {
     public class NewProject
     {

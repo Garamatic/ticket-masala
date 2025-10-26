@@ -1,0 +1,117 @@
+﻿@using IT_Project2526.Models.ViewModels
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    ViewData["Title"] = "New Project";
+    @model NewProject;
+}
+
+<h1>New Project</h1>
+
+<form asp-action="NewProject" method="post">
+    <!--Project Name + Creation Date-->
+    <div class="form-group">
+        <label asp-for="Name">Project Name:</label>
+        <input  asp-for="Name" type="text" id="ProjectName" name="ProjectName" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label for="CreationDate">Creation Date:</label>
+        <input type="date" id="CreationDate" name="CreationDate" />
+    </div>
+    <!--Project Information-->
+    <div class="form-group">
+        <label for="ProjectType">Project Type:</label>
+        <select name="ProjectType" id="ProjectType">
+            <option value="" disabled selected>-- Select Project Type --</option>
+            <option value="FullRenovation">Full Renovation</option>
+            <option value="PartialRenovation">Partial Renovation</option>
+            <option value="CleanUp">Clean Up</option>
+            <option value="Modified">Modified</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label asp-for="Description">Project Description:</label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label for="ProjectComment">Type here all ProjectComments</label>
+        <textarea></textarea>
+    </div>
+    <!--Customer Zone-->
+    <div class="form-group">
+        <label>Customer:</label>
+        <div>
+            <label>
+                <input type="radio" asp-for="IsNewCustomer" value="true" checked="checked" /> New Customer
+            </label>
+            <label>
+                <input type="radio" asp-for="IsNewCustomer" value="false" /> Existing Customer
+            </label>
+        </div>
+    </div>
+    <!--New Customer (standaard zichtbaar)-->
+    <div id="newCustomerFields" class="p-2 border rounded">
+        <h4>Create New Customer</h4>
+        <div class="form-group">
+            <label asp-for="NewCustomerName"></label>
+            <input asp-for="NewCustomerName" class="form-control" />
+            <span asp-validation-for="NewCustomerName" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="NewCustomerEmail"></label>
+            <input asp-for="NewCustomerEmail" type ="email" class="form-control" />
+            <span asp-validation-for="NewCustomerEmail" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="NewCustomerPhone"></label>
+            <input asp-for="NewCustomerPhone" class="form-control" />
+            <span asp-validation-for="NewCustomerPhone" class="text-danger"></span>
+        </div>
+    </div>
+    <!--Existing Customer(standaard verborgen) -->
+    <div id="existingCustomerFields" class="p-2 border rounded" style="display: none;">
+        <h4>Select Customer</h4>
+        <div class="form-group">
+            <label asp-for="SelectedCustomerId"></label>
+            <select asp-for="SelectedCustomerId" asp-items="Model.CustomerList" class="form-control">
+                <option value="">-- Select Customer --</option>
+            </select>
+        </div>
+    </div>
+
+
+
+    <button type="submit" class="btn btn-primary mt-3">Create New Project</button>
+</form>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const isNewCustomerRadios = document.querySelectorAll('input[name="IsNewCustomer"]');
+            const newCustomerFields = document.getElementById('newCustomerFields');
+            const existingCustomerFields = document.getElementById('existingCustomerFields');
+
+            function toggleCustomerFields() {
+                if (document.querySelector('input[name="IsNewCustomer"][value="true"]').checked) {
+                    newCustomerFields.style.display = 'block';
+                    existingCustomerFields.style.display = 'none';
+                } else {
+                    newCustomerFields.style.display = 'none';
+                    existingCustomerFields.style.display = 'block';
+                }
+            }
+
+        isNewCustomerRadios.forEach(radio => {
+                   radio.addEventListener('change', toggleCustomerFields);
+               });
+
+               toggleCustomerFields();
+           });
+    </script>
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

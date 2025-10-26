@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Identity.Client;
 
 namespace IT_Project2526.Models
 {
@@ -19,5 +20,7 @@ namespace IT_Project2526.Models
         public required Customer Customer { get; set; }
 
         public List<string> Comments { get; set; } = [];
+
+        public bool PostPoned => CompletionDate > DateTime.UtcNow;
     }
 }

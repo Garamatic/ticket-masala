@@ -12,6 +12,37 @@ html {
   box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
+.box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #f0f0f0;
+    border-radius: 15px;
+    padding: 20px;
+    width: 200px;
+    height: 100px;
+}
+
+
+.btn {
+    background-color: #4CAF50; /* Groene knop */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px; /* Ook de knop afgerond */
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn:hover {
+    background-color: #45a049; /* Donkergroen bij hover */
+}
+
+.navbar-logo {
+    width: 200px;
+    height: auto;
+}
+
 html {
   position: relative;
   min-height: 100%;

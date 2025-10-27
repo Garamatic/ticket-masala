@@ -83,10 +83,6 @@ namespace IT_Project2526.Managers
         {
             return Valid().Where(x => x.TicketStatus == Status.InProgress).ToList();
         }
-        public List<Ticket> PostPonedTickets()
-        {
-            return Valid().Where(x => x.TicketStatus == Status.Postponed).ToList();
-        }
         public List<Ticket> CompletedTickets()
         {
             return Valid().Where(x => x.TicketStatus == Status.Completed).ToList();
@@ -98,6 +94,18 @@ namespace IT_Project2526.Managers
         public  List<Ticket> Valid() 
         {
             return [.. db.Tickets.Where(x => x.ValidUntil == null)];
+        }
+        public List<Ticket> TicketsForCustomer(string customerCode)
+        {
+            return Valid().Where(x => x.Customer.Code == customerCode).ToList();
+        }
+        public List<Ticket> ResponsibleForTickets(string name)
+        {
+            return Valid().Where(x => x.Responsible is not null && x.Responsible.Name == name).ToList();
+        }
+        public List<Ticket> WatchingForTickets(string name)
+        {
+            return Valid().Where(x => x.Watchers.Any(y => y.Name == name)).ToList();
         }
     }
 }

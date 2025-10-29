@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using IT_Project2526.Models;
 using IT_Project2526;
+using Microsoft.AspNetCore.Authorization;
 
 namespace IT_Project2526
 {
@@ -21,8 +22,52 @@ namespace IT_Project2526
                         errorNumbersToAdd: null);
                 }));
 
-            builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-                .AddEntityFrameworkStores<ITProjectDB>();
+            //Identity configuration
+            builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+            {
+                // Password settings
+                options.Password.RequireDigit = true;              // Require at least one digit
+                options.Password.RequiredLength = 8;              // Minimum length
+                options.Password.RequireNonAlphanumeric = false;  // Require symbols like !@#
+                options.Password.RequireUppercase = true;        // Require uppercase letters
+                options.Password.RequireLowercase = false;        // Require lowercase letters
+                options.Password.RequiredUniqueChars = 1;        // Minimum unique characters
+
+                // Lockout settings
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.AllowedForNewUsers = true;
+
+                // User settings
+                options.User.RequireUniqueEmail = true;
+
+                // SignIn settings
+                options.SignIn.RequireConfirmedEmail = false; // set true if we want email confirmation
+            })
+                .AddEntityFrameworkStores<ITProjectDB>()
+                .AddDefaultTokenProviders()
+                .AddDefaultUI(); //for identity pages
+
+            //Authorization
+            builder.Services.AddAuthorization(options =>
+            {
+                options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .Build();
+            });
+
+            builder.Services.ConfigureApplicationCookie(options =>
+            {
+                // Cookie settings
+                options.Cookie.HttpOnly = true;
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(120);
+
+                options.LoginPath = "/Identity/Account/Login";
+                options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+                options.SlidingExpiration = true;
+            });
+
+
             // Add services to the container.
             builder.Services.AddControllersWithViews();
 
@@ -41,11 +86,14 @@ namespace IT_Project2526
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
+
+            app.MapRazorPages(); // Identity pages like /Identity/Login
 
             app.Run();
         }

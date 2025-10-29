@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IT_Project2526
 {
-    public class ITProjectDB : IdentityDbContext<IdentityUser>
+    public class ITProjectDB : IdentityDbContext<ApplicationUser>
     {
         public ITProjectDB(DbContextOptions<ITProjectDB> options)
     : base(options)
@@ -26,7 +26,6 @@ namespace IT_Project2526
         public DbSet<Project> Projects { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
         public DbSet<Resource> Resources { get; set; }
-
         public DbSet<Employee> Employees { get; set; }
         public DbSet<Customer> Customers { get; set; }
 

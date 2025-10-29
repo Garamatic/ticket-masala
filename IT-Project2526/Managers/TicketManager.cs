@@ -11,7 +11,7 @@ namespace IT_Project2526.Managers
             return Valid().FirstOrDefault(x => x.Guid == ticketGuid);
         }
 
-        public void CreateTicket(TicketVM vm)
+        /*public void CreateTicket(TicketVM vm)
         {
             if (vm != null)
             {
@@ -42,7 +42,7 @@ namespace IT_Project2526.Managers
                 ticket.SubTickets = vm.SubTickets;
           
             }
-        }
+        }*/
         public void ChangeTicketStatus(Guid ticketGuid,Status status)
         {
             var ticket = Valid().FirstOrDefault(x => x.Guid == ticketGuid) ?? throw new Exception("Ticket not found");

@@ -2,10 +2,10 @@
 
 namespace IT_Project2526.Models
 {
-    public abstract class ApplicationUser : IdentityUser
+    public class ApplicationUser : IdentityUser 
     {
-        public required string Name { get; set; }
-        public required string Phone { get; set; }
+        public required string? Name { get; set; }
+        public required string? Phone { get; set; }
     }
 
     public class Guest : ApplicationUser { }

@@ -4,6 +4,7 @@ using IT_Project2526;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace IT_Project2526.Migrations
 {
     [DbContext(typeof(ITProjectDB))]
-    partial class ITProjectDBModelSnapshot : ModelSnapshot
+    [Migration("20251029152518_ApplicationUserNameAndPhoneNullable")]
+    partial class ApplicationUserNameAndPhoneNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

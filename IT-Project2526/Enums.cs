@@ -31,15 +31,13 @@
         Unknown = 0,
         General,
     }
-    public enum EmployeeLevel 
+    public enum EmployeeType 
     {
-        Junior,
-        Medior,
-        Senior,
-        Lead,
-        Manager,
-        CFO,
-        CTO,
-        CEO,
+        Admin,
+        ProjectManager,
+        Support,
+        Finance,
+        CEO
     }
+
 }

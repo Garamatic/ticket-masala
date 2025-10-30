@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using IT_Project2526.Models;
 using IT_Project2526;
 using Microsoft.AspNetCore.Authorization;
+using IT_Project2526.Managers;
 
 namespace IT_Project2526
 {
@@ -47,6 +48,9 @@ namespace IT_Project2526
                 .AddEntityFrameworkStores<ITProjectDB>()
                 .AddDefaultTokenProviders()
                 .AddDefaultUI(); //for identity pages
+
+            //register applicationusermanager service so it's available in the controller
+            builder.Services.AddScoped<ApplicationUserManager>();
 
             //Authorization
             builder.Services.AddAuthorization(options =>

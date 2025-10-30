@@ -8,11 +8,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Controllers\ApplicationUserController.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Migrations\" />
     <Folder Include="ViewModels\" />
     <Folder Include="Views\CaseManagement\" />
     <Folder Include="Views\ProjectManagement\" />
     <Folder Include="Views\Tickets\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Controllers\ApplicationUserController.cs" />
   </ItemGroup>
 
   <ItemGroup>

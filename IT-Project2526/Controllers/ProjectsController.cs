@@ -15,16 +15,19 @@ namespace IT_Project2526.Controllers
 {
     public class ProjectsController : Controller
     {
-        private readonly ApplicationDbContext _context;
-        public ProjectsController(ApplicationDbContext context)
+        private readonly ITProjectDB _context;
+        public ProjectsController(ITProjectDB context)
         {
             _context = context;
         }
 
         public IActionResult Index()
-        {   
+        {
             //Projecten uit Db halen met hun tickets
-            var projectsOfDb = _context.Projects.Include(p => p.Tickets).ToList();
+            var projectsOfDb = _context.Projects
+                                       .Include(p => p.Tasks)
+                                       .Include(p => p.ProjectManager)
+                                       .ToList();
 
             //Models naar ViewModels
             List<ProjectTicketViewModel> viewModels = projectsOfDb.Select(p => new ProjectTicketViewModel
@@ -34,9 +37,9 @@ namespace IT_Project2526.Controllers
                     Name = p.Name,
                     Description = p.Description,
                     Status = p.Status,
-                    ProjectManager = p.Manager,
+                    ProjectManager = p.ProjectManager,
                 },
-                Tickets = p.Tickets.Select(t => new TicketViewModel
+                Tasks = p.Tasks.Select(t => new TicketViewModel
                 {
                     Guid = t.Guid,
                     TicketStatus = t.TicketStatus,
@@ -50,12 +53,12 @@ namespace IT_Project2526.Controllers
         [HttpGet]
         public IActionResult NewProject()
         { //Ophalen bestaande klanten en voorbereiden van de new project form
-            var existingCustomers = _context.Customer.ToList();
+            var existingCustomers = _context.Customers.ToList();
             var viewModel = new NewProject
             {
                 CustomerList = existingCustomers.Select(c => new SelectListItem
                 {
-                    Value = c.Guid.ToString(),
+                    Value = c.Id.ToString(),
                     Text = c.Name
                 }).ToList(),
                 IsNewCustomer = true
@@ -88,7 +91,7 @@ namespace IT_Project2526.Controllers
                 else
                 {
                     // Zoek de bestaande klant op basis van de SelectedCustomerId
-                    projectCustomer = await _context.Customers.FirstOrDefaultAsync(c => c.Guid == viewModel.SelectedCustomerId);
+                    projectCustomer = await _context.Customers.FirstOrDefaultAsync(c => c.Id == viewModel.SelectedCustomerId);
 
                     if (projectCustomer == null)
                     {
@@ -97,7 +100,7 @@ namespace IT_Project2526.Controllers
                         // Herlaad de klantenlijst en retourneer de view om de fout te tonen
                         viewModel.CustomerList = _context.Customers.ToList().Select(c => new SelectListItem
                         {
-                            Value = c.Guid.ToString(),
+                            Value = c.Id.ToString(),
                             Text = c.Name
                         }).ToList();
                         return View(viewModel);
@@ -109,7 +112,7 @@ namespace IT_Project2526.Controllers
                 {
                     Name = viewModel.Name,
                     Description = viewModel.Description,
-                    Status = Status.Open, // Stel de status in op basis van je logica
+                    Status = Status.Pending, // Stel de status in op basis van je logica
                     // ProjectManager moet ook nog worden ingevuld, bijvoorbeeld met de ingelogde gebruiker
                     ProjectManager = null, // Dit moet je nog implementeren
                     // ... andere Project eigenschappen
@@ -131,7 +134,7 @@ namespace IT_Project2526.Controllers
             // Als de validatie faalt, herlaad dan de klantenlijst en toon het formulier opnieuw
             viewModel.CustomerList = _context.Customers.ToList().Select(c => new SelectListItem
             {
-                Value = c.Guid.ToString(),
+                Value = c.Id.ToString(),
                 Text = c.Name
             }).ToList();
             return View(viewModel);

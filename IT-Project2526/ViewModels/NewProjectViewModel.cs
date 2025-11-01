@@ -15,7 +15,7 @@ namespace IT_Project2526.ViewModels
 
         // Klantenkeuze
         public bool IsNewCustomer { get; set; } = true; // Standaard staat 'Nieuwe klant' geselecteerd
-        public Guid? SelectedCustomerId { get; set; }
+        public string? SelectedCustomerId { get; set; }
         public List<SelectListItem> CustomerList { get; set; }
 
         // Velden voor een nieuwe klant

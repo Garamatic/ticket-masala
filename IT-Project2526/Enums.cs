@@ -6,7 +6,7 @@
         Rejected,
         Assigned,
         InProgress,
-        Postponed,
+        //Postponed,
         Completed,
         Failed
     }
@@ -30,5 +30,16 @@
     {
         Unknown = 0,
         General,
+    }
+    public enum EmployeeLevel 
+    {
+        Junior,
+        Medior,
+        Senior,
+        Lead,
+        Manager,
+        CFO,
+        CTO,
+        CEO,
     }
 }

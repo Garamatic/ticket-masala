@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="nl"></html></html>
+<html lang="nl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ticket Masala</title>
     <style>
         body {
@@ -56,10 +56,11 @@
         header h1 {
             margin: 10px 0 0 0;
         }
-</style>
+    </style>
+</head>
 <body>
     <header>
-        <img src="../docs/visual/logo-green-square.png" alt="Ticket Masala Logo">
+        <img src="../docs/visual/logo-green-square.png" alt="Ticket Masala Logo" />
         <h1>Ticket Masala</h1>
     </header>
 
@@ -96,7 +97,6 @@
             <h2>Instellingen</h2>
             <p>Instellingen inhoud komt hier</p>
         </div>
-        
     </div>
 
     <script>
@@ -105,7 +105,8 @@
             for (let tab of tabs) {
                 tab.classList.remove('active');
             }
-            document.getElementById(tabId).classList.add('active');
+            const el = document.getElementById(tabId);
+            if (el) el.classList.add('active');
         }
     </script>
 </body>

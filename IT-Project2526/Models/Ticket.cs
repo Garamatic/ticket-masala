@@ -1,16 +1,26 @@
 ﻿using System.ComponentModel;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Identity.Client;
 
 namespace IT_Project2526.Models
 {
     public class Ticket : BaseModel
     {
-        public DateTime? CompletionDate { get; set; }
-        public List<Ticket> SubTickets { get; set; } = [];
-        public Ticket? ParentTicket { get; set; }
-        public required string Description { get; set; }
         public required Status TicketStatus { get; set; } = Status.Pending;
-        public required Category Category { get; set; } = Category.Unknown;
-        public required SubCategory SubCategory { get; set; } = SubCategory.Unknown;
-        public List<Resource> Resources { get; set; } = [];
+        public TicketType? TicketType { get; set; }
+        public required string Description { get; set; }
+        public DateTime? CompletionTarget { get; set; }
+        public DateTime? CompletionDate { get; set; }
+    
+
+        public Ticket? ParentTicket { get; set; }
+        public List<Ticket> SubTickets { get; set; } = [];
+        public Employee? Responsible { get; set; }
+        public List<Employee> Watchers { get; set; } = [];
+        public required Customer Customer { get; set; }
+
+        public List<string> Comments { get; set; } = [];
+
+        public bool PostPoned => CompletionDate > DateTime.UtcNow;
     }
 }

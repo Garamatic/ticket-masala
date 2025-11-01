@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace IT_Project2526.Models
 {
     public abstract class BaseModel
     {
-        public Guid Guid { get; } = Guid.NewGuid();
+        [Key]
+        public Guid Guid { get; set; } = Guid.NewGuid();
         public DateTime CreationDate { get; } = DateTime.UtcNow;
         public DateTime? ValidUntil { get; set;}
         public Guid? CreatorGuid { get; set; }

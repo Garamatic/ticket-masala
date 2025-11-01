@@ -8,18 +8,30 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Views\CaseManagement\**" />
     <Compile Remove="Views\NewFolder1\**" />
     <Compile Remove="Views\NewFolder2\**" />
+    <Compile Remove="Views\ProjectManagement\**" />
     <Compile Remove="Views\Projectmanager\**" />
+    <Compile Remove="Views\Tickets\**" />
+    <Content Remove="Views\CaseManagement\**" />
     <Content Remove="Views\NewFolder1\**" />
     <Content Remove="Views\NewFolder2\**" />
+    <Content Remove="Views\ProjectManagement\**" />
     <Content Remove="Views\Projectmanager\**" />
+    <Content Remove="Views\Tickets\**" />
+    <EmbeddedResource Remove="Views\CaseManagement\**" />
     <EmbeddedResource Remove="Views\NewFolder1\**" />
     <EmbeddedResource Remove="Views\NewFolder2\**" />
+    <EmbeddedResource Remove="Views\ProjectManagement\**" />
     <EmbeddedResource Remove="Views\Projectmanager\**" />
+    <EmbeddedResource Remove="Views\Tickets\**" />
+    <None Remove="Views\CaseManagement\**" />
     <None Remove="Views\NewFolder1\**" />
     <None Remove="Views\NewFolder2\**" />
+    <None Remove="Views\ProjectManagement\**" />
     <None Remove="Views\Projectmanager\**" />
+    <None Remove="Views\Tickets\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,9 +43,6 @@
     <Folder Include="Areas\Identity\" />
     <Folder Include="Migrations\" />
     <Folder Include="ViewModels\" />
-    <Folder Include="Views\CaseManagement\" />
-    <Folder Include="Views\ProjectManagement\" />
-    <Folder Include="Views\Tickets\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -42,7 +51,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.9" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.10" />
     <PackageReference Include="AutoMapper" Version="15.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.11" />

@@ -5,6 +5,6 @@ namespace IT_Project2526.ViewModels
     public class ProjectTicketViewModel
     {
         public ProjectViewModel ProjectDetails { get; set; }
-        public List<TicketViewModel> Tickets { get; set; } = new List<TicketViewModel>();
+        public List<TicketViewModel> Tasks { get; set; } = new List<TicketViewModel>();
     }
 }

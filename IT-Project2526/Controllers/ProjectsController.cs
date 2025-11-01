@@ -19,6 +19,18 @@ namespace IT_Project2526.Controllers
         public ProjectsController(ITProjectDB context)
         {
             _context = context;
+            try
+            {
+                if (!_context.Database.CanConnect())
+                {
+                    throw new Exception("Fatal Error: No Database Connection Possible");
+                }
+            }
+            catch (Exception ex) 
+            {
+                Console.WriteLine(ex.Message);
+                throw;
+            }
         }
 
         public IActionResult Index()

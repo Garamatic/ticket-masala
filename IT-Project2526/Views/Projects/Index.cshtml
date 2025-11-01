@@ -1,14 +1,55 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@using IT_Project2526.Models;
+@using IT_Project2526.ViewModels;
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Project Overview & Tickets";
 }
 
-<h2>Index</h2>
+<h2>@ViewData["Title"]</h2>
 
 <div class="box">
 <a asp-controller="Projects" asp-action="NewProject" class="btn">Create New Project</a>
 </div>
 
-<p>Hieronder komt de lijst van bestaande projecten</p>
+@if (Model != null && Model.Any())
+{
+    @foreach (var item in Model) //Lijst ostellen
+    {
+        <div class="project-container">
+            @*ProjectDetails*@
+            <h3>Project: @item.ProjectDetails.Name</h3>
+            @if (item.Tickets.Any())
+            {
+                <table class="project-table">
+                    <thead>
+                        <tr>
+                            <th>Number Ticket</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var ticket in item.Tickets)
+                        {
+                            <tr>
+                                <td>
+                                    @ticket.Guid
+                                </td>
+                                <td>
+                                    @ticket.TicketStatus
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p>No Tickets for this Project</p>
+            }
+        </div>
+        <hr />
+    }
+}
+else
+{
+    <p>No Projects Avaidable.</p>
+}

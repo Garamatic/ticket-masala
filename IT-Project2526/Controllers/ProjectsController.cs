@@ -22,8 +22,29 @@ namespace IT_Project2526.Controllers
         }
 
         public IActionResult Index()
-        {
-            return View();
+        {   
+            //Projecten uit Db halen met hun tickets
+            var projectsOfDb = _context.Projects.Include(p => p.Tickets).ToList();
+
+            //Models naar ViewModels
+            List<ProjectTicketViewModel> viewModels = projectsOfDb.Select(p => new ProjectTicketViewModel
+            {
+                ProjectDetails = new ProjectViewModel
+                {
+                    Name = p.Name,
+                    Description = p.Description,
+                    Status = p.Status,
+                    ProjectManager = p.Manager,
+                },
+                Tickets = p.Tickets.Select(t => new TicketViewModel
+                {
+                    Guid = t.Guid,
+                    TicketStatus = t.TicketStatus,
+                    CreationDate = t.CreationDate,
+                }).ToList()
+            }).ToList();
+
+            return View(viewModels);
         }
 
         [HttpGet]

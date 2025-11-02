@@ -1,6 +1,6 @@
 # IT-Project-25/26 - Ticket Masala
 
-![Logo](docs/visual/logo-green.png)
+![Logo](IT-Project2526/docs/visual/logo-green.png)
 
 ## Informatie
 
@@ -14,7 +14,7 @@ Light-weight beheersysteem met AI-integratie als rode draad in alle lagen.
 
 Dashboard-gedreven ontwerp waarbij de gebruiker (klant, stafflid) per rol de relevante informatie ziet. Er zijn drie views: ticketing, case en project management.
 
-![ERD-model](docs/architecture/erd-dark.drawio.png)
+![ERD-model](IT-Project2526/docs/architecture/erd-dark.drawio.png)
 
 ### Lagen
 
@@ -26,7 +26,7 @@ Dashboard-gedreven ontwerp waarbij de gebruiker (klant, stafflid) per rol de rel
 
 - AI-helper: biedt contextbewuste ondersteuning in alle lagen door historische gegevens te analyseren en voorstellen te doen voor acties, toewijzingen en samenvattingen. De AI gebruikt lokale of cloudmodellen voor verklaarbaarheid en automatisering.
 
-![Basis UI](docs/visual/basic-UI.png)
+![Basis UI](IT-Project2526/docs/visual/basic-UI.png)
 
 ### Interconnectie van lagen
 

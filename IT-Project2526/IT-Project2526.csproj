@@ -8,12 +8,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Areas\Identity\" />
+    <Compile Remove="Controllers\ApplicationUserController.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Migrations\" />
     <Folder Include="ViewModels\" />
     <Folder Include="Views\CaseManagement\" />
     <Folder Include="Views\ProjectManagement\" />
     <Folder Include="Views\Tickets\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Controllers\ApplicationUserController.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,7 +32,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.10">
       <PrivateAssets>all</PrivateAssets>

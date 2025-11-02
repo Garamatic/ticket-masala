@@ -8,7 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Controllers\ApplicationUserController.cs" />
+    <Content Remove="wwwroot\images\logo-green.jpg" />
+    <Content Remove="wwwroot\images\logo-green.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -42,5 +43,4 @@
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
   </ItemGroup>
-
 </Project>

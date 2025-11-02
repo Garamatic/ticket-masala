@@ -57,10 +57,14 @@
     <div id="newCustomerFields" class="p-2 border rounded">
         <h4>Create New Customer</h4>
         <div class="form-group">
-            <label asp-for="NewCustomerName"></label>
-            <input asp-for="NewCustomerName" class="form-control" />
-            <span asp-validation-for="NewCustomerName" class="text-danger"></span>
+            <label asp-for="NewCustomerFirstName"></label>
+            <input asp-for="NewCustomerFirstName" class="form-control" />
+            <span asp-validation-for="NewCustomerFirstName" class="text-danger"></span>
         </div>
+        <div class="form-group">
+            <label asp-for="NewCustomerLastName"></label>
+            <input asp-for="NewCustomerLastName" class="form-control" />
+            <span asp-validation-for="NewCustomerLastName" class="text-danger"></span>
         <div class="form-group">
             <label asp-for="NewCustomerEmail"></label>
             <input asp-for="NewCustomerEmail" type ="email" class="form-control" />

@@ -5,7 +5,6 @@ using IT_Project2526.Models;
 namespace IT_Project2526.Managers
 {
     public class TicketManager(ITProjectDB db)
-    public class TicketManager(ITProjectDB db)
     {
         private ITProjectDB db = db;
 

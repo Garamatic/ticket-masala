@@ -1,3 +1,5 @@
+@model List<IT_Project2526.ViewModels.ProjectTicketViewModel>
+@using System.Linq
 @using IT_Project2526.Models;
 @using IT_Project2526.ViewModels;
 @{
@@ -17,7 +19,7 @@
         <div class="project-container">
             @*ProjectDetails*@
             <h3>Project: @item.ProjectDetails.Name</h3>
-            <p>Project Manager: @item.ProjectDetails.ProjectManager.name</p>
+            <p>Project Manager: @item.ProjectDetails.ProjectManager.FirstName @item.ProjectDetails.ProjectManager.LastName</p>
             @if (item.Tasks != null && item.Tasks.Any())
             {
                 <table class="project-table">

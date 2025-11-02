@@ -19,7 +19,7 @@ namespace IT_Project2526.Controllers
         public ProjectsController(ITProjectDB context)
         {
             _context = context;
-            try
+           /* try
             {
                 if (!_context.Database.CanConnect())
                 {
@@ -30,7 +30,7 @@ namespace IT_Project2526.Controllers
             {
                 Console.WriteLine(ex.Message);
                 throw;
-            }
+            }*/
         }
 
         public IActionResult Index()

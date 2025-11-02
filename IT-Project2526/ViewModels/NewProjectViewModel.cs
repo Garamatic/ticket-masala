@@ -19,7 +19,8 @@ namespace IT_Project2526.ViewModels
         public List<SelectListItem> CustomerList { get; set; }
 
         // Velden voor een nieuwe klant
-        public string? NewCustomerName { get; set; }
+        public string? NewCustomerFirstName { get; set; }
+        public string? NewCustomerLastName { get; set; }
         public string? NewCustomerEmail { get; set; }
         public string? NewCustomerPhone { get; set; }
     }

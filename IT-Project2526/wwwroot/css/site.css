@@ -25,7 +25,7 @@ html {
 
 
 .btn {
-    background-color: #4CAF50; /* Groene knop */
+    background-color: #8BC34A; /* Groene knop */
     color: white;
     border: none;
     padding: 10px 20px;
@@ -36,6 +36,10 @@ html {
 
 .btn:hover {
     background-color: #45a049; /* Donkergroen bij hover */
+}
+
+.navbar{
+    background-color: #E8F5E9;
 }
 
 .navbar-logo {
@@ -50,4 +54,10 @@ html {
 
 body {
   margin-bottom: 60px;
+  background-color: #FAFAFA;
+
+}
+
+p {
+    color: #263238;
 }

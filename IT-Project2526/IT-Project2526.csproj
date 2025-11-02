@@ -16,7 +16,6 @@
     <Folder Include="ViewModels\" />
     <Folder Include="Views\CaseManagement\" />
     <Folder Include="Views\ProjectManagement\" />
-    <Folder Include="Views\Tickets\" />
   </ItemGroup>
 
   <ItemGroup>

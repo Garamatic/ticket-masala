@@ -55,9 +55,12 @@ namespace IT_Project2526
             //Authorization
             builder.Services.AddAuthorization(options =>
             {
-                options.FallbackPolicy = new AuthorizationPolicyBuilder()
-                    .RequireAuthenticatedUser()
-                    .Build();
+                if (!builder.Environment.IsDevelopment())
+                {
+                    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                        .RequireAuthenticatedUser()
+                        .Build();
+                }
             });
 
             builder.Services.ConfigureApplicationCookie(options =>

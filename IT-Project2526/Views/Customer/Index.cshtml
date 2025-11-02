@@ -1,6 +1,32 @@
+@model List<IT_Project2526.ViewModels.CustomerListViewModel>
+
 @{
-    ViewData["Title"] = "Customers";
+    ViewData["Title"] = "Customers: Overview";
 }
 
 <h1>@ViewData["Title"]</h1>
-<p>Customer index view. Replace with your strongly-typed view model and rendering logic.</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Projects</th>
+            <th>Acties</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var customer in Model)
+        {
+            <tr>
+                <td>@customer.Name</td>
+                <td>@customer.Email</td>
+                <td>@customer.ProjectCount</td>
+                <td>
+                    @* De link naar de detailpagina *@
+                    <a asp-action="Details" asp-route-id="@customer.Id" class="btn btn-info">Details</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

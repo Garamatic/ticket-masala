@@ -93,7 +93,8 @@ namespace IT_Project2526.Controllers
                     // Maak een nieuwe klant aan en vul de gegevens in
                     projectCustomer = new Customer
                     {
-                        Name = viewModel.NewCustomerName,
+                        FirstName = viewModel.NewCustomerFirstName,
+                        LastName = viewModel.NewCustomerLastName,
                         Email = viewModel.NewCustomerEmail,
                         Phone = viewModel.NewCustomerPhone,
                         // De Guid en CreationDate worden door de BaseModel gezet

@@ -26,7 +26,8 @@ namespace IT_Project2526.Controllers
             var viewModels = customers.Select(c => new CustomerListViewModel
             {
                 Id = c.Id,
-                Name = c.Name,
+                FirstName = c.FirstName,
+                LastName = c.LastName,
                 Email = c.Email,
                 ProjectCount = c.Projects?.Count ?? 0 // Aantal projecten tellen
             }).ToList();

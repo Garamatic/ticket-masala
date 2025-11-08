@@ -72,7 +72,8 @@ namespace IT_Project2526.Controllers
 
 			if (ModelState.IsValid)
 			{
-				user.Name = model.Name;
+				user.FirstName = model.FirstName;
+				user.LastName = model.LastName;
 				user.Phone = model.Phone;
 				user.Email = model.Email;
 				user.UserName = model.UserName;

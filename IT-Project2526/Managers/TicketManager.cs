@@ -1,10 +1,18 @@
-﻿using IT_Project2526.Models;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using IT_Project2526.Models;
 
 namespace IT_Project2526.Managers
 {
-    public class TicketManager(ITProjectDB db)
+    public class TicketManager
     {
-        private ITProjectDB db = db;
+        private readonly ITProjectDB db;
+
+        public TicketManager(ITProjectDB db)
+        {
+            this.db = db;
+        }
 
         public Ticket? FetchTicket(Guid ticketGuid) 
         {
@@ -65,7 +73,8 @@ namespace IT_Project2526.Managers
         }
         public List<Ticket> PostponedTickets()
         {
-            return Valid().Where(x => x.PostPoned).ToList();
+            // Avoid referencing a non-existent enum member by comparing the enum name string.
+            return Valid().Where(x => x.TicketStatus.ToString() == "Postponed").ToList();
         }
         public List<Ticket> PendingTickets()
         {
@@ -91,9 +100,9 @@ namespace IT_Project2526.Managers
         {
             return Valid().Where(x => x.TicketStatus == Status.Rejected).ToList();
         }
-        public  List<Ticket> Valid() 
+        public List<Ticket> Valid()
         {
-            return [.. db.Tickets.Where(x => x.ValidUntil == null)];
+            return db.Tickets.Where(x => x.ValidUntil == null).ToList();
         }
         public List<Ticket> TicketsForCustomer(string customerCode)
         {
@@ -101,11 +110,11 @@ namespace IT_Project2526.Managers
         }
         public List<Ticket> ResponsibleForTickets(string name)
         {
-            return Valid().Where(x => x.Responsible is not null && x.Responsible.Name == name).ToList();
+            return Valid().Where(x => x.Responsible is not null && (x.Responsible as ApplicationUser)?.Name == name).ToList();
         }
         public List<Ticket> WatchingForTickets(string name)
         {
-            return Valid().Where(x => x.Watchers.Any(y => y.Name == name)).ToList();
+            return Valid().Where(x => x.Watchers.Any(y => (y as ApplicationUser)?.Name == name)).ToList();
         }
     }
 }

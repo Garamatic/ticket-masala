@@ -8,14 +8,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Controllers\ApplicationUserController.cs" />
+    <Content Remove="wwwroot\images\logo-green.jpg" />
+    <Content Remove="wwwroot\images\logo-green.png" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Migrations\" />
     <Folder Include="ViewModels\" />
-    <Folder Include="Views\CaseManagement\" />
-    <Folder Include="Views\ProjectManagement\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\images\logo-green.jpg" />
+    <None Include="wwwroot\images\logo-green.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,7 +35,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.10">
       <PrivateAssets>all</PrivateAssets>
@@ -39,5 +43,4 @@
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
   </ItemGroup>
-
 </Project>

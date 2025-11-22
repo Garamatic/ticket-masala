@@ -36,7 +36,7 @@ namespace IT_Project2526.Controllers
         }
 
         // Details: Toon de details van één klant
-        public async Task<IActionResult> Details(string id)
+        public async Task<IActionResult> Detail(string id)
         {
             if (string.IsNullOrEmpty(id))
             {

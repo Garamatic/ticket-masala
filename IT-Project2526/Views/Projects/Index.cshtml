@@ -49,9 +49,15 @@
     {
         <div class="project-container">
             @*ProjectDetails*@
-            <h3>Project: @item.ProjectDetails.Name</h3>
-            <p>Project Manager: @item.ProjectDetails.ProjectManager.FirstName @item.ProjectDetails.ProjectManager.LastName</p>
-            @if (item.Tasks != null && item.Tasks.Any())
+            <h3>
+                Project: 
+                <a asp-controller="Projects" asp-action="Details" asp-route-id="@item.Guid">
+                    @item.Name
+                </a>
+            </h3>
+            <p>Project Manager: @item.ProjectManagerName</p>
+            <p>Number of Tickets: @item.TicketCount</p>
+            @if (item.CurrentTicketGuid.HasValue)
             {
                 <table class="project-table">
                     <thead>
@@ -67,8 +73,34 @@
                                 <td>
                                     @ticket.Guid
                                 </td>
-                                <td>
-                                    @ticket.TicketStatus
+                                    @{
+                                        var status = ticket.TicketStatus;
+                                        var cssClass = "";
+
+                                        switch (status)
+                                        {
+                                            case Status.Pending:
+                                                cssClass = "status-pending";
+                                                break;
+                                            case Status.Rejected:
+                                                cssClass = "status-rejected";
+                                                break;
+                                            case Status.Assigned:
+                                                cssClass = "status-assigned";
+                                                break;
+                                            case Status.InProgress:
+                                                cssClass = "status-inProgress";
+                                                break;
+                                            case Status.Completed:
+                                                cssClass = "status-completed";
+                                                break;
+                                            case Status.Failed:
+                                                cssClass = "status-completed";
+                                                break;
+                                        }
+                                    }
+                                <td class="status-badge @cssClass">
+                                    @status.ToString()
                                 </td>
                             </tr>
                         }
@@ -77,7 +109,7 @@
             }
             else
             {
-                <p>No Tickets for this Project</p>
+                <p>No Active Tickets</p>
             }
         </div>
         <hr />
@@ -85,5 +117,5 @@
 }
 else
 {
-    <p>No Projects Avaidable.</p>
+    <p>No Projects Available.</p>
 }

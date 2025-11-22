@@ -30,19 +30,31 @@ namespace IT_Project2526.Controllers
 
         public async Task<IActionResult> Index()
         {
-            try
+            //Projecten uit Db halen met hun tickets
+            var projectsOfDb = _context.Projects
+                                       .Include(p => p.Tasks)
+                                       .Include(p => p.ProjectManager)
+                                       .ToList();
+
+            //Models naar ViewModels
+            List<ProjectTicketViewModel> viewModels = projectsOfDb.Select(p => new ProjectTicketViewModel
             {
-                _logger.LogInformation("Loading projects index");
-                
-                var viewModels = await _projectService.GetAllProjectsAsync();
-                return View(viewModels);
-            }
-            catch (Exception ex)
-            {
-                var correlationId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
-                _logger.LogError(ex, "Error loading projects. CorrelationId: {CorrelationId}", correlationId);
-                return StatusCode(500);
-            }
+                ProjectDetails = new ProjectViewModel
+                {
+                    Name = p.Name,
+                    Description = p.Description,
+                    Status = p.Status,
+                    ProjectManager = p.ProjectManager,
+                },
+                Tasks = p.Tasks.Select(t => new TicketViewModel
+                {
+                    Guid = t.Guid,
+                    TicketStatus = t.TicketStatus,
+                    CreationDate = t.CreationDate,
+                }).ToList()
+            }).ToList();
+
+            return View(viewModels);
         }
 
         [HttpGet]

@@ -14,5 +14,11 @@ namespace IT_Project2526.ViewModels
        public Status Status { get; init; }
        public Employee ProjectManager {  get; init; }
 
+        public class ProjectTicketInfo
+        {
+            public Guid Guid { get; set; }
+            public string Description { get; set; }
+            public Status TicketStatus { get; set; }
+        }
     }
 }

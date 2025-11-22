@@ -45,162 +45,45 @@
 
 @if (Model != null && Model.Any())
 {
-    <!-- Project Statistics -->
-    <div class="stats-grid mb-4">
-        <div class="stat-card">
-            <div class="stat-card-title">Total Projects</div>
-            <div class="stat-card-value">@Model.Count</div>
-            <div class="stat-card-change">
-                <i class="fas fa-arrow-up me-1"></i> Active
-            </div>
-        </div>
-        
-        <div class="stat-card secondary">
-            <div class="stat-card-title">In Progress</div>
-            <div class="stat-card-value">@Model.Count(p => p.ProjectDetails.Status == Status.InProgress)</div>
-            <div class="stat-card-change">Being worked on</div>
-        </div>
-        
-        <div class="stat-card success">
-            <div class="stat-card-title">Completed</div>
-            <div class="stat-card-value">@Model.Count(p => p.ProjectDetails.Status == Status.Completed)</div>
-            <div class="stat-card-change">Successfully finished</div>
-        </div>
-        
-        <div class="stat-card warning">
-            <div class="stat-card-title">Pending</div>
-            <div class="stat-card-value">@Model.Count(p => p.ProjectDetails.Status == Status.Pending)</div>
-            <div class="stat-card-change">Awaiting start</div>
-        </div>
-    </div>
-
-    <!-- Projects Grid -->
-    <div class="project-grid" id="projectsGrid">
-        @foreach (var item in Model)
-        {
-            var statusClass = item.ProjectDetails.Status switch
+    @foreach (var item in Model) //Lijst ostellen
+    {
+        <div class="project-container">
+            @*ProjectDetails*@
+            <h3>Project: @item.ProjectDetails.Name</h3>
+            <p>Project Manager: @item.ProjectDetails.ProjectManager.FirstName @item.ProjectDetails.ProjectManager.LastName</p>
+            @if (item.Tasks != null && item.Tasks.Any())
             {
-                Status.Pending => "pending",
-                Status.InProgress => "in-progress",
-                Status.Completed => "completed",
-                Status.Failed => "failed",
-                _ => "pending"
-            };
-            
-            var statusBadgeClass = item.ProjectDetails.Status switch
+                <table class="project-table">
+                    <thead>
+                        <tr>
+                            <th>Number Ticket</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var ticket in item.Tasks)
+                        {
+                            <tr>
+                                <td>
+                                    @ticket.Guid
+                                </td>
+                                <td>
+                                    @ticket.TicketStatus
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
             {
-                Status.Pending => "badge-pending",
-                Status.InProgress => "badge-in-progress",
-                Status.Completed => "badge-completed",
-                Status.Failed => "badge-danger",
-                _ => "badge-primary"
-            };
-
-            <div class="project-card fade-in" data-status="@((int)item.ProjectDetails.Status)" data-name="@item.ProjectDetails.Name.ToLower()">
-                <div class="project-card-header">
-                    <div>
-                        <h3 class="project-title">@item.ProjectDetails.Name</h3>
-                        <span class="badge @statusBadgeClass">
-                            @item.ProjectDetails.Status.ToString()
-                        </span>
-                    </div>
-                    <button class="btn btn-sm btn-outline-primary" onclick="window.location='@Url.Action("Details", "Projects", new { id = item.ProjectDetails.Guid })'">
-                        <i class="fas fa-arrow-right"></i>
-                    </button>
-                </div>
-
-                <p class="project-description">
-                    @(item.ProjectDetails.Description?.Length > 120 
-                        ? item.ProjectDetails.Description.Substring(0, 120) + "..." 
-                        : item.ProjectDetails.Description ?? "No description available")
-                </p>
-
-                <div class="project-meta">
-                    <div class="project-meta-item">
-                        <i class="fas fa-user text-primary"></i>
-                        <span>@(item.ProjectDetails.ProjectManager?.Name ?? "Unassigned")</span>
-                    </div>
-                    
-                    <div class="project-meta-item">
-                        <i class="fas fa-ticket-alt text-secondary"></i>
-                        <span>@(item.Tasks?.Count ?? 0) Tickets</span>
-                    </div>
-                </div>
-
-                @if (item.Tasks != null && item.Tasks.Any())
-                {
-                    <div class="project-stats mt-3 pt-3 border-top">
-                        <div class="project-stat">
-                            <div class="project-stat-value">@item.Tasks.Count(t => t.Status == "Completed")</div>
-                            <div class="project-stat-label">
-                                <i class="fas fa-check-circle text-success"></i> Done
-                            </div>
-                        </div>
-                        <div class="project-stat">
-                            <div class="project-stat-value">@item.Tasks.Count(t => t.Status == "InProgress")</div>
-                            <div class="project-stat-label">
-                                <i class="fas fa-spinner text-info"></i> Active
-                            </div>
-                        </div>
-                        <div class="project-stat">
-                            <div class="project-stat-value">@item.Tasks.Count(t => t.Status == "Pending")</div>
-                            <div class="project-stat-label">
-                                <i class="fas fa-clock text-warning"></i> Pending
-                            </div>
-                        </div>
-                    </div>
-                }
-            </div>
-        }
-    </div>
+                <p>No Tickets for this Project</p>
+            }
+        </div>
+        <hr />
+    }
 }
 else
 {
-    <!-- Empty State -->
-    <div class="empty-state">
-        <div class="empty-state-icon">
-            <i class="fas fa-folder-open"></i>
-        </div>
-        <h3 class="empty-state-title">No Projects Yet</h3>
-        <p class="empty-state-description">
-            Get started by creating your first project. Click the button below to begin.
-        </p>
-        <a asp-controller="Projects" asp-action="NewProject" class="btn btn-primary btn-lg">
-            <i class="fas fa-plus me-2"></i>
-            Create Your First Project
-        </a>
-    </div>
-}
-
-@section Scripts {
-    <script>
-        // Project Search
-        document.getElementById('projectSearch').addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            const projects = document.querySelectorAll('.project-card');
-            
-            projects.forEach(project => {
-                const projectName = project.dataset.name;
-                if (projectName.includes(searchTerm)) {
-                    project.style.display = 'block';
-                } else {
-                    project.style.display = 'none';
-                }
-            });
-        });
-
-        // Status Filter
-        document.getElementById('statusFilter').addEventListener('change', function(e) {
-            const selectedStatus = e.target.value;
-            const projects = document.querySelectorAll('.project-card');
-            
-            projects.forEach(project => {
-                if (selectedStatus === '' || project.dataset.status === selectedStatus) {
-                    project.style.display = 'block';
-                } else {
-                    project.style.display = 'none';
-                }
-            });
-        });
-    </script>
+    <p>No Projects Avaidable.</p>
 }

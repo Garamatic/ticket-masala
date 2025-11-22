@@ -60,7 +60,14 @@ namespace IT_Project2526.Controllers
         [HttpGet]
         public IActionResult NewProject()
         {
-            try
+            var project = await _context.Projects
+                .Include(p => p.ProjectManager)
+                .Include(p => p.Tasks)
+                .FirstOrDefaultAsync(m => m.Guid == guid);
+
+            if (project == null) return NotFound();
+
+            var viewModel = new ProjectDetailsViewModel
             {
                 _logger.LogInformation("New project form requested");
                 

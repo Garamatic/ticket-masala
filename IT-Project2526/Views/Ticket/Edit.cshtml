@@ -1,0 +1,60 @@
+﻿@model IT_Project2526.ViewModels.EditTicketViewModel
+
+@{
+    ViewData["Title"] = "Edit Ticket: " + Model.Guid + " - " + Model.Description;
+}
+
+<h2>Edit Ticket</h2>
+
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            
+            <input type="hidden" asp-for="Guid" />
+
+            <div class="form-group">
+                <label asp-for="Description" class="control-label"></label>
+                <input asp-for="Description" class="form-control" />
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="TicketStatus" class="control-label"></label>
+                <select asp-for="TicketStatus" asp-items="Html.GetEnumSelectList<Status>()" class="form-control"></select>
+                <span asp-validation-for="TicketStatus" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="CompletionTarget" class="control-label"></label>
+                <input asp-for="CompletionTarget" class="form-control" />
+                <span asp-validation-for="CompletionTarget" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="ResponsibleUserId" class="control-label"></label>
+                <select asp-for="ResponsibleUserId" asp-items="Model.ResponsibleUsers" class="form-control">
+                    <option value="">-- Select Responisble --</option>
+                </select>
+                <span asp-validation-for="ResponsibleUserId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    
+    <a asp-action="Detail" asp-route-id="@Model.Guid">Return to Details</a>
+</div>
+
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

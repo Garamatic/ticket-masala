@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using IT_Project2526;
+using IT_Project2526.Models;
+using IT_Project2526.ViewModels;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
 namespace IT_Project2526.Controllers
@@ -25,23 +28,23 @@ namespace IT_Project2526.Controllers
            }*/
         }
 
-        public async Task<IActionResult> Detail(Guid? guid)
+        public async Task<IActionResult> Detail(Guid? id)
         {
-            if (guid == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
             var project = await _context.Projects
                          .Include(p => p.Tasks)
-                         .FirstOrDefaultAsync(p => p.Tasks.Any(t => t.Guid == guid));
+                         .FirstOrDefaultAsync(p => p.Tasks.Any(t => t.Guid == id));
 
             var ticket = await _context.Tickets
                         .Include(t => t.Customer)
                         .Include(t => t.Responsible)
                         .Include(t => t.ParentTicket)
                         .Include(t => t.SubTickets)
-                        .FirstOrDefaultAsync(m => m.Guid == guid);
+                        .FirstOrDefaultAsync(m => m.Guid == id);
 
             if (ticket == null)
             { 
@@ -68,10 +71,81 @@ namespace IT_Project2526.Controllers
                 SubTickets = ticket.SubTickets.Select(st => new SubTicketInfo
                     {
                         Guid = st.Guid,
-                        Description = st.Description
+                        Description = st.Description,
+                        TicketStatus = st.TicketStatus
                     }).ToList()
             };
 
+            return View(viewModel);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Edit(Guid? id)
+        {
+            if (id == null) return NotFound();
+
+            var ticket = await _context.Tickets
+                                        .Include(t => t.Responsible)
+                                        .FirstOrDefaultAsync(t => t.Guid == id);
+
+            if (ticket == null) return NotFound();
+
+            // Haal alle mogelijke verantwoordelijke gebruikers op voor de dropdown
+            var responsibleUsers = await _context.Users.ToListAsync();
+
+            // Map de databasegegevens naar het ViewModel
+            var viewModel = new EditTicketViewModel
+            {
+                Guid = ticket.Guid,
+                Description = ticket.Description,
+                TicketStatus = ticket.TicketStatus,
+                CompletionTarget = ticket.CompletionTarget,
+                ResponsibleUserId = ticket.Responsible?.Id, // ID van de huidige verantwoordelijke
+
+                // Vul de dropdown lijst
+                ResponsibleUsers = responsibleUsers.Select(u => new SelectListItem
+                {
+                    Value = u.Id.ToString(),
+                    Text = $"{u.FirstName} {u.LastName}"
+                }).ToList()
+            };
+
+            return View(viewModel);
+            
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(Guid id, EditTicketViewModel viewModel)
+        {
+            if (id != viewModel.Guid) return NotFound();
+
+            if (ModelState.IsValid)
+            {
+                var ticketToUpdate = await _context.Tickets.FirstOrDefaultAsync(t => t.Guid == id);
+                if (ticketToUpdate == null) return NotFound();
+
+                // Werk de eigenschappen bij op basis van het ViewModel
+                ticketToUpdate.Description = viewModel.Description;
+                ticketToUpdate.TicketStatus = viewModel.TicketStatus;
+                ticketToUpdate.CompletionTarget = viewModel.CompletionTarget;
+                // Update de verantwoordelijke (u moet nog logica hebben om ApplicationUser te vinden op basis van de Guid/Id)
+
+                try
+                {
+                    _context.Update(ticketToUpdate);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Detail), new { id = ticketToUpdate.Guid }); 
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    
+                    throw;
+                }
+            }
+
+            // Als validatie faalt, herlaad de dropdowns en toon de view opnieuw
+            viewModel.ResponsibleUsers = await _context.Users.Select(u => new SelectListItem { Value = u.Id.ToString(), Text = $"{u.FirstName} {u.LastName}" }).ToListAsync();
             return View(viewModel);
         }
     }

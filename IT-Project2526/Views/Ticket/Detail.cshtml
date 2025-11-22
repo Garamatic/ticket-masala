@@ -27,7 +27,7 @@
         <dd class="col-sm-9">
             @if (Model.ParentTicketGuid.HasValue)
             {
-                <a asp-action="Details" asp-route-id="@Model.ParentTicketGuid">
+                <a asp-action="Detail" asp-route-id="@Model.ParentTicketGuid">
                     @Model.ParentTicketGuid.Value
                 </a>
             }
@@ -65,7 +65,7 @@
             @foreach (var sub in Model.SubTickets)
             {
                 <li>
-                    <a asp-action="Details" asp-route-id="@sub.Guid">
+                    <a asp-action="Detail" asp-route-id="@sub.Guid">
                         @sub.Guid
                     </a>
                     - @sub.Description
@@ -74,6 +74,10 @@
             }
         </ul>
     }
+</div>
+
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.Guid" class="btn btn-primary">Edit Ticket</a>
 </div>
 
 @if (Model.ProjectGuid != Guid.Empty)

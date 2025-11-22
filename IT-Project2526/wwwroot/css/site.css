@@ -1,5 +1,7 @@
 html {
-  font-size: 14px;
+    font-size: 14px;
+    position: relative;
+    min-height: 100%;
 }
 
 @media (min-width: 768px) {
@@ -47,11 +49,6 @@ nav{
     height: auto;
 }
 
-html {
-  position: relative;
-  min-height: 100%;
-}
-
 body {
   margin-bottom: 60px;
   background-color: #FAFAFA;
@@ -60,4 +57,44 @@ body {
 
 p {
     color: #263238;
+}
+
+/*Ticket Status*/
+
+.status-badge {
+    padding: 0.3em 0.6em;
+    border-radius: 1em; 
+    font-weight: bold;
+    display: inline-block; 
+    text-align: center;
+}
+
+.status-pending {
+    background-color: #edd137;
+    color: black;
+}
+
+.status-rejected {
+    background-color: #ef2323;
+    color: white;
+}
+
+.status-assigned {
+    background-color: #1ae3cd;
+    color: black;
+}
+
+.status-inProgress {
+    background-color: #ffc107;
+    color: black;
+}
+
+.status-completed {
+    background-color: #4caf50;
+    color: white;
+}
+
+.status-failed {
+    background-color: #6c757d;
+    color: white;
 }

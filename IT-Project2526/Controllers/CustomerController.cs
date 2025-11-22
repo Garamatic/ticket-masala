@@ -66,7 +66,7 @@ namespace IT_Project2526.Controllers
                     Name = p.Name,
                     Description = p.Description,
                     Status = p.Status,
-                    ProjectManager = p.ProjectManager
+                    ProjectManagerName = $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}"
                 }).ToList()
             };
 

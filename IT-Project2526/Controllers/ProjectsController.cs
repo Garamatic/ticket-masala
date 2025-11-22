@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using IT_Project2526.ViewModels;
 
-//Database Connectie moet nog toegevoegd worden
 
 namespace IT_Project2526.Controllers
 {
@@ -42,24 +41,60 @@ namespace IT_Project2526.Controllers
                                        .ToList();
 
             //Models naar ViewModels
-            List<ProjectTicketViewModel> viewModels = projectsOfDb.Select(p => new ProjectTicketViewModel
+            List<ProjectViewModel> viewModels = projectsOfDb.Select(p =>
             {
-                ProjectDetails = new ProjectViewModel
+                var currentTicket = p.Tasks
+                    .Where(t => t.TicketStatus == Status.InProgress ||
+                                t.TicketStatus == Status.Assigned ||
+                                t.TicketStatus == Status.Pending)
+                    .OrderByDescending(t => t.CreationDate) // Sorteer op meest recent
+                    .FirstOrDefault() ?? p.Tasks.FirstOrDefault();
+
+                return new ProjectViewModel
                 {
+                    Guid = p.Guid,
                     Name = p.Name,
-                    Description = p.Description,
                     Status = p.Status,
-                    ProjectManager = p.ProjectManager,
-                },
-                Tasks = p.Tasks.Select(t => new TicketViewModel
-                {
-                    Guid = t.Guid,
-                    TicketStatus = t.TicketStatus,
-                    CreationDate = t.CreationDate,
-                }).ToList()
+                    ProjectManagerName = $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}",
+                    TicketCount = p.Tasks.Count,
+
+                    CurrentTicketGuid = currentTicket?.Guid,
+                    CurrentTicketDescription = currentTicket?.Description,
+                    CurrentTicketStatus = currentTicket?.TicketStatus
+                };
             }).ToList();
 
             return View(viewModels);
+        }
+
+         
+
+        public async Task<IActionResult> Detail(Guid? guid)
+        {
+            var project = await _context.Projects
+                .Include(p => p.ProjectManager)
+                .Include(p => p.Tasks)
+                .FirstOrDefaultAsync(m => m.Guid == guid);
+
+            if (project == null) return NotFound();
+
+            var viewModel = new ProjectDetailsViewModel
+            {
+                Guid = project.Guid,
+                Name = project.Name,
+                Description = project.Description,
+                Status = project.Status,
+                ProjectManagerName = $"{project.ProjectManager.FirstName} {project.ProjectManager.LastName}",
+                CompletionTarget = project.CompletionTarget,
+                Tasks = project.Tasks.Select(t => new ProjectDetailsViewModel.ProjectTicketInfo
+                {
+                    Guid = t.Guid,
+                    Description = t.Description,
+                    TicketStatus = t.TicketStatus
+                }).ToList()
+            };
+
+            return View(viewModel);
         }
 
         [HttpGet]

@@ -1,4 +1,8 @@
 ﻿@model IT_Project2526.ViewModels.CustomerDetailViewModel
+@using System.Linq
+@using IT_Project2526
+@using IT_Project2526.Models;
+@using IT_Project2526.ViewModels;
 
 @{
     ViewData["Title"] = "Details Customer: " + Model.Name;
@@ -36,6 +40,7 @@
                 <th>Project Name</th>
                 <th>Status</th>
                 <th>Project Manager</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>

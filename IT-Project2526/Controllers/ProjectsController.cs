@@ -69,12 +69,12 @@ namespace IT_Project2526.Controllers
 
          
 
-        public async Task<IActionResult> Detail(Guid? guid)
+        public async Task<IActionResult> Detail(Guid? id)
         {
             var project = await _context.Projects
                 .Include(p => p.ProjectManager)
                 .Include(p => p.Tasks)
-                .FirstOrDefaultAsync(m => m.Guid == guid);
+                .FirstOrDefaultAsync(m => m.Guid == id);
 
             if (project == null) return NotFound();
 

@@ -1,5 +1,6 @@
 @model List<IT_Project2526.ViewModels.ProjectTicketViewModel>
 @using System.Linq
+@using IT_Project2526
 @using IT_Project2526.Models;
 @using IT_Project2526.ViewModels;
 @{
@@ -36,8 +37,34 @@
                                 <td>
                                     @ticket.Guid
                                 </td>
-                                <td>
-                                    @ticket.TicketStatus
+                                    @{
+                                        var status = ticket.TicketStatus;
+                                        var cssClass = "";
+
+                                        switch (status)
+                                        {
+                                            case Status.Pending:
+                                                cssClass = "status-pending";
+                                                break;
+                                            case Status.Rejected:
+                                                cssClass = "status-rejected";
+                                                break;
+                                            case Status.Assigned:
+                                                cssClass = "status-assigned";
+                                                break;
+                                            case Status.InProgress:
+                                                cssClass = "status-inProgress";
+                                                break;
+                                            case Status.Completed:
+                                                cssClass = "status-completed";
+                                                break;
+                                            case Status.Failed:
+                                                cssClass = "status-completed";
+                                                break;
+                                        }
+                                    }
+                                <td class="status-badge @cssClass">
+                                    @status.ToString()
                                 </td>
                             </tr>
                         }

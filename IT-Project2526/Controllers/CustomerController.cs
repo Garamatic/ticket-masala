@@ -56,7 +56,8 @@ namespace IT_Project2526.Controllers
             var viewModel = new CustomerDetailViewModel
             {
                 Id = customer.Id,
-                Name = customer.Name,
+                FirstName = customer.FirstName,
+                LastName= customer.LastName,
                 Email = customer.Email,
                 Phone = customer.Phone, // Telefoonnummer zit in de Identity basisklasse
                 Code = customer.Code,

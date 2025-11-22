@@ -1,4 +1,8 @@
 ﻿@model IT_Project2526.ViewModels.CustomerDetailViewModel
+@using System.Linq
+@using IT_Project2526
+@using IT_Project2526.Models;
+@using IT_Project2526.ViewModels;
 
 @{
     ViewData["Title"] = "Details Customer: " + Model.FirstName + " " + Model.LastName;
@@ -35,6 +39,7 @@
                 <th>Project Name</th>
                 <th>Status</th>
                 <th>Project Manager</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
@@ -42,8 +47,15 @@
             {
                 <tr>
                     <td>@project.Name</td>
-                    <td>@project.Status</td>
+                    <td>
+                        <status-badge status="@project.Status"></status-badge>
+                    </td>
                     <td>@project.ProjectManagerName</td>
+                    <td>
+                        <a asp-asp-controller="Projects" asp-action="Detail" asp-route-id="@project.Guid" class="btn btn-info btn-sm">
+                            View Project
+                        </a>
+                    </td>
                 </tr>
             }
         </tbody>

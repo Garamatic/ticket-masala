@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Details Customer: " + Model.Name;
+    var projects = Model?.Projects;
 }
 
 <h1>@ViewData["Title"]</h1>
@@ -24,7 +25,7 @@
 
 <h3>Projects</h3>
 
-@if (Model.Projects.Any())
+@if (projects != null && projects.Any())
 {
     <table class="table">
         <thead>
@@ -35,12 +36,12 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var project in Model.Projects)
+            @foreach (var project in projects)
             {
                 <tr>
                     <td>@project.Name</td>
                     <td>@project.Status</td>
-                    <td>@project.ProjectManager.Name</td>
+                    <td>@(project.ProjectManager?.Name ?? "Unassigned")</td>
                 </tr>
             }
         </tbody>

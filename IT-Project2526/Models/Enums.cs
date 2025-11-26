@@ -1,4 +1,4 @@
-﻿namespace IT_Project2526
+﻿namespace IT_Project2526.Models
 {
     public enum Status
     {

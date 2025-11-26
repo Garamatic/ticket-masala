@@ -19,7 +19,7 @@
         <div class="project-container">
             @*ProjectDetails*@
             <h3>Project: @item.ProjectDetails.Name</h3>
-            <p>Project Manager: @item.ProjectDetails.ProjectManager.FirstName @item.ProjectDetails.ProjectManager.LastName</p>
+            <p>Project Manager: @(item.ProjectDetails.ProjectManager != null ? item.ProjectDetails.ProjectManager.Name : "Unassigned")</p>
             @if (item.Tasks != null && item.Tasks.Any())
             {
                 <table class="project-table">
@@ -37,7 +37,7 @@
                                     @ticket.Guid
                                 </td>
                                 <td>
-                                    @ticket.TicketStatus
+                                    @ticket.Status
                                 </td>
                             </tr>
                         }
@@ -54,5 +54,5 @@
 }
 else
 {
-    <p>No Projects Avaidable.</p>
+    <p>No Projects Available.</p>
 }

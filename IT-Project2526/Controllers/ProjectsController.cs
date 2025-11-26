@@ -54,8 +54,11 @@ namespace IT_Project2526.Controllers
                 Tasks = p.Tasks.Select(t => new TicketViewModel
                 {
                     Guid = t.Guid,
-                    TicketStatus = t.TicketStatus,
-                    CreationDate = t.CreationDate,
+                    Description = t.Description,
+                    Status = t.TicketStatus.ToString(),
+                    ResponsibleName = t.Responsible?.Name,
+                    CommentsCount = t.Comments?.Count ?? 0,
+                    CompletionTarget = t.CompletionTarget
                 }).ToList()
             }).ToList();
 

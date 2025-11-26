@@ -1,9 +1,8 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
-using IT_Project2526.Models;
-using IT_Project2526;
-using Microsoft.AspNetCore.Authorization;
 using IT_Project2526.Managers;
+using IT_Project2526.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace IT_Project2526
 {
@@ -77,6 +76,7 @@ namespace IT_Project2526
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+            builder.Services.AddRazorPages(); // keep Razor Pages for Identity UI
 
             var app = builder.Build();
 

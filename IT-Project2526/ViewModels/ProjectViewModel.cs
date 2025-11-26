@@ -1,13 +1,18 @@
 ﻿using IT_Project2526.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace IT_Project2526.ViewModels
 {
     public class ProjectViewModel
     {
-       public string Name { get; set; }
-       public string Description { get; set; }
-       public Status Status { get; set; }
-       public Employee ProjectManager {  get; set; }
+       [Required]
+       public Guid Guid { get; init; }
+       [Required, StringLength(200)]
+       public string Name { get; init; } = string.Empty;
+       [StringLength(2000)]
+       public string Description { get; init; } = string.Empty;
+       public Status Status { get; init; }
+       public Employee ProjectManager {  get; init; }
 
     }
 }

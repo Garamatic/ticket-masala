@@ -16,11 +16,10 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var customer in Model)
+        @foreach (var customer in Model ?? new List<IT_Project2526.ViewModels.CustomerListViewModel>())
         {
             <tr>
-                <td>@customer.FirstName</td>
-                <td>@customer.LastName</td>
+                <td>@(string.Concat(customer.FirstName, " ", customer.LastName).Trim())</td>
                 <td>@customer.Email</td>
                 <td>@customer.ProjectCount</td>
                 <td>

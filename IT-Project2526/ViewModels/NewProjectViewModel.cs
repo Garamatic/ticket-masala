@@ -10,6 +10,10 @@ namespace IT_Project2526.ViewModels
         public string Name { get; set; }
         [Required]
         public string Description { get; set; }
+        // Optional creation date and type for binding from the view
+        public DateTime? CreationDate { get; set; }
+        public string? ProjectType { get; set; }
+        public string? ProjectComment { get; set; }
         // De projectmanager wordt meestal ingelogd (of uit een lijst gehaald)
         // en hoeft hier niet in de ViewModel te staan, tenzij de user deze moet kunnen kiezen.
 

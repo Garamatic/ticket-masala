@@ -31,8 +31,8 @@ namespace IT_Project2526.Controllers
                                                    Id = c.Id,
                                                    FirstName = c.FirstName,
                                                    LastName = c.LastName,
-                                                   Email = c.Email ?? string.Empty, // Null-coalescing operator toegevoegd
-                                                   ProjectCount = c.Projects.Count() // Aantal projecten tellen
+                                                   Email = c.Email ?? string.Empty,
+                                                   ProjectCount = c.Projects.Count()
                                                })
                                                .ToListAsync();
 
@@ -58,21 +58,32 @@ namespace IT_Project2526.Controllers
             {
                 var viewModel = await _context.Customers
                                               .AsNoTracking()
+                                              .Include(c => c.Projects)
+                                                  .ThenInclude(p => p.ProjectManager)
                                               .Where(c => c.Id == id)
                                               .Select(customer => new CustomerDetailViewModel
                                               {
                                                   Id = customer.Id,
                                                   Name = customer.Name,
-                                                  Email = customer.Email ?? string.Empty,  // Null-coalescing operator toegevoegd
-                                                  Phone = customer.Phone ?? string.Empty, // Null-coalescing operator toegevoegd
-                                                  Code = customer.Code ?? string.Empty,   // Null-coalescing operator toegevoegd
+                                                  Email = customer.Email ?? string.Empty,
+                                                  Phone = customer.Phone ?? string.Empty,
+                                                  Code = customer.Code ?? string.Empty,
                                                   Projects = customer.Projects
                                                                     .Select(p => new ProjectViewModel
                                                                     {
+                                                                        Guid = p.Guid,
                                                                         Name = p.Name,
                                                                         Description = p.Description,
                                                                         Status = p.Status,
-                                                                        ProjectManager = p.ProjectManager
+                                                                        ProjectManagerName = p.ProjectManager != null 
+                                                                            ? $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}"
+                                                                            : "Unassigned",
+                                                                        ProjectManager = new { 
+                                                                            Name = p.ProjectManager != null 
+                                                                                ? $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}"
+                                                                                : "Unassigned"
+                                                                        },
+                                                                        TicketCount = p.Tasks.Count
                                                                     })
                                                                     .ToList()
                                               })

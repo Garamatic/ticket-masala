@@ -21,7 +21,7 @@
         {
             <tr>
                 <td>@p.ProjectDetails.Name</td>
-                <td>@(p.ProjectDetails.ProjectManager?.Name ?? "Unassigned")</td>
+                <td>@(p.ProjectDetails.ProjectManagerName ?? "Unassigned")</td>
                 <td>@p.ProjectDetails.Status</td>
                 <td>@p.Tasks.Count()</td>
                 <td>

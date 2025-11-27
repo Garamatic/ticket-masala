@@ -32,7 +32,7 @@
 
 <h3>Projects</h3>
 
-@if (projects != null && projects.Any())
+@if (Model.Projects != null && Model.Projects.Any())
 {
     <table class="table">
         <thead>
@@ -44,7 +44,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var project in projects)
+            @foreach (var project in Model.Projects)
             {
                 <tr>
                     <td>@project.Name</td>

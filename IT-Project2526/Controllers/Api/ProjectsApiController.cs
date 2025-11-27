@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using IT_Project2526.Services;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using IT_Project2526.ViewModels;
 using IT_Project2526.Utilities;
 using IT_Project2526.Models;
@@ -17,14 +18,17 @@ namespace IT_Project2526.Controllers.Api
     [Produces("application/json")]
     public class ProjectsApiController : ControllerBase
     {
-        private readonly IProjectService _projectService;
+        private readonly ITProjectDB _context;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<ProjectsApiController> _logger;
 
         public ProjectsApiController(
-            IProjectService projectService,
+            ITProjectDB context,
+            UserManager<ApplicationUser> userManager,
             ILogger<ProjectsApiController> logger)
         {
-            _projectService = projectService;
+            _context = context;
+            _userManager = userManager;
             _logger = logger;
         }
 
@@ -44,7 +48,46 @@ namespace IT_Project2526.Controllers.Api
             try
             {
                 _logger.LogInformation("API: Getting all projects");
-                var projects = await _projectService.GetAllProjectsAsync();
+                
+                var projects = await _context.Projects
+                    .AsNoTracking()
+                    .Include(p => p.Tasks)
+                        .ThenInclude(t => t.Responsible)
+                    .Include(p => p.Tasks)
+                        .ThenInclude(t => t.Customer)
+                    .Include(p => p.Customer)
+                    .Include(p => p.ProjectManager)
+                    .Where(p => p.ValidUntil == null)
+                    .Select(p => new ProjectTicketViewModel
+                    {
+                        ProjectDetails = new ProjectViewModel
+                        {
+                            Guid = p.Guid,
+                            Name = p.Name,
+                            Description = p.Description,
+                            Status = p.Status,
+                            ProjectManagerName = p.ProjectManager != null 
+                                ? $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}" 
+                                : "Not Assigned",
+                            TicketCount = p.Tasks.Count
+                        },
+                        Tasks = p.Tasks.Select(t => new TicketViewModel
+                        {
+                            Guid = t.Guid,
+                            Description = t.Description,
+                            TicketStatus = t.TicketStatus,
+                            ResponsibleName = t.Responsible != null 
+                                ? $"{t.Responsible.FirstName} {t.Responsible.LastName}" 
+                                : "Not Assigned",
+                            CustomerName = t.Customer != null
+                                ? $"{t.Customer.FirstName} {t.Customer.LastName}"
+                                : "Unknown",
+                            CompletionTarget = t.CompletionTarget,
+                            CreationDate = DateTime.UtcNow
+                        }).ToList()
+                    })
+                    .ToListAsync();
+
                 return Ok(ApiResponse<IEnumerable<ProjectTicketViewModel>>.SuccessResponse(
                     projects, 
                     $"Retrieved {projects.Count()} projects"));
@@ -71,7 +114,16 @@ namespace IT_Project2526.Controllers.Api
         {
             try
             {
-                var project = await _projectService.GetProjectByIdAsync(id);
+                var project = await _context.Projects
+                    .AsNoTracking()
+                    .Include(p => p.Tasks)
+                        .ThenInclude(t => t.Responsible)
+                    .Include(p => p.Tasks)
+                        .ThenInclude(t => t.Customer)
+                    .Include(p => p.Customer)
+                    .Include(p => p.ProjectManager)
+                    .Where(p => p.Guid == id && p.ValidUntil == null)
+                    .FirstOrDefaultAsync();
                 
                 if (project == null)
                 {
@@ -80,7 +132,36 @@ namespace IT_Project2526.Controllers.Api
                         $"Project with ID {id} not found"));
                 }
 
-                return Ok(ApiResponse<ProjectTicketViewModel>.SuccessResponse(project));
+                var viewModel = new ProjectTicketViewModel
+                {
+                    ProjectDetails = new ProjectViewModel
+                    {
+                        Guid = project.Guid,
+                        Name = project.Name,
+                        Description = project.Description,
+                        Status = project.Status,
+                        ProjectManagerName = project.ProjectManager != null 
+                            ? $"{project.ProjectManager.FirstName} {project.ProjectManager.LastName}" 
+                            : "Not Assigned",
+                        TicketCount = project.Tasks.Count
+                    },
+                    Tasks = project.Tasks.Select(t => new TicketViewModel
+                    {
+                        Guid = t.Guid,
+                        Description = t.Description,
+                        TicketStatus = t.TicketStatus,
+                        ResponsibleName = t.Responsible != null 
+                            ? $"{t.Responsible.FirstName} {t.Responsible.LastName}" 
+                            : "Not Assigned",
+                        CustomerName = t.Customer != null
+                            ? $"{t.Customer.FirstName} {t.Customer.LastName}"
+                            : "Unknown",
+                        CompletionTarget = t.CompletionTarget,
+                        CreationDate = DateTime.UtcNow
+                    }).ToList()
+                };
+
+                return Ok(ApiResponse<ProjectTicketViewModel>.SuccessResponse(viewModel));
             }
             catch (Exception ex)
             {
@@ -101,7 +182,45 @@ namespace IT_Project2526.Controllers.Api
         {
             try
             {
-                var projects = await _projectService.GetCustomerProjectsAsync(customerId);
+                var projects = await _context.Projects
+                    .AsNoTracking()
+                    .Include(p => p.Tasks)
+                        .ThenInclude(t => t.Responsible)
+                    .Include(p => p.Tasks)
+                        .ThenInclude(t => t.Customer)
+                    .Include(p => p.Customer)
+                    .Include(p => p.ProjectManager)
+                    .Where(p => p.CustomerId == customerId && p.ValidUntil == null)
+                    .Select(p => new ProjectTicketViewModel
+                    {
+                        ProjectDetails = new ProjectViewModel
+                        {
+                            Guid = p.Guid,
+                            Name = p.Name,
+                            Description = p.Description,
+                            Status = p.Status,
+                            ProjectManagerName = p.ProjectManager != null 
+                                ? $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}" 
+                                : "Not Assigned",
+                            TicketCount = p.Tasks.Count
+                        },
+                        Tasks = p.Tasks.Select(t => new TicketViewModel
+                        {
+                            Guid = t.Guid,
+                            Description = t.Description,
+                            TicketStatus = t.TicketStatus,
+                            ResponsibleName = t.Responsible != null 
+                                ? $"{t.Responsible.FirstName} {t.Responsible.LastName}" 
+                                : "Not Assigned",
+                            CustomerName = t.Customer != null
+                                ? $"{t.Customer.FirstName} {t.Customer.LastName}"
+                                : "Unknown",
+                            CompletionTarget = t.CompletionTarget,
+                            CreationDate = DateTime.UtcNow
+                        }).ToList()
+                    })
+                    .ToListAsync();
+
                 return Ok(ApiResponse<IEnumerable<ProjectTicketViewModel>>.SuccessResponse(
                     projects,
                     $"Retrieved {projects.Count()} projects for customer {customerId}"));
@@ -125,7 +244,46 @@ namespace IT_Project2526.Controllers.Api
         {
             try
             {
-                var projects = await _projectService.SearchProjectsAsync(query);
+                var projects = await _context.Projects
+                    .AsNoTracking()
+                    .Include(p => p.Tasks)
+                        .ThenInclude(t => t.Responsible)
+                    .Include(p => p.Tasks)
+                        .ThenInclude(t => t.Customer)
+                    .Include(p => p.Customer)
+                    .Include(p => p.ProjectManager)
+                    .Where(p => p.ValidUntil == null && 
+                               (p.Name.Contains(query) || p.Description.Contains(query)))
+                    .Select(p => new ProjectTicketViewModel
+                    {
+                        ProjectDetails = new ProjectViewModel
+                        {
+                            Guid = p.Guid,
+                            Name = p.Name,
+                            Description = p.Description,
+                            Status = p.Status,
+                            ProjectManagerName = p.ProjectManager != null 
+                                ? $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}" 
+                                : "Not Assigned",
+                            TicketCount = p.Tasks.Count
+                        },
+                        Tasks = p.Tasks.Select(t => new TicketViewModel
+                        {
+                            Guid = t.Guid,
+                            Description = t.Description,
+                            TicketStatus = t.TicketStatus,
+                            ResponsibleName = t.Responsible != null 
+                                ? $"{t.Responsible.FirstName} {t.Responsible.LastName}" 
+                                : "Not Assigned",
+                            CustomerName = t.Customer != null
+                                ? $"{t.Customer.FirstName} {t.Customer.LastName}"
+                                : "Unknown",
+                            CompletionTarget = t.CompletionTarget,
+                            CreationDate = DateTime.UtcNow
+                        }).ToList()
+                    })
+                    .ToListAsync();
+
                 return Ok(ApiResponse<IEnumerable<ProjectTicketViewModel>>.SuccessResponse(
                     projects,
                     $"Found {projects.Count()} projects matching '{query}'"));
@@ -144,18 +302,33 @@ namespace IT_Project2526.Controllers.Api
         /// <param name="customerId">The customer ID</param>
         /// <returns>Project statistics for the customer</returns>
         [HttpGet("statistics/{customerId}")]
-        [ProducesResponseType(typeof(ApiResponse<Repositories.ProjectStatistics>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<ApiResponse<Repositories.ProjectStatistics>>> GetStatistics(string customerId)
+        [ProducesResponseType(typeof(ApiResponse<ProjectStatistics>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<ProjectStatistics>>> GetStatistics(string customerId)
         {
             try
             {
-                var stats = await _projectService.GetCustomerStatisticsAsync(customerId);
-                return Ok(ApiResponse<Repositories.ProjectStatistics>.SuccessResponse(stats));
+                var projects = await _context.Projects
+                    .AsNoTracking()
+                    .Include(p => p.Tasks)
+                    .Where(p => p.CustomerId == customerId && p.ValidUntil == null)
+                    .ToListAsync();
+
+                var stats = new ProjectStatistics
+                {
+                    TotalProjects = projects.Count,
+                    ActiveProjects = projects.Count(p => p.Status == Status.InProgress),
+                    CompletedProjects = projects.Count(p => p.Status == Status.Completed),
+                    PendingProjects = projects.Count(p => p.Status == Status.Pending),
+                    TotalTasks = projects.Sum(p => p.Tasks.Count),
+                    CompletedTasks = projects.Sum(p => p.Tasks.Count(t => t.TicketStatus == Status.Completed))
+                };
+
+                return Ok(ApiResponse<ProjectStatistics>.SuccessResponse(stats));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "API: Error getting statistics for customer {CustomerId}", customerId);
-                return StatusCode(500, ApiResponse<Repositories.ProjectStatistics>.ErrorResponse(
+                return StatusCode(500, ApiResponse<ProjectStatistics>.ErrorResponse(
                     "An error occurred while retrieving statistics"));
             }
         }
@@ -187,14 +360,51 @@ namespace IT_Project2526.Controllers.Api
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
                     ?? throw new UnauthorizedAccessException("User ID not found");
 
-                var projectId = await _projectService.CreateProjectAsync(model, userId);
+                Customer? customer;
 
-                _logger.LogInformation("API: Project created {ProjectId}", projectId);
+                if (model.IsNewCustomer)
+                {
+                    customer = new Customer
+                    {
+                        FirstName = model.NewCustomerFirstName ?? string.Empty,
+                        LastName = model.NewCustomerLastName ?? string.Empty,
+                        Email = model.NewCustomerEmail,
+                        Phone = model.NewCustomerPhone,
+                        Code = Guid.NewGuid().ToString().Substring(0, 8).ToUpper(),
+                        UserName = model.NewCustomerEmail
+                    };
+                    
+                    await _userManager.CreateAsync(customer);
+                    await _userManager.AddToRoleAsync(customer, Constants.RoleCustomer);
+                }
+                else
+                {
+                    customer = await _context.Customers.FirstOrDefaultAsync(c => c.Id == model.SelectedCustomerId);
+                    if (customer == null)
+                    {
+                        return BadRequest(ApiResponse<Guid>.ErrorResponse("Selected customer not found"));
+                    }
+                }
+
+                var project = new Project
+                {
+                    Name = model.Name,
+                    Description = model.Description,
+                    Status = Status.Pending,
+                    Customer = customer,
+                    CompletionTarget = model.CreationDate,
+                    CreatorGuid = Guid.Parse(userId)
+                };
+
+                _context.Projects.Add(project);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("API: Project created {ProjectId}", project.Guid);
 
                 return CreatedAtAction(
                     nameof(GetById),
-                    new { id = projectId },
-                    ApiResponse<Guid>.SuccessResponse(projectId, "Project created successfully"));
+                    new { id = project.Guid },
+                    ApiResponse<Guid>.SuccessResponse(project.Guid, "Project created successfully"));
             }
             catch (Exception ex)
             {
@@ -217,16 +427,24 @@ namespace IT_Project2526.Controllers.Api
         {
             try
             {
-                await _projectService.UpdateProjectStatusAsync(id, status);
+                var project = await _context.Projects.FirstOrDefaultAsync(p => p.Guid == id && p.ValidUntil == null);
+                
+                if (project == null)
+                {
+                    return NotFound(ApiResponse<string>.ErrorResponse($"Project {id} not found"));
+                }
+
+                project.Status = status;
+                if (status == Status.Completed)
+                {
+                    project.CompletionDate = DateTime.UtcNow;
+                }
+
+                await _context.SaveChangesAsync();
 
                 return Ok(ApiResponse<string>.SuccessResponse(
                     status.ToString(),
                     $"Project status updated to {status}"));
-            }
-            catch (InvalidOperationException ex)
-            {
-                _logger.LogWarning(ex, "API: Project {ProjectId} not found", id);
-                return NotFound(ApiResponse<string>.ErrorResponse(ex.Message));
             }
             catch (Exception ex)
             {
@@ -249,15 +467,24 @@ namespace IT_Project2526.Controllers.Api
         {
             try
             {
-                await _projectService.AssignProjectManagerAsync(id, managerId);
+                var project = await _context.Projects.FirstOrDefaultAsync(p => p.Guid == id && p.ValidUntil == null);
+                if (project == null)
+                {
+                    return NotFound(ApiResponse<string>.ErrorResponse($"Project {id} not found"));
+                }
+
+                var manager = await _userManager.FindByIdAsync(managerId) as Employee;
+                if (manager == null)
+                {
+                    return NotFound(ApiResponse<string>.ErrorResponse($"Manager {managerId} not found"));
+                }
+
+                project.ProjectManager = manager;
+                await _context.SaveChangesAsync();
 
                 return Ok(ApiResponse<string>.SuccessResponse(
                     managerId,
                     "Project manager assigned successfully"));
-            }
-            catch (InvalidOperationException ex)
-            {
-                return NotFound(ApiResponse<string>.ErrorResponse(ex.Message));
             }
             catch (Exception ex)
             {
@@ -279,7 +506,12 @@ namespace IT_Project2526.Controllers.Api
         {
             try
             {
-                await _projectService.DeleteProjectAsync(id);
+                var project = await _context.Projects.FirstOrDefaultAsync(p => p.Guid == id);
+                if (project != null)
+                {
+                    project.ValidUntil = DateTime.UtcNow;
+                    await _context.SaveChangesAsync();
+                }
 
                 return Ok(ApiResponse<string>.SuccessResponse(
                     id.ToString(),
@@ -332,5 +564,18 @@ namespace IT_Project2526.Controllers.Api
                 Errors = errors
             };
         }
+    }
+
+    /// <summary>
+    /// Project statistics model
+    /// </summary>
+    public class ProjectStatistics
+    {
+        public int TotalProjects { get; set; }
+        public int ActiveProjects { get; set; }
+        public int CompletedProjects { get; set; }
+        public int PendingProjects { get; set; }
+        public int TotalTasks { get; set; }
+        public int CompletedTasks { get; set; }
     }
 }

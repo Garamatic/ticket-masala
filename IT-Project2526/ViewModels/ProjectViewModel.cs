@@ -17,7 +17,7 @@ namespace IT_Project2526.ViewModels
         public class ProjectTicketInfo
         {
             public Guid Guid { get; set; }
-            public string Description { get; set; }
+            public string Description { get; set; } = string.Empty;
             public Status TicketStatus { get; set; }
         }
     }

@@ -6,6 +6,9 @@ namespace IT_Project2526.ViewModels
 {
     public class NewProject
     {
+        [Display(Name = "Project")]
+        public Guid Guid { get; set; }
+        
         // Projectvelden
         [Required(ErrorMessage = "Project name is required")]
         [StringLength(200, MinimumLength = 3, ErrorMessage = "Project name must be between 3 and 200 characters")]

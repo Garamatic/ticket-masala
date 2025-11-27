@@ -28,6 +28,38 @@ namespace IT_Project2526.Controllers
            }*/
         }
 
+        public async Task<IActionResult> Index()
+        {
+            try
+            {
+                var tickets = await _context.Tickets
+                    .AsNoTracking()
+                    .Include(t => t.Customer)
+                    .Include(t => t.Responsible)
+                    .Select(t => new TicketViewModel
+                    {
+                        Guid = t.Guid,
+                        Description = t.Description,
+                        TicketStatus = t.TicketStatus,
+                        CreationDate = t.CreationDate,
+                        CompletionTarget = t.CompletionTarget,
+                        ResponsibleName = t.Responsible != null
+                            ? $"{t.Responsible.FirstName} {t.Responsible.LastName}"
+                            : "Not Assigned",
+                        CustomerName = t.Customer != null
+                            ? $"{t.Customer.FirstName} {t.Customer.LastName}"
+                            : "Unknown"
+                    })
+                    .ToListAsync();
+
+                return View(tickets);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500);
+            }
+        }
+
         public async Task<IActionResult> Detail(Guid? id)
         {
             if (id == null)

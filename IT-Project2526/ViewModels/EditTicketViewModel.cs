@@ -11,7 +11,7 @@ namespace IT_Project2526.ViewModels
         public Guid Guid { get; set; }
 
         [Required(ErrorMessage = "Description is required")]
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         [Display(Name = "Current Status")]
         public Status TicketStatus { get; set; }

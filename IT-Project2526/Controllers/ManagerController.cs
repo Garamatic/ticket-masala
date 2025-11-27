@@ -28,6 +28,7 @@ namespace IT_Project2526.Controllers
                 var projects = _context.Projects
                     .Include(p => p.Tasks)
                     .Include(p => p.ProjectManager)
+                    .Include(p => p.Tasks).ThenInclude(t => t.Responsible)
                     .Where(p => p.ValidUntil == null)
                     .ToList();
 
@@ -39,16 +40,28 @@ namespace IT_Project2526.Controllers
                         Name = p.Name,
                         Description = p.Description,
                         Status = p.Status,
-                        ProjectManager = p.ProjectManager
+                        ProjectManagerName = p.ProjectManager != null 
+                            ? $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}"
+                            : "Unassigned",
+                        ProjectManager = new { 
+                            Name = p.ProjectManager != null 
+                                ? $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}"
+                                : "Unassigned"
+                        },
+                        TicketCount = p.Tasks.Count
                     },
                     Tasks = p.Tasks.Select(t => new TicketViewModel
                     {
                         Guid = t.Guid,
                         Description = t.Description,
-                        Status = t.TicketStatus.ToString(),
-                        ResponsibleName = t.Responsible?.Name,
-                        CommentsCount = t.Comments?.Count ?? 0,
-                        CompletionTarget = t.CompletionTarget
+                        TicketStatus = t.TicketStatus,
+                        ResponsibleName = t.Responsible != null 
+                            ? $"{t.Responsible.FirstName} {t.Responsible.LastName}"
+                            : "Unassigned",
+                        CustomerName = string.Empty,
+                        Comments = t.Comments?.ToList() ?? new List<string>(),
+                        CompletionTarget = t.CompletionTarget,
+                        CreationDate = DateTime.UtcNow
                     }).ToList()
                 }).ToList();
 

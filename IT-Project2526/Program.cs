@@ -1,8 +1,6 @@
 using IT_Project2526;
 using IT_Project2526.Managers;
 using IT_Project2526.Models;
-using IT_Project2526.Services;
-using IT_Project2526.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -46,18 +44,8 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     .AddDefaultTokenProviders()
     .AddDefaultUI(); //for identity pages
 
-// Register Managers
+// Register Managers (if needed in future)
 builder.Services.AddScoped<ApplicationUserManager>();
-
-// Register Repositories
-builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
-builder.Services.AddScoped<ITicketRepository, TicketRepository>();
-
-// Register Services
-builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<IProjectService, ProjectService>();
-builder.Services.AddScoped<ITicketService, TicketService>();
 
 // Add Memory Cache
 builder.Services.AddMemoryCache();

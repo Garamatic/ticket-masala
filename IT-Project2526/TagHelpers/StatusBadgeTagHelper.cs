@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Razor.TagHelpers;
+using IT_Project2526.Models;
 
 namespace IT_Project2526.TagHelpers
 {

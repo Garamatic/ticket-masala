@@ -5,7 +5,7 @@ namespace IT_Project2526.ViewModels
 {
     public class ProjectTicketViewModel
     {
-        public ProjectViewModel ProjectDetails { get; set; }
+        public ProjectViewModel ProjectDetails { get; set; } = new ProjectViewModel();
         public IReadOnlyList<TicketViewModel> Tasks { get; set; } = Array.Empty<TicketViewModel>();
     }
 }

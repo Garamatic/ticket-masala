@@ -1,10 +1,13 @@
 ﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using IT_Project2526.ViewModels;
+using IT_Project2526.Utilities;
 
 namespace IT_Project2526.Controllers
 {
+    [Authorize(Roles = Constants.RoleEmployee + "," + Constants.RoleAdmin)]
     public class CustomerController : Controller
     {
         private readonly ITProjectDB _context;
@@ -28,7 +31,7 @@ namespace IT_Project2526.Controllers
                                                    Id = c.Id,
                                                    FirstName = c.FirstName,
                                                    LastName = c.LastName,
-                                                   Email = c.Email,
+                                                   Email = c.Email ?? string.Empty, // Null-coalescing operator toegevoegd
                                                    ProjectCount = c.Projects.Count() // Aantal projecten tellen
                                                })
                                                .ToListAsync();
@@ -60,9 +63,9 @@ namespace IT_Project2526.Controllers
                                               {
                                                   Id = customer.Id,
                                                   Name = customer.Name,
-                                                  Email = customer.Email,
-                                                  Phone = customer.Phone, // Telefoonnummer zit in de Identity basisklasse
-                                                  Code = customer.Code,
+                                                  Email = customer.Email ?? string.Empty,  // Null-coalescing operator toegevoegd
+                                                  Phone = customer.Phone ?? string.Empty, // Null-coalescing operator toegevoegd
+                                                  Code = customer.Code ?? string.Empty,   // Null-coalescing operator toegevoegd
                                                   Projects = customer.Projects
                                                                     .Select(p => new ProjectViewModel
                                                                     {

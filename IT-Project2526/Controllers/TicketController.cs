@@ -3,6 +3,8 @@ using IT_Project2526.Models;
 using IT_Project2526.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
 namespace IT_Project2526.Controllers
 {
@@ -94,7 +96,9 @@ namespace IT_Project2526.Controllers
                 ResponsibleName = ticket.Responsible != null
                                     ? $"{ticket.Responsible.FirstName} {ticket.Responsible.LastName}"
                                     : "Not Assigned",
-                CustomerName = $"{ticket.Customer.FirstName} {ticket.Customer.LastName}",
+                CustomerName = ticket.Customer != null
+                                    ? $"{ticket.Customer.FirstName} {ticket.Customer.LastName}"
+                                    : "Unknown",
 
                 ParentTicketGuid = ticket.ParentTicket?.Guid,
 

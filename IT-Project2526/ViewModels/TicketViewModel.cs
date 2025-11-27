@@ -9,6 +9,7 @@ namespace IT_Project2526.ViewModels
     {
         public Guid Guid { get; set; }
         public Status TicketStatus { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         // Add string Status property for backward compatibility with views
         public string Status => TicketStatus.ToString();

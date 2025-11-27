@@ -78,11 +78,7 @@ namespace IT_Project2526.Controllers
                                                                         ProjectManagerName = p.ProjectManager != null 
                                                                             ? $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}"
                                                                             : "Unassigned",
-                                                                        ProjectManager = new { 
-                                                                            Name = p.ProjectManager != null 
-                                                                                ? $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}"
-                                                                                : "Unassigned"
-                                                                        },
+                                                                        ProjectManager = p.ProjectManager,
                                                                         TicketCount = p.Tasks.Count
                                                                     })
                                                                     .ToList()

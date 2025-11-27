@@ -58,16 +58,9 @@ namespace IT_Project2526.Controllers
         }
 
         [HttpGet]
-        public IActionResult NewProject()
+        public async Task<IActionResult> NewProject()
         {
-            var project = await _context.Projects
-                .Include(p => p.ProjectManager)
-                .Include(p => p.Tasks)
-                .FirstOrDefaultAsync(m => m.Guid == guid);
-
-            if (project == null) return NotFound();
-
-            var viewModel = new ProjectDetailsViewModel
+            try
             {
                 _logger.LogInformation("New project form requested");
                 
@@ -77,9 +70,9 @@ namespace IT_Project2526.Controllers
                     CustomerList = existingCustomers.Select(c => new SelectListItem
                     {
                         Value = c.Id.ToString(),
-                        Text = c.Name
+                        Text = c.FirstName + " " + c.LastName
                     }).ToList(),
-                    IsNewCustomer = true
+                    IsNewCustomer = false
                 };
 
                 return View(viewModel);
@@ -133,7 +126,7 @@ namespace IT_Project2526.Controllers
                             viewModel.CustomerList = _context.Customers.Select(c => new SelectListItem
                             {
                                 Value = c.Id.ToString(),
-                                Text = c.Name
+                                Text = c.FirstName + " " + c.LastName
                             }).ToList();
                             return View(viewModel);
                         }
@@ -159,7 +152,7 @@ namespace IT_Project2526.Controllers
                 viewModel.CustomerList = _context.Customers.ToList().Select(c => new SelectListItem
                 {
                     Value = c.Id.ToString(),
-                    Text = c.Name
+                    Text = c.FirstName + " " + c.LastName
                 }).ToList();
                 
                 return View(viewModel);
@@ -175,7 +168,7 @@ namespace IT_Project2526.Controllers
                 viewModel.CustomerList = _context.Customers.ToList().Select(c => new SelectListItem
                 {
                     Value = c.Id.ToString(),
-                    Text = c.Name
+                    Text = c.FirstName + " " + c.LastName
                 }).ToList();
                 
                 return View(viewModel);
@@ -272,7 +265,7 @@ namespace IT_Project2526.Controllers
                     CustomerList = _context.Customers.Select(c => new SelectListItem
                     {
                         Value = c.Id.ToString(),
-                        Text = c.Name,
+                        Text = c.FirstName + " " + c.LastName,
                         Selected = project.Customer != null && c.Id == project.Customer.Id
                     }).ToList()
                 };
@@ -305,7 +298,7 @@ namespace IT_Project2526.Controllers
                     viewModel.CustomerList = _context.Customers.Select(c => new SelectListItem
                     {
                         Value = c.Id.ToString(),
-                        Text = c.Name
+                        Text = c.FirstName + " " + c.LastName
                     }).ToList();
                     return View(viewModel);
                 }
@@ -350,7 +343,7 @@ namespace IT_Project2526.Controllers
                 viewModel.CustomerList = _context.Customers.Select(c => new SelectListItem
                 {
                     Value = c.Id.ToString(),
-                    Text = c.Name
+                    Text = c.FirstName + " " + c.LastName
                 }).ToList();
                 
                 ModelState.AddModelError(string.Empty, "An error occurred while updating the project. Please try again.");

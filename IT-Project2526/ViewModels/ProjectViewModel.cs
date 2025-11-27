@@ -13,6 +13,8 @@ namespace IT_Project2526.ViewModels
        public string Description { get; init; } = string.Empty;
        public Status Status { get; init; }
        public Employee ProjectManager {  get; init; }
+       public string ProjectManagerName { get; set; } = string.Empty;
+       public int TicketCount { get; set; }
 
         public class ProjectTicketInfo
         {

@@ -8,15 +8,27 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Repositories\**" />
+    <Compile Remove="Services\**" />
+    <Compile Remove="Tests\**" />
+    <Content Remove="Repositories\**" />
+    <Content Remove="Services\**" />
+    <Content Remove="Tests\**" />
+    <EmbeddedResource Remove="Repositories\**" />
+    <EmbeddedResource Remove="Services\**" />
+    <EmbeddedResource Remove="Tests\**" />
+    <None Remove="Repositories\**" />
+    <None Remove="Services\**" />
+    <None Remove="Tests\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Remove="wwwroot\images\logo-green.jpg" />
     <Content Remove="wwwroot\images\logo-green.png" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Migrations\" />
-    <Folder Include="Repositories\" />
-    <Folder Include="Services\" />
-    <Folder Include="Tests\Services\" />
   </ItemGroup>
 
   <ItemGroup>

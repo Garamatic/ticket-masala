@@ -51,13 +51,13 @@
             @*ProjectDetails*@
             <h3>
                 Project: 
-                <a asp-controller="Projects" asp-action="Details" asp-route-id="@item.Guid">
-                    @item.Name
+                <a asp-controller="Projects" asp-action="Details" asp-route-id="@item.ProjectDetails.Guid">
+                    @item.ProjectDetails.Name
                 </a>
             </h3>
-            <p>Project Manager: @item.ProjectManagerName</p>
-            <p>Number of Tickets: @item.TicketCount</p>
-            @if (item.CurrentTicketGuid.HasValue)
+            <p>Project Manager: @item.ProjectDetails.ProjectManagerName</p>
+            <p>Number of Tickets: @item.ProjectDetails.TicketCount</p>
+            @if (item.Tasks != null && item.Tasks.Any())
             {
                 <table class="project-table">
                     <thead>

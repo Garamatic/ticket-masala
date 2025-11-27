@@ -1,6 +1,7 @@
 ﻿@{
-    var title = ViewData["Title"] ?? "Ticket-Masala";
-    var description = ViewData["Description"] ?? "Ticket-Masala application";
+    var title = ViewData["Title"] ?? "Ticket Masala";
+    var description = ViewData["Description"] ?? "Project and Ticket Management System";
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
 }
 <!DOCTYPE html>
@@ -9,60 +10,214 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="@description" />
-    <meta name="theme-color" content="#ffffff" />
-    <title>@title - Ticket-Masala</title>
+    <meta name="theme-color" content="#4CAF50" />
+    <title>@title - Ticket Masala</title>
 
-    <environment include="Development">
-        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" asp-append-version="true" />
-    </environment>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <!-- Bundled CSS (Bootstrap + Design System + Site CSS) -->
+    <link rel="stylesheet" href="~/css/bundle.css" asp-append-version="true" />
+    
     @RenderSection("Styles", required: false)
 </head>
 <body>
-    <header>
-        <nav role="navigation" aria-label="Main navigation" class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
-                    <img class="navbar-logo" src="~/images/logo-green.png" alt="Ticket-Masala logo" />
-                </a>
-
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
-                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark @(currentAction == "Index" ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Index" aria-current="@(currentAction == "Index" ? "page" : null)">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark @(currentAction == "Privacy" ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Privacy" aria-current="@(currentAction == "Privacy" ? "page" : null)">Privacy</a>
-                        </li>
-                    </ul>
-
-                    <partial name="_LoginPartial" />
-                </div>
+    <div class="app-wrapper">
+        <!-- Sidebar Navigation -->
+        <aside class="app-sidebar" id="sidebar">
+            <div class="navbar-brand">
+                <img class="navbar-logo" src="~/images/logo-green.png" alt="Ticket Masala" />
             </div>
-        </nav>
-    </header>
+            
+            <nav class="nav-menu" aria-label="Main navigation">
+                <ul class="list-unstyled">
+                    <li class="nav-item">
+                        <a class="nav-link @(currentController == "Home" && currentAction == "Index" ? "active" : "")" 
+                           asp-controller="Home" asp-action="Index">
+                            <i class="fas fa-home nav-icon"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        @if (User.IsInRole("Employee") || User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link @(currentController == "Projects" ? "active" : "")" 
+                                   asp-controller="Projects" asp-action="Index">
+                                    <i class="fas fa-folder-open nav-icon"></i>
+                                    <span>Projects</span>
+                                </a>
+                            </li>
+                            
+                            <li class="nav-item">
+                                <a class="nav-link @(currentController == "Customer" ? "active" : "")" 
+                                   asp-controller="Customer" asp-action="Index">
+                                    <i class="fas fa-users nav-icon"></i>
+                                    <span>Customers</span>
+                                </a>
+                            </li>
+                        }
+                        
+                        <li class="nav-item">
+                            <a class="nav-link @(currentController == "Ticket" ? "active" : "")" 
+                               asp-controller="Ticket" asp-action="Index">
+                                <i class="fas fa-ticket-alt nav-icon"></i>
+                                <span>Tickets</span>
+                            </a>
+                        </li>
+                        
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link @(currentController == "Manager" ? "active" : "")" 
+                                   asp-controller="Manager" asp-action="Projects">
+                                    <i class="fas fa-chart-line nav-icon"></i>
+                                    <span>Manager View</span>
+                                </a>
+                            </li>
+                        }
+                    }
+                    
+                    <li class="nav-item mt-4">
+                        <a class="nav-link @(currentAction == "Privacy" ? "active" : "")" 
+                           asp-controller="Home" asp-action="Privacy">
+                            <i class="fas fa-shield-alt nav-icon"></i>
+                            <span>Privacy</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
 
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+        <!-- Main Content Area -->
+        <div class="app-main" id="mainContent">
+            <!-- Top Header -->
+            <header class="app-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-3">
+                        <button class="btn btn-outline-primary btn-sm" id="sidebarToggle" aria-label="Toggle sidebar">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <h1 class="h5 m-0">@title</h1>
+                    </div>
+                    
+                    <div class="d-flex align-items-center gap-3">
+                        <!-- Search (optional) -->
+                        <div class="search-box d-none d-md-block" style="max-width: 300px;">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" class="form-control" placeholder="Search..." />
+                        </div>
+                        
+                        <!-- Dark Mode Toggle -->
+                        <button id="themeToggle" class="btn btn-outline-primary btn-sm" aria-label="Toggle dark mode" title="Toggle dark/light mode">
+                            <i class="fas fa-moon" id="themeIcon"></i>
+                        </button>
+                        
+                        <!-- User Menu -->
+                        <partial name="_LoginPartial" />
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <main class="app-content page-enter" role="main">
+                @RenderBody()
+            </main>
+
+            <!-- Footer -->
+            <footer class="border-top footer text-muted p-3 bg-white">
+                <div class="container-fluid">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>&copy; @DateTime.Now.Year Ticket Masala - All rights reserved</span>
+                        <span>
+                            <a asp-controller="Home" asp-action="Privacy" class="text-muted">Privacy Policy</a>
+                        </span>
+                    </div>
+                </div>
+            </footer>
+        </div>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; @DateTime.Now.Year - IT_Project2526 - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
+    <!-- Bundled Scripts (jQuery + Bootstrap + Site.js + Toast.js) -->
+    <script src="~/js/bundle.js" asp-append-version="true"></script>
 
-    <script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true" defer></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js" asp-append-version="true" defer></script>
-    <script src="~/js/site.js" asp-append-version="true" defer></script>
+    <!-- Sidebar Toggle & Dark Mode Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sidebar Toggle
+            var sidebarToggle = document.getElementById('sidebarToggle');
+            var sidebar = document.getElementById('sidebar');
+            var mainContent = document.getElementById('mainContent');
+            
+            if (sidebarToggle && sidebar && mainContent) {
+                sidebarToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('collapsed');
+                    mainContent.classList.toggle('expanded');
+                });
+                
+                // Auto-collapse sidebar on mobile/tablet
+                if (window.innerWidth <= 1024) {
+                    sidebar.classList.add('collapsed');
+                    mainContent.classList.add('expanded');
+                }
+                
+                // Handle window resize
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth <= 1024) {
+                        sidebar.classList.add('collapsed');
+                        mainContent.classList.add('expanded');
+                    } else {
+                        sidebar.classList.remove('collapsed');
+                        mainContent.classList.remove('expanded');
+                    }
+                });
+            }
+            
+            // Dark Mode Toggle
+            var themeToggle = document.getElementById('themeToggle');
+            var themeIcon = document.getElementById('themeIcon');
+            var html = document.documentElement;
+            
+            if (themeToggle && themeIcon) {
+                // Load saved theme from localStorage
+                var savedTheme = localStorage.getItem('theme') || 'light';
+                html.setAttribute('data-theme', savedTheme);
+                updateThemeIcon(savedTheme);
+                
+                themeToggle.addEventListener('click', function() {
+                    var currentTheme = html.getAttribute('data-theme') || 'light';
+                    var newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    
+                    html.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
+                    updateThemeIcon(newTheme);
+                    
+                    // Show toast notification
+                    if (window.toast) {
+                        window.toast.info('Theme changed to ' + newTheme + ' mode');
+                    }
+                });
+                
+                function updateThemeIcon(theme) {
+                    themeIcon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+                }
+            }
+            
+            // Enable Bootstrap tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

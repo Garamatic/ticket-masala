@@ -1,60 +1,68 @@
-﻿@using IT_Project2526.Models
+﻿@model IT_Project2526.ViewModels.NewProject
+@using IT_Project2526.Models
 @using IT_Project2526.ViewModels
 @*
     For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 *@
 @{
     ViewData["Title"] = "New Project";
-    @model NewProject;
 }
 
-<h1>New Project</h1>
+<h1>@ViewData["Title"]</h1>
 
 <form asp-action="NewProject" method="post">
-    <!--Project Name + Creation Date-->
-    <div class="form-group">
-        <label asp-for="Name">Project Name:</label>
-        <input  asp-for="Name" type="text" id="ProjectName" name="ProjectName" class="form-control" />
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label">Project Name</label>
+        <input asp-for="Name" class="form-control" />
         <span asp-validation-for="Name" class="text-danger"></span>
     </div>
-    <div class="form-group">
-        <label for="CreationDate">Creation Date:</label>
-        <input type="date" id="CreationDate" name="CreationDate" />
+
+    <div class="mb-3">
+        <label asp-for="CreationDate" class="form-label">Creation Date</label>
+        <input asp-for="CreationDate" class="form-control" type="date" />
+        <span asp-validation-for="CreationDate" class="text-danger"></span>
     </div>
-    <!--Project Information-->
-    <div class="form-group">
-        <label for="ProjectType">Project Type:</label>
-        <select name="ProjectType" id="ProjectType">
-            <option value="" disabled selected>-- Select Project Type --</option>
+
+    <div class="mb-3">
+        <label asp-for="ProjectType" class="form-label">Project Type</label>
+        <select asp-for="ProjectType" class="form-select">
+            <option value="">-- Select Project Type --</option>
             <option value="FullRenovation">Full Renovation</option>
             <option value="PartialRenovation">Partial Renovation</option>
             <option value="CleanUp">Clean Up</option>
             <option value="Modified">Modified</option>
         </select>
+        <span asp-validation-for="ProjectType" class="text-danger"></span>
     </div>
-    <div class="form-group">
-        <label asp-for="Description">Project Description:</label>
+
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label">Project Description</label>
         <textarea asp-for="Description" class="form-control"></textarea>
         <span asp-validation-for="Description" class="text-danger"></span>
     </div>
-    <div class="form-group">
-        <label for="ProjectComment">Type here all ProjectComments</label>
-        <textarea></textarea>
+
+    <div class="mb-3">
+        <label asp-for="ProjectComment" class="form-label">Comments</label>
+        <textarea asp-for="ProjectComment" class="form-control"></textarea>
+        <span asp-validation-for="ProjectComment" class="text-danger"></span>
     </div>
-    <!--Customer Zone-->
-    <div class="form-group">
-        <label>Customer:</label>
-        <div>
-            <label>
-                <input type="radio" asp-for="IsNewCustomer" value="true" checked="checked" /> New Customer
-            </label>
-            <label>
-                <input type="radio" asp-for="IsNewCustomer" value="false" /> Existing Customer
-            </label>
+
+    <fieldset class="mb-3">
+        <legend class="form-label">Customer</legend>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" asp-for="IsNewCustomer" value="true" id="isNewYes" />
+            <label class="form-check-label" for="isNewYes">New Customer</label>
         </div>
-    </div>
-    <!--New Customer (standaard zichtbaar)-->
-    <div id="newCustomerFields" class="p-2 border rounded">
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" asp-for="IsNewCustomer" value="false" id="isNewNo" />
+            <label class="form-check-label" for="isNewNo">Existing Customer</label>
+        </div>
+    </fieldset>
+
+    <div id="newCustomerFields" class="p-2 border rounded mb-3">
         <h4>Create New Customer</h4>
         <div class="form-group">
             <label asp-for="NewCustomerFirstName"></label>
@@ -65,29 +73,28 @@
             <label asp-for="NewCustomerLastName"></label>
             <input asp-for="NewCustomerLastName" class="form-control" />
             <span asp-validation-for="NewCustomerLastName" class="text-danger"></span>
+        </div>
         <div class="form-group">
             <label asp-for="NewCustomerEmail"></label>
             <input asp-for="NewCustomerEmail" type ="email" class="form-control" />
             <span asp-validation-for="NewCustomerEmail" class="text-danger"></span>
         </div>
-        <div class="form-group">
-            <label asp-for="NewCustomerPhone"></label>
+        <div class="mb-3">
+            <label asp-for="NewCustomerPhone" class="form-label"></label>
             <input asp-for="NewCustomerPhone" class="form-control" />
             <span asp-validation-for="NewCustomerPhone" class="text-danger"></span>
         </div>
     </div>
-    <!--Existing Customer(standaard verborgen) -->
-    <div id="existingCustomerFields" class="p-2 border rounded" style="display: none;">
+
+    <div id="existingCustomerFields" class="p-2 border rounded mb-3" style="display: none;">
         <h4>Select Customer</h4>
-        <div class="form-group">
-            <label asp-for="SelectedCustomerId"></label>
-            <select asp-for="SelectedCustomerId" asp-items="Model.CustomerList" class="form-control">
+        <div class="mb-3">
+            <label asp-for="SelectedCustomerId" class="form-label"></label>
+            <select asp-for="SelectedCustomerId" asp-items="Model.CustomerList" class="form-select">
                 <option value="">-- Select Customer --</option>
             </select>
         </div>
     </div>
-
-
 
     <button type="submit" class="btn btn-primary mt-3">Create New Project</button>
 </form>
@@ -95,28 +102,15 @@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const isNewCustomerRadios = document.querySelectorAll('input[name="IsNewCustomer"]');
-            const newCustomerFields = document.getElementById('newCustomerFields');
-            const existingCustomerFields = document.getElementById('existingCustomerFields');
-
             function toggleCustomerFields() {
-                if (document.querySelector('input[name="IsNewCustomer"][value="true"]').checked) {
-                    newCustomerFields.style.display = 'block';
-                    existingCustomerFields.style.display = 'none';
-                } else {
-                    newCustomerFields.style.display = 'none';
-                    existingCustomerFields.style.display = 'block';
-                }
+                const checked = document.querySelector('input[name="IsNewCustomer"]:checked');
+                const isNew = checked ? (checked.value || '').toString().toLowerCase() === 'true' : true;
+                document.getElementById('newCustomerFields').style.display = isNew ? 'block' : 'none';
+                document.getElementById('existingCustomerFields').style.display = isNew ? 'none' : 'block';
             }
 
-        isNewCustomerRadios.forEach(radio => {
-                   radio.addEventListener('change', toggleCustomerFields);
-               });
-
-               toggleCustomerFields();
-           });
+            document.querySelectorAll('input[name="IsNewCustomer"]').forEach(r => r.addEventListener('change', toggleCustomerFields));
+            toggleCustomerFields();
+        });
     </script>
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
 }

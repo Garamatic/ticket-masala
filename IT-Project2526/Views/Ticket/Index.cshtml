@@ -1,0 +1,36 @@
+@model List<IT_Project2526.ViewModels.TicketViewModel>
+
+@{
+    ViewData["Title"] = "Tickets";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Description</th>
+            <th>Status</th>
+            <th>Customer</th>
+            <th>Responsible</th>
+            <th>Completion Target</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var ticket in Model ?? new List<IT_Project2526.ViewModels.TicketViewModel>())
+        {
+            <tr>
+                <td>@ticket.Description</td>
+                <td>@ticket.TicketStatus</td>
+                <td>@ticket.CustomerName</td>
+                <td>@ticket.ResponsibleName</td>
+                <td>@(ticket.CompletionTarget?.ToString("yyyy-MM-dd") ?? "N/A")</td>
+                <td>
+                    <a asp-action="Detail" asp-route-id="@ticket.Guid" class="btn btn-sm btn-info">View</a>
+                    <a asp-action="Edit" asp-route-id="@ticket.Guid" class="btn btn-sm btn-warning">Edit</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

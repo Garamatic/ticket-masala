@@ -2,19 +2,154 @@ html {
   font-size: 14px;
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+.ticket-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+.ticket-id {
+    font-family: 'Courier New', monospace;
+    font-size: var(--font-size-sm);
+    color: var(--text-tertiary);
 }
 
-html {
-  position: relative;
-  min-height: 100%;
+.ticket-description {
+    color: var(--text-primary);
+    font-weight: var(--font-weight-medium);
+    margin-bottom: var(--spacing-sm);
+}
+
+.ticket-footer {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    font-size: var(--font-size-sm);
+}
+
+/* ==========================================
+   STATUS INDICATORS
+   ========================================== */
+
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.status-pending .status-dot {
+    background-color: var(--color-pending);
+}
+
+.status-in-progress .status-dot {
+    background-color: var(--color-in-progress);
+}
+
+.status-completed .status-dot {
+    background-color: var(--color-completed);
+}
+
+.status-failed .status-dot {
+    background-color: var(--color-failed);
+}
+
+/* ==========================================
+   DASHBOARD COMPONENTS
+   ========================================== */
+
+.dashboard-header {
+    margin-bottom: var(--spacing-2xl);
+}
+
+.dashboard-title {
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--spacing-sm);
+}
+
+.dashboard-subtitle {
+    font-size: var(--font-size-lg);
+    color: var(--text-secondary);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-2xl);
+}
+
+.stat-card {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    color: white;
+    padding: var(--spacing-xl);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-lg);
+}
+
+.stat-card.secondary {
+    background: linear-gradient(135deg, var(--color-secondary), var(--color-secondary-dark));
+}
+
+.stat-card.warning {
+    background: linear-gradient(135deg, #FF9800, #F57C00);
+}
+
+.stat-card.success {
+    background: linear-gradient(135deg, var(--color-success), #2E7D32);
+}
+
+.stat-card-title {
+    font-size: var(--font-size-sm);
+    text-transform: uppercase;
+    opacity: 0.9;
+    margin-bottom: var(--spacing-sm);
+    letter-spacing: 1px;
+}
+
+.stat-card-value {
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--spacing-xs);
+}
+
+.stat-card-change {
+    font-size: var(--font-size-sm);
+    opacity: 0.9;
+}
+
+/* ==========================================
+   PAGE HEADER
+   ========================================== */
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-2xl);
+}
+
+.page-title {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+    margin: 0;
+}
+
+.page-actions {
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+.navbar-logo {
+    width: 200px;
+    height: auto;
 }
 
 body {

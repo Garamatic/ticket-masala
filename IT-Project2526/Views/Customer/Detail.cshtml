@@ -1,0 +1,63 @@
+﻿@model IT_Project2526.ViewModels.CustomerDetailViewModel
+@using System.Linq
+@using IT_Project2526
+@using IT_Project2526.Models;
+@using IT_Project2526.ViewModels;
+
+@{
+    ViewData["Title"] = "Details Customer: " + Model.Name;
+    var projects = Model?.Projects;
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div>
+    <dl class="row">
+        <dt class="col-sm-2">First Name:</dt>
+        <dd class="col-sm-10">@Model.FirstName</dd>
+
+        <dt class="col-sm-2">Last Name:</dt>
+        <dd class="col-sm-10">@Model.LastName</dd>
+
+        <dt class="col-sm-2">Email:</dt>
+        <dd class="col-sm-10">@Model.Email</dd>
+
+        <dt class="col-sm-2">Phone:</dt>
+        <dd class="col-sm-10">@Model.Phone</dd>
+
+        <dt class="col-sm-2">Code:</dt>
+        <dd class="col-sm-10">@Model.Code</dd>
+    </dl>
+</div>
+
+<h3>Projects</h3>
+
+@if (Model.Projects != null && Model.Projects.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Project Name</th>
+                <th>Status</th>
+                <th>Project Manager</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var project in Model.Projects)
+            {
+                <tr>
+                    <td>@project.Name</td>
+                    <td>@project.Status</td>
+                    <td>@(project.ProjectManager?.Name ?? "Unassigned")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>This customer has no projects</p>
+}
+
+<a asp-action="Index">Back to Customer Index</a>

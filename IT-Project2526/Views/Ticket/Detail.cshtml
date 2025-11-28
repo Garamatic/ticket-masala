@@ -1,0 +1,92 @@
+﻿@model IT_Project2526.ViewModels.TicketViewModel
+@using System.Linq
+@using IT_Project2526
+@using IT_Project2526.Models;
+@using IT_Project2526.ViewModels;
+
+@{
+    ViewData["Title"] = "Ticket Detail";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<div class="detail-container">
+    <h4>Number Ticket: @Model.Guid</h4>
+    <hr />
+    <dl class="row">
+
+        <dt class="col-sm-3">Description</dt>
+        <dd class="col-sm-9">@Model.Description</dd>
+
+        <dt class="col-sm-3">Status</dt>
+        <dd class="col-sm-9">
+            <status-badge status="@Model.TicketStatus"></status-badge>
+        </dd>
+
+        <dt class="col-sm-3">Parent Ticket</dt>
+        <dd class="col-sm-9">
+            @if (Model.ParentTicketGuid.HasValue)
+            {
+                <a asp-action="Detail" asp-route-id="@Model.ParentTicketGuid">
+                    @Model.ParentTicketGuid.Value
+                </a>
+            }
+            else
+            {
+                <span>No Parent Ticket</span>
+            }
+        </dd>
+
+        <dt class="col-sm-3">Customer</dt>
+        <dd class="col-sm-9">@Model.CustomerName</dd>
+
+        <dt class="col-sm-3">Responsible</dt>
+        <dd class="col-sm-9">@Model.ResponsibleName</dd>
+
+        <dt class="col-sm-3">Completion Target</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.CompletionTarget)</dd>
+
+        <dt class="col-sm-3">Comments</dt>
+        <dd class="col-sm-9">
+            <ul>
+                @foreach (var comment in Model.Comments)
+                {
+                    <li>@comment</li>
+                }
+            </ul>
+        </dd>
+
+    </dl>
+
+    @if (Model.SubTickets.Any())
+    {
+        <h5>Subtickets (@Model.SubTickets.Count)</h5>
+        <ul>
+            @foreach (var sub in Model.SubTickets)
+            {
+                <li>
+                    <a asp-action="Detail" asp-route-id="@sub.Guid">
+                        @sub.Guid
+                    </a>
+                    - @sub.Description
+                    <status-badge status="@sub.TicketStatus"></status-badge>
+                </li>
+            }
+        </ul>
+    }
+</div>
+
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.Guid" class="btn btn-primary">Edit Ticket</a>
+</div>
+
+@if (Model.ProjectGuid != Guid.Empty)
+{
+    <div>
+        <a asp-controller="Projects" asp-action="Details" asp-route-id="@Model.ProjectGuid" class="btn btn-secondary">View Project</a>
+    </div>
+}
+
+<div>
+    <button type="button" onclick="window.history.back()" class="btn btn-secondary">Back</button>
+</div>

@@ -19,6 +19,8 @@ Set it as a Fly secret so EF Core can access it:
 fly secrets set ConnectionStrings__DefaultConnection="Server=tcp:YOUR_SERVER.database.windows.net,1433;Initial Catalog=TicketMasalaDB;Persist Security Info=False;User ID=USERNAME;Password=STRONG_PASSWORD;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
 ```
 
+Server=tcp:itproject2526.database.windows.net,1433;Initial Catalog=TicketMasalaDB;Persist Security Info=False;User ID=itprojectadmin;Password=Eendompasswoord1!;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;
+
 ASP.NET configuration binding will read this environment variable instead of the placeholder.
 
 ## 4. First Launch (if not already created)

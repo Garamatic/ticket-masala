@@ -8,16 +8,29 @@ using Microsoft.EntityFrameworkCore;
 using WebOptimizer;
 
 var builder = WebApplication.CreateBuilder(args);
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
+// Use SQLite in production on Fly.io, SQL Server in development
 builder.Services.AddDbContext<ITProjectDB>(options =>
-    options.UseSqlServer(connectionString, sqlServerOptions =>
+{
+    if (builder.Environment.IsProduction())
     {
-        sqlServerOptions.EnableRetryOnFailure(
-            maxRetryCount: 5,
-            maxRetryDelay: TimeSpan.FromSeconds(10),
-            errorNumbersToAdd: null);
-    }));
+        // SQLite for production (Fly.io) - data stored in /data volume
+        var dbPath = Path.Combine("/data", "ticketmasala.db");
+        options.UseSqlite($"Data Source={dbPath}");
+    }
+    else
+    {
+        // SQL Server for local development
+        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+        options.UseSqlServer(connectionString, sqlServerOptions =>
+        {
+            sqlServerOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorNumbersToAdd: null);
+        });
+    }
+});
 
 //Identity configuration
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -142,7 +155,12 @@ if (!app.Environment.IsDevelopment())
 // Use WebOptimizer middleware
 app.UseWebOptimizer();
 
-app.UseHttpsRedirection();
+// Only redirect to HTTPS in Development (Fly.io proxy handles TLS termination in production)
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseStaticFiles();
 
 app.UseRouting();

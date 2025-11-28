@@ -99,6 +99,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages(); // keep Razor Pages for Identity UI
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
@@ -154,5 +155,6 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.MapRazorPages(); // Identity pages like /Identity/Login
+app.MapHealthChecks("/health");
 
 app.Run();

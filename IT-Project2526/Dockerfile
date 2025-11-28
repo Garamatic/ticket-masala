@@ -18,6 +18,9 @@ RUN dotnet publish IT-Project2526.csproj -c Release -o /app/publish --no-restore
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 
+# Ensure SQLite data directory exists (will be mount point on Fly)
+RUN mkdir -p /data
+
 # Copy published output
 COPY --from=build /app/publish .
 

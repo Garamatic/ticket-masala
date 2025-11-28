@@ -24,6 +24,6 @@ primary_region = "ord"
   grace_period = "30s"
 
 # Persistent volume for SQLite database
-[mounts]
+[[mounts]]
   source = "ticket_data"
   destination = "/data"

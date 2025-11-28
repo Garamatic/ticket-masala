@@ -8,16 +8,27 @@ using Microsoft.EntityFrameworkCore;
 using WebOptimizer;
 
 var builder = WebApplication.CreateBuilder(args);
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
+// Use SQLite in production (Fly), SQL Server locally
 builder.Services.AddDbContext<ITProjectDB>(options =>
-    options.UseSqlServer(connectionString, sqlServerOptions =>
+{
+    if (builder.Environment.IsProduction())
     {
-        sqlServerOptions.EnableRetryOnFailure(
-            maxRetryCount: 5,
-            maxRetryDelay: TimeSpan.FromSeconds(10),
-            errorNumbersToAdd: null);
-    }));
+        var dbPath = Path.Combine("/data", "ticketmasala.db");
+        options.UseSqlite($"Data Source={dbPath}");
+    }
+    else
+    {
+        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+        options.UseSqlServer(connectionString, sqlServerOptions =>
+        {
+            sqlServerOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorNumbersToAdd: null);
+        });
+    }
+});
 
 //Identity configuration
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>

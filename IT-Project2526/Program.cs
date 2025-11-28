@@ -1,4 +1,5 @@
 using IT_Project2526;
+using IT_Project2526.Data;
 using IT_Project2526.Managers;
 using IT_Project2526.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -46,6 +47,9 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 
 // Register Managers (if needed in future)
 builder.Services.AddScoped<ApplicationUserManager>();
+
+// Register DbSeeder
+builder.Services.AddScoped<DbSeeder>();
 
 // Add Memory Cache
 builder.Services.AddMemoryCache();
@@ -97,6 +101,34 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages(); // keep Razor Pages for Identity UI
 
 var app = builder.Build();
+
+// Seed the database
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    
+    try
+    {
+        logger.LogInformation("==================================================");
+        logger.LogInformation("Checking if database seeding is needed...");
+        logger.LogInformation("==================================================");
+        
+        var seeder = services.GetRequiredService<DbSeeder>();
+        await seeder.SeedAsync();
+        
+        logger.LogInformation("==================================================");
+        logger.LogInformation("Database check completed");
+        logger.LogInformation("==================================================");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "==================================================");
+        logger.LogError(ex, "CRITICAL: An error occurred while seeding the database.");
+        logger.LogError(ex, "==================================================");
+        logger.LogError("You may need to manually create test users or check your database connection");
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

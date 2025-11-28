@@ -8,29 +8,16 @@ using Microsoft.EntityFrameworkCore;
 using WebOptimizer;
 
 var builder = WebApplication.CreateBuilder(args);
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-// Use SQLite in production on Fly.io, SQL Server in development
 builder.Services.AddDbContext<ITProjectDB>(options =>
-{
-    if (builder.Environment.IsProduction())
+    options.UseSqlServer(connectionString, sqlServerOptions =>
     {
-        // SQLite for production (Fly.io) - data stored in /data volume
-        var dbPath = Path.Combine("/data", "ticketmasala.db");
-        options.UseSqlite($"Data Source={dbPath}");
-    }
-    else
-    {
-        // SQL Server for local development
-        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-        options.UseSqlServer(connectionString, sqlServerOptions =>
-        {
-            sqlServerOptions.EnableRetryOnFailure(
-                maxRetryCount: 5,
-                maxRetryDelay: TimeSpan.FromSeconds(10),
-                errorNumbersToAdd: null);
-        });
-    }
-});
+        sqlServerOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(10),
+            errorNumbersToAdd: null);
+    }));
 
 //Identity configuration
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>

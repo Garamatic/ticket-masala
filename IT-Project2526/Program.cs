@@ -14,9 +14,6 @@ var builder = WebApplication.CreateBuilder(args);
 // Use SQLite in production (Fly), SQL Server locally
 builder.Services.AddDbContext<ITProjectDB>(options =>
 {
-    // Avoid throwing on PendingModelChangesWarning during migrate on Fly
-    options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
-
     if (builder.Environment.IsProduction())
     {
         var dbPath = Path.Combine("/data", "ticketmasala.db");

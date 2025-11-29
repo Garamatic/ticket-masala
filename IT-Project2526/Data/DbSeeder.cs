@@ -10,12 +10,14 @@ namespace IT_Project2526.Data
         private readonly ITProjectDB _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<DbSeeder> _logger;
+        private readonly IWebHostEnvironment _environment;
 
-        public DbSeeder(ITProjectDB context, UserManager<ApplicationUser> userManager, ILogger<DbSeeder> logger)
+        public DbSeeder(ITProjectDB context, UserManager<ApplicationUser> userManager, ILogger<DbSeeder> logger, IWebHostEnvironment environment)
         {
             _context = context;
             _userManager = userManager;
             _logger = logger;
+            _environment = environment;
         }
 
         public async Task SeedAsync()
@@ -26,8 +28,20 @@ namespace IT_Project2526.Data
                 
                 // Ensure database is created
                 _logger.LogInformation("Ensuring database exists...");
-                await _context.Database.MigrateAsync();
-                _logger.LogInformation("Database migrations applied successfully");
+                
+                // Use EnsureCreated for SQLite in production (Fly), Migrate for SQL Server in dev
+                if (_environment.IsProduction())
+                {
+                    // EnsureCreated works for SQLite without migrations
+                    var created = await _context.Database.EnsureCreatedAsync();
+                    _logger.LogInformation(created ? "SQLite database created" : "SQLite database already exists");
+                }
+                else
+                {
+                    // Apply migrations for SQL Server in development
+                    await _context.Database.MigrateAsync();
+                    _logger.LogInformation("Database migrations applied successfully");
+                }
 
                 // Check if we already have users
                 var userCount = await _context.Users.CountAsync();

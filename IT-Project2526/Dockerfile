@@ -19,7 +19,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 
 # Ensure SQLite data directory exists (will be mount point on Fly)
-RUN mkdir -p /data
+RUN mkdir -p /data/keys && mkdir -p /data
 
 # Copy published output
 COPY --from=build /app/publish .

@@ -3,8 +3,10 @@ using IT_Project2526.Data;
 using IT_Project2526.Managers;
 using IT_Project2526.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using WebOptimizer;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +14,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Use SQLite in production (Fly), SQL Server locally
 builder.Services.AddDbContext<ITProjectDB>(options =>
 {
+    // Avoid throwing on PendingModelChangesWarning during migrate on Fly
+    options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
+
     if (builder.Environment.IsProduction())
     {
         var dbPath = Path.Combine("/data", "ticketmasala.db");
@@ -65,6 +70,11 @@ builder.Services.AddScoped<DbSeeder>();
 // Add Memory Cache
 builder.Services.AddMemoryCache();
 builder.Services.AddDistributedMemoryCache();
+
+// Persist DataProtection keys so cookies remain valid across restarts
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo("/data/keys"))
+    .SetApplicationName("ticket-masala");
 
 // Configure WebOptimizer for CSS/JS bundling and minification
 builder.Services.AddWebOptimizer(pipeline =>
@@ -171,6 +181,6 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.MapRazorPages(); // Identity pages like /Identity/Login
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health").AllowAnonymous();
 
 app.Run();

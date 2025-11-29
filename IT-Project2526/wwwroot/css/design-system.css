@@ -4,6 +4,34 @@
  */
 
 /* ==========================================
+   BOOTSTRAP OVERRIDES
+   Override Bootstrap's default colors to match our theme
+   ========================================== */
+
+:root {
+    /* Override Bootstrap's primary color to our green */
+    --bs-primary: #4CAF50;
+    --bs-primary-rgb: 76, 175, 80;
+    --bs-link-color: #4CAF50;
+    --bs-link-hover-color: #388E3C;
+}
+
+/* Override Bootstrap's .btn-primary */
+.btn-primary {
+    --bs-btn-bg: #4CAF50;
+    --bs-btn-border-color: #4CAF50;
+    --bs-btn-hover-bg: #45a049;
+    --bs-btn-hover-border-color: #388E3C;
+    --bs-btn-active-bg: #388E3C;
+    --bs-btn-active-border-color: #388E3C;
+}
+
+/* Override Bootstrap's focus ring color */
+.btn-primary:focus-visible {
+    box-shadow: 0 0 0 0.25rem rgba(76, 175, 80, 0.5);
+}
+
+/* ==========================================
    CSS CUSTOM PROPERTIES (VARIABLES)
    ========================================== */
 

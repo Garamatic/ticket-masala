@@ -52,17 +52,17 @@
 }
 
 /* Sidebar Navigation */
-.nav-menu {
+.sidebar-nav {
     flex: 1;
     padding: 1rem 0;
     overflow-y: auto;
 }
 
-.nav-menu .nav-item {
+.sidebar-nav .sidebar-item {
     margin-bottom: 0.25rem;
 }
 
-.nav-menu .nav-link {
+.sidebar-nav .sidebar-link {
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -72,21 +72,22 @@
     border-radius: 0;
     transition: all 0.2s ease;
     border-left: 3px solid transparent;
+    background: transparent;
 }
 
-.nav-menu .nav-link:hover {
+.sidebar-nav .sidebar-link:hover {
     background: var(--bg-secondary);
     color: var(--color-primary);
 }
 
-.nav-menu .nav-link.active {
+.sidebar-nav .sidebar-link.active {
     background: rgba(76, 175, 80, 0.1);
     color: var(--color-primary);
     border-left-color: var(--color-primary);
     font-weight: 500;
 }
 
-.nav-menu .nav-icon {
+.sidebar-nav .sidebar-icon {
     width: 20px;
     text-align: center;
     font-size: 1rem;

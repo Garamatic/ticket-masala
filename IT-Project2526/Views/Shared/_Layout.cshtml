@@ -35,12 +35,12 @@
                 <img class="navbar-logo" src="~/images/logo-green.png" alt="Ticket Masala" />
             </div>
             
-            <nav class="nav-menu" aria-label="Main navigation">
+            <nav class="sidebar-nav" aria-label="Main navigation">
                 <ul class="list-unstyled">
-                    <li class="nav-item">
-                        <a class="nav-link @(currentController == "Home" && currentAction == "Index" ? "active" : "")" 
+                    <li class="sidebar-item">
+                        <a class="sidebar-link @(currentController == "Home" && currentAction == "Index" ? "active" : "")" 
                            asp-controller="Home" asp-action="Index">
-                            <i class="fas fa-home nav-icon"></i>
+                            <i class="fas fa-home sidebar-icon"></i>
                             <span>Dashboard</span>
                         </a>
                     </li>
@@ -49,47 +49,47 @@
                     {
                         @if (User.IsInRole("Employee") || User.IsInRole("Admin"))
                         {
-                            <li class="nav-item">
-                                <a class="nav-link @(currentController == "Projects" ? "active" : "")" 
+                            <li class="sidebar-item">
+                                <a class="sidebar-link @(currentController == "Projects" ? "active" : "")" 
                                    asp-controller="Projects" asp-action="Index">
-                                    <i class="fas fa-folder-open nav-icon"></i>
+                                    <i class="fas fa-folder-open sidebar-icon"></i>
                                     <span>Projects</span>
                                 </a>
                             </li>
                             
-                            <li class="nav-item">
-                                <a class="nav-link @(currentController == "Customer" ? "active" : "")" 
+                            <li class="sidebar-item">
+                                <a class="sidebar-link @(currentController == "Customer" ? "active" : "")" 
                                    asp-controller="Customer" asp-action="Index">
-                                    <i class="fas fa-users nav-icon"></i>
+                                    <i class="fas fa-users sidebar-icon"></i>
                                     <span>Customers</span>
                                 </a>
                             </li>
                         }
                         
-                        <li class="nav-item">
-                            <a class="nav-link @(currentController == "Ticket" ? "active" : "")" 
+                        <li class="sidebar-item">
+                            <a class="sidebar-link @(currentController == "Ticket" ? "active" : "")" 
                                asp-controller="Ticket" asp-action="Index">
-                                <i class="fas fa-ticket-alt nav-icon"></i>
+                                <i class="fas fa-ticket-alt sidebar-icon"></i>
                                 <span>Tickets</span>
                             </a>
                         </li>
                         
                         @if (User.IsInRole("Admin"))
                         {
-                            <li class="nav-item">
-                                <a class="nav-link @(currentController == "Manager" ? "active" : "")" 
+                            <li class="sidebar-item">
+                                <a class="sidebar-link @(currentController == "Manager" ? "active" : "")" 
                                    asp-controller="Manager" asp-action="Projects">
-                                    <i class="fas fa-chart-line nav-icon"></i>
+                                    <i class="fas fa-chart-line sidebar-icon"></i>
                                     <span>Manager View</span>
                                 </a>
                             </li>
                         }
                     }
                     
-                    <li class="nav-item mt-4">
-                        <a class="nav-link @(currentAction == "Privacy" ? "active" : "")" 
+                    <li class="sidebar-item mt-4">
+                        <a class="sidebar-link @(currentAction == "Privacy" ? "active" : "")" 
                            asp-controller="Home" asp-action="Privacy">
-                            <i class="fas fa-shield-alt nav-icon"></i>
+                            <i class="fas fa-shield-alt sidebar-icon"></i>
                             <span>Privacy</span>
                         </a>
                     </li>
@@ -160,26 +160,18 @@
             var mainContent = document.getElementById('mainContent');
             
             if (sidebarToggle && sidebar && mainContent) {
-                sidebarToggle.addEventListener('click', function() {
-                    sidebar.classList.toggle('collapsed');
-                    mainContent.classList.toggle('expanded');
-                });
-                
-                // Auto-collapse sidebar on mobile/tablet
-                if (window.innerWidth <= 1024) {
+                // Load saved sidebar state from localStorage
+                var savedSidebarState = localStorage.getItem('sidebarCollapsed');
+                if (savedSidebarState === 'true') {
                     sidebar.classList.add('collapsed');
                     mainContent.classList.add('expanded');
                 }
                 
-                // Handle window resize
-                window.addEventListener('resize', function() {
-                    if (window.innerWidth <= 1024) {
-                        sidebar.classList.add('collapsed');
-                        mainContent.classList.add('expanded');
-                    } else {
-                        sidebar.classList.remove('collapsed');
-                        mainContent.classList.remove('expanded');
-                    }
+                sidebarToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('collapsed');
+                    mainContent.classList.toggle('expanded');
+                    // Save state
+                    localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
                 });
             }
             

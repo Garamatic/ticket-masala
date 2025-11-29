@@ -62,6 +62,112 @@ namespace IT_Project2526.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Create()
+        {
+            var customers = await _context.Customers.ToListAsync();
+            var employees = await _context.Employees.ToListAsync();
+            var projects = await _context.Projects.ToListAsync();
+
+            ViewBag.Customers = customers.Select(c => new SelectListItem
+            {
+                Value = c.Id,
+                Text = $"{c.FirstName} {c.LastName}"
+            }).ToList();
+
+            ViewBag.Employees = employees.Select(e => new SelectListItem
+            {
+                Value = e.Id,
+                Text = $"{e.FirstName} {e.LastName}"
+            }).ToList();
+
+            ViewBag.Projects = projects.Select(p => new SelectListItem
+            {
+                Value = p.Guid.ToString(),
+                Text = p.Name
+            }).ToList();
+
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(string description, string customerId, string? responsibleId, Guid? projectGuid, DateTime? completionTarget)
+        {
+            if (string.IsNullOrWhiteSpace(description))
+            {
+                ModelState.AddModelError("description", "Description is required");
+            }
+
+            if (string.IsNullOrWhiteSpace(customerId))
+            {
+                ModelState.AddModelError("customerId", "Customer is required");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                // Reload dropdowns
+                var customers = await _context.Customers.ToListAsync();
+                var employees = await _context.Employees.ToListAsync();
+                var projects = await _context.Projects.ToListAsync();
+
+                ViewBag.Customers = customers.Select(c => new SelectListItem
+                {
+                    Value = c.Id,
+                    Text = $"{c.FirstName} {c.LastName}"
+                }).ToList();
+
+                ViewBag.Employees = employees.Select(e => new SelectListItem
+                {
+                    Value = e.Id,
+                    Text = $"{e.FirstName} {e.LastName}"
+                }).ToList();
+
+                ViewBag.Projects = projects.Select(p => new SelectListItem
+                {
+                    Value = p.Guid.ToString(),
+                    Text = p.Name
+                }).ToList();
+
+                return View();
+            }
+
+            var customer = await _context.Customers.FindAsync(customerId);
+            Employee? responsible = null;
+            if (!string.IsNullOrWhiteSpace(responsibleId))
+            {
+                responsible = await _context.Employees.FindAsync(responsibleId);
+            }
+
+            var ticket = new Ticket
+            {
+                Description = description,
+                Customer = customer!,
+                Responsible = responsible,
+                TicketStatus = responsible != null ? Status.Assigned : Status.Pending,
+                TicketType = TicketType.ProjectRequest,
+                CompletionTarget = completionTarget ?? DateTime.UtcNow.AddDays(14),
+                CreatorGuid = customer != null ? Guid.Parse(customer.Id) : Guid.Empty,
+                Comments = new List<string>()
+            };
+
+            _context.Tickets.Add(ticket);
+
+            // If a project is selected, add the ticket to that project
+            if (projectGuid.HasValue && projectGuid.Value != Guid.Empty)
+            {
+                var project = await _context.Projects.Include(p => p.Tasks).FirstOrDefaultAsync(p => p.Guid == projectGuid.Value);
+                if (project != null)
+                {
+                    project.Tasks.Add(ticket);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
+        }
+
         public async Task<IActionResult> Detail(Guid? id)
         {
             if (id == null)

@@ -4,7 +4,7 @@
 
 ## Informatie
 
-- Wie : Charlotte Schröer, Maarten Görtz, Wito De Schrijver, Stef Van Impe en Juan Benjumea
+- Wie : Charlotte Schröer, Maarten Görtz, Wito De Schrijver en Juan Benjumea
 - Concept : Ticketing, Case en Project Management met AI ondersteuning
 - Technologieen: Fullstack .NET en Python
 
@@ -40,20 +40,22 @@ AI Helper → Alle lagen: real-time suggesties bij aanmaak, opvolging, planning 
 
 Algemeen
 
-- [ ] Role based authentication
+- [x] Role based authentication (Identity + Authorize attributen)
 - [ ] Notificaties en berichten
 - [ ] Discussies en comments
 
 Ticketing interface
 
-- [ ] Ticket aanmaakfunctie : form bij klant, medewerker, automatisch.
-- [ ] Aanpassing ticket : individueel en batch
+- [x] Ticket aanmaakfunctie (Create view)
+- [x] Ticket detail en bewerken (Detail, Edit views)
+- [x] Ticket overzicht (Index view)
 - [ ] Filter- en zoekfunctie
 - [ ] Quick actions
 
-Case management interface
+Case / Customer management interface
 
-- [ ] Case Detail view
+- [x] Customer overzicht (Index view)
+- [x] Customer detail view
 - [ ] Linken, groeperen van tickets
 - [ ] Notities
 - [ ] Berichten
@@ -62,6 +64,9 @@ Case management interface
 
 Project management interface  
 
+- [x] Project overzicht (Index view)
+- [x] Project aanmaken (Create, NewProject views)
+- [x] Project detail en bewerken (Detail, Edit views)
 - [ ] Fases en mijlpalen
 - [ ] Teamleden en verantwoordelijkheden
 - [ ] Kalender
@@ -78,8 +83,10 @@ AI Helper
 
 ## Functionele en technische vereisten
 
-- Frontend : Blazor WebAssembly (.NET 8)
+- Frontend : ASP.NET Core MVC met Razor Views
 - Mobile first en responsive design
-- Backend : ASP .NET Core Web API
-- AI: Python microservice (Ollama / Open AI / local LLM integration)
-- Deployment: Azure + Docker
+- Backend : ASP.NET Core MVC (.NET 8)
+- Database : Entity Framework Core + Migrations
+- Authenticatie : ASP.NET Identity
+- AI: Python microservice (Ollama / OpenAI / local LLM integration) — voorbereid
+- Deployment: Azure + Docker (fly.toml aanwezig)

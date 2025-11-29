@@ -16,7 +16,15 @@ builder.Services.AddDbContext<ITProjectDB>(options =>
 {
     if (builder.Environment.IsProduction())
     {
-        var dbPath = Path.Combine("/data", "ticketmasala.db");
+        // Ensure /data directory exists
+        var dataDir = "/data";
+        if (!Directory.Exists(dataDir))
+        {
+            Directory.CreateDirectory(dataDir);
+        }
+        
+        var dbPath = Path.Combine(dataDir, "ticketmasala.db");
+        Console.WriteLine($"Using SQLite database at: {dbPath}");
         options.UseSqlite($"Data Source={dbPath}");
     }
     else

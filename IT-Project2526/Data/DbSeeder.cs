@@ -24,15 +24,9 @@ namespace IT_Project2526.Data
         {
             try
             {
-                // Use raw SQL to check if AspNetUsers table exists in SQLite
-                var connection = _context.Database.GetDbConnection();
-                await connection.OpenAsync();
-                
-                using var command = connection.CreateCommand();
-                command.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='AspNetUsers';";
-                var result = await command.ExecuteScalarAsync();
-                
-                return result != null;
+                // Simple check: try to count users - if table doesn't exist, this will throw
+                _ = await _context.Users.CountAsync();
+                return true;
             }
             catch
             {
@@ -52,36 +46,21 @@ namespace IT_Project2526.Data
                 // Use EnsureCreated for SQLite in production (Fly), Migrate for SQL Server in dev
                 if (_environment.IsProduction())
                 {
-                    // For SQLite: Delete and recreate if tables don't exist
-                    // This handles the case where the database file exists but is empty
-                    try
+                    _logger.LogInformation("Production mode: Using SQLite with EnsureCreated");
+                    
+                    // First, always try EnsureCreated - it's idempotent (does nothing if DB exists)
+                    var created = await _context.Database.EnsureCreatedAsync();
+                    _logger.LogInformation("EnsureCreatedAsync result: {Created}", created);
+                    
+                    // Verify tables exist
+                    var tablesExist = await CheckTablesExistAsync();
+                    if (!tablesExist)
                     {
-                        // Try to check if tables exist by querying
-                        var canConnect = await _context.Database.CanConnectAsync();
-                        _logger.LogInformation("Database connection test: {CanConnect}", canConnect);
-                        
-                        // Check if the AspNetUsers table exists by trying to execute a simple query
-                        var tablesExist = await CheckTablesExistAsync();
-                        
-                        if (!tablesExist)
-                        {
-                            _logger.LogWarning("Tables don't exist. Deleting and recreating database...");
-                            await _context.Database.EnsureDeletedAsync();
-                            await _context.Database.EnsureCreatedAsync();
-                            _logger.LogInformation("SQLite database recreated successfully");
-                        }
-                        else
-                        {
-                            _logger.LogInformation("SQLite database tables already exist");
-                        }
+                        _logger.LogError("CRITICAL: Tables still don't exist after EnsureCreatedAsync!");
+                        throw new Exception("Failed to create database tables");
                     }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Error checking tables, will recreate database");
-                        await _context.Database.EnsureDeletedAsync();
-                        await _context.Database.EnsureCreatedAsync();
-                        _logger.LogInformation("SQLite database recreated after error");
-                    }
+                    
+                    _logger.LogInformation("SQLite database tables verified");
                 }
                 else
                 {

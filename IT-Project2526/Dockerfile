@@ -1,6 +1,6 @@
-# Multi-stage build for IT-Project2526 (.NET 8)
+# Multi-stage build for IT-Project2526 (.NET 10)
 # Build stage
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # We assume build context is the project directory (IT-Project2526)
@@ -15,7 +15,7 @@ COPY . .
 RUN dotnet publish IT-Project2526.csproj -c Release -o /app/publish --no-restore
 
 # Runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
 # Ensure SQLite data directory exists (will be mount point on Fly)

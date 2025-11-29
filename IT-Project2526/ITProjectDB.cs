@@ -17,14 +17,9 @@ namespace IT_Project2526
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);
-<<<<<<< HEAD
             
             // Suppress PendingModelChangesWarning during migrations on Fly
             optionsBuilder.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
-=======
-            optionsBuilder.ConfigureWarnings(warnings => 
-                warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
->>>>>>> main
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

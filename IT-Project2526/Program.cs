@@ -69,9 +69,17 @@ builder.Services.AddMemoryCache();
 builder.Services.AddDistributedMemoryCache();
 
 // Persist DataProtection keys so cookies remain valid across restarts
-builder.Services.AddDataProtection()
-    .PersistKeysToFileSystem(new DirectoryInfo("/data/keys"))
-    .SetApplicationName("ticket-masala");
+if (builder.Environment.IsProduction())
+{
+    builder.Services.AddDataProtection()
+        .PersistKeysToFileSystem(new DirectoryInfo("/data/keys"))
+        .SetApplicationName("ticket-masala");
+}
+else
+{
+    builder.Services.AddDataProtection()
+        .SetApplicationName("ticket-masala");
+}
 
 // Configure WebOptimizer for CSS/JS bundling and minification
 builder.Services.AddWebOptimizer(pipeline =>

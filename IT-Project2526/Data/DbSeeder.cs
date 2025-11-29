@@ -9,13 +9,15 @@ namespace IT_Project2526.Data
     {
         private readonly ITProjectDB _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly ILogger<DbSeeder> _logger;
         private readonly IWebHostEnvironment _environment;
 
-        public DbSeeder(ITProjectDB context, UserManager<ApplicationUser> userManager, ILogger<DbSeeder> logger, IWebHostEnvironment environment)
+        public DbSeeder(ITProjectDB context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, ILogger<DbSeeder> logger, IWebHostEnvironment environment)
         {
             _context = context;
             _userManager = userManager;
+            _roleManager = roleManager;
             _logger = logger;
             _environment = environment;
         }
@@ -31,6 +33,33 @@ namespace IT_Project2526.Data
             catch
             {
                 return false;
+            }
+        }
+
+        private async Task EnsureRolesExistAsync()
+        {
+            // EnsureCreated doesn't run HasData() seeding, so we need to create roles manually
+            var roles = new[] { Constants.RoleAdmin, Constants.RoleEmployee, Constants.RoleCustomer };
+            
+            foreach (var roleName in roles)
+            {
+                if (!await _roleManager.RoleExistsAsync(roleName))
+                {
+                    var result = await _roleManager.CreateAsync(new IdentityRole(roleName));
+                    if (result.Succeeded)
+                    {
+                        _logger.LogInformation("Created role: {Role}", roleName);
+                    }
+                    else
+                    {
+                        _logger.LogError("Failed to create role {Role}: {Errors}", 
+                            roleName, string.Join(", ", result.Errors.Select(e => e.Description)));
+                    }
+                }
+                else
+                {
+                    _logger.LogInformation("Role already exists: {Role}", roleName);
+                }
             }
         }
 
@@ -61,6 +90,9 @@ namespace IT_Project2526.Data
                     }
                     
                     _logger.LogInformation("SQLite database tables verified");
+                    
+                    // EnsureCreated doesn't run HasData(), so we need to create roles manually
+                    await EnsureRolesExistAsync();
                 }
                 else
                 {

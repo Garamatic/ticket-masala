@@ -204,32 +204,82 @@ namespace IT_Project2526.Controllers
                 return NotFound(); 
             }
 
-            var viewModel = new TicketViewModel
+            // Build GERDA-enhanced view model
+            var viewModel = new TicketDetailsViewModel
             {
                 Guid = ticket.Guid,
                 Description = ticket.Description,
                 TicketStatus = ticket.TicketStatus,
+                TicketType = ticket.TicketType,
                 CreationDate = ticket.CreationDate,
                 CompletionTarget = ticket.CompletionTarget,
+                CompletionDate = ticket.CompletionDate,
                 Comments = ticket.Comments,
+                
+                // Relationships
                 ResponsibleName = ticket.Responsible != null
                                     ? $"{ticket.Responsible.FirstName} {ticket.Responsible.LastName}"
-                                    : "Not Assigned",
+                                    : null,
+                ResponsibleId = ticket.Responsible?.Id,
                 CustomerName = ticket.Customer != null
                                     ? $"{ticket.Customer.FirstName} {ticket.Customer.LastName}"
-                                    : "Unknown",
-
+                                    : null,
+                CustomerId = ticket.Customer?.Id,
                 ParentTicketGuid = ticket.ParentTicket?.Guid,
-
-                ProjectGuid = project?.Guid ?? Guid.Empty,
-
+                ProjectGuid = project?.Guid,
+                ProjectName = project?.Name,
+                
                 SubTickets = ticket.SubTickets.Select(st => new SubTicketInfo
-                    {
-                        Guid = st.Guid,
-                        Description = st.Description,
-                        TicketStatus = st.TicketStatus
-                    }).ToList()
+                {
+                    Guid = st.Guid,
+                    Description = st.Description,
+                    TicketStatus = st.TicketStatus
+                }).ToList(),
+                
+                // GERDA AI Insights
+                EstimatedEffortPoints = ticket.EstimatedEffortPoints,
+                PriorityScore = ticket.PriorityScore,
+                GerdaTags = ticket.GerdaTags
             };
+
+            // Get recommended agent from Dispatching service (if ticket is unassigned)
+            if (string.IsNullOrWhiteSpace(ticket.ResponsibleId))
+            {
+                try
+                {
+                    var dispatchingService = HttpContext.RequestServices.GetService<Services.GERDA.Dispatching.IDispatchingService>();
+                    if (dispatchingService != null)
+                    {
+                        var recommendations = await dispatchingService.GetTopRecommendedAgentsAsync(ticket.Guid, 1);
+                        if (recommendations != null && recommendations.Any())
+                        {
+                            var topRecommendation = recommendations.First();
+                            var agent = await _context.Employees.FindAsync(topRecommendation.AgentId);
+                            if (agent != null)
+                            {
+                                // Calculate current workload
+                                var currentWorkload = await _context.Tickets
+                                    .Where(t => t.ResponsibleId == agent.Id && 
+                                               (t.TicketStatus == Status.Assigned || t.TicketStatus == Status.InProgress))
+                                    .SumAsync(t => t.EstimatedEffortPoints);
+                                
+                                viewModel.RecommendedAgent = new RecommendedAgentInfo
+                                {
+                                    AgentId = agent.Id,
+                                    AgentName = $"{agent.FirstName} {agent.LastName}",
+                                    AffinityScore = topRecommendation.Score,
+                                    CurrentWorkload = currentWorkload,
+                                    MaxCapacity = agent.MaxCapacityPoints
+                                };
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to get recommended agent for ticket {TicketGuid}", ticket.Guid);
+                }
+            }
 
             return View(viewModel);
         }

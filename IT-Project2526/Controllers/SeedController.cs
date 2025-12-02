@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IT_Project2526.Controllers
 {
-    [AllowAnonymous] // Temporarily allow anonymous access for development
+    // Seed controller only accessible in Development environment
     public class SeedController : Controller
     {
         private readonly DbSeeder _seeder;

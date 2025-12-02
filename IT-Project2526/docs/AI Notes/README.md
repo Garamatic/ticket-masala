@@ -3,13 +3,35 @@
 ## Mission
 Move from "Passive Ticket Tracking" to "Active Operational Orchestration" within the "Ticket Masala" platform.
 
+## The Problem: Legacy System Bottleneck
+
+Many large organizations (governments, banks, insurance companies) rely on robust but cumbersome "Systems of Record" (e.g., SAP). While these systems are legally required and hold master data, they are inefficient for day-to-day operational management:
+
+-   **The System of Record:** Legally required, slow, difficult to manage, lacks agility.
+-   **The Need:** A fast, modern "cockpit" for team leaders to distribute work, track velocity, monitor SLAs, and identify bottlenecks in real-time.
+
+## The Solution: Digital Twin Operations Cockpit
+
+"Ticket Masala" acts as an **Operational Overlay** sitting on top of the legacy system, providing agility without replacing core infrastructure:
+
+-   **.NET App (Ticket Masala):** Where work is actively _managed_, prioritized, and dispatched for operational efficiency.
+-   **Legacy System (e.g., SAP):** Where the case officially _lives_ and is legally recorded.
+
+This architecture is **Read-Heavy, Write-Light** with periodic one-way sync from the legacy system to the .NET app's database.
+
+### Data Ingestion Strategies
+
+1.  **The "Senior Architect" Way (API Integration):** Direct connection to legacy APIs (e.g., SAP .NET Connector, BAPIs) - most robust and professional.
+2.  **The "Hacker" Way (File Drop):** Manager exports case list to spreadsheet, .NET app monitors shared folder with file watcher - requires zero IT permissions, quick proof of value.
+
 ## High-Level Architecture: "Ticket Masala" (White Label Ticketing Engine)
 
 "Ticket Masala" is designed as a generic, configurable ticketing system that can adapt to various organizational needs (e.g., IT Helpdesk, Tax Office). Its core principles are:
 
 -   **Modular Architecture:** Clear separation of concerns between the core ticketing logic and the intelligent "GERDA" services.
--   **Configuration over Code:** Behaviors, roles, and categories are defined via a central JSON configuration file, allowing for flexible deployment without code changes.
--   **Role-Based Access Control (RBAC):** Supports a flexible hierarchy of users (Superuser, Project Manager, Handler, Viewer).
+-   **Configuration over Code:** Behaviors, roles, and categories are defined via `masala_config.json`, allowing for flexible deployment without code changes.
+-   **Role-Based Access Control (RBAC):** Supports a flexible hierarchy of users (Admin, Employee, Customer).
+-   **Project → Ticket Hierarchy:** "Projects" act as containers for work (workstreams/queues, tax years, regional directorates), not traditional software projects.
 -   **Mock Data Driven:** Utilizes synthetic data generation (Bogus library) to simulate real-world operational patterns for AI training and demonstration, preserving data privacy.
 
 ### Core Components:
@@ -31,16 +53,21 @@ GERDA is an internal service within the "Ticket Masala" platform, leveraging ML.
 ### 1. G - Grouping (The Noise Filter)
 
 -   **Business Problem:** "Spammy" clients or repetitive requests clog the backlog, leading to redundant work.
--   **Tech Stack:** ML.NET **Clustering (K-Means)** or rule-based grouping (configured via JSON).
--   **Logic:** Detects clusters of incoming requests based on `RequesterId` and `TimeWindow`.
--   **Action:** Auto-bundles multiple related tickets into one "Parent Case" to streamline processing and reduce agent workload.
+-   **Current Implementation:** **Rule-based grouping** (no ML) - detects when the same customer submits multiple tickets within a time window and auto-groups them.
+-   **Tech Stack:** LINQ queries with time-window filtering (configured via `masala_config.json`).
+-   **Logic:** Counts tickets from same `CustomerId` within `TimeWindowMinutes`. If count exceeds `MaxTicketsPerUser`, creates parent-child ticket relationship.
+-   **Action:** Auto-bundles multiple related tickets into one "Parent Ticket" to streamline processing and reduce agent workload.
+-   **Future Enhancement:** ML.NET **K-Means Clustering** to detect similarity beyond just same customer (e.g., similar descriptions, same issue category).
 
-#### Configuration Example (`masala_config.json`):
+#### Configuration Example (`masala_config.json`)
+
 ```json
 "SpamDetection": {
+  "IsEnabled": true,
   "TimeWindowMinutes": 60,
-  "MaxTicketsPerUser": 5,  // If > 5 tickets from same user in 1 hour -> CLUSTER THEM
-  "Action": "AutoMerge"    // or "Flag" for manual review
+  "MaxTicketsPerUser": 5,      // If > 5 tickets from same user in 1 hour -> GROUP THEM
+  "Action": "AutoMerge",        // or "Flag" for manual review
+  "GroupedTicketPrefix": "[GROUPED] "
 }
 ```
 
@@ -49,17 +76,24 @@ GERDA is an internal service within the "Ticket Masala" platform, leveraging ML.
 ### 2. E - Estimating (The Sizer)
 
 -   **Business Problem:** Treating all tasks equally, regardless of actual effort, leads to inefficient queue management.
--   **Tech Stack:** ML.NET **Multi-Class Classification**.
--   **Logic:** Predicts complexity buckets (**S / M / L / XL**) for tickets based on their `Category` and historical cycle times of similar cases. This can use a pre-trained ML model or a simple lookup based on `ComplexityMap` from config.
--   **Action:** Assigns a "Fibonacci Point Value" (1, 3, 8, 13, etc.) to the ticket for ranking.
+-   **Current Implementation:** **Category lookup table** (no ML) - maps ticket categories to Fibonacci complexity points via configuration.
+-   **Tech Stack:** Dictionary-based keyword matching using `CategoryComplexityMap` from `masala_config.json`.
+-   **Logic:** Extracts category from ticket description/project name using keyword matching, then looks up pre-configured effort points (1, 3, 5, 8, 13).
+-   **Action:** Assigns `EstimatedEffortPoints` to ticket for use in WSJF ranking algorithm.
+-   **Future Enhancement:** ML.NET **Multi-Class Classification** trained on historical cycle times to predict complexity dynamically instead of static lookup.
 
-#### Configuration Example (`masala_config.json`):
+#### Configuration Example (`masala_config.json`)
+
 ```json
-"ComplexityMap": {
-  "Password Reset": 1,      // S (e.g., Tax equivalent: Address Change)
-  "Hardware Request": 3,    // M
-  "Software Bug": 8,        // L
-  "System Outage": 13       // XL (e.g., Tax equivalent: Audit)
+"ComplexityEstimation": {
+  "IsEnabled": true,
+  "CategoryComplexityMap": [
+    { "Category": "Password Reset", "EffortPoints": 1 },      // S (Tax equivalent: Address Change)
+    { "Category": "Hardware Request", "EffortPoints": 3 },    // M
+    { "Category": "Software Bug", "EffortPoints": 8 },        // L
+    { "Category": "System Outage", "EffortPoints": 13 }       // XL (Tax equivalent: Audit)
+  ],
+  "DefaultEffortPoints": 5
 }
 ```
 
@@ -68,18 +102,25 @@ GERDA is an internal service within the "Ticket Masala" platform, leveraging ML.
 ### 3. R - Ranking (The Prioritizer)
 
 -   **Business Problem:** Agents often cherry-pick easy tasks, causing urgent/hard tasks to breach SLAs.
--   **Tech Stack:** **WSJF Algorithm** (Weighted Shortest Job First).
+-   **Current Implementation:** **Interface defined, not yet implemented.**
+-   **Tech Stack:** **WSJF Algorithm** (Weighted Shortest Job First) - algorithmic, no ML required.
 -   **Logic:** Calculates a `PriorityScore` dynamically for each ticket using the formula:
-    $$Priority = \frac{\text{Cost of Delay (SLA Breach Risk)}} {\text{Job Size (Fibonacci Points)}}$$ 
-    -   `Cost of Delay`: Derived from `SlaConfig` and the ticket's age.
-    -   `Job Size`: Obtained from the Estimating (E) step.
+
+$$Priority = \frac{\text{Cost of Delay (SLA Breach Risk)}} {\text{Job Size (Fibonacci Points)}}$$
+
+-   `Cost of Delay`: Derived from `SlaWeight` config and the ticket's age relative to completion target.
+-   `Job Size`: Obtained from the Estimating (E) step (`EstimatedEffortPoints`).
+
 -   **Action:** Re-orders the queue dynamically to prioritize high-value, low-effort tasks and prevent SLA breaches.
 
-#### Configuration Example (`masala_config.json`):
+#### Configuration Example (`masala_config.json`)
+
 ```json
-"SlaConfig": {
-  "DefaultDays": 7,       // Default SLA for a ticket
-  "CriticalDays": 1       // Days remaining until SLA breach becomes critical
+"Ranking": {
+  "IsEnabled": true,
+  "SlaWeight": 100,                        // Factor to emphasize SLA urgency
+  "ComplexityWeight": 1,                   // Factor for job size (usually 1)
+  "RecalculationFrequencyMinutes": 1440    // Daily recalculation
 }
 ```
 
@@ -88,15 +129,23 @@ GERDA is an internal service within the "Ticket Masala" platform, leveraging ML.
 ### 4. D - Dispatching (The Matchmaker)
 
 -   **Business Problem:** Loss of institutional knowledge when new agents handle clients with complex history; inefficient assignment to overloaded agents.
--   **Tech Stack:** ML.NET **Matrix Factorization (Recommendation)**.
--   **Logic:** Scores `[Agent, Client]` pairs based on historical case handling. Also considers agent availability and current workload.
+-   **Current Implementation:** **Interface defined, not yet implemented.**
+-   **Tech Stack:** ML.NET **Matrix Factorization (Recommendation System)**.
+-   **Logic:** 
+    - Builds `[AgentId, CustomerId, Rating]` matrix from historical ticket assignments and resolution quality
+    - Uses collaborative filtering to predict affinity scores for unseen agent-customer pairs
+    - Filters recommendations by agent availability and current workload (`MaxAssignedTicketsPerAgent`)
 -   **Action:** Recommends the most suitable agent for the highest-priority cases, balancing affinity with workload.
+-   **ML Model:** Trained on historical `Ticket.ResponsibleId` and `Ticket.CustomerId` pairs with implicit ratings based on resolution time and customer satisfaction.
 
-#### Configuration Example (`masala_config.json`):
+#### Configuration Example (`masala_config.json`)
+
 ```json
-"Recommender": {
-  "RetrainFrequencyHours": 24,
-  "MinHistoryForMatch": 3   // Minimum number of past interactions to consider an affinity match
+"Dispatching": {
+  "IsEnabled": true,
+  "MinHistoryForAffinityMatch": 3,               // Min past interactions for affinity
+  "MaxAssignedTicketsPerAgent": 15,
+  "RetrainRecommendationModelFrequencyHours": 24
 }
 ```
 
@@ -105,24 +154,60 @@ GERDA is an internal service within the "Ticket Masala" platform, leveraging ML.
 ### 5. A - Anticipation (The Weather Report)
 
 -   **Business Problem:** Reactive capacity planning; understaffing is only realized when backlogs are overflowing.
--   **Tech Stack:** ML.NET **Time Series Forecasting (SSA)** combined with HR/Agent availability data.
--   **Logic:** Compares **Predicted Inflow** (seasonal trends in new tickets) vs. **Predicted Capacity** (agent velocity, holidays, sick days).
--   **Action:** Triggers "Director Alerts" if forecasted inflow exceeds capacity within a 30-day horizon, enabling proactive resource management.
+-   **Current Implementation:** **Interface defined, not yet implemented.**
+-   **Tech Stack:** ML.NET **Time Series Forecasting (SSA - Singular Spectrum Analysis)**.
+-   **Logic:** 
+    - Analyzes historical daily ticket inflow over past 3 years (`InflowHistoryYears`)
+    - Detects seasonal patterns (e.g., tax filing deadlines, holiday periods)
+    - Forecasts ticket volume for next 30 days (`ForecastHorizonDays`)
+    - Compares predicted inflow vs. team capacity (agent count × velocity - planned absences)
+-   **Action:** Triggers "Director Alerts" if forecasted inflow exceeds capacity within a 30-day horizon, enabling proactive resource management (hiring temps, overtime approval, vacation freezes).
+-   **ML Model:** SSA time series model trained on `COUNT(Tickets) GROUP BY CreationDate`.
 
-#### Configuration Example (`masala_config.json`):
+#### Configuration Example (`masala_config.json`)
+
 ```json
 "Anticipation": {
+  "IsEnabled": true,
   "ForecastHorizonDays": 30,
   "InflowHistoryYears": 3,
-  "CapacityRefreshFrequencyHours": 12
+  "CapacityRefreshFrequencyHours": 12,
+  "RiskThresholdPercentage": 20                  // Alert if inflow > capacity by 20%
 }
 ```
 
-## Impact & Value Proposition
+## The Fuel: Synthetic Data Generation
 
--   **For University:** Demonstrates advanced concepts in AI/ML (.NET, multiple ML algorithms), modular software architecture, and flexible design patterns (Strategy Pattern, Configuration over Convention).
--   **For Business:** Transforms reactive operations into a proactive, data-driven system, leading to:
-    -   Reduced SLA breaches.
-    -   Improved agent efficiency and workload balance.
-    -   Better resource planning and early bottleneck detection.
-    -   Enhanced institutional knowledge retention.
+Due to privacy and sensitivity of real operational data, the project relies on robust mock data generation:
+
+-   **Tool:** The **Bogus** library for .NET
+-   **Strategy:** Creates **synthetic data** that preserves statistical properties of real-world environments
+-   **Intentional Patterns for GERDA:**
+    -   **Spam Patterns:** A few clients generating high volumes of tickets in short time windows
+    -   **Complexity Patterns:** Certain categories consistently having longer resolution times
+    -   **Seasonality Patterns:** Ticket volumes spiking in specific, predictable months (e.g., tax deadlines)
+-   **Benefit:** Allows development, testing, and demonstration of complete Ticket Masala and GERDA feature set in a safe, privacy-preserving environment
+
+## Current Implementation Status (Sprint 5 - December 2024)
+
+| Component | Status | Technology | Notes |
+|-----------|--------|------------|-------|
+| **G - Grouping** | ✅ **Implemented** | Rule-based LINQ | Detects spam by counting tickets per customer in time window |
+| **E - Estimating** | ✅ **Implemented** | Config lookup table | Maps categories to Fibonacci points via JSON |
+| **R - Ranking** | ⏳ **Interface Only** | WSJF Algorithm | Planned for Sprint 6 |
+| **D - Dispatching** | ⏳ **Interface Only** | ML.NET Matrix Factorization | Planned for Sprint 6-7 |
+| **A - Anticipation** | ⏳ **Interface Only** | ML.NET Time Series SSA | Planned for Sprint 7 |
+
+### Next Steps
+
+**Sprint 6 (Dec 8-14):**
+-   Implement R - Ranking service with WSJF algorithm
+-   Implement D - Dispatching service with ML.NET Matrix Factorization
+-   Create database migration for GERDA fields
+-   Integrate GERDA services into TicketController
+
+**Sprint 7 (Dec 15-21):**
+-   Implement A - Anticipation service with ML.NET Time Series forecasting
+-   Add ML.NET NuGet packages
+-   Create UI components to display GERDA insights (priority scores, agent recommendations, capacity alerts)
+-   Performance testing and optimization

@@ -1,6 +1,7 @@
 ﻿using IT_Project2526;
 using IT_Project2526.Models;
 using IT_Project2526.ViewModels;
+using IT_Project2526.Services.GERDA;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -12,22 +13,17 @@ namespace IT_Project2526.Controllers
     public class TicketController : Controller
     {
         private readonly ITProjectDB _context;
+        private readonly IGerdaService _gerdaService;
+        private readonly ILogger<TicketController> _logger;
 
-        public TicketController(ITProjectDB context)
+        public TicketController(
+            ITProjectDB context,
+            IGerdaService gerdaService,
+            ILogger<TicketController> logger)
         {
             _context = context;
-            /* try
-           {
-               if (!_context.Database.CanConnect())
-               {
-                   throw new Exception("Fatal Error: No Database Connection Possible");
-               }
-           }
-           catch (Exception ex) 
-           {
-               Console.WriteLine(ex.Message);
-               throw;
-           }*/
+            _gerdaService = gerdaService;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index()
@@ -164,6 +160,23 @@ namespace IT_Project2526.Controllers
             }
 
             await _context.SaveChangesAsync();
+
+            // ============================================
+            // GERDA AI Integration
+            // ============================================
+            try
+            {
+                _logger.LogInformation("Processing ticket {TicketGuid} with GERDA AI", ticket.Guid);
+                await _gerdaService.ProcessTicketAsync(ticket.Guid);
+                
+                TempData["Success"] = "Ticket created successfully! GERDA AI has processed the ticket (estimated effort, priority, and tags assigned).";
+                _logger.LogInformation("GERDA processing completed for ticket {TicketGuid}", ticket.Guid);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "GERDA AI processing failed for ticket {TicketGuid}", ticket.Guid);
+                TempData["Warning"] = "Ticket created, but AI processing encountered an error. Manual review recommended.";
+            }
 
             return RedirectToAction(nameof(Index));
         }

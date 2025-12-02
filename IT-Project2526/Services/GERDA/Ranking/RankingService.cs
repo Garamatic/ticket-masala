@@ -110,12 +110,15 @@ public class RankingService : IRankingService
     }
 
     /// <summary>
-    /// Calculate Cost of Delay based on SLA breach risk and ticket age
+    /// Calculate Cost of Delay based on SLA breach risk, ticket age, and category-specific urgency
     /// </summary>
     private double CalculateCostOfDelay(Ticket ticket)
     {
         var now = DateTime.UtcNow;
         var age = (now - ticket.CreationDate).TotalDays;
+
+        // Get category-specific urgency multiplier from queue config
+        var categoryMultiplier = GetCategoryUrgencyMultiplier(ticket);
 
         // If ticket has a completion target (SLA), calculate urgency based on that
         if (ticket.CompletionTarget.HasValue)
@@ -125,28 +128,114 @@ public class RankingService : IRankingService
             if (daysUntilDeadline <= 0)
             {
                 // Already breached SLA - CRITICAL
-                return _config.GerdaAI.Ranking.SlaWeight * 10.0;
+                return _config.GerdaAI.Ranking.SlaWeight * 10.0 * categoryMultiplier;
             }
             else if (daysUntilDeadline <= 1)
             {
                 // Less than 1 day until breach - URGENT
-                return _config.GerdaAI.Ranking.SlaWeight * 5.0;
+                return _config.GerdaAI.Ranking.SlaWeight * 5.0 * categoryMultiplier;
             }
             else if (daysUntilDeadline <= 3)
             {
                 // Less than 3 days until breach - HIGH
-                return _config.GerdaAI.Ranking.SlaWeight * 2.0;
+                return _config.GerdaAI.Ranking.SlaWeight * 2.0 * categoryMultiplier;
             }
             else
             {
                 // Normal urgency based on time remaining
                 // More time remaining = lower urgency
-                return _config.GerdaAI.Ranking.SlaWeight / daysUntilDeadline;
+                return (_config.GerdaAI.Ranking.SlaWeight / daysUntilDeadline) * categoryMultiplier;
             }
         }
 
         // Fallback: use ticket age as urgency factor
         // Older tickets get higher urgency
-        return age * _config.GerdaAI.Ranking.SlaWeight / 10.0;
+        return (age * _config.GerdaAI.Ranking.SlaWeight / 10.0) * categoryMultiplier;
+    }
+
+    /// <summary>
+    /// Get category-specific urgency multiplier from queue configuration
+    /// </summary>
+    private double GetCategoryUrgencyMultiplier(Ticket ticket)
+    {
+        // Find the queue config for this ticket's project
+        var queueConfig = _config.Queues.FirstOrDefault(q => 
+            ticket.ProjectId.HasValue && 
+            q.Code == GetQueueCodeFromProjectId(ticket.ProjectId.Value));
+
+        if (queueConfig == null)
+        {
+            return 1.0; // Default multiplier if no queue config found
+        }
+
+        // Get the ticket's category/description as a potential category match
+        var category = ExtractCategoryFromTicket(ticket);
+
+        if (queueConfig.UrgencyMultipliers.TryGetValue(category, out var multiplier))
+        {
+            return multiplier;
+        }
+
+        // Try "Other" as fallback
+        if (queueConfig.UrgencyMultipliers.TryGetValue("Other", out var otherMultiplier))
+        {
+            return otherMultiplier;
+        }
+
+        return 1.0; // Default if no match found
+    }
+
+    /// <summary>
+    /// Extract category from ticket description or title
+    /// Maps ticket content to configured categories
+    /// </summary>
+    private string ExtractCategoryFromTicket(Ticket ticket)
+    {
+        var description = ticket.Description?.ToLower() ?? "";
+        
+        // Simple keyword matching - in production this could use ML classification
+        if (description.Contains("password") || description.Contains("login"))
+            return "Password Reset";
+        if (description.Contains("hardware") || description.Contains("laptop") || description.Contains("monitor"))
+            return "Hardware Request";
+        if (description.Contains("bug") || description.Contains("error") || description.Contains("crash"))
+            return "Software Bug";
+        if (description.Contains("outage") || description.Contains("down") || description.Contains("offline"))
+            return "System Outage";
+        if (description.Contains("deployment") || description.Contains("deploy"))
+            return "Deployment";
+        if (description.Contains("security") || description.Contains("patch") || description.Contains("vulnerability"))
+            return "Security Patch";
+        if (description.Contains("performance") || description.Contains("slow"))
+            return "Performance Issue";
+        if (description.Contains("leave") || description.Contains("vacation") || description.Contains("pto"))
+            return "Leave Request";
+        if (description.Contains("payroll") || description.Contains("salary") || description.Contains("payment"))
+            return "Payroll Issue";
+        if (description.Contains("onboard") || description.Contains("new hire"))
+            return "Onboarding";
+        if (description.Contains("refund") || description.Contains("reimburs"))
+            return "Refund Request";
+        if (description.Contains("fraud") || description.Contains("investigation"))
+            return "Fraud Investigation";
+
+        return "Other"; // Default category
+    }
+
+    /// <summary>
+    /// Get queue code from ProjectId (stub - implement based on your project data model)
+    /// </summary>
+    private string GetQueueCodeFromProjectId(int projectId)
+    {
+        // This is a simplified mapping - in production you'd query the Project table
+        // or maintain a ProjectId -> QueueCode lookup
+        switch (projectId)
+        {
+            case 1: return "ITCS";
+            case 2: return "DEVOPS";
+            case 3: return "HR";
+            case 4: return "VATD";
+            default: return "ITCS";
+        }
     }
 }

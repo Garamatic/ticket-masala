@@ -16,8 +16,45 @@ public class GerdaConfig
     [JsonPropertyName("DefaultSlaThresholdDays")]
     public int DefaultSlaThresholdDays { get; set; } = 30;
     
+    [JsonPropertyName("Queues")]
+    public List<QueueConfig> Queues { get; set; } = new();
+    
     [JsonPropertyName("GerdaAI")]
     public GerdaAISettings GerdaAI { get; set; } = new();
+}
+
+/// <summary>
+/// Work Queue configuration with category-specific SLA and urgency settings
+/// </summary>
+public class QueueConfig
+{
+    [JsonPropertyName("Name")]
+    public string Name { get; set; } = string.Empty;
+    
+    [JsonPropertyName("Code")]
+    public string Code { get; set; } = string.Empty;
+    
+    [JsonPropertyName("Description")]
+    public string Description { get; set; } = string.Empty;
+    
+    [JsonPropertyName("IsActive")]
+    public bool IsActive { get; set; } = true;
+    
+    [JsonPropertyName("AutoArchiveDays")]
+    public int AutoArchiveDays { get; set; } = 180;
+    
+    /// <summary>
+    /// Category-specific SLA in days (e.g., "Password Reset": 1, "Hardware Request": 3)
+    /// </summary>
+    [JsonPropertyName("SlaDefaults")]
+    public Dictionary<string, int> SlaDefaults { get; set; } = new();
+    
+    /// <summary>
+    /// Category-specific urgency multipliers for WSJF ranking
+    /// Higher values = more urgent (e.g., "System Outage": 5.0, "Password Reset": 1.5)
+    /// </summary>
+    [JsonPropertyName("UrgencyMultipliers")]
+    public Dictionary<string, double> UrgencyMultipliers { get; set; } = new();
 }
 
 public class GerdaAISettings

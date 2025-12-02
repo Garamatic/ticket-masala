@@ -2,6 +2,10 @@ using IT_Project2526;
 using IT_Project2526.Data;
 using IT_Project2526.Managers;
 using IT_Project2526.Models;
+using IT_Project2526.Services.GERDA;
+using IT_Project2526.Services.GERDA.Models;
+using IT_Project2526.Services.GERDA.Grouping;
+using IT_Project2526.Services.GERDA.Estimating;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
@@ -71,6 +75,31 @@ builder.Services.AddScoped<ApplicationUserManager>();
 
 // Register DbSeeder
 builder.Services.AddScoped<DbSeeder>();
+
+// ============================================
+// GERDA AI Services Configuration
+// ============================================
+var gerdaConfigPath = Path.Combine(builder.Environment.ContentRootPath, "masala_config.json");
+if (File.Exists(gerdaConfigPath))
+{
+    var gerdaConfigJson = File.ReadAllText(gerdaConfigPath);
+    var gerdaConfig = System.Text.Json.JsonSerializer.Deserialize<GerdaConfig>(gerdaConfigJson, 
+        new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    
+    if (gerdaConfig != null)
+    {
+        builder.Services.AddSingleton(gerdaConfig);
+        builder.Services.AddScoped<IGroupingService, GroupingService>();
+        builder.Services.AddScoped<IEstimatingService, EstimatingService>();
+        builder.Services.AddScoped<IGerdaService, GerdaService>();
+        
+        Console.WriteLine("GERDA AI Services registered successfully");
+    }
+}
+else
+{
+    Console.WriteLine($"Warning: GERDA config not found at {gerdaConfigPath}");
+}
 
 // Add Memory Cache
 builder.Services.AddMemoryCache();

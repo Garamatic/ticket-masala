@@ -10,16 +10,12 @@
 
   <ItemGroup>
     <Compile Remove="Repositories\**" />
-    <Compile Remove="Services\**" />
     <Compile Remove="Tests\**" />
     <Content Remove="Repositories\**" />
-    <Content Remove="Services\**" />
     <Content Remove="Tests\**" />
     <EmbeddedResource Remove="Repositories\**" />
-    <EmbeddedResource Remove="Services\**" />
     <EmbeddedResource Remove="Tests\**" />
     <None Remove="Repositories\**" />
-    <None Remove="Services\**" />
     <None Remove="Tests\**" />
   </ItemGroup>
 

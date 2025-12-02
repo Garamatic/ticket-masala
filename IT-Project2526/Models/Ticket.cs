@@ -11,11 +11,21 @@ namespace IT_Project2526.Models
         public DateTime? CompletionTarget { get; set; }
         public DateTime? CompletionDate { get; set; }
 
+        // GERDA AI fields
+        public int EstimatedEffortPoints { get; set; } = 0;
+        public double PriorityScore { get; set; } = 0.0;
+        public string? GerdaTags { get; set; } // Comma-separated: "AI-Dispatched,Spam-Cluster"
+
         public Ticket? ParentTicket { get; set; }
+        public Guid? ParentTicketGuid { get; set; }
         public List<Ticket> SubTickets { get; set; } = [];
         public ApplicationUser? Responsible { get; set; }
+        public string? ResponsibleId { get; set; }
         public List<ApplicationUser> Watchers { get; set; } = [];
         public required Customer Customer { get; set; }
+        public string? CustomerId { get; set; }
+        public Project? Project { get; set; }
+        public int? ProjectId { get; set; }
 
         public List<string> Comments { get; set; } = [];
      }

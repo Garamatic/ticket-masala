@@ -9,6 +9,7 @@ using IT_Project2526.Services.GERDA.Estimating;
 using IT_Project2526.Services.GERDA.Ranking;
 using IT_Project2526.Services.GERDA.Dispatching;
 using IT_Project2526.Services.GERDA.Anticipation;
+using IT_Project2526.Services.GERDA.BackgroundJobs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
@@ -99,7 +100,10 @@ if (File.Exists(gerdaConfigPath))
         builder.Services.AddScoped<IAnticipationService, AnticipationService>();
         builder.Services.AddScoped<IGerdaService, GerdaService>();
         
-        Console.WriteLine("GERDA AI Services registered successfully (G+E+R+D+A)");
+        // Register GERDA Background Service for automated maintenance
+        builder.Services.AddHostedService<GerdaBackgroundService>();
+        
+        Console.WriteLine("GERDA AI Services registered successfully (G+E+R+D+A + Background Jobs)");
     }
 }
 else

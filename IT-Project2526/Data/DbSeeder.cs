@@ -206,7 +206,12 @@ namespace IT_Project2526.Data
                     LastName = "Johnson",
                     Phone = "+1-555-0200",
                     Team = "Project Management",
-                    Level = EmployeeType.ProjectManager
+                    Level = EmployeeType.ProjectManager,
+                    // GERDA AI Fields
+                    Language = "EN",
+                    Specializations = "[\"Project Management\",\"Agile\",\"Risk Management\"]",
+                    MaxCapacityPoints = 50,
+                    Region = "North America"
                 },
                 new Employee
                 {
@@ -217,7 +222,12 @@ namespace IT_Project2526.Data
                     LastName = "Chen",
                     Phone = "+1-555-0201",
                     Team = "Project Management",
-                    Level = EmployeeType.ProjectManager
+                    Level = EmployeeType.ProjectManager,
+                    // GERDA AI Fields
+                    Language = "EN,ZH",
+                    Specializations = "[\"Project Management\",\"DevOps\",\"Infrastructure\"]",
+                    MaxCapacityPoints = 45,
+                    Region = "Asia-Pacific"
                 },
                 new Employee
                 {
@@ -228,7 +238,12 @@ namespace IT_Project2526.Data
                     LastName = "Martinez",
                     Phone = "+1-555-0300",
                     Team = "Technical Support",
-                    Level = EmployeeType.Support
+                    Level = EmployeeType.Support,
+                    // GERDA AI Fields
+                    Language = "EN,ES",
+                    Specializations = "[\"Hardware Support\",\"Network Troubleshooting\",\"Password Reset\"]",
+                    MaxCapacityPoints = 40,
+                    Region = "Latin America"
                 },
                 new Employee
                 {
@@ -239,7 +254,12 @@ namespace IT_Project2526.Data
                     LastName = "Taylor",
                     Phone = "+1-555-0301",
                     Team = "Technical Support",
-                    Level = EmployeeType.Support
+                    Level = EmployeeType.Support,
+                    // GERDA AI Fields
+                    Language = "EN,FR",
+                    Specializations = "[\"Software Troubleshooting\",\"Bug Triage\",\"System Outage\"]",
+                    MaxCapacityPoints = 35,
+                    Region = "Europe"
                 },
                 new Employee
                 {
@@ -250,7 +270,12 @@ namespace IT_Project2526.Data
                     LastName = "Anderson",
                     Phone = "+1-555-0400",
                     Team = "Finance",
-                    Level = EmployeeType.Finance
+                    Level = EmployeeType.Finance,
+                    // GERDA AI Fields
+                    Language = "EN",
+                    Specializations = "[\"Payroll\",\"Tax Processing\",\"Refund Request\"]",
+                    MaxCapacityPoints = 30,
+                    Region = "North America"
                 }
             };
 

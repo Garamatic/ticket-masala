@@ -133,7 +133,7 @@ public class DispatchingService : IDispatchingService
                 continue;
             }
 
-            // Predict affinity score using ML model
+            // Predict affinity score using ML model (Factor 1: Past Interaction)
             var input = new AgentCustomerRating
             {
                 AgentId = employee.Id,
@@ -142,9 +142,23 @@ public class DispatchingService : IDispatchingService
 
             var prediction = predictionEngine.Predict(input);
             
+            // Calculate multi-factor affinity score (4 factors: ML prediction, expertise, language, geography)
+            var multiFactorScore = AffinityScoring.CalculateMultiFactorScore(
+                prediction.Score,
+                ticket,
+                employee,
+                ticket.Customer);
+            
             // Adjust score based on current workload (penalize busy agents)
             var workloadPenalty = currentWorkload / (double)_config.GerdaAI.Dispatching.MaxAssignedTicketsPerAgent;
-            var adjustedScore = prediction.Score * (1.0 - (workloadPenalty * 0.5)); // Up to 50% penalty for full workload
+            var adjustedScore = multiFactorScore * (1.0 - (workloadPenalty * 0.5)); // Up to 50% penalty for full workload
+
+            _logger.LogDebug(
+                "GERDA-D: Agent {AgentName} scored {Score:F2} for ticket {TicketGuid} - {Explanation}",
+                $"{employee.FirstName} {employee.LastName}",
+                adjustedScore,
+                ticketGuid,
+                AffinityScoring.GetScoreExplanation(prediction.Score, ticket, employee, ticket.Customer));
 
             scoredAgents.Add((employee.Id, adjustedScore));
         }

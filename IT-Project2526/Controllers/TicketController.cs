@@ -284,6 +284,47 @@ namespace IT_Project2526.Controllers
             return View(viewModel);
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AssignToRecommended(Guid ticketGuid, string agentId)
+        {
+            var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.Guid == ticketGuid);
+            
+            if (ticket == null)
+            {
+                TempData["Error"] = "Ticket not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var agent = await _context.Employees.FindAsync(agentId);
+            
+            if (agent == null)
+            {
+                TempData["Error"] = "Agent not found.";
+                return RedirectToAction(nameof(Detail), new { id = ticketGuid });
+            }
+
+            // Assign ticket to recommended agent
+            ticket.ResponsibleId = agentId;
+            ticket.TicketStatus = Status.Assigned;
+            
+            // Tag as AI-assigned
+            ticket.GerdaTags = string.IsNullOrWhiteSpace(ticket.GerdaTags)
+                ? "AI-Assigned"
+                : $"{ticket.GerdaTags},AI-Assigned";
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Ticket {TicketGuid} assigned to recommended agent {AgentName} ({AgentId})",
+                ticketGuid,
+                $"{agent.FirstName} {agent.LastName}",
+                agentId);
+
+            TempData["Success"] = $"Ticket successfully assigned to {agent.FirstName} {agent.LastName}!";
+            return RedirectToAction(nameof(Detail), new { id = ticketGuid });
+        }
+
         [HttpGet]
         public async Task<IActionResult> Edit(Guid? id)
         {

@@ -136,6 +136,9 @@ public class AnticipationSettings
     [JsonPropertyName("InflowHistoryYears")]
     public int InflowHistoryYears { get; set; } = 3;
     
+    [JsonPropertyName("MinHistoryForForecasting")]
+    public int MinHistoryForForecasting { get; set; } = 90; // 90 days minimum
+    
     [JsonPropertyName("CapacityRefreshFrequencyHours")]
     public int CapacityRefreshFrequencyHours { get; set; } = 12;
     

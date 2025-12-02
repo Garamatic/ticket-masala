@@ -17,7 +17,7 @@ namespace IT_Project2526.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.10")
+                .HasAnnotation("ProductVersion", "10.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -208,11 +208,23 @@ namespace IT_Project2526.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("EstimatedEffortPoints")
+                        .HasColumnType("int");
+
+                    b.Property<string>("GerdaTags")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid?>("ParentTicketGuid")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<double>("PriorityScore")
+                        .HasColumnType("float");
+
                     b.Property<Guid?>("ProjectGuid")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("ProjectId")
+                        .HasColumnType("int");
 
                     b.Property<string>("ResponsibleId")
                         .HasColumnType("nvarchar(450)");
@@ -269,21 +281,21 @@ namespace IT_Project2526.Migrations
                         new
                         {
                             Id = "2",
-                            ConcurrencyStamp = "0aae9f4d-2689-40f9-98d5-66f39ee2ab91",
+                            ConcurrencyStamp = "37c8eda6-b4c1-4b76-91fc-94e8542bf4d6",
                             Name = "Employee",
                             NormalizedName = "EMPLOYEE"
                         },
                         new
                         {
                             Id = "1",
-                            ConcurrencyStamp = "cca2d384-2c0d-4f19-aaa8-05efc2d96a45",
+                            ConcurrencyStamp = "bc9361db-cdcf-49b1-934b-16e3d5a27c09",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
                             Id = "3",
-                            ConcurrencyStamp = "365267af-d622-45bc-9008-2a07add295fb",
+                            ConcurrencyStamp = "d47449a8-94fe-45d9-ad4e-a7cd0a2120f2",
                             Name = "Customer",
                             NormalizedName = "CUSTOMER"
                         });
@@ -458,7 +470,7 @@ namespace IT_Project2526.Migrations
                         .WithMany("SubTickets")
                         .HasForeignKey("ParentTicketGuid");
 
-                    b.HasOne("IT_Project2526.Models.Project", null)
+                    b.HasOne("IT_Project2526.Models.Project", "Project")
                         .WithMany("Tasks")
                         .HasForeignKey("ProjectGuid");
 
@@ -469,6 +481,8 @@ namespace IT_Project2526.Migrations
                     b.Navigation("Customer");
 
                     b.Navigation("ParentTicket");
+
+                    b.Navigation("Project");
 
                     b.Navigation("Responsible");
                 });

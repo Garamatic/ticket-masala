@@ -99,6 +99,7 @@
       "IsEnabled": true,
       "ForecastHorizonDays": 30, // How many days into the future to forecast
       "InflowHistoryYears": 3,   // How many years of historical data to use for inflow prediction
+      "MinHistoryForForecasting": 90, // Minimum days of historical data required for forecasting
       "CapacityRefreshFrequencyHours": 12, // How often to refresh agent capacity data
       "RiskThresholdPercentage": 20 // If (ForecastedInflow - Capacity) / Capacity > this, trigger alert
     }

@@ -6,6 +6,9 @@ using IT_Project2526.Services.GERDA;
 using IT_Project2526.Services.GERDA.Models;
 using IT_Project2526.Services.GERDA.Grouping;
 using IT_Project2526.Services.GERDA.Estimating;
+using IT_Project2526.Services.GERDA.Ranking;
+using IT_Project2526.Services.GERDA.Dispatching;
+using IT_Project2526.Services.GERDA.Anticipation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
@@ -91,9 +94,12 @@ if (File.Exists(gerdaConfigPath))
         builder.Services.AddSingleton(gerdaConfig);
         builder.Services.AddScoped<IGroupingService, GroupingService>();
         builder.Services.AddScoped<IEstimatingService, EstimatingService>();
+        builder.Services.AddScoped<IRankingService, RankingService>();
+        builder.Services.AddScoped<IDispatchingService, DispatchingService>();
+        builder.Services.AddScoped<IAnticipationService, AnticipationService>();
         builder.Services.AddScoped<IGerdaService, GerdaService>();
         
-        Console.WriteLine("GERDA AI Services registered successfully");
+        Console.WriteLine("GERDA AI Services registered successfully (G+E+R+D+A)");
     }
 }
 else

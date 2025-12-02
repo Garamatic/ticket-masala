@@ -7,6 +7,7 @@ This document outlines the architectural journey and design principles for the "
 Many large organizations (governments, banks, insurance companies) rely on a robust but cumbersome "System of Record" (e.g., SAP). While this system is the legal source of truth, it is often slow, difficult to manage, and lacks the agility required for modern operational management.
 
 -   **The System of Record:** Legally required, holds master data, but is inefficient for day-to-day work allocation and tracking.
+
 -   **The Need:** A fast, modern "cockpit" for team leaders and directors to distribute work, track team velocity, monitor SLAs, and identify operational bottlenecks in real-time.
 
 The goal of this project is to build an "Operational Overlay" that sits on top of the legacy system, providing the necessary agility without replacing the core infrastructure.

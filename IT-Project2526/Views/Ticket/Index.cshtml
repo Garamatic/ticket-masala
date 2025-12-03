@@ -1,0 +1,152 @@
+@model List<IT_Project2526.ViewModels.TicketViewModel>
+@using IT_Project2526.Models
+
+@{
+    ViewData["Title"] = "Tickets";
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <i class="fas fa-ticket-alt text-primary me-2"></i>
+            Tickets
+        </h1>
+        <p class="page-subtitle">View and manage all support tickets</p>
+    </div>
+    <div class="page-actions">
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>
+            New Ticket
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="filters-bar">
+    <div class="search-box">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" class="form-control" id="ticketSearch" placeholder="Search tickets..." />
+    </div>
+    
+    <select class="form-select" id="statusFilter" style="max-width: 180px;">
+        <option value="">All Status</option>
+        <option value="Pending">Pending</option>
+        <option value="Assigned">Assigned</option>
+        <option value="InProgress">In Progress</option>
+        <option value="Completed">Completed</option>
+        <option value="Rejected">Rejected</option>
+    </select>
+</div>
+
+@if (Model != null && Model.Any())
+{
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Customer</th>
+                    <th>Assigned To</th>
+                    <th>Due Date</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var ticket in Model)
+                {
+                    var statusClass = ticket.TicketStatus switch
+                    {
+                        Status.Pending => "status-pending",
+                        Status.Rejected => "status-rejected",
+                        Status.Assigned => "status-assigned",
+                        Status.InProgress => "status-inProgress",
+                        Status.Completed => "status-completed",
+                        Status.Failed => "status-failed",
+                        _ => ""
+                    };
+                    
+                    <tr>
+                        <td>
+                            <div class="fw-medium">@ticket.Description</div>
+                        </td>
+                        <td>
+                            <span class="status-badge @statusClass">
+                                @ticket.TicketStatus.ToString()
+                            </span>
+                        </td>
+                        <td>@(ticket.CustomerName ?? "—")</td>
+                        <td>@(ticket.ResponsibleName ?? "Unassigned")</td>
+                        <td>
+                            @if (ticket.CompletionTarget.HasValue)
+                            {
+                                <span class="@(ticket.CompletionTarget < DateTime.Now ? "text-danger" : "")">
+                                    @ticket.CompletionTarget.Value.ToString("MMM dd, yyyy")
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                <a asp-action="Detail" asp-route-id="@ticket.Guid" 
+                                   class="btn btn-outline-primary" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a asp-action="Edit" asp-route-id="@ticket.Guid" 
+                                   class="btn btn-outline-secondary" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <div class="empty-state">
+        <div class="empty-state-icon">
+            <i class="fas fa-ticket-alt"></i>
+        </div>
+        <h3 class="empty-state-title">No tickets found</h3>
+        <p class="empty-state-text">There are no tickets to display. Create your first ticket to get started.</p>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>
+            Create Ticket
+        </a>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('ticketSearch');
+            const statusFilter = document.getElementById('statusFilter');
+            const tableRows = document.querySelectorAll('tbody tr');
+            
+            function filterTable() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const statusValue = statusFilter.value.toLowerCase();
+                
+                tableRows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    const status = row.querySelector('.status-badge')?.textContent.toLowerCase() || '';
+                    
+                    const matchesSearch = text.includes(searchTerm);
+                    const matchesStatus = !statusValue || status.includes(statusValue);
+                    
+                    row.style.display = matchesSearch && matchesStatus ? '' : 'none';
+                });
+            }
+            
+            searchInput?.addEventListener('input', filterTable);
+            statusFilter?.addEventListener('change', filterTable);
+        });
+    </script>
+}

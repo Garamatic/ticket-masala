@@ -1,8 +1,251 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Dashboard";
+    ViewData["Description"] = "Welcome to Ticket Masala - Your Project Management Hub";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<!-- Dashboard Header -->
+<div class="dashboard-header text-center">
+    <h1 class="dashboard-title">
+        Welcome to <span class="text-primary">Ticket Masala</span>
+    </h1>
+    <p class="dashboard-subtitle">
+        Your all-in-one project and ticket management solution
+    </p>
 </div>
+
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <!-- Quick Stats for Authenticated Users -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-card-title">
+                <i class="fas fa-folder-open me-2"></i>
+                Your Projects
+            </div>
+            <div class="stat-card-value">12</div>
+            <div class="stat-card-change">
+                <i class="fas fa-arrow-up me-1"></i> 3 new this week
+            </div>
+        </div>
+        
+        <div class="stat-card secondary">
+            <div class="stat-card-title">
+                <i class="fas fa-ticket-alt me-2"></i>
+                Active Tickets
+            </div>
+            <div class="stat-card-value">28</div>
+            <div class="stat-card-change">
+                <i class="fas fa-check me-1"></i> 5 completed today
+            </div>
+        </div>
+        
+        <div class="stat-card warning">
+            <div class="stat-card-title">
+                <i class="fas fa-clock me-2"></i>
+                Pending Tasks
+            </div>
+            <div class="stat-card-value">8</div>
+            <div class="stat-card-change">
+                <i class="fas fa-exclamation-circle me-1"></i> 2 due soon
+            </div>
+        </div>
+        
+        <div class="stat-card success">
+            <div class="stat-card-title">
+                <i class="fas fa-chart-line me-2"></i>
+                Completion Rate
+            </div>
+            <div class="stat-card-value">85%</div>
+            <div class="stat-card-change">
+                <i class="fas fa-trophy me-1"></i> Great progress!
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-plus-circle fa-3x text-primary"></i>
+                    </div>
+                    <h3 class="card-title h5">Create Project</h3>
+                    <p class="text-secondary mb-3">Start a new project and invite your team</p>
+                    <a asp-controller="Projects" asp-action="NewProject" class="btn btn-primary">
+                        <i class="fas fa-arrow-right me-2"></i>
+                        Get Started
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-tasks fa-3x text-success"></i>
+                    </div>
+                    <h3 class="card-title h5">View Projects</h3>
+                    <p class="text-secondary mb-3">Manage and track all your active projects</p>
+                    <a asp-controller="Projects" asp-action="Index" class="btn btn-success">
+                        <i class="fas fa-arrow-right me-2"></i>
+                        View All
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-users fa-3x text-info"></i>
+                    </div>
+                    <h3 class="card-title h5">Manage Team</h3>
+                    <p class="text-secondary mb-3">View customers and team members</p>
+                    @if (User.IsInRole("Employee") || User.IsInRole("Admin"))
+                    {
+                        <a asp-controller="Customer" asp-action="Index" class="btn btn-info">
+                            <i class="fas fa-arrow-right me-2"></i>
+                            View Customers
+                        </a>
+                    }
+                    else
+                    {
+                        <button class="btn btn-info" disabled>
+                            <i class="fas fa-lock me-2"></i>
+                            Restricted
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-history me-2"></i>
+                Recent Activity
+            </h3>
+        </div>
+        <div class="card-body">
+            <div class="ticket-list">
+                <div class="ticket-item">
+                    <div class="ticket-header">
+                        <span class="ticket-id">#TM-1234</span>
+                        <span class="badge badge-success">Completed</span>
+                    </div>
+                    <div class="ticket-description">Updated project documentation for Website Redesign</div>
+                    <div class="ticket-footer text-secondary">
+                        <i class="fas fa-user me-1"></i> John Doe
+                        <i class="fas fa-clock ms-3 me-1"></i> 2 hours ago
+                    </div>
+                </div>
+                
+                <div class="ticket-item">
+                    <div class="ticket-header">
+                        <span class="ticket-id">#TM-1233</span>
+                        <span class="badge badge-in-progress">In Progress</span>
+                    </div>
+                    <div class="ticket-description">Implement new authentication system</div>
+                    <div class="ticket-footer text-secondary">
+                        <i class="fas fa-user me-1"></i> Jane Smith
+                        <i class="fas fa-clock ms-3 me-1"></i> 5 hours ago
+                    </div>
+                </div>
+                
+                <div class="ticket-item">
+                    <div class="ticket-header">
+                        <span class="ticket-id">#TM-1232</span>
+                        <span class="badge badge-pending">Pending</span>
+                    </div>
+                    <div class="ticket-description">Design new landing page mockups</div>
+                    <div class="ticket-footer text-secondary">
+                        <i class="fas fa-user me-1"></i> Bob Johnson
+                        <i class="fas fa-clock ms-3 me-1"></i> Yesterday
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <!-- Hero Section for Non-Authenticated Users -->
+    <div class="row align-items-center mb-5">
+        <div class="col-lg-6">
+            <h2 class="display-4 fw-bold mb-4">
+                Streamline Your <span class="text-primary">Project Management</span>
+            </h2>
+            <p class="lead text-secondary mb-4">
+                Ticket Masala helps teams collaborate, track progress, and deliver projects on time.
+                Simple, powerful, and built for modern teams.
+            </p>
+            <div class="d-flex gap-3">
+                <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-primary btn-lg">
+                    <i class="fas fa-sign-in-alt me-2"></i>
+                    Sign In to Get Started
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-6 text-center">
+            <i class="fas fa-chart-pie fa-10x text-primary" style="opacity: 0.1;"></i>
+        </div>
+    </div>
+
+    <!-- Features Grid -->
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-rocket fa-3x text-primary mb-3"></i>
+                    <h3 class="h5">Fast & Efficient</h3>
+                    <p class="text-secondary">
+                        Get your projects up and running in minutes with our intuitive interface.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-shield-alt fa-3x text-success mb-3"></i>
+                    <h3 class="h5">Secure & Reliable</h3>
+                    <p class="text-secondary">
+                        Your data is protected with enterprise-grade security and encryption.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-3x text-info mb-3"></i>
+                    <h3 class="h5">Team Collaboration</h3>
+                    <p class="text-secondary">
+                        Work together seamlessly with real-time updates and notifications.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        // Add fade-in animation to cards
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('fade-in');
+                }, index * 100);
+            });
+        });
+    </script>
+}

@@ -1,0 +1,212 @@
+﻿@model IT_Project2526.ViewModels.TicketDetailsViewModel
+@using System.Linq
+@using IT_Project2526
+@using IT_Project2526.Models;
+@using IT_Project2526.ViewModels;
+
+@{
+    ViewData["Title"] = "Ticket Detail";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<div class="row">
+    <!-- Left Column: Core Ticket Information -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4>Ticket #@Model.Guid.ToString().Substring(0, 8)</h4>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">Description</dt>
+                    <dd class="col-sm-9">@Model.Description</dd>
+
+                    <dt class="col-sm-3">Status</dt>
+                    <dd class="col-sm-9">
+                        <status-badge status="@Model.TicketStatus"></status-badge>
+                    </dd>
+
+                    <dt class="col-sm-3">Customer</dt>
+                    <dd class="col-sm-9">@(Model.CustomerName ?? "Unknown")</dd>
+
+                    <dt class="col-sm-3">Responsible</dt>
+                    <dd class="col-sm-9">@(Model.ResponsibleName ?? "Not Assigned")</dd>
+
+                    <dt class="col-sm-3">Created</dt>
+                    <dd class="col-sm-9">@Model.CreationDate.ToString("yyyy-MM-dd HH:mm")</dd>
+
+                    <dt class="col-sm-3">SLA Deadline</dt>
+                    <dd class="col-sm-9">
+                        @if (Model.CompletionTarget.HasValue)
+                        {
+                            <span class="@(Model.IsSlaBreached ? "text-danger fw-bold" : Model.DaysUntilSla <= 3 ? "text-warning" : "")">
+                                @Model.CompletionTarget.Value.ToString("yyyy-MM-dd HH:mm")
+                            </span>
+                            <small class="ms-2">(@Model.SlaStatusLabel)</small>
+                        }
+                        else
+                        {
+                            <span class="text-muted">No deadline set</span>
+                        }
+                    </dd>
+
+                    @if (Model.ProjectName != null)
+                    {
+                        <dt class="col-sm-3">Project</dt>
+                        <dd class="col-sm-9">
+                            <a asp-controller="Projects" asp-action="Details" asp-route-id="@Model.ProjectGuid">
+                                @Model.ProjectName
+                            </a>
+                        </dd>
+                    }
+
+                    @if (Model.ParentTicketGuid.HasValue)
+                    {
+                        <dt class="col-sm-3">Parent Ticket</dt>
+                        <dd class="col-sm-9">
+                            <a asp-action="Detail" asp-route-id="@Model.ParentTicketGuid">
+                                #@Model.ParentTicketGuid.Value.ToString().Substring(0, 8)
+                            </a>
+                        </dd>
+                    }
+
+                    @if (Model.Comments.Any())
+                    {
+                        <dt class="col-sm-3">Comments</dt>
+                        <dd class="col-sm-9">
+                            <ul class="list-unstyled">
+                                @foreach (var comment in Model.Comments)
+                                {
+                                    <li class="mb-1">💬 @comment</li>
+                                }
+                            </ul>
+                        </dd>
+                    }
+                </dl>
+
+                @if (Model.SubTickets.Any())
+                {
+                    <hr />
+                    <h5>Sub-tickets (@Model.SubTickets.Count)</h5>
+                    <ul class="list-group">
+                        @foreach (var sub in Model.SubTickets)
+                        {
+                            <li class="list-group-item">
+                                <a asp-action="Detail" asp-route-id="@sub.Guid">
+                                    #@sub.Guid.ToString().Substring(0, 8)
+                                </a>
+                                - @sub.Description
+                                <status-badge status="@sub.TicketStatus" class="float-end"></status-badge>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: GERDA AI Insights -->
+    <div class="col-md-4">
+        <div class="card border-primary mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">🤖 GERDA AI Insights</h5>
+            </div>
+            <div class="card-body">
+                <!-- Complexity Estimation -->
+                <div class="mb-3">
+                    <h6 class="text-primary">Complexity</h6>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fs-4">@Model.EstimatedEffortPoints points</span>
+                        <span class="badge bg-secondary">@Model.ComplexityLabel</span>
+                    </div>
+                    <div class="progress mt-2" style="height: 8px;">
+                        <div class="progress-bar" 
+                             role="progressbar" 
+                             style="width: @((Model.EstimatedEffortPoints / 21.0 * 100))%"
+                             aria-valuenow="@Model.EstimatedEffortPoints" 
+                             aria-valuemin="0" 
+                             aria-valuemax="21">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Priority Ranking -->
+                <div class="mb-3">
+                    <h6 class="text-primary">Priority (WSJF)</h6>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fs-4">@Model.PriorityScore.ToString("F1")</span>
+                        <span class="@Model.UrgencyBadgeClass">@Model.UrgencyLabel</span>
+                    </div>
+                    <small class="text-muted">Higher score = more urgent</small>
+                </div>
+
+                <!-- AI Tags -->
+                @if (Model.GerdaTagsList.Any())
+                {
+                    <div class="mb-3">
+                        <h6 class="text-primary">AI Tags</h6>
+                        <div class="d-flex flex-wrap gap-1">
+                            @foreach (var tag in Model.GerdaTagsList)
+                            {
+                                <span class="badge bg-light text-dark border">🏷️ @tag</span>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Recommended Agent (if unassigned) -->
+        @if (Model.RecommendedAgent != null)
+        {
+            <div class="card border-success mb-3">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">✨ Recommended Agent</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="card-title">@Model.RecommendedAgent.AgentName</h6>
+                    <p class="mb-2">
+                        <span class="badge bg-success">@Model.RecommendedAgent.AffinityLabel</span>
+                        <span class="text-muted ms-2">Score: @Model.RecommendedAgent.AffinityScore.ToString("F2")</span>
+                    </p>
+                    
+                    <div class="mb-2">
+                        <small class="text-muted">Current Workload</small>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar @(Model.RecommendedAgent.WorkloadPercentage > 80 ? "bg-warning" : "bg-success")" 
+                                 role="progressbar" 
+                                 style="width: @Model.RecommendedAgent.WorkloadPercentage%"
+                                 aria-valuenow="@Model.RecommendedAgent.WorkloadPercentage" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                                @Model.RecommendedAgent.CurrentWorkload / @Model.RecommendedAgent.MaxCapacity pts
+                            </div>
+                        </div>
+                    </div>
+
+                    <form asp-action="AssignToRecommended" method="post" class="mt-3">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="ticketGuid" value="@Model.Guid" />
+                        <input type="hidden" name="agentId" value="@Model.RecommendedAgent.AgentId" />
+                        <button type="submit" class="btn btn-success btn-sm w-100">
+                            Assign to @Model.RecommendedAgent.AgentName
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="mt-3">
+    <a asp-action="Edit" asp-route-id="@Model.Guid" class="btn btn-primary">Edit Ticket</a>
+    
+    @if (Model.ProjectGuid.HasValue)
+    {
+        <a asp-controller="Projects" asp-action="Details" asp-route-id="@Model.ProjectGuid" class="btn btn-secondary">View Project</a>
+    }
+    
+    <button type="button" onclick="window.history.back()" class="btn btn-outline-secondary">Back</button>
+</div>

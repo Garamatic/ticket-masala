@@ -1,0 +1,160 @@
+@model List<IT_Project2526.ViewModels.ProjectTicketViewModel>
+@using IT_Project2526.Models
+@{
+    ViewData["Title"] = "Projects";
+    ViewData["Description"] = "Manage and view all your projects";
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <i class="fas fa-folder-open text-primary me-2"></i>
+            Projects
+        </h1>
+        <p class="page-subtitle">Manage your projects and track progress</p>
+    </div>
+    <div class="page-actions">
+        <a asp-controller="Projects" asp-action="NewProject" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>
+            New Project
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="filters-bar">
+    <div class="search-box">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" class="form-control" id="projectSearch" placeholder="Search projects..." />
+    </div>
+    
+    <select class="form-select" id="statusFilter" style="max-width: 180px;">
+        <option value="">All Status</option>
+        <option value="Pending">Pending</option>
+        <option value="InProgress">In Progress</option>
+        <option value="Completed">Completed</option>
+    </select>
+</div>
+
+@if (Model != null && Model.Any())
+{
+    <div class="row g-4">
+        @foreach (var item in Model)
+        {
+            <div class="col-12">
+                <div class="project-card">
+                    <div class="project-card-header">
+                        <h3 class="project-card-title">
+                            <a asp-controller="Projects" asp-action="Details" asp-route-id="@item.ProjectDetails.Guid">
+                                <i class="fas fa-folder text-primary me-2"></i>
+                                @item.ProjectDetails.Name
+                            </a>
+                        </h3>
+                    </div>
+                    
+                    <div class="project-card-meta">
+                        <span>
+                            <i class="fas fa-user-tie"></i>
+                            @item.ProjectDetails.ProjectManagerName
+                        </span>
+                        <span>
+                            <i class="fas fa-ticket-alt"></i>
+                            @item.ProjectDetails.TicketCount Tickets
+                        </span>
+                    </div>
+                    
+                    @if (item.Tasks != null && item.Tasks.Any())
+                    {
+                        <div class="table-responsive mt-3">
+                            <table class="table table-sm mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Ticket ID</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var ticket in item.Tasks.Take(5))
+                                    {
+                                        var statusClass = ticket.TicketStatus switch
+                                        {
+                                            Status.Pending => "status-pending",
+                                            Status.Rejected => "status-rejected",
+                                            Status.Assigned => "status-assigned",
+                                            Status.InProgress => "status-inProgress",
+                                            Status.Completed => "status-completed",
+                                            Status.Failed => "status-failed",
+                                            _ => ""
+                                        };
+                                        
+                                        <tr>
+                                            <td>
+                                                <code class="text-muted">@ticket.Guid.ToString()[..8]...</code>
+                                            </td>
+                                            <td>
+                                                <span class="status-badge @statusClass">
+                                                    @ticket.TicketStatus.ToString()
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        @if (item.Tasks.Count > 5)
+                        {
+                            <div class="mt-2 text-center">
+                                <a asp-controller="Projects" asp-action="Details" asp-route-id="@item.ProjectDetails.Guid" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    View all @item.Tasks.Count tickets
+                                    <i class="fas fa-arrow-right ms-1"></i>
+                                </a>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-info-circle me-1"></i>
+                            No active tickets
+                        </p>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="empty-state">
+        <div class="empty-state-icon">
+            <i class="fas fa-folder-open"></i>
+        </div>
+        <h3 class="empty-state-title">No projects yet</h3>
+        <p class="empty-state-text">Get started by creating your first project.</p>
+        <a asp-controller="Projects" asp-action="NewProject" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>
+            Create Project
+        </a>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('projectSearch');
+            const projectCards = document.querySelectorAll('.project-card');
+            
+            searchInput?.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                
+                projectCards.forEach(card => {
+                    const text = card.textContent.toLowerCase();
+                    card.closest('.col-12').style.display = text.includes(searchTerm) ? '' : 'none';
+                });
+            });
+        });
+    </script>
+}

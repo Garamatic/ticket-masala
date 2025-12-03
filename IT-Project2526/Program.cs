@@ -2,6 +2,7 @@ using IT_Project2526;
 using IT_Project2526.Data;
 using IT_Project2526.Managers;
 using IT_Project2526.Models;
+using IT_Project2526.Services;
 using IT_Project2526.Services.GERDA;
 using IT_Project2526.Services.GERDA.Models;
 using IT_Project2526.Services.GERDA.Grouping;
@@ -76,6 +77,10 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 
 // Register Managers (if needed in future)
 builder.Services.AddScoped<ApplicationUserManager>();
+
+// Register Services
+builder.Services.AddScoped<IMetricsService, MetricsService>();
+builder.Services.AddScoped<ITicketService, TicketService>();
 
 // Register DbSeeder
 builder.Services.AddScoped<DbSeeder>();

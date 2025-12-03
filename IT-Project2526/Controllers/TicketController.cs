@@ -1,6 +1,7 @@
 ﻿using IT_Project2526;
 using IT_Project2526.Models;
 using IT_Project2526.ViewModels;
+using IT_Project2526.Services;
 using IT_Project2526.Services.GERDA;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
@@ -14,15 +15,18 @@ namespace IT_Project2526.Controllers
     {
         private readonly ITProjectDB _context;
         private readonly IGerdaService _gerdaService;
+        private readonly ITicketService _ticketService;
         private readonly ILogger<TicketController> _logger;
 
         public TicketController(
             ITProjectDB context,
             IGerdaService gerdaService,
+            ITicketService ticketService,
             ILogger<TicketController> logger)
         {
             _context = context;
             _gerdaService = gerdaService;
+            _ticketService = ticketService;
             _logger = logger;
         }
 
@@ -61,27 +65,9 @@ namespace IT_Project2526.Controllers
         [HttpGet]
         public async Task<IActionResult> Create()
         {
-            var customers = await _context.Customers.ToListAsync();
-            var employees = await _context.Employees.ToListAsync();
-            var projects = await _context.Projects.ToListAsync();
-
-            ViewBag.Customers = customers.Select(c => new SelectListItem
-            {
-                Value = c.Id,
-                Text = $"{c.FirstName} {c.LastName}"
-            }).ToList();
-
-            ViewBag.Employees = employees.Select(e => new SelectListItem
-            {
-                Value = e.Id,
-                Text = $"{e.FirstName} {e.LastName}"
-            }).ToList();
-
-            ViewBag.Projects = projects.Select(p => new SelectListItem
-            {
-                Value = p.Guid.ToString(),
-                Text = p.Name
-            }).ToList();
+            ViewBag.Customers = await _ticketService.GetCustomerSelectListAsync();
+            ViewBag.Employees = await _ticketService.GetEmployeeSelectListAsync();
+            ViewBag.Projects = await _ticketService.GetProjectSelectListAsync();
 
             return View();
         }
@@ -103,69 +89,19 @@ namespace IT_Project2526.Controllers
             if (!ModelState.IsValid)
             {
                 // Reload dropdowns
-                var customers = await _context.Customers.ToListAsync();
-                var employees = await _context.Employees.ToListAsync();
-                var projects = await _context.Projects.ToListAsync();
-
-                ViewBag.Customers = customers.Select(c => new SelectListItem
-                {
-                    Value = c.Id,
-                    Text = $"{c.FirstName} {c.LastName}"
-                }).ToList();
-
-                ViewBag.Employees = employees.Select(e => new SelectListItem
-                {
-                    Value = e.Id,
-                    Text = $"{e.FirstName} {e.LastName}"
-                }).ToList();
-
-                ViewBag.Projects = projects.Select(p => new SelectListItem
-                {
-                    Value = p.Guid.ToString(),
-                    Text = p.Name
-                }).ToList();
+                ViewBag.Customers = await _ticketService.GetCustomerSelectListAsync();
+                ViewBag.Employees = await _ticketService.GetEmployeeSelectListAsync();
+                ViewBag.Projects = await _ticketService.GetProjectSelectListAsync();
 
                 return View();
             }
 
-            var customer = await _context.Customers.FindAsync(customerId);
-            Employee? responsible = null;
-            if (!string.IsNullOrWhiteSpace(responsibleId))
-            {
-                responsible = await _context.Employees.FindAsync(responsibleId);
-            }
-
-            var ticket = new Ticket
-            {
-                Description = description,
-                Customer = customer!,
-                Responsible = responsible,
-                TicketStatus = responsible != null ? Status.Assigned : Status.Pending,
-                TicketType = TicketType.ProjectRequest,
-                CompletionTarget = completionTarget ?? DateTime.UtcNow.AddDays(14),
-                CreatorGuid = customer != null ? Guid.Parse(customer.Id) : Guid.Empty,
-                Comments = new List<string>()
-            };
-
-            _context.Tickets.Add(ticket);
-
-            // If a project is selected, add the ticket to that project
-            if (projectGuid.HasValue && projectGuid.Value != Guid.Empty)
-            {
-                var project = await _context.Projects.Include(p => p.Tasks).FirstOrDefaultAsync(p => p.Guid == projectGuid.Value);
-                if (project != null)
-                {
-                    project.Tasks.Add(ticket);
-                }
-            }
-
-            await _context.SaveChangesAsync();
-
-            // ============================================
-            // GERDA AI Integration
-            // ============================================
             try
             {
+                // Create ticket via service
+                var ticket = await _ticketService.CreateTicketAsync(description, customerId, responsibleId, projectGuid, completionTarget);
+
+                // Process with GERDA AI
                 _logger.LogInformation("Processing ticket {TicketGuid} with GERDA AI", ticket.Guid);
                 await _gerdaService.ProcessTicketAsync(ticket.Guid);
                 
@@ -174,8 +110,8 @@ namespace IT_Project2526.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "GERDA AI processing failed for ticket {TicketGuid}", ticket.Guid);
-                TempData["Warning"] = "Ticket created, but AI processing encountered an error. Manual review recommended.";
+                _logger.LogError(ex, "Error creating or processing ticket");
+                TempData["Warning"] = "Ticket creation encountered an error. Please try again.";
             }
 
             return RedirectToAction(nameof(Index));
@@ -188,69 +124,22 @@ namespace IT_Project2526.Controllers
                 return NotFound();
             }
 
-            var project = await _context.Projects
-                         .Include(p => p.Tasks)
-                         .FirstOrDefaultAsync(p => p.Tasks.Any(t => t.Guid == id));
-
-            var ticket = await _context.Tickets
-                        .Include(t => t.Customer)
-                        .Include(t => t.Responsible)
-                        .Include(t => t.ParentTicket)
-                        .Include(t => t.SubTickets)
-                        .FirstOrDefaultAsync(m => m.Guid == id);
-
-            if (ticket == null)
+            var viewModel = await _ticketService.GetTicketDetailsAsync(id.Value);
+            
+            if (viewModel == null)
             { 
                 return NotFound(); 
             }
 
-            // Build GERDA-enhanced view model
-            var viewModel = new TicketDetailsViewModel
-            {
-                Guid = ticket.Guid,
-                Description = ticket.Description,
-                TicketStatus = ticket.TicketStatus,
-                TicketType = ticket.TicketType,
-                CreationDate = ticket.CreationDate,
-                CompletionTarget = ticket.CompletionTarget,
-                CompletionDate = ticket.CompletionDate,
-                Comments = ticket.Comments,
-                
-                // Relationships
-                ResponsibleName = ticket.Responsible != null
-                                    ? $"{ticket.Responsible.FirstName} {ticket.Responsible.LastName}"
-                                    : null,
-                ResponsibleId = ticket.Responsible?.Id,
-                CustomerName = ticket.Customer != null
-                                    ? $"{ticket.Customer.FirstName} {ticket.Customer.LastName}"
-                                    : null,
-                CustomerId = ticket.Customer?.Id,
-                ParentTicketGuid = ticket.ParentTicket?.Guid,
-                ProjectGuid = project?.Guid,
-                ProjectName = project?.Name,
-                
-                SubTickets = ticket.SubTickets.Select(st => new SubTicketInfo
-                {
-                    Guid = st.Guid,
-                    Description = st.Description,
-                    TicketStatus = st.TicketStatus
-                }).ToList(),
-                
-                // GERDA AI Insights
-                EstimatedEffortPoints = ticket.EstimatedEffortPoints,
-                PriorityScore = ticket.PriorityScore,
-                GerdaTags = ticket.GerdaTags
-            };
-
             // Get recommended agent from Dispatching service (if ticket is unassigned)
-            if (string.IsNullOrWhiteSpace(ticket.ResponsibleId))
+            if (string.IsNullOrWhiteSpace(viewModel.ResponsibleId))
             {
                 try
                 {
                     var dispatchingService = HttpContext.RequestServices.GetService<Services.GERDA.Dispatching.IDispatchingService>();
                     if (dispatchingService != null)
                     {
-                        var recommendations = await dispatchingService.GetTopRecommendedAgentsAsync(ticket.Guid, 1);
+                        var recommendations = await dispatchingService.GetTopRecommendedAgentsAsync(id.Value, 1);
                         if (recommendations != null && recommendations.Any())
                         {
                             var topRecommendation = recommendations.First();
@@ -277,7 +166,7 @@ namespace IT_Project2526.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to get recommended agent for ticket {TicketGuid}", ticket.Guid);
+                    _logger.LogWarning(ex, "Failed to get recommended agent for ticket {TicketGuid}", id.Value);
                 }
             }
 
@@ -288,40 +177,16 @@ namespace IT_Project2526.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AssignToRecommended(Guid ticketGuid, string agentId)
         {
-            var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.Guid == ticketGuid);
+            var success = await _ticketService.AssignTicketAsync(ticketGuid, agentId);
             
-            if (ticket == null)
+            if (!success)
             {
-                TempData["Error"] = "Ticket not found.";
+                TempData["Error"] = "Failed to assign ticket. Please try again.";
                 return RedirectToAction(nameof(Index));
             }
 
             var agent = await _context.Employees.FindAsync(agentId);
-            
-            if (agent == null)
-            {
-                TempData["Error"] = "Agent not found.";
-                return RedirectToAction(nameof(Detail), new { id = ticketGuid });
-            }
-
-            // Assign ticket to recommended agent
-            ticket.ResponsibleId = agentId;
-            ticket.TicketStatus = Status.Assigned;
-            
-            // Tag as AI-assigned
-            ticket.GerdaTags = string.IsNullOrWhiteSpace(ticket.GerdaTags)
-                ? "AI-Assigned"
-                : $"{ticket.GerdaTags},AI-Assigned";
-
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation(
-                "Ticket {TicketGuid} assigned to recommended agent {AgentName} ({AgentId})",
-                ticketGuid,
-                $"{agent.FirstName} {agent.LastName}",
-                agentId);
-
-            TempData["Success"] = $"Ticket successfully assigned to {agent.FirstName} {agent.LastName}!";
+            TempData["Success"] = $"Ticket successfully assigned to {agent?.FirstName} {agent?.LastName}!";
             return RedirectToAction(nameof(Detail), new { id = ticketGuid });
         }
 

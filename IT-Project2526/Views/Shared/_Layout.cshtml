@@ -77,10 +77,26 @@
                         @if (User.IsInRole("Admin"))
                         {
                             <li class="sidebar-item">
-                                <a class="sidebar-link @(currentController == "Manager" ? "active" : "")" 
-                                   asp-controller="Manager" asp-action="Projects">
+                                <a class="sidebar-link @(currentController == "Manager" && currentAction == "TeamDashboard" ? "active" : "")" 
+                                   asp-controller="Manager" asp-action="TeamDashboard">
                                     <i class="fas fa-chart-line sidebar-icon"></i>
-                                    <span>Manager View</span>
+                                    <span>Team Dashboard</span>
+                                </a>
+                            </li>
+                            
+                            <li class="sidebar-item">
+                                <a class="sidebar-link @(currentController == "Manager" && currentAction == "DispatchBacklog" ? "active" : "")" 
+                                   asp-controller="Manager" asp-action="DispatchBacklog">
+                                    <i class="fas fa-robot sidebar-icon"></i>
+                                    <span>GERDA Dispatch</span>
+                                </a>
+                            </li>
+                            
+                            <li class="sidebar-item">
+                                <a class="sidebar-link @(currentController == "Manager" && currentAction == "Projects" ? "active" : "")" 
+                                   asp-controller="Manager" asp-action="Projects">
+                                    <i class="fas fa-tasks sidebar-icon"></i>
+                                    <span>All Projects</span>
                                 </a>
                             </li>
                         }

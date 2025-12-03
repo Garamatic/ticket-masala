@@ -21,7 +21,7 @@ public interface IRankingService
     /// <summary>
     /// Get tickets ordered by priority score
     /// </summary>
-    Task<List<Guid>> GetPrioritizedTicketGuidsAsync(int? projectId = null);
+    Task<List<Guid>> GetPrioritizedTicketGuidsAsync(Guid? projectGuid = null);
     
     /// <summary>
     /// Check if ranking is enabled

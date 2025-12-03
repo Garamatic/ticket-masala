@@ -32,8 +32,9 @@ namespace IT_Project2526.Controllers
         {
             //Projecten uit Db halen met hun tickets
             var projectsOfDb = _context.Projects
-                                       .Include(p => p.Tasks)
+                                       .Include(p => p.Tasks.Where(t => t.ValidUntil == null))
                                        .Include(p => p.ProjectManager)
+                                       .Where(p => p.ValidUntil == null)
                                        .ToList();
 
             //Models naar ViewModels
@@ -41,10 +42,15 @@ namespace IT_Project2526.Controllers
             {
                 ProjectDetails = new ProjectViewModel
                 {
+                    Guid = p.Guid,
                     Name = p.Name,
                     Description = p.Description,
                     Status = p.Status,
                     ProjectManager = p.ProjectManager,
+                    ProjectManagerName = p.ProjectManager != null 
+                        ? $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}" 
+                        : "Not Assigned",
+                    TicketCount = p.Tasks.Count
                 },
                 Tasks = p.Tasks.Select(t => new TicketViewModel
                 {
@@ -182,9 +188,9 @@ namespace IT_Project2526.Controllers
             {
                 var project = await _context.Projects
                     .AsNoTracking()
-                    .Include(p => p.Tasks)
+                    .Include(p => p.Tasks.Where(t => t.ValidUntil == null))
                         .ThenInclude(t => t.Responsible)
-                    .Include(p => p.Tasks)
+                    .Include(p => p.Tasks.Where(t => t.ValidUntil == null))
                         .ThenInclude(t => t.Customer)
                     .Include(p => p.Customer)
                     .Include(p => p.ProjectManager)

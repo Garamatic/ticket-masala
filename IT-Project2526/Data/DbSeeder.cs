@@ -449,7 +449,8 @@ namespace IT_Project2526.Data
                     CompletionTarget = DateTime.UtcNow.AddDays(7),
                     CompletionDate = DateTime.UtcNow.AddDays(-2),
                     Comments = new List<string> { "Initial design completed", "Client approved the mockup" },
-                    CreatorGuid = Guid.Parse(customer1.Id)
+                    CreatorGuid = Guid.Parse(customer1.Id),
+                    ProjectGuid = project1.Guid
                 },
                 new Ticket
                 {
@@ -460,7 +461,8 @@ namespace IT_Project2526.Data
                     Responsible = support2,
                     CompletionTarget = DateTime.UtcNow.AddDays(14),
                     Comments = new List<string> { "Started implementation", "Mobile view needs adjustment" },
-                    CreatorGuid = Guid.Parse(customer1.Id)
+                    CreatorGuid = Guid.Parse(customer1.Id),
+                    ProjectGuid = project1.Guid
                 },
                 new Ticket
                 {
@@ -471,7 +473,8 @@ namespace IT_Project2526.Data
                     Responsible = support1,
                     CompletionTarget = DateTime.UtcNow.AddDays(21),
                     Comments = new List<string> { "Analyzing requirements" },
-                    CreatorGuid = Guid.Parse(customer2.Id)
+                    CreatorGuid = Guid.Parse(customer2.Id),
+                    ProjectGuid = project2.Guid
                 },
                 new Ticket
                 {
@@ -481,7 +484,8 @@ namespace IT_Project2526.Data
                     Customer = customer1,
                     CompletionTarget = DateTime.UtcNow.AddDays(30),
                     Comments = new List<string>(),
-                    CreatorGuid = Guid.Parse(customer1.Id)
+                    CreatorGuid = Guid.Parse(customer1.Id),
+                    ProjectGuid = project1.Guid
                 },
                 new Ticket
                 {
@@ -492,7 +496,8 @@ namespace IT_Project2526.Data
                     Responsible = support2,
                     CompletionTarget = DateTime.UtcNow.AddDays(3),
                     Comments = new List<string> { "Issue reproduced", "Working on fix" },
-                    CreatorGuid = Guid.Parse(customer2.Id)
+                    CreatorGuid = Guid.Parse(customer2.Id),
+                    ProjectGuid = project2.Guid
                 }
             };
 

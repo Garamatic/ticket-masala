@@ -51,6 +51,13 @@ namespace IT_Project2526
             modelBuilder.Entity<IdentityRole>()
                 .HasData(employee, admin, cust);
 
+            // Configure Project-Ticket relationship
+            modelBuilder.Entity<Ticket>()
+                .HasOne(t => t.Project)
+                .WithMany(p => p.Tasks)
+                .HasForeignKey(t => t.ProjectGuid)
+                .OnDelete(DeleteBehavior.SetNull);
+
         }
 
         public DbSet<Project> Projects { get; set; }

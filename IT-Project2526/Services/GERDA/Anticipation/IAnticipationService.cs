@@ -16,7 +16,7 @@ public interface IAnticipationService
     /// <summary>
     /// Get current team capacity (tickets per day)
     /// </summary>
-    Task<double> GetTeamCapacityAsync(int? projectId = null);
+    Task<double> GetTeamCapacityAsync(Guid? projectGuid = null);
     
     /// <summary>
     /// Check if there's a capacity risk in the forecast horizon

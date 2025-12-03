@@ -90,14 +90,14 @@ public class RankingService : IRankingService
         _logger.LogInformation("GERDA-R: Completed priority recalculation for {Count} tickets", openTickets.Count);
     }
 
-    public async Task<List<Guid>> GetPrioritizedTicketGuidsAsync(int? projectId = null)
+    public async Task<List<Guid>> GetPrioritizedTicketGuidsAsync(Guid? projectGuid = null)
     {
         var query = _context.Tickets
             .Where(t => t.TicketStatus != Status.Completed && t.TicketStatus != Status.Failed);
 
-        if (projectId.HasValue)
+        if (projectGuid.HasValue)
         {
-            query = query.Where(t => t.ProjectId == projectId.Value);
+            query = query.Where(t => t.ProjectGuid == projectGuid.Value);
         }
 
         var prioritizedGuids = await query
@@ -160,8 +160,8 @@ public class RankingService : IRankingService
     {
         // Find the queue config for this ticket's project
         var queueConfig = _config.Queues.FirstOrDefault(q => 
-            ticket.ProjectId.HasValue && 
-            q.Code == GetQueueCodeFromProjectId(ticket.ProjectId.Value));
+            ticket.ProjectGuid.HasValue && 
+            q.Code == GetQueueCodeFromProjectGuid(ticket.ProjectGuid.Value));
 
         if (queueConfig == null)
         {
@@ -223,19 +223,13 @@ public class RankingService : IRankingService
     }
 
     /// <summary>
-    /// Get queue code from ProjectId (stub - implement based on your project data model)
+    /// Get queue code from ProjectGuid (stub - implement based on your project data model)
     /// </summary>
-    private string GetQueueCodeFromProjectId(int projectId)
+    private string GetQueueCodeFromProjectGuid(Guid projectGuid)
     {
         // This is a simplified mapping - in production you'd query the Project table
-        // or maintain a ProjectId -> QueueCode lookup
-        switch (projectId)
-        {
-            case 1: return "ITCS";
-            case 2: return "DEVOPS";
-            case 3: return "HR";
-            case 4: return "VATD";
-            default: return "ITCS";
-        }
+        // or maintain a ProjectGuid -> QueueCode lookup
+        // For now, return a default value
+        return "ITCS"; // Default queue code
     }
 }

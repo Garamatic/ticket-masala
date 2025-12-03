@@ -116,9 +116,9 @@ namespace IT_Project2526.Controllers.Api
             {
                 var project = await _context.Projects
                     .AsNoTracking()
-                    .Include(p => p.Tasks)
+                    .Include(p => p.Tasks.Where(t => t.ValidUntil == null))
                         .ThenInclude(t => t.Responsible)
-                    .Include(p => p.Tasks)
+                    .Include(p => p.Tasks.Where(t => t.ValidUntil == null))
                         .ThenInclude(t => t.Customer)
                     .Include(p => p.Customer)
                     .Include(p => p.ProjectManager)
@@ -184,9 +184,9 @@ namespace IT_Project2526.Controllers.Api
             {
                 var projects = await _context.Projects
                     .AsNoTracking()
-                    .Include(p => p.Tasks)
+                    .Include(p => p.Tasks.Where(t => t.ValidUntil == null))
                         .ThenInclude(t => t.Responsible)
-                    .Include(p => p.Tasks)
+                    .Include(p => p.Tasks.Where(t => t.ValidUntil == null))
                         .ThenInclude(t => t.Customer)
                     .Include(p => p.Customer)
                     .Include(p => p.ProjectManager)
@@ -246,14 +246,14 @@ namespace IT_Project2526.Controllers.Api
             {
                 var projects = await _context.Projects
                     .AsNoTracking()
-                    .Include(p => p.Tasks)
+                    .Include(p => p.Tasks.Where(t => t.ValidUntil == null))
                         .ThenInclude(t => t.Responsible)
-                    .Include(p => p.Tasks)
+                    .Include(p => p.Tasks.Where(t => t.ValidUntil == null))
                         .ThenInclude(t => t.Customer)
                     .Include(p => p.Customer)
                     .Include(p => p.ProjectManager)
                     .Where(p => p.ValidUntil == null && 
-                               (p.Name.Contains(query) || p.Description.Contains(query)))
+                        (p.Name.Contains(query) || p.Description.Contains(query)))
                     .Select(p => new ProjectTicketViewModel
                     {
                         ProjectDetails = new ProjectViewModel

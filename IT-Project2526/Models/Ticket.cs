@@ -34,7 +34,7 @@ namespace IT_Project2526.Models
         public required Customer Customer { get; set; }
         public string? CustomerId { get; set; }
         public Project? Project { get; set; }
-        public int? ProjectId { get; set; }
+        public Guid? ProjectGuid { get; set; }
 
         public List<string> Comments { get; set; } = [];
      }

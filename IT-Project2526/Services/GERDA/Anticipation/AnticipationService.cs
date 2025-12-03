@@ -95,7 +95,7 @@ public class AnticipationService : IAnticipationService
         return results;
     }
 
-    public async Task<double> GetTeamCapacityAsync(int? projectId = null)
+    public async Task<double> GetTeamCapacityAsync(Guid? projectGuid = null)
     {
         if (!IsEnabled)
         {

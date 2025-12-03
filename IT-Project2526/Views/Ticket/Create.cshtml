@@ -39,9 +39,12 @@
                         <label for="customerId" class="form-label">Customer <span class="text-danger">*</span></label>
                         <select name="customerId" id="customerId" class="form-select" required>
                             <option value="">-- Select Customer --</option>
-                            @foreach (var customer in ViewBag.Customers as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)
+                            @if (ViewBag.Customers != null)
                             {
-                                <option value="@customer.Value">@customer.Text</option>
+                                @foreach (var customer in ViewBag.Customers as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)
+                                {
+                                    <option value="@customer.Value">@customer.Text</option>
+                                }
                             }
                         </select>
                     </div>
@@ -52,9 +55,12 @@
                         <label for="responsibleId" class="form-label">Assign To (Optional)</label>
                         <select name="responsibleId" id="responsibleId" class="form-select">
                             <option value="">-- Unassigned --</option>
-                            @foreach (var employee in ViewBag.Employees as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)
+                            @if (ViewBag.Employees != null)
                             {
-                                <option value="@employee.Value">@employee.Text</option>
+                                @foreach (var employee in ViewBag.Employees as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)
+                                {
+                                    <option value="@employee.Value">@employee.Text</option>
+                                }
                             }
                         </select>
                     </div>
@@ -65,9 +71,12 @@
                         <label for="projectGuid" class="form-label">Project (Optional)</label>
                         <select name="projectGuid" id="projectGuid" class="form-select">
                             <option value="">-- No Project --</option>
-                            @foreach (var project in ViewBag.Projects as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)
+                            @if (ViewBag.Projects != null)
                             {
-                                <option value="@project.Value">@project.Text</option>
+                                @foreach (var project in ViewBag.Projects as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)
+                                {
+                                    <option value="@project.Value">@project.Text</option>
+                                }
                             }
                         </select>
                     </div>

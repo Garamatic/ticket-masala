@@ -62,6 +62,16 @@ public class EfCoreProjectRepository : IProjectRepository
             .ToListAsync();
     }
 
+    public async Task<Project?> GetRecommendedProjectForCustomerAsync(string customerId)
+    {
+        return await _context.Projects
+            .Include(p => p.Customer)
+            .Where(p => p.CustomerId == customerId && p.ValidUntil == null)
+            .Where(p => p.Status == Status.Pending || p.Status == Status.InProgress)
+            .OrderByDescending(p => p.CreationDate)
+            .FirstOrDefaultAsync();
+    }
+
     public async Task<Project> AddAsync(Project project)
     {
         _context.Projects.Add(project);

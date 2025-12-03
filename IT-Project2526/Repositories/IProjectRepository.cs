@@ -11,6 +11,7 @@ public interface IProjectRepository
     Task<IEnumerable<Project>> GetAllAsync();
     Task<IEnumerable<Project>> GetActiveProjectsAsync();
     Task<IEnumerable<Project>> GetByCustomerIdAsync(string customerId);
+    Task<Project?> GetRecommendedProjectForCustomerAsync(string customerId);
     Task<Project> AddAsync(Project project);
     Task UpdateAsync(Project project);
     Task DeleteAsync(Guid id);

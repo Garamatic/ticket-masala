@@ -40,8 +40,8 @@ public class DispatchBacklogService : IDispatchBacklogService
 
     public async Task<GerdaDispatchViewModel> BuildDispatchBacklogViewModelAsync()
     {
-        // Get unassigned or pending tickets
-        var allTickets = await _ticketRepository.GetAllAsync(includeRelations: true);
+        // Get unassigned or pending tickets  
+        var allTickets = (await _ticketRepository.GetAllAsync()).ToList();
         var unassignedTickets = allTickets
             .Where(t => t.TicketStatus == Status.Pending || 
                        (t.TicketStatus == Status.Assigned && t.ResponsibleId == null))
@@ -52,7 +52,7 @@ public class DispatchBacklogService : IDispatchBacklogService
         var employees = (await _userRepository.GetAllEmployeesAsync()).ToList();
 
         // Get current workload for each employee
-        var agentWorkloads = new Dictionary<string, (int count, int? effortPoints)>();
+        var agentWorkloads = new Dictionary<string, (int count, int effortPoints)>();
         foreach (var employee in employees)
         {
             var tickets = await _ticketRepository.GetByResponsibleIdAsync(employee.Id);
@@ -103,20 +103,20 @@ public class DispatchBacklogService : IDispatchBacklogService
                 {
                     var recommendations = await _dispatchingService.GetTopRecommendedAgentsAsync(ticket.Guid, count: 3);
                     
-                    foreach (var (agentId, score) in recommendations)
+                    foreach (var recommendation in recommendations)
                     {
-                        var agent = employees.FirstOrDefault(e => e.Id == agentId);
+                        var agent = employees.FirstOrDefault(e => e.Id == recommendation.AgentId);
                         if (agent != null)
                         {
-                            var workload = agentWorkloads.GetValueOrDefault(agentId, (0, 0));
+                            var workload = agentWorkloads.GetValueOrDefault(recommendation.AgentId, (0, 0));
                             
                             ticketInfo.RecommendedAgents.Add(new AgentRecommendation
                             {
-                                AgentId = agentId,
+                                AgentId = recommendation.AgentId,
                                 AgentName = $"{agent.FirstName} {agent.LastName}",
                                 Team = agent.Team,
-                                Score = score,
-                                CurrentWorkload = workload.count,
+                                Score = recommendation.Score,
+                                CurrentWorkload = workload.Item1,
                                 MaxCapacity = agent.MaxCapacityPoints,
                                 Specializations = agent.Specializations,
                                 Language = agent.Language,
@@ -162,9 +162,9 @@ public class DispatchBacklogService : IDispatchBacklogService
                 Id = e.Id,
                 Name = $"{e.FirstName} {e.LastName}",
                 Team = e.Team,
-                CurrentWorkload = workload.count,
+                CurrentWorkload = workload.Item1,
                 MaxCapacity = 10, // Default max tickets
-                CurrentEffortPoints = workload.effortPoints,
+                CurrentEffortPoints = workload.Item2,
                 MaxCapacityPoints = e.MaxCapacityPoints,
                 Language = e.Language,
                 Region = e.Region

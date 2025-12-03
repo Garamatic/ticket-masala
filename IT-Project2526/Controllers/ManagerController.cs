@@ -15,7 +15,6 @@ namespace IT_Project2526.Controllers
     [Authorize(Roles = Constants.RoleAdmin)]
     public class ManagerController : Controller
     {
-        private readonly ITProjectDB _context;
         private readonly ILogger<ManagerController> _logger;
         private readonly IMetricsService _metricsService;
         private readonly IDispatchingService _dispatchingService;
@@ -25,7 +24,6 @@ namespace IT_Project2526.Controllers
         private readonly IProjectRepository _projectRepository;
 
         public ManagerController(
-            ITProjectDB context, 
             ILogger<ManagerController> logger,
             IMetricsService metricsService,
             IDispatchingService dispatchingService,
@@ -34,7 +32,6 @@ namespace IT_Project2526.Controllers
             ITicketService ticketService,
             IProjectRepository projectRepository)
         {
-            _context = context;
             _logger = logger;
             _metricsService = metricsService;
             _dispatchingService = dispatchingService;
@@ -166,6 +163,7 @@ namespace IT_Project2526.Controllers
 
         /// <summary>
         /// Batch assign tickets using GERDA recommendations or manual assignment
+        /// Refactored to use TicketService (eliminates remaining _context usage)
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -177,109 +175,17 @@ namespace IT_Project2526.Controllers
                     "Manager batch assigning {Count} tickets, UseGerda={UseGerda}",
                     request.TicketGuids.Count, request.UseGerdaRecommendations);
 
-                var result = new BatchAssignResult();
-
-                foreach (var ticketGuid in request.TicketGuids)
-                {
-                    try
+                // Use TicketService with GERDA recommendation function
+                var result = await _ticketService.BatchAssignTicketsAsync(
+                    request,
+                    async (ticketGuid) =>
                     {
-                        var ticket = await _context.Tickets
-                            .Include(t => t.Responsible)
-                            .Include(t => t.Project)
-                            .FirstOrDefaultAsync(t => t.Guid == ticketGuid);
-
-                        if (ticket == null)
+                        if (_dispatchingService.IsEnabled)
                         {
-                            result.FailureCount++;
-                            result.Errors.Add($"Ticket {ticketGuid} not found");
-                            continue;
+                            return await _dispatchingService.GetRecommendedAgentAsync(ticketGuid);
                         }
-
-                        string? assignedAgentId = null;
-                        Guid? assignedProjectGuid = null;
-
-                        // Determine assignment strategy
-                        if (request.UseGerdaRecommendations)
-                        {
-                            // Use GERDA to recommend agent
-                            if (_dispatchingService.IsEnabled)
-                            {
-                                assignedAgentId = await _dispatchingService.GetRecommendedAgentAsync(ticketGuid);
-                            }
-
-                            // Use customer-based project recommendation
-                            if (ticket.ProjectGuid == null && ticket.CustomerId != null)
-                            {
-                                var customerProject = await _context.Projects
-                                    .Where(p => p.CustomerId == ticket.CustomerId && p.ValidUntil == null)
-                                    .Where(p => p.Status == Status.Pending || p.Status == Status.InProgress)
-                                    .OrderByDescending(p => p.CreationDate)
-                                    .FirstOrDefaultAsync();
-                                
-                                assignedProjectGuid = customerProject?.Guid;
-                            }
-                        }
-                        else
-                        {
-                            // Use forced assignments
-                            assignedAgentId = request.ForceAgentId;
-                            assignedProjectGuid = request.ForceProjectGuid;
-                        }
-
-                        // Apply assignments
-                        if (!string.IsNullOrEmpty(assignedAgentId))
-                        {
-                            ticket.ResponsibleId = assignedAgentId;
-                            ticket.TicketStatus = Status.Assigned;
-                            
-                            if (request.UseGerdaRecommendations)
-                            {
-                                ticket.GerdaTags = string.IsNullOrEmpty(ticket.GerdaTags)
-                                    ? "AI-Dispatched"
-                                    : $"{ticket.GerdaTags},AI-Dispatched";
-                            }
-                        }
-
-                        if (assignedProjectGuid.HasValue)
-                        {
-                            ticket.ProjectGuid = assignedProjectGuid.Value;
-                        }
-
-                        await _context.SaveChangesAsync();
-
-                        // Get assigned names for result
-                        var assignedAgent = assignedAgentId != null
-                            ? await _context.Users.OfType<Employee>().FirstOrDefaultAsync(e => e.Id == assignedAgentId)
-                            : null;
-                        
-                        var assignedProject = assignedProjectGuid.HasValue
-                            ? await _context.Projects.FirstOrDefaultAsync(p => p.Guid == assignedProjectGuid.Value)
-                            : null;
-
-                        result.SuccessCount++;
-                        result.Assignments.Add(new TicketAssignmentDetail
-                        {
-                            TicketGuid = ticketGuid,
-                            AssignedAgentName = assignedAgent != null 
-                                ? $"{assignedAgent.FirstName} {assignedAgent.LastName}" 
-                                : null,
-                            AssignedProjectName = assignedProject?.Name,
-                            Success = true
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Error assigning ticket {TicketGuid}", ticketGuid);
-                        result.FailureCount++;
-                        result.Errors.Add($"Error assigning ticket {ticketGuid}: {ex.Message}");
-                        result.Assignments.Add(new TicketAssignmentDetail
-                        {
-                            TicketGuid = ticketGuid,
-                            Success = false,
-                            ErrorMessage = ex.Message
-                        });
-                    }
-                }
+                        return null;
+                    });
 
                 _logger.LogInformation(
                     "Batch assignment complete: {Success} succeeded, {Failed} failed",
@@ -319,9 +225,7 @@ namespace IT_Project2526.Controllers
 
                 if (success)
                 {
-                    var ticket = await _context.Tickets
-                        .Include(t => t.Responsible)
-                        .FirstOrDefaultAsync(t => t.Guid == ticketGuid);
+                    var ticket = await _ticketService.GetTicketForEditAsync(ticketGuid);
                     
                     var agentName = ticket?.Responsible != null
                         ? $"{ticket.Responsible.FirstName} {ticket.Responsible.LastName}"

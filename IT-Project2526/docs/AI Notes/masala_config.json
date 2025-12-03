@@ -1,0 +1,116 @@
+// BFMasala/masala_config.json
+
+{
+  // General application settings
+  "AppInstanceName": "Ticket Masala - Generic Demo",
+  "AppDescription": "A highly configurable ticketing and case management system.",
+  "DefaultSlaThresholdDays": 30, // Default SLA for tickets if not category-specific
+
+  // Role definitions for RBAC, mapping internal roles to display names
+  "Roles": {
+    "SuperUser": "Director",
+    "ProjectManager": "Line Manager",
+    "Handler": "Agent",
+    "Viewer": "Auditor"
+  },
+
+  // Project/Queue definitions. These will be seeded into the database as 'Project' entities.
+  "Queues": [
+    {
+      "Name": "Customer Support (IT)",
+      "Code": "ITCS",
+      "Description": "General IT support requests.",
+      "IsActive": true,
+      "AutoArchiveDays": 180 // Tickets in this queue resolved after this many days are archived
+    },
+    {
+      "Name": "DevOps & Infrastructure",
+      "Code": "DEVOPS",
+      "Description": "Tickets related to system stability and development operations.",
+      "IsActive": true,
+      "AutoArchiveDays": 365
+    },
+    {
+      "Name": "HR Enquiries",
+      "Code": "HR",
+      "Description": "Human Resources related queries and requests.",
+      "IsActive": true,
+      "AutoArchiveDays": 90
+    },
+    // Example of a Tax Office specific queue (could be loaded if instance is configured for Tax)
+    {
+      "Name": "VAT Disputes (Tax)",
+      "Code": "VATD",
+      "Description": "Processing of VAT related disputes.",
+      "IsActive": false, // Set to false for a generic IT demo, true for Tax demo
+      "AutoArchiveDays": 730
+    }
+  ],
+
+  // GERDA AI Specific Settings
+  "GerdaAI": {
+    "IsEnabled": true, // Master switch for GERDA features
+
+    // G - Grouping (Clustering) Settings
+    "SpamDetection": {
+      "IsEnabled": true,
+      "TimeWindowMinutes": 60,       // Tickets from same requester within this window
+      "MaxTicketsPerUser": 5,        // If > this number, consider for grouping
+      "Action": "AutoMerge",         // Options: "AutoMerge", "Flag"
+      "GroupedTicketPrefix": "[GROUPED] " // Prefix for grouped parent tickets
+    },
+
+    // E - Estimating (Classification) Settings
+    "ComplexityEstimation": {
+      "IsEnabled": true,
+      // Maps ticket categories to Fibonacci points for effort estimation
+      // These categories should align with those used in your mock data and UI
+      "CategoryComplexityMap": [
+        { "Category": "Password Reset", "EffortPoints": 1 },
+        { "Category": "Address Change", "EffortPoints": 1 }, // Tax specific
+        { "Category": "Hardware Request", "EffortPoints": 3 },
+        { "Category": "Software Bug", "EffortPoints": 8 },
+        { "Category": "Refund Request", "EffortPoints": 8 }, // Tax specific
+        { "Category": "System Outage", "EffortPoints": 13 },
+        { "Category": "Fraud Investigation", "EffortPoints": 13 }, // Tax specific
+        { "Category": "Other", "EffortPoints": 5 } // Default for unmapped
+      ],
+      "DefaultEffortPoints": 5 // Default if category not found or mapping fails
+    },
+
+    // R - Ranking (WSJF Algorithm) Settings
+    "Ranking": {
+      "IsEnabled": true,
+      "SlaWeight": 100, // Factor to emphasize SLA urgency
+      "ComplexityWeight": 1, // Factor for job size, usually 1
+      "RecalculationFrequencyMinutes": 1440 // How often to recalculate PriorityScore (e.g., daily)
+    },
+
+    // D - Dispatching (Recommendation) Settings
+    "Dispatching": {
+      "IsEnabled": true,
+      "MinHistoryForAffinityMatch": 3, // Min historical tickets for a reliable agent-requester affinity
+      "MaxAssignedTicketsPerAgent": 15, // Max tickets an agent can have before being excluded from auto-dispatch
+      "RetrainRecommendationModelFrequencyHours": 24 // How often to retrain the ML model for recommendations
+    },
+
+    // A - Anticipation (Capacity Forecasting) Settings
+    "Anticipation": {
+      "IsEnabled": true,
+      "ForecastHorizonDays": 30, // How many days into the future to forecast
+      "InflowHistoryYears": 3,   // How many years of historical data to use for inflow prediction
+      "CapacityRefreshFrequencyHours": 12, // How often to refresh agent capacity data
+      "RiskThresholdPercentage": 20 // If (ForecastedInflow - Capacity) / Capacity > this, trigger alert
+    }
+  },
+
+  // Mock Data Generation Settings (for development and demonstration)
+  "MockData": {
+    "GenerateOnStartup": true,
+    "NumberOfProjects": 5,
+    "NumberOfUsers": 20,
+    "NumberOfTickets": 1000,
+    "SpammerClientCount": 3, // Number of clients that will generate "spam" patterns
+    "SeasonalSpikeMonths": [6, 10] // Months where ticket inflow might spike (e.g., June for Income Tax, Oct for Vehicle Tax)
+  }
+}

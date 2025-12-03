@@ -27,6 +27,7 @@ namespace IT_Project2526.Services
         Task<Ticket?> GetTicketForEditAsync(Guid ticketGuid);
         Task<List<SelectListItem>> GetAllUsersSelectListAsync();
         Task<bool> UpdateTicketAsync(Ticket ticket);
+        Task<BatchAssignResult> BatchAssignTicketsAsync(BatchAssignRequest request, Func<Guid, Task<string?>> getRecommendedAgent);
     }
 
     public class TicketService : ITicketService
@@ -330,7 +331,7 @@ namespace IT_Project2526.Services
                 t.TicketStatus == Status.Assigned || 
                 t.TicketStatus == Status.InProgress);
             
-            return activeTickets.Sum(t => t.EstimatedEffortPoints ?? 0);
+            return activeTickets.Sum(t => t.EstimatedEffortPoints);
         }
 
         /// <summary>
@@ -445,6 +446,121 @@ namespace IT_Project2526.Services
             }
             
             return true;
+        }
+
+        /// <summary>
+        /// Batch assign tickets using GERDA recommendations or manual assignment
+        /// Addresses remaining database coupling in ManagerController
+        /// </summary>
+        public async Task<BatchAssignResult> BatchAssignTicketsAsync(
+            BatchAssignRequest request, 
+            Func<Guid, Task<string?>> getRecommendedAgent)
+        {
+            var result = new BatchAssignResult();
+
+            foreach (var ticketGuid in request.TicketGuids)
+            {
+                try
+                {
+                    var ticket = await _ticketRepository.GetByIdAsync(ticketGuid, includeRelations: true);
+
+                    if (ticket == null)
+                    {
+                        result.FailureCount++;
+                        result.Errors.Add($"Ticket {ticketGuid} not found");
+                        continue;
+                    }
+
+                    string? assignedAgentId = null;
+                    Guid? assignedProjectGuid = null;
+
+                    // Determine assignment strategy
+                    if (request.UseGerdaRecommendations)
+                    {
+                        // Use GERDA to recommend agent
+                        assignedAgentId = await getRecommendedAgent(ticketGuid);
+
+                        // Use customer-based project recommendation
+                        if (ticket.ProjectGuid == null && ticket.CustomerId != null)
+                        {
+                            var recommendedProject = await _projectRepository.GetRecommendedProjectForCustomerAsync(ticket.CustomerId);
+                            assignedProjectGuid = recommendedProject?.Guid;
+                        }
+                    }
+                    else
+                    {
+                        // Use forced assignments
+                        assignedAgentId = request.ForceAgentId;
+                        assignedProjectGuid = request.ForceProjectGuid;
+                    }
+
+                    // Apply assignments
+                    Employee? assignedAgent = null;
+                    if (!string.IsNullOrEmpty(assignedAgentId))
+                    {
+                        assignedAgent = await _userRepository.GetEmployeeByIdAsync(assignedAgentId);
+                        if (assignedAgent != null)
+                        {
+                            ticket.ResponsibleId = assignedAgentId;
+                            ticket.TicketStatus = Status.Assigned;
+                            
+                            if (request.UseGerdaRecommendations)
+                            {
+                                ticket.GerdaTags = string.IsNullOrEmpty(ticket.GerdaTags)
+                                    ? "AI-Dispatched"
+                                    : $"{ticket.GerdaTags},AI-Dispatched";
+                            }
+                        }
+                    }
+
+                    if (assignedProjectGuid.HasValue)
+                    {
+                        ticket.ProjectGuid = assignedProjectGuid.Value;
+                    }
+
+                    await _ticketRepository.UpdateAsync(ticket);
+
+                    // Get assigned names for result
+                    var assignedProject = assignedProjectGuid.HasValue
+                        ? await _projectRepository.GetByIdAsync(assignedProjectGuid.Value, includeRelations: false)
+                        : null;
+
+                    result.SuccessCount++;
+                    result.Assignments.Add(new TicketAssignmentDetail
+                    {
+                        TicketGuid = ticketGuid,
+                        AssignedAgentName = assignedAgent != null 
+                            ? $"{assignedAgent.FirstName} {assignedAgent.LastName}" 
+                            : null,
+                        AssignedProjectName = assignedProject?.Name,
+                        Success = true
+                    });
+
+                    // Notify observers if agent assigned
+                    if (assignedAgent != null)
+                    {
+                        await NotifyObserversAssignedAsync(ticket, assignedAgent);
+                    }
+                    else if (assignedProjectGuid.HasValue)
+                    {
+                        await NotifyObserversUpdatedAsync(ticket);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error assigning ticket {TicketGuid}", ticketGuid);
+                    result.FailureCount++;
+                    result.Errors.Add($"Error assigning ticket {ticketGuid}: {ex.Message}");
+                    result.Assignments.Add(new TicketAssignmentDetail
+                    {
+                        TicketGuid = ticketGuid,
+                        Success = false,
+                        ErrorMessage = ex.Message
+                    });
+                }
+            }
+
+            return result;
         }
     }
 }

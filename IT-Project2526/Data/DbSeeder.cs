@@ -134,11 +134,16 @@ namespace IT_Project2526.Data
                 _logger.LogInformation("Creating sample tickets...");
                 await CreateSampleTickets();
 
+                // Create Unassigned Tickets for GERDA Dispatch Testing
+                _logger.LogInformation("Creating unassigned tickets for GERDA testing...");
+                await CreateUnassignedTicketsForGerdaTesting();
+
                 _logger.LogInformation("========== DATABASE SEEDING COMPLETED SUCCESSFULLY! ==========");
                 _logger.LogInformation("You can now login with any of the test accounts");
                 _logger.LogInformation("Admin: admin@ticketmasala.com / Admin123!");
                 _logger.LogInformation("Employee: mike.pm@ticketmasala.com / Employee123!");
                 _logger.LogInformation("Customer: alice.customer@example.com / Customer123!");
+                _logger.LogInformation("Created {Count} unassigned tickets for GERDA Dispatch testing", 15);
             }
             catch (Exception ex)
             {
@@ -513,5 +518,230 @@ namespace IT_Project2526.Data
             await _context.SaveChangesAsync();
             _logger.LogInformation("Created {Count} sample tickets", tickets.Length);
         }
+
+        private async Task CreateUnassignedTicketsForGerdaTesting()
+        {
+            var customers = await _context.Customers.ToListAsync();
+            var projects = await _context.Projects.Where(p => p.ValidUntil == null && p.Status != Status.Completed).ToListAsync();
+
+            var unassignedTickets = new List<Ticket>
+            {
+                // Hardware Support tickets
+                new Ticket
+                {
+                    Description = "Laptop screen is flickering intermittently",
+                    TicketStatus = Status.Pending,
+                    TicketType = TicketType.ProjectRequest,
+                    Customer = customers[0],
+                    CompletionTarget = DateTime.UtcNow.AddDays(2),
+                    Comments = new List<string> { "Issue started yesterday" },
+                    CreatorGuid = Guid.Parse(customers[0].Id),
+                    EstimatedEffortPoints = 3,
+                    PriorityScore = 45.0,
+                    GerdaTags = "Hardware"
+                },
+                new Ticket
+                {
+                    Description = "Printer not responding to print jobs",
+                    TicketStatus = Status.Pending,
+                    TicketType = TicketType.ProjectRequest,
+                    Customer = customers[1],
+                    CompletionTarget = DateTime.UtcNow.AddDays(1),
+                    Comments = new List<string> { "Urgent - affects entire department" },
+                    CreatorGuid = Guid.Parse(customers[1].Id),
+                    EstimatedEffortPoints = 2,
+                    PriorityScore = 65.0,
+                    GerdaTags = "Hardware,Urgent"
+                },
+                new Ticket
+                {
+                    Description = "Need replacement keyboard - keys are stuck",
+                    TicketStatus = Status.Pending,
+                    TicketType = TicketType.ProjectRequest,
+                    Customer = customers[2],
+                    CompletionTarget = DateTime.UtcNow.AddDays(3),
+                    Comments = new List<string>(),
+                    CreatorGuid = Guid.Parse(customers[2].Id),
+                    EstimatedEffortPoints = 1,
+                    PriorityScore = 25.0,
+                    GerdaTags = "Hardware"
+                },
+
+                // Network Troubleshooting tickets
+                new Ticket
+                {
+                    Description = "Cannot connect to VPN from home office",
+                    TicketStatus = Status.Pending,
+                    TicketType = TicketType.ProjectRequest,
+                    Customer = customers[3],
+                    CompletionTarget = DateTime.UtcNow.AddDays(1),
+                    Comments = new List<string> { "Error message: Connection timeout" },
+                    CreatorGuid = Guid.Parse(customers[3].Id),
+                    EstimatedEffortPoints = 5,
+                    PriorityScore = 55.0,
+                    GerdaTags = "Network"
+                },
+                new Ticket
+                {
+                    Description = "Slow internet connection in conference room B",
+                    TicketStatus = Status.Pending,
+                    TicketType = TicketType.ProjectRequest,
+                    Customer = customers[4],
+                    CompletionTarget = DateTime.UtcNow.AddDays(2),
+                    Comments = new List<string> { "Speed test shows 1 Mbps instead of 100 Mbps" },
+                    CreatorGuid = Guid.Parse(customers[4].Id),
+                    EstimatedEffortPoints = 3,
+                    PriorityScore = 40.0,
+                    GerdaTags = "Network"
+                },
+
+                // Software Troubleshooting tickets
+                new Ticket
+                {
+                    Description = "Application crashes when opening large files",
+                    TicketStatus = Status.Pending,
+                    TicketType = TicketType.ProjectRequest,
+                    Customer = customers[0],
+                    CompletionTarget = DateTime.UtcNow.AddDays(3),
+                    Comments = new List<string> { "Happens with files over 50MB" },
+                    CreatorGuid = Guid.Parse(customers[0].Id),
+                    EstimatedEffortPoints = 8,
+                    PriorityScore = 50.0,
+                    GerdaTags = "Software,Bug"
+                },
+                new Ticket
+                {
+                    Description = "Email client not syncing with server",
+                    TicketStatus = Status.Pending,
+                    TicketType = TicketType.ProjectRequest,
+                    Customer = customers[1],
+                    CompletionTarget = DateTime.UtcNow.AddHours(12),
+                    Comments = new List<string> { "Critical - missing important emails" },
+                    CreatorGuid = Guid.Parse(customers[1].Id),
+                    EstimatedEffortPoints = 5,
+                    PriorityScore = 75.0,
+                    GerdaTags = "Software,Critical"
+                },
+                new Ticket
+                {
+                    Description = "Software update fails with error 0x80070005",
+                    TicketStatus = Status.Pending,
+                    TicketType = TicketType.ProjectRequest,
+                    Customer = customers[2],
+                    CompletionTarget = DateTime.UtcNow.AddDays(2),
+                    Comments = new List<string> { "Tried restarting multiple times" },
+                    CreatorGuid = Guid.Parse(customers[2].Id),
+                    EstimatedEffortPoints = 3,
+                    PriorityScore = 35.0,
+                    GerdaTags = "Software"
+                },
+
+                // Password Reset tickets
+                new Ticket
+                {
+                    Description = "Forgot password for HR portal - need urgent reset",
+                    TicketStatus = Status.Pending,
+                    TicketType = TicketType.ProjectRequest,
+                    Customer = customers[3],
+                    CompletionTarget = DateTime.UtcNow.AddHours(6),
+                    Comments = new List<string> { "Need to submit timesheet today" },
+                    CreatorGuid = Guid.Parse(customers[3].Id),
+                    EstimatedEffortPoints = 1,
+                    PriorityScore = 60.0,
+                    GerdaTags = "Password"
+                },
+                new Ticket
+                {
+                    Description = "Account locked after multiple failed login attempts",
+                    TicketStatus = Status.Pending,
+                    TicketType = TicketType.ProjectRequest,
+                    Customer = customers[4],
+                    CompletionTarget = DateTime.UtcNow.AddHours(4),
+                    Comments = new List<string>(),
+                    CreatorGuid = Guid.Parse(customers[4].Id),
+                    EstimatedEffortPoints = 1,
+                    PriorityScore = 70.0,
+                    GerdaTags = "Password,Locked"
+                },
+
+                // Payroll tickets
+                new Ticket
+                {
+                    Description = "Incorrect tax deduction on last paycheck",
+                    TicketStatus = Status.Pending,
+                    TicketType = TicketType.ProjectRequest,
+                    Customer = customers[0],
+                    CompletionTarget = DateTime.UtcNow.AddDays(5),
+                    Comments = new List<string> { "Deducted 30% instead of 25%" },
+                    CreatorGuid = Guid.Parse(customers[0].Id),
+                    EstimatedEffortPoints = 5,
+                    PriorityScore = 55.0,
+                    GerdaTags = "Payroll,Tax"
+                },
+                new Ticket
+                {
+                    Description = "Need copy of W2 form from 2023",
+                    TicketStatus = Status.Pending,
+                    TicketType = TicketType.ProjectRequest,
+                    Customer = customers[1],
+                    CompletionTarget = DateTime.UtcNow.AddDays(7),
+                    Comments = new List<string>(),
+                    CreatorGuid = Guid.Parse(customers[1].Id),
+                    EstimatedEffortPoints = 2,
+                    PriorityScore = 30.0,
+                    GerdaTags = "Payroll,Tax"
+                },
+
+                // Refund Request tickets
+                new Ticket
+                {
+                    Description = "Request refund for cancelled subscription",
+                    TicketStatus = Status.Pending,
+                    TicketType = TicketType.ProjectRequest,
+                    Customer = customers[2],
+                    CompletionTarget = DateTime.UtcNow.AddDays(10),
+                    Comments = new List<string> { "Cancelled on Nov 15 but charged on Dec 1" },
+                    CreatorGuid = Guid.Parse(customers[2].Id),
+                    EstimatedEffortPoints = 3,
+                    PriorityScore = 40.0,
+                    GerdaTags = "Refund"
+                },
+
+                // DevOps/Infrastructure tickets
+                new Ticket
+                {
+                    Description = "Setup continuous deployment pipeline for new project",
+                    TicketStatus = Status.Pending,
+                    TicketType = TicketType.ProjectRequest,
+                    Customer = customers[3],
+                    CompletionTarget = DateTime.UtcNow.AddDays(14),
+                    Comments = new List<string> { "Need Jenkins integration with GitHub" },
+                    CreatorGuid = Guid.Parse(customers[3].Id),
+                    ProjectGuid = projects.Count > 0 ? projects[0].Guid : null,
+                    EstimatedEffortPoints = 13,
+                    PriorityScore = 45.0,
+                    GerdaTags = "DevOps,Infrastructure"
+                },
+                new Ticket
+                {
+                    Description = "Database backup taking too long - optimization needed",
+                    TicketStatus = Status.Pending,
+                    TicketType = TicketType.ProjectRequest,
+                    Customer = customers[4],
+                    CompletionTarget = DateTime.UtcNow.AddDays(7),
+                    Comments = new List<string> { "Currently takes 6 hours, should be under 2" },
+                    CreatorGuid = Guid.Parse(customers[4].Id),
+                    ProjectGuid = projects.Count > 1 ? projects[1].Guid : null,
+                    EstimatedEffortPoints = 8,
+                    PriorityScore = 50.0,
+                    GerdaTags = "Infrastructure,Database"
+                }
+            };
+
+            _context.Tickets.AddRange(unassignedTickets);
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("Created {Count} unassigned tickets for GERDA Dispatch testing", unassignedTickets.Count);
+        }
     }
 }
+

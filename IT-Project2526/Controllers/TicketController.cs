@@ -13,18 +13,15 @@ namespace IT_Project2526.Controllers
     [Authorize] // All authenticated users can access tickets
     public class TicketController : Controller
     {
-        private readonly ITProjectDB _context;
         private readonly IGerdaService _gerdaService;
         private readonly ITicketService _ticketService;
         private readonly ILogger<TicketController> _logger;
 
         public TicketController(
-            ITProjectDB context,
             IGerdaService gerdaService,
             ITicketService ticketService,
             ILogger<TicketController> logger)
         {
-            _context = context;
             _gerdaService = gerdaService;
             _ticketService = ticketService;
             _logger = logger;
@@ -34,30 +31,12 @@ namespace IT_Project2526.Controllers
         {
             try
             {
-                var tickets = await _context.Tickets
-                    .AsNoTracking()
-                    .Include(t => t.Customer)
-                    .Include(t => t.Responsible)
-                    .Select(t => new TicketViewModel
-                    {
-                        Guid = t.Guid,
-                        Description = t.Description,
-                        TicketStatus = t.TicketStatus,
-                        CreationDate = t.CreationDate,
-                        CompletionTarget = t.CompletionTarget,
-                        ResponsibleName = t.Responsible != null
-                            ? $"{t.Responsible.FirstName} {t.Responsible.LastName}"
-                            : "Not Assigned",
-                        CustomerName = t.Customer != null
-                            ? $"{t.Customer.FirstName} {t.Customer.LastName}"
-                            : "Unknown"
-                    })
-                    .ToListAsync();
-
+                var tickets = await _ticketService.GetAllTicketsAsync();
                 return View(tickets);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error loading tickets");
                 return StatusCode(500);
             }
         }
@@ -143,14 +122,11 @@ namespace IT_Project2526.Controllers
                         if (recommendations != null && recommendations.Any())
                         {
                             var topRecommendation = recommendations.First();
-                            var agent = await _context.Employees.FindAsync(topRecommendation.AgentId);
+                            var agent = await _ticketService.GetEmployeeByIdAsync(topRecommendation.AgentId);
                             if (agent != null)
                             {
-                                // Calculate current workload
-                                var currentWorkload = await _context.Tickets
-                                    .Where(t => t.ResponsibleId == agent.Id && 
-                                               (t.TicketStatus == Status.Assigned || t.TicketStatus == Status.InProgress))
-                                    .SumAsync(t => t.EstimatedEffortPoints);
+                                // Calculate current workload using service
+                                var currentWorkload = await _ticketService.GetEmployeeCurrentWorkloadAsync(agent.Id);
                                 
                                 viewModel.RecommendedAgent = new RecommendedAgentInfo
                                 {
@@ -185,7 +161,7 @@ namespace IT_Project2526.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            var agent = await _context.Employees.FindAsync(agentId);
+            var agent = await _ticketService.GetEmployeeByIdAsync(agentId);
             TempData["Success"] = $"Ticket successfully assigned to {agent?.FirstName} {agent?.LastName}!";
             return RedirectToAction(nameof(Detail), new { id = ticketGuid });
         }
@@ -195,34 +171,27 @@ namespace IT_Project2526.Controllers
         {
             if (id == null) return NotFound();
 
-            var ticket = await _context.Tickets
-                                        .Include(t => t.Responsible)
-                                        .FirstOrDefaultAsync(t => t.Guid == id);
+            var ticket = await _ticketService.GetTicketForEditAsync(id.Value);
 
             if (ticket == null) return NotFound();
 
-            // Haal alle mogelijke verantwoordelijke gebruikers op voor de dropdown
-            var responsibleUsers = await _context.Users.ToListAsync();
+            // Get all users for the dropdown
+            var responsibleUsers = await _ticketService.GetAllUsersSelectListAsync();
 
-            // Map de databasegegevens naar het ViewModel
+            // Map the database data to the ViewModel
             var viewModel = new EditTicketViewModel
             {
                 Guid = ticket.Guid,
                 Description = ticket.Description,
                 TicketStatus = ticket.TicketStatus,
                 CompletionTarget = ticket.CompletionTarget,
-                ResponsibleUserId = ticket.Responsible?.Id, // ID van de huidige verantwoordelijke
+                ResponsibleUserId = ticket.Responsible?.Id, // ID of current responsible
 
-                // Vul de dropdown lijst
-                ResponsibleUsers = responsibleUsers.Select(u => new SelectListItem
-                {
-                    Value = u.Id.ToString(),
-                    Text = $"{u.FirstName} {u.LastName}"
-                }).ToList()
+                // Fill the dropdown list
+                ResponsibleUsers = responsibleUsers
             };
 
             return View(viewModel);
-            
         }
 
         [HttpPost]
@@ -233,30 +202,34 @@ namespace IT_Project2526.Controllers
 
             if (ModelState.IsValid)
             {
-                var ticketToUpdate = await _context.Tickets.FirstOrDefaultAsync(t => t.Guid == id);
+                var ticketToUpdate = await _ticketService.GetTicketForEditAsync(id);
                 if (ticketToUpdate == null) return NotFound();
 
-                // Werk de eigenschappen bij op basis van het ViewModel
+                // Update properties based on the ViewModel
                 ticketToUpdate.Description = viewModel.Description;
                 ticketToUpdate.TicketStatus = viewModel.TicketStatus;
                 ticketToUpdate.CompletionTarget = viewModel.CompletionTarget;
-                // Update de verantwoordelijke (u moet nog logica hebben om ApplicationUser te vinden op basis van de Guid/Id)
 
                 try
                 {
-                    _context.Update(ticketToUpdate);
-                    await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Detail), new { id = ticketToUpdate.Guid }); 
+                    var success = await _ticketService.UpdateTicketAsync(ticketToUpdate);
+                    if (success)
+                    {
+                        return RedirectToAction(nameof(Detail), new { id = ticketToUpdate.Guid });
+                    }
+                    else
+                    {
+                        ModelState.AddModelError("", "Failed to update ticket. Please try again.");
+                    }
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    
                     throw;
                 }
             }
 
-            // Als validatie faalt, herlaad de dropdowns en toon de view opnieuw
-            viewModel.ResponsibleUsers = await _context.Users.Select(u => new SelectListItem { Value = u.Id.ToString(), Text = $"{u.FirstName} {u.LastName}" }).ToListAsync();
+            // If validation fails, reload the dropdowns and show the view again
+            viewModel.ResponsibleUsers = await _ticketService.GetAllUsersSelectListAsync();
             return View(viewModel);
         }
     }

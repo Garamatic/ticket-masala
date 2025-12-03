@@ -3,6 +3,8 @@ using IT_Project2526.Data;
 using IT_Project2526.Managers;
 using IT_Project2526.Models;
 using IT_Project2526.Services;
+using IT_Project2526.Repositories;
+using IT_Project2526.Observers;
 using IT_Project2526.Services.GERDA;
 using IT_Project2526.Services.GERDA.Models;
 using IT_Project2526.Services.GERDA.Grouping;
@@ -78,9 +80,23 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 // Register Managers (if needed in future)
 builder.Services.AddScoped<ApplicationUserManager>();
 
+// ============================================
+// Register Repositories (Repository Pattern)
+// ============================================
+builder.Services.AddScoped<ITicketRepository, EfCoreTicketRepository>();
+builder.Services.AddScoped<IProjectRepository, EfCoreProjectRepository>();
+builder.Services.AddScoped<IUserRepository, EfCoreUserRepository>();
+
+// ============================================
+// Register Observers (Observer Pattern)
+// ============================================
+builder.Services.AddScoped<ITicketObserver, GerdaTicketObserver>();
+builder.Services.AddScoped<ITicketObserver, LoggingTicketObserver>();
+
 // Register Services
 builder.Services.AddScoped<IMetricsService, MetricsService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
+builder.Services.AddScoped<IDispatchBacklogService, DispatchBacklogService>();
 
 // Register DbSeeder
 builder.Services.AddScoped<DbSeeder>();

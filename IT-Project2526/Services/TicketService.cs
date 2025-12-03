@@ -1,5 +1,7 @@
 using IT_Project2526.Models;
 using IT_Project2526.ViewModels;
+using IT_Project2526.Repositories;
+using IT_Project2526.Observers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,6 +10,7 @@ namespace IT_Project2526.Services
     /// <summary>
     /// Service responsible for ticket business logic.
     /// Follows Information Expert and Single Responsibility principles.
+    /// Updated to use Repository pattern and Observer pattern.
     /// </summary>
     public interface ITicketService
     {
@@ -17,16 +20,37 @@ namespace IT_Project2526.Services
         Task<Ticket> CreateTicketAsync(string description, string customerId, string? responsibleId, Guid? projectGuid, DateTime? completionTarget);
         Task<TicketDetailsViewModel?> GetTicketDetailsAsync(Guid ticketGuid);
         Task<bool> AssignTicketAsync(Guid ticketGuid, string agentId);
+        Task<bool> AssignTicketWithProjectAsync(Guid ticketGuid, string? agentId, Guid? projectGuid);
+        Task<IEnumerable<TicketViewModel>> GetAllTicketsAsync();
+        Task<Employee?> GetEmployeeByIdAsync(string agentId);
+        Task<int> GetEmployeeCurrentWorkloadAsync(string agentId);
+        Task<Ticket?> GetTicketForEditAsync(Guid ticketGuid);
+        Task<List<SelectListItem>> GetAllUsersSelectListAsync();
+        Task<bool> UpdateTicketAsync(Ticket ticket);
     }
 
     public class TicketService : ITicketService
     {
         private readonly ITProjectDB _context;
+        private readonly ITicketRepository _ticketRepository;
+        private readonly IUserRepository _userRepository;
+        private readonly IProjectRepository _projectRepository;
+        private readonly IEnumerable<ITicketObserver> _observers;
         private readonly ILogger<TicketService> _logger;
 
-        public TicketService(ITProjectDB context, ILogger<TicketService> logger)
+        public TicketService(
+            ITProjectDB context, 
+            ITicketRepository ticketRepository,
+            IUserRepository userRepository,
+            IProjectRepository projectRepository,
+            IEnumerable<ITicketObserver> observers,
+            ILogger<TicketService> logger)
         {
             _context = context;
+            _ticketRepository = ticketRepository;
+            _userRepository = userRepository;
+            _projectRepository = projectRepository;
+            _observers = observers;
             _logger = logger;
         }
 
@@ -35,7 +59,7 @@ namespace IT_Project2526.Services
         /// </summary>
         public async Task<List<SelectListItem>> GetCustomerSelectListAsync()
         {
-            var customers = await _context.Customers.ToListAsync();
+            var customers = await _userRepository.GetAllCustomersAsync();
             return customers.Select(c => new SelectListItem
             {
                 Value = c.Id,
@@ -48,7 +72,7 @@ namespace IT_Project2526.Services
         /// </summary>
         public async Task<List<SelectListItem>> GetEmployeeSelectListAsync()
         {
-            var employees = await _context.Employees.ToListAsync();
+            var employees = await _userRepository.GetAllEmployeesAsync();
             return employees.Select(e => new SelectListItem
             {
                 Value = e.Id,
@@ -61,16 +85,40 @@ namespace IT_Project2526.Services
         /// </summary>
         public async Task<List<SelectListItem>> GetProjectSelectListAsync()
         {
-            var projects = await _context.Projects.ToListAsync();
+            var projects = await _projectRepository.GetAllAsync();
             return projects.Select(p => new SelectListItem
             {
                 Value = p.Guid.ToString(),
                 Text = p.Name
             }).ToList();
         }
+        
+        /// <summary>
+        /// Get all tickets with customer and responsible information
+        /// </summary>
+        public async Task<IEnumerable<TicketViewModel>> GetAllTicketsAsync()
+        {
+            var tickets = await _ticketRepository.GetAllAsync();
+            
+            return tickets.Select(t => new TicketViewModel
+            {
+                Guid = t.Guid,
+                Description = t.Description,
+                TicketStatus = t.TicketStatus,
+                CreationDate = t.CreationDate,
+                CompletionTarget = t.CompletionTarget,
+                ResponsibleName = t.Responsible != null
+                    ? $"{t.Responsible.FirstName} {t.Responsible.LastName}"
+                    : "Not Assigned",
+                CustomerName = t.Customer != null
+                    ? $"{t.Customer.FirstName} {t.Customer.LastName}"
+                    : "Unknown"
+            }).ToList();
+        }
 
         /// <summary>
         /// Create a new ticket with proper defaults and associations
+        /// Notifies observers after creation (triggers GERDA processing)
         /// </summary>
         public async Task<Ticket> CreateTicketAsync(
             string description, 
@@ -79,7 +127,7 @@ namespace IT_Project2526.Services
             Guid? projectGuid, 
             DateTime? completionTarget)
         {
-            var customer = await _context.Customers.FindAsync(customerId);
+            var customer = await _userRepository.GetCustomerByIdAsync(customerId);
             if (customer == null)
             {
                 throw new ArgumentException("Customer not found", nameof(customerId));
@@ -88,7 +136,7 @@ namespace IT_Project2526.Services
             Employee? responsible = null;
             if (!string.IsNullOrWhiteSpace(responsibleId))
             {
-                responsible = await _context.Employees.FindAsync(responsibleId);
+                responsible = await _userRepository.GetEmployeeByIdAsync(responsibleId);
             }
 
             var ticket = new Ticket
@@ -103,25 +151,46 @@ namespace IT_Project2526.Services
                 Comments = new List<string>()
             };
 
-            _context.Tickets.Add(ticket);
+            // Add ticket via repository
+            await _ticketRepository.AddAsync(ticket);
 
             // If a project is selected, add the ticket to that project
             if (projectGuid.HasValue && projectGuid.Value != Guid.Empty)
             {
-                var project = await _context.Projects
-                    .Include(p => p.Tasks)
-                    .FirstOrDefaultAsync(p => p.Guid == projectGuid.Value);
+                var project = await _projectRepository.GetByIdAsync(projectGuid.Value, includeRelations: true);
                 
                 if (project != null)
                 {
                     project.Tasks.Add(ticket);
+                    await _projectRepository.UpdateAsync(project);
                 }
             }
 
-            await _context.SaveChangesAsync();
-
             _logger.LogInformation("Ticket {TicketGuid} created successfully", ticket.Guid);
+            
+            // Notify observers (triggers GERDA processing automatically)
+            await NotifyObserversCreatedAsync(ticket);
+
             return ticket;
+        }
+
+        /// <summary>
+        /// Notify all observers that a ticket was created
+        /// </summary>
+        private async Task NotifyObserversCreatedAsync(Ticket ticket)
+        {
+            foreach (var observer in _observers)
+            {
+                try
+                {
+                    await observer.OnTicketCreatedAsync(ticket);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Observer {ObserverType} failed on ticket creation", observer.GetType().Name);
+                    // Continue with other observers
+                }
+            }
         }
 
         /// <summary>
@@ -129,21 +198,15 @@ namespace IT_Project2526.Services
         /// </summary>
         public async Task<TicketDetailsViewModel?> GetTicketDetailsAsync(Guid ticketGuid)
         {
-            var ticket = await _context.Tickets
-                .Include(t => t.Customer)
-                .Include(t => t.Responsible)
-                .Include(t => t.ParentTicket)
-                .Include(t => t.SubTickets)
-                .FirstOrDefaultAsync(t => t.Guid == ticketGuid);
+            var ticket = await _ticketRepository.GetByIdAsync(ticketGuid, includeRelations: true);
 
             if (ticket == null)
             {
                 return null;
             }
 
-            var project = await _context.Projects
-                .Include(p => p.Tasks)
-                .FirstOrDefaultAsync(p => p.Tasks.Any(t => t.Guid == ticketGuid));
+            var project = await _projectRepository.GetAllAsync();
+            var ticketProject = project.FirstOrDefault(p => p.Tasks.Any(t => t.Guid == ticketGuid));
 
             var viewModel = new TicketDetailsViewModel
             {
@@ -166,8 +229,8 @@ namespace IT_Project2526.Services
                     : null,
                 CustomerId = ticket.Customer?.Id,
                 ParentTicketGuid = ticket.ParentTicket?.Guid,
-                ProjectGuid = project?.Guid,
-                ProjectName = project?.Name,
+                ProjectGuid = ticketProject?.Guid,
+                ProjectName = ticketProject?.Name,
                 
                 SubTickets = ticket.SubTickets.Select(st => new SubTicketInfo
                 {
@@ -187,10 +250,11 @@ namespace IT_Project2526.Services
 
         /// <summary>
         /// Assign a ticket to an agent
+        /// Notifies observers after assignment
         /// </summary>
         public async Task<bool> AssignTicketAsync(Guid ticketGuid, string agentId)
         {
-            var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.Guid == ticketGuid);
+            var ticket = await _ticketRepository.GetByIdAsync(ticketGuid, includeRelations: false);
             
             if (ticket == null)
             {
@@ -198,7 +262,7 @@ namespace IT_Project2526.Services
                 return false;
             }
 
-            var agent = await _context.Employees.FindAsync(agentId);
+            var agent = await _userRepository.GetEmployeeByIdAsync(agentId);
             
             if (agent == null)
             {
@@ -219,9 +283,167 @@ namespace IT_Project2526.Services
                 ticket.GerdaTags += ",AI-Assigned";
             }
 
-            await _context.SaveChangesAsync();
+            await _ticketRepository.UpdateAsync(ticket);
 
             _logger.LogInformation("Ticket {TicketGuid} assigned to agent {AgentId}", ticketGuid, agentId);
+            
+            // Notify observers
+            await NotifyObserversAssignedAsync(ticket, agent);
+            
+            return true;
+        }
+        
+        /// <summary>
+        /// Notify all observers that a ticket was assigned
+        /// </summary>
+        private async Task NotifyObserversAssignedAsync(Ticket ticket, Employee assignee)
+        {
+            foreach (var observer in _observers)
+            {
+                try
+                {
+                    await observer.OnTicketAssignedAsync(ticket, assignee);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Observer {ObserverType} failed on ticket assignment", observer.GetType().Name);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get employee by ID for GERDA recommendation details
+        /// </summary>
+        public async Task<Employee?> GetEmployeeByIdAsync(string agentId)
+        {
+            return await _userRepository.GetEmployeeByIdAsync(agentId);
+        }
+
+        /// <summary>
+        /// Calculate current workload for an employee (sum of EstimatedEffortPoints for assigned/in-progress tickets)
+        /// </summary>
+        public async Task<int> GetEmployeeCurrentWorkloadAsync(string agentId)
+        {
+            var tickets = await _ticketRepository.GetByResponsibleIdAsync(agentId);
+            
+            var activeTickets = tickets.Where(t => 
+                t.TicketStatus == Status.Assigned || 
+                t.TicketStatus == Status.InProgress);
+            
+            return activeTickets.Sum(t => t.EstimatedEffortPoints ?? 0);
+        }
+
+        /// <summary>
+        /// Get ticket for editing with relations
+        /// </summary>
+        public async Task<Ticket?> GetTicketForEditAsync(Guid ticketGuid)
+        {
+            return await _ticketRepository.GetByIdAsync(ticketGuid, includeRelations: true);
+        }
+
+        /// <summary>
+        /// Get all users (not just employees) for edit form dropdown
+        /// </summary>
+        public async Task<List<SelectListItem>> GetAllUsersSelectListAsync()
+        {
+            var users = await _userRepository.GetAllUsersAsync();
+            
+            return users.Select(u => new SelectListItem
+            {
+                Value = u.Id,
+                Text = $"{u.FirstName} {u.LastName}"
+            }).ToList();
+        }
+
+        /// <summary>
+        /// Update an existing ticket
+        /// </summary>
+        public async Task<bool> UpdateTicketAsync(Ticket ticket)
+        {
+            try
+            {
+                await _ticketRepository.UpdateAsync(ticket);
+                
+                // Notify observers
+                await NotifyObserversUpdatedAsync(ticket);
+                
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to update ticket {TicketGuid}", ticket.Guid);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Notify all observers that a ticket was updated
+        /// </summary>
+        private async Task NotifyObserversUpdatedAsync(Ticket ticket)
+        {
+            foreach (var observer in _observers)
+            {
+                try
+                {
+                    await observer.OnTicketUpdatedAsync(ticket);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Observer {ObserverType} failed on ticket update", observer.GetType().Name);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Assign a ticket to an agent and/or project (manager functionality)
+        /// </summary>
+        public async Task<bool> AssignTicketWithProjectAsync(Guid ticketGuid, string? agentId, Guid? projectGuid)
+        {
+            var ticket = await _ticketRepository.GetByIdAsync(ticketGuid, includeRelations: false);
+            
+            if (ticket == null)
+            {
+                _logger.LogWarning("Ticket {TicketGuid} not found for assignment", ticketGuid);
+                return false;
+            }
+
+            Employee? agent = null;
+            
+            if (!string.IsNullOrEmpty(agentId))
+            {
+                agent = await _userRepository.GetEmployeeByIdAsync(agentId);
+                
+                if (agent == null)
+                {
+                    _logger.LogWarning("Agent {AgentId} not found", agentId);
+                    return false;
+                }
+
+                ticket.ResponsibleId = agentId;
+                ticket.TicketStatus = Status.Assigned;
+            }
+
+            if (projectGuid.HasValue)
+            {
+                ticket.ProjectGuid = projectGuid.Value;
+            }
+
+            await _ticketRepository.UpdateAsync(ticket);
+
+            _logger.LogInformation("Ticket {TicketGuid} assigned to agent {AgentId} and project {ProjectGuid}", 
+                ticketGuid, agentId, projectGuid);
+            
+            // Notify observers if agent assigned
+            if (agent != null)
+            {
+                await NotifyObserversAssignedAsync(ticket, agent);
+            }
+            else
+            {
+                // Just project assignment, notify update
+                await NotifyObserversUpdatedAsync(ticket);
+            }
+            
             return true;
         }
     }

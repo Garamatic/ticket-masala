@@ -7,6 +7,7 @@ using IT_Project2526.Utilities;
 using IT_Project2526.Services;
 using IT_Project2526.Services.GERDA.Dispatching;
 using IT_Project2526.Services.GERDA.Ranking;
+using IT_Project2526.Repositories;
 using System.Text.Json;
 
 namespace IT_Project2526.Controllers
@@ -19,19 +20,28 @@ namespace IT_Project2526.Controllers
         private readonly IMetricsService _metricsService;
         private readonly IDispatchingService _dispatchingService;
         private readonly IRankingService _rankingService;
+        private readonly IDispatchBacklogService _dispatchBacklogService;
+        private readonly ITicketService _ticketService;
+        private readonly IProjectRepository _projectRepository;
 
         public ManagerController(
             ITProjectDB context, 
             ILogger<ManagerController> logger,
             IMetricsService metricsService,
             IDispatchingService dispatchingService,
-            IRankingService rankingService)
+            IRankingService rankingService,
+            IDispatchBacklogService dispatchBacklogService,
+            ITicketService ticketService,
+            IProjectRepository projectRepository)
         {
             _context = context;
             _logger = logger;
             _metricsService = metricsService;
             _dispatchingService = dispatchingService;
             _rankingService = rankingService;
+            _dispatchBacklogService = dispatchBacklogService;
+            _ticketService = ticketService;
+            _projectRepository = projectRepository;
         }
 
         /// <summary>
@@ -55,18 +65,14 @@ namespace IT_Project2526.Controllers
             }
         }
 
-        public IActionResult Projects()
+        public async Task<IActionResult> Projects()
         {
             try
             {
                 _logger.LogInformation("Manager viewing all projects");
                 
-                var projects = _context.Projects
-                    .Include(p => p.Tasks.Where(t => t.ValidUntil == null))
-                    .Include(p => p.ProjectManager)
-                    .Include(p => p.Tasks.Where(t => t.ValidUntil == null)).ThenInclude(t => t.Responsible)
-                    .Where(p => p.ValidUntil == null)
-                    .ToList();
+                var allProjects = await _projectRepository.GetAllAsync();
+                var projects = allProjects.Where(p => p.ValidUntil == null).ToList();
 
                 var viewModels = projects.Select(p => new ProjectTicketViewModel
                 {
@@ -108,6 +114,7 @@ namespace IT_Project2526.Controllers
 
         /// <summary>
         /// GERDA Dispatching Dashboard - Shows backlog with AI recommendations
+        /// Refactored to use DispatchBacklogService (addresses God Object anti-pattern)
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> DispatchBacklog()
@@ -116,170 +123,7 @@ namespace IT_Project2526.Controllers
             {
                 _logger.LogInformation("Manager viewing GERDA Dispatch Backlog");
 
-                // Get unassigned or pending tickets
-                var unassignedTickets = await _context.Tickets
-                    .Include(t => t.Customer)
-                    .Include(t => t.Project)
-                    .Where(t => t.ValidUntil == null)
-                    .Where(t => t.TicketStatus == Status.Pending || 
-                               (t.TicketStatus == Status.Assigned && t.ResponsibleId == null))
-                    .ToListAsync();
-                
-                // Order by CreationDate in memory (since it's a computed property)
-                unassignedTickets = unassignedTickets.OrderByDescending(t => t.CreationDate).ToList();
-
-                // Get all active employees
-                var employees = await _context.Users.OfType<Employee>().ToListAsync();
-
-                // Get current workload for each employee
-                var agentWorkloads = await _context.Tickets
-                    .Where(t => t.ResponsibleId != null && t.ValidUntil == null)
-                    .Where(t => t.TicketStatus != Status.Completed && t.TicketStatus != Status.Failed)
-                    .GroupBy(t => t.ResponsibleId)
-                    .Select(g => new { AgentId = g.Key!, Count = g.Count(), EffortPoints = g.Sum(t => t.EstimatedEffortPoints) })
-                    .ToDictionaryAsync(x => x.AgentId, x => (x.Count, x.EffortPoints));
-
-                // Get active projects
-                var projects = await _context.Projects
-                    .Include(p => p.Customer)
-                    .Where(p => p.ValidUntil == null)
-                    .Where(p => p.Status == Status.Pending || p.Status == Status.InProgress)
-                    .OrderBy(p => p.Name)
-                    .ToListAsync();
-
-                // Build ticket dispatch info with recommendations
-                var ticketDispatchInfos = new List<TicketDispatchInfo>();
-
-                foreach (var ticket in unassignedTickets)
-                {
-                    var ticketInfo = new TicketDispatchInfo
-                    {
-                        Guid = ticket.Guid,
-                        Description = ticket.Description,
-                        TicketStatus = ticket.TicketStatus,
-                        CreationDate = ticket.CreationDate,
-                        CompletionTarget = ticket.CompletionTarget,
-                        CustomerName = ticket.Customer != null 
-                            ? $"{ticket.Customer.FirstName} {ticket.Customer.LastName}" 
-                            : "Unknown",
-                        CustomerId = ticket.CustomerId,
-                        EstimatedEffortPoints = ticket.EstimatedEffortPoints,
-                        PriorityScore = ticket.PriorityScore,
-                        GerdaTags = ticket.GerdaTags,
-                        CurrentProjectGuid = ticket.ProjectGuid,
-                        CurrentProjectName = ticket.Project?.Name
-                    };
-
-                    // Get GERDA agent recommendations
-                    if (_dispatchingService.IsEnabled)
-                    {
-                        try
-                        {
-                            var recommendations = await _dispatchingService.GetTopRecommendedAgentsAsync(ticket.Guid, count: 3);
-                            
-                            foreach (var (agentId, score) in recommendations)
-                            {
-                                var agent = employees.FirstOrDefault(e => e.Id == agentId);
-                                if (agent != null)
-                                {
-                                    var workload = agentWorkloads.GetValueOrDefault(agentId, (0, 0));
-                                    
-                                    ticketInfo.RecommendedAgents.Add(new AgentRecommendation
-                                    {
-                                        AgentId = agentId,
-                                        AgentName = $"{agent.FirstName} {agent.LastName}",
-                                        Team = agent.Team,
-                                        Score = score,
-                                        CurrentWorkload = workload.Item1,
-                                        MaxCapacity = agent.MaxCapacityPoints,
-                                        Specializations = agent.Specializations,
-                                        Language = agent.Language,
-                                        Region = agent.Region
-                                    });
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning(ex, "Failed to get GERDA recommendations for ticket {TicketGuid}", ticket.Guid);
-                        }
-                    }
-
-                    // Recommend project based on customer
-                    if (ticket.ProjectGuid == null && ticket.Customer != null)
-                    {
-                        var customerProjects = projects.Where(p => p.CustomerId == ticket.CustomerId).ToList();
-                        if (customerProjects.Any())
-                        {
-                            // Recommend the most recent active project for this customer
-                            var recommendedProject = customerProjects
-                                .OrderByDescending(p => p.CreationDate)
-                                .FirstOrDefault();
-                            
-                            if (recommendedProject != null)
-                            {
-                                ticketInfo.RecommendedProjectGuid = recommendedProject.Guid;
-                                ticketInfo.RecommendedProjectName = recommendedProject.Name;
-                            }
-                        }
-                    }
-
-                    ticketDispatchInfos.Add(ticketInfo);
-                }
-
-                // Build agent info list
-                var agentInfos = employees.Select(e =>
-                {
-                    var workload = agentWorkloads.GetValueOrDefault(e.Id, (0, 0));
-                    return new AgentInfo
-                    {
-                        Id = e.Id,
-                        Name = $"{e.FirstName} {e.LastName}",
-                        Team = e.Team,
-                        CurrentWorkload = workload.Item1,
-                        MaxCapacity = 10, // Default max tickets
-                        CurrentEffortPoints = workload.Item2,
-                        MaxCapacityPoints = e.MaxCapacityPoints,
-                        Language = e.Language,
-                        Region = e.Region
-                    };
-                }).OrderBy(a => a.Team).ThenBy(a => a.Name).ToList();
-
-                // Calculate statistics
-                var now = DateTime.UtcNow;
-                var statistics = new DispatchStatistics
-                {
-                    TotalUnassignedTickets = ticketDispatchInfos.Count,
-                    TicketsWithProjectRecommendation = ticketDispatchInfos.Count(t => t.RecommendedProjectGuid.HasValue),
-                    TicketsWithAgentRecommendation = ticketDispatchInfos.Count(t => t.RecommendedAgents.Any()),
-                    TotalAvailableAgents = agentInfos.Count(a => a.IsAvailable),
-                    OverloadedAgents = agentInfos.Count(a => a.WorkloadPercentage >= 100),
-                    AverageTicketAge = unassignedTickets.Any() 
-                        ? unassignedTickets.Average(t => (now - t.CreationDate).TotalHours) 
-                        : 0,
-                    HighPriorityTickets = ticketDispatchInfos.Count(t => t.PriorityScore >= 50),
-                    TicketsOlderThan24Hours = ticketDispatchInfos.Count(t => t.TimeInBacklog.TotalHours >= 24)
-                };
-
-                // Build project options
-                var projectOptions = projects.Select(p => new ProjectOption
-                {
-                    Guid = p.Guid,
-                    Name = p.Name,
-                    CustomerName = p.Customer != null 
-                        ? $"{p.Customer.FirstName} {p.Customer.LastName}" 
-                        : "Unknown",
-                    CurrentTicketCount = p.Tasks.Count,
-                    Status = p.Status
-                }).ToList();
-
-                var viewModel = new GerdaDispatchViewModel
-                {
-                    UnassignedTickets = ticketDispatchInfos,
-                    AvailableAgents = agentInfos,
-                    Statistics = statistics,
-                    Projects = projectOptions
-                };
+                var viewModel = await _dispatchBacklogService.BuildDispatchBacklogViewModelAsync();
 
                 return View(viewModel);
             }
@@ -300,24 +144,12 @@ namespace IT_Project2526.Controllers
         {
             try
             {
-                var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.Guid == ticketGuid);
-                if (ticket == null)
+                var success = await _ticketService.AssignTicketWithProjectAsync(ticketGuid, agentId, projectGuid);
+                
+                if (!success)
                 {
-                    return Json(new { success = false, message = "Ticket not found" });
+                    return Json(new { success = false, message = "Ticket not found or assignment failed" });
                 }
-
-                if (!string.IsNullOrEmpty(agentId))
-                {
-                    ticket.ResponsibleId = agentId;
-                    ticket.TicketStatus = Status.Assigned;
-                }
-
-                if (projectGuid.HasValue)
-                {
-                    ticket.ProjectGuid = projectGuid.Value;
-                }
-
-                await _context.SaveChangesAsync();
 
                 _logger.LogInformation(
                     "Manager assigned ticket {TicketGuid} to agent {AgentId} and project {ProjectGuid}",

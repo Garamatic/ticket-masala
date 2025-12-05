@@ -12,9 +12,18 @@
     }
     public enum TicketType
     {
-        Unknown,
+        Incident,
+        ServiceRequest,
         ProjectRequest,
         Subtask
+    }
+
+    public enum ReviewStatus
+    {
+        None,
+        Pending,
+        Approved,
+        Rejected
     }
     public enum Category
     {

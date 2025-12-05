@@ -11,6 +11,8 @@ namespace IT_Project2526.Services
     public interface IMetricsService
     {
         Task<TeamDashboardViewModel> CalculateTeamMetricsAsync();
+        Task<List<ForecastData>> CalculateForecastAsync();
+        Task<List<AgentPerformanceMetric>> CalculateClosedTicketsPerAgentAsync();
     }
 
     public class MetricsService : IMetricsService
@@ -278,6 +280,76 @@ namespace IT_Project2526.Services
             if (effortPoints <= 8) return "Medium";
             if (effortPoints <= 13) return "Complex";
             return "Very Complex";
+        }
+        /// <summary>
+        /// Calculate ticket volume forecast for the next 7 days
+        /// Uses a simple moving average of the last 30 days
+        /// </summary>
+        public async Task<List<ForecastData>> CalculateForecastAsync()
+        {
+            var today = DateTime.UtcNow.Date;
+            var thirtyDaysAgo = today.AddDays(-30);
+
+            // Get daily creation counts for the last 30 days
+            var dailyCounts = await _context.Tickets
+                .Where(t => t.CreationDate >= thirtyDaysAgo)
+                .GroupBy(t => t.CreationDate.Date)
+                .Select(g => new { Date = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            // Calculate average daily volume
+            double averageDailyVolume = dailyCounts.Any() ? dailyCounts.Average(x => x.Count) : 0;
+            
+            // Simple linear projection with some random variation for "Peak and Valley" simulation
+            // In a real app, this would use ML.NET or a more sophisticated algorithm
+            var forecast = new List<ForecastData>();
+            var random = new Random();
+
+            for (int i = 1; i <= 7; i++)
+            {
+                var date = today.AddDays(i);
+                // Simulate weekday vs weekend variance
+                var isWeekend = date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday;
+                var variance = (random.NextDouble() * 0.4) - 0.2; // +/- 20% variance
+                var volume = averageDailyVolume * (1 + variance);
+                
+                if (isWeekend) volume *= 0.3; // Lower volume on weekends
+
+                forecast.Add(new ForecastData
+                {
+                    Date = date,
+                    PredictedVolume = (int)Math.Round(Math.Max(0, volume))
+                });
+            }
+
+            return forecast;
+        }
+
+        /// <summary>
+        /// Calculate closed tickets per agent for performance tracking
+        /// </summary>
+        public async Task<List<AgentPerformanceMetric>> CalculateClosedTicketsPerAgentAsync()
+        {
+            var employees = await _context.Users
+                .OfType<Employee>()
+                .ToListAsync();
+
+            var metrics = new List<AgentPerformanceMetric>();
+
+            foreach (var emp in employees)
+            {
+                var closedCount = await _context.Tickets
+                    .CountAsync(t => t.ResponsibleId == emp.Id && t.TicketStatus == Status.Completed);
+
+                metrics.Add(new AgentPerformanceMetric
+                {
+                    AgentId = emp.Id,
+                    AgentName = $"{emp.FirstName} {emp.LastName}",
+                    ClosedTickets = closedCount
+                });
+            }
+
+            return metrics.OrderByDescending(m => m.ClosedTickets).ToList();
         }
     }
 }

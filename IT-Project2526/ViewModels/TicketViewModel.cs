@@ -1,7 +1,6 @@
 ﻿using IT_Project2526;
 using IT_Project2526.Models;
 using System;
-using IT_Project2526.Models;
 
 namespace IT_Project2526.ViewModels
 {

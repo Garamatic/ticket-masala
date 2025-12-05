@@ -15,30 +15,134 @@ namespace IT_Project2526.Controllers
     {
         private readonly IGerdaService _gerdaService;
         private readonly ITicketService _ticketService;
+        private readonly IFileService _fileService;
+        private readonly IAuditService _auditService;
+        private readonly ITProjectDB _context;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<TicketController> _logger;
 
         public TicketController(
             IGerdaService gerdaService,
             ITicketService ticketService,
+            IFileService fileService,
+            IAuditService auditService,
+            ITProjectDB context,
+            IHttpContextAccessor httpContextAccessor,
             ILogger<TicketController> logger)
         {
             _gerdaService = gerdaService;
             _ticketService = ticketService;
+            _fileService = fileService;
+            _auditService = auditService;
+            _context = context;
+            _httpContextAccessor = httpContextAccessor;
             _logger = logger;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(TicketSearchViewModel searchModel)
         {
             try
             {
-                var tickets = await _ticketService.GetAllTicketsAsync();
-                return View(tickets);
+                // Initialize defaults if needed
+                if (searchModel == null) searchModel = new TicketSearchViewModel();
+                
+                var result = await _ticketService.SearchTicketsAsync(searchModel);
+                
+                // Populate dropdowns for filter UI
+                ViewBag.Customers = await _ticketService.GetCustomerSelectListAsync();
+                ViewBag.Employees = await _ticketService.GetEmployeeSelectListAsync();
+                ViewBag.Projects = await _ticketService.GetProjectSelectListAsync();
+                
+                // Load saved filters for the current user
+                var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    ViewBag.SavedFilters = await _context.SavedFilters
+                        .Where(f => f.UserId == userId)
+                        .OrderBy(f => f.Name)
+                        .ToListAsync();
+                }
+
+                return View(result);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading tickets");
                 return StatusCode(500);
             }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveFilter(string name, TicketSearchViewModel searchModel)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                TempData["Error"] = "Filter name is required.";
+                return RedirectToAction(nameof(Index), searchModel);
+            }
+
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            var filter = new SavedFilter
+            {
+                Id = Guid.NewGuid(),
+                Name = name,
+                UserId = userId,
+                SearchTerm = searchModel.SearchTerm,
+                Status = searchModel.Status,
+                TicketType = searchModel.TicketType,
+                ProjectId = searchModel.ProjectId,
+                AssignedToId = searchModel.AssignedToId,
+                CustomerId = searchModel.CustomerId,
+                IsOverdue = searchModel.IsOverdue,
+                IsDueSoon = searchModel.IsDueSoon
+            };
+
+            _context.SavedFilters.Add(filter);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Filter saved successfully.";
+            return RedirectToAction(nameof(Index), searchModel);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> LoadFilter(Guid id)
+        {
+            var filter = await _context.SavedFilters.FindAsync(id);
+            if (filter == null) return NotFound();
+
+            var searchModel = new TicketSearchViewModel
+            {
+                SearchTerm = filter.SearchTerm,
+                Status = filter.Status,
+                TicketType = filter.TicketType,
+                ProjectId = filter.ProjectId,
+                AssignedToId = filter.AssignedToId,
+                CustomerId = filter.CustomerId,
+                IsOverdue = filter.IsOverdue ?? false,
+                IsDueSoon = filter.IsDueSoon ?? false
+            };
+
+            return RedirectToAction(nameof(Index), searchModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteFilter(Guid id)
+        {
+            var filter = await _context.SavedFilters.FindAsync(id);
+            if (filter == null) return NotFound();
+
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (filter.UserId != userId) return Forbid();
+
+            _context.SavedFilters.Remove(filter);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Filter deleted.";
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpGet]
@@ -110,6 +214,31 @@ namespace IT_Project2526.Controllers
                 return NotFound(); 
             }
 
+            // Load attachments
+            viewModel.Attachments = await _context.Documents
+                .Where(d => d.TicketId == id.Value)
+                .OrderByDescending(d => d.UploadDate)
+                .ToListAsync();
+
+            // Load audit logs
+            viewModel.AuditLogs = await _auditService.GetAuditLogForTicketAsync(id.Value);
+
+            // Load comments
+            viewModel.Comments = await _context.TicketComments
+                .Include(c => c.Author)
+                .Where(c => c.TicketId == id.Value)
+                .OrderByDescending(c => c.CreatedAt)
+                .ToListAsync();
+
+            // Load reviews
+            // viewModel.ReviewStatus is already populated by TicketService if added there
+            // viewModel.ReviewStatus = ticket.ReviewStatus;
+            viewModel.QualityReviews = await _context.QualityReviews
+                .Include(r => r.Reviewer)
+                .Where(r => r.TicketId == id.Value)
+                .OrderByDescending(r => r.ReviewDate)
+                .ToListAsync();
+
             // Get recommended agent from Dispatching service (if ticket is unassigned)
             if (string.IsNullOrWhiteSpace(viewModel.ResponsibleId))
             {
@@ -147,6 +276,35 @@ namespace IT_Project2526.Controllers
             }
 
             return View(viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddComment(Guid id, string commentBody, bool isInternal)
+        {
+            var ticket = await _context.Tickets.FindAsync(id);
+            if (ticket == null) return NotFound();
+
+            if (!string.IsNullOrWhiteSpace(commentBody))
+            {
+                var comment = new TicketComment
+                {
+                    Id = Guid.NewGuid(),
+                    TicketId = id,
+                    Body = commentBody,
+                    IsInternal = isInternal,
+                    CreatedAt = DateTime.UtcNow,
+                    AuthorId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                };
+
+                _context.TicketComments.Add(comment);
+                await _context.SaveChangesAsync();
+
+                // Audit Log
+                await _auditService.LogActionAsync(id, "Commented", comment.AuthorId ?? "System", "Comment", null, isInternal ? "Internal Note" : "Public Reply");
+            }
+
+            return RedirectToAction(nameof(Detail), new { id = id });
         }
 
         [HttpPost]
@@ -231,6 +389,96 @@ namespace IT_Project2526.Controllers
             // If validation fails, reload the dropdowns and show the view again
             viewModel.ResponsibleUsers = await _ticketService.GetAllUsersSelectListAsync();
             return View(viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UploadAttachment(Guid ticketId, IFormFile file, bool isPublic)
+        {
+            if (file == null || file.Length == 0)
+            {
+                TempData["Error"] = "Please select a file to upload.";
+                return RedirectToAction(nameof(Detail), new { id = ticketId });
+            }
+
+            try
+            {
+                var storedFileName = await _fileService.SaveFileAsync(file, "tickets");
+                
+                var document = new Document
+                {
+                    Id = Guid.NewGuid(),
+                    TicketId = ticketId,
+                    FileName = file.FileName,
+                    StoredFileName = storedFileName,
+                    ContentType = file.ContentType,
+                    FileSize = file.Length,
+                    UploadDate = DateTime.UtcNow,
+                    UploaderId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value,
+                    IsPublic = isPublic
+                };
+
+                _context.Documents.Add(document);
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = "File uploaded successfully.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error uploading file for ticket {TicketId}", ticketId);
+                TempData["Error"] = "An error occurred while uploading the file.";
+            }
+
+            return RedirectToAction(nameof(Detail), new { id = ticketId });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DownloadAttachment(Guid id)
+        {
+            var doc = await _context.Documents.FindAsync(id);
+            if (doc == null) return NotFound();
+
+            var stream = await _fileService.GetFileStreamAsync(doc.StoredFileName, "tickets");
+            if (stream == null) return NotFound();
+
+            return File(stream, doc.ContentType, doc.FileName);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> PreviewAttachment(Guid id)
+        {
+            var doc = await _context.Documents.FindAsync(id);
+            if (doc == null) return NotFound();
+
+            var stream = await _fileService.GetFileStreamAsync(doc.StoredFileName, "tickets");
+            if (stream == null) return NotFound();
+
+            // Return inline for preview
+            Response.Headers.Append("Content-Disposition", $"inline; filename=\"{doc.FileName}\"");
+            return File(stream, doc.ContentType);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> BatchAssign(List<Guid> ticketIds, string agentId)
+        {
+            if (ticketIds != null && ticketIds.Any() && !string.IsNullOrEmpty(agentId))
+            {
+                await _ticketService.BatchAssignToAgentAsync(ticketIds, agentId);
+                // We could use TempData for success message if we had a way to display it
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> BatchStatus(List<Guid> ticketIds, Status status)
+        {
+             if (ticketIds != null && ticketIds.Any())
+            {
+                await _ticketService.BatchUpdateStatusAsync(ticketIds, status);
+            }
+            return RedirectToAction(nameof(Index));
         }
     }
 }

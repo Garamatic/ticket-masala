@@ -7,8 +7,10 @@ using IT_Project2526.Utilities;
 using IT_Project2526.Services;
 using IT_Project2526.Services.GERDA.Dispatching;
 using IT_Project2526.Services.GERDA.Ranking;
+using IT_Project2526.Services.GERDA.Anticipation;
 using IT_Project2526.Repositories;
 using System.Text.Json;
+using Newtonsoft.Json;
 
 namespace IT_Project2526.Controllers
 {
@@ -22,6 +24,7 @@ namespace IT_Project2526.Controllers
         private readonly IDispatchBacklogService _dispatchBacklogService;
         private readonly ITicketService _ticketService;
         private readonly IProjectRepository _projectRepository;
+        private readonly IAnticipationService _anticipationService;
 
         public ManagerController(
             ILogger<ManagerController> logger,
@@ -30,7 +33,8 @@ namespace IT_Project2526.Controllers
             IRankingService rankingService,
             IDispatchBacklogService dispatchBacklogService,
             ITicketService ticketService,
-            IProjectRepository projectRepository)
+            IProjectRepository projectRepository,
+            IAnticipationService anticipationService)
         {
             _logger = logger;
             _metricsService = metricsService;
@@ -39,6 +43,7 @@ namespace IT_Project2526.Controllers
             _dispatchBacklogService = dispatchBacklogService;
             _ticketService = ticketService;
             _projectRepository = projectRepository;
+            _anticipationService = anticipationService;
         }
 
         /// <summary>
@@ -51,6 +56,10 @@ namespace IT_Project2526.Controllers
                 _logger.LogInformation("Manager viewing Team Dashboard with GERDA metrics");
 
                 var viewModel = await _metricsService.CalculateTeamMetricsAsync();
+                
+                // Populate new analytics
+                viewModel.ForecastData = await _metricsService.CalculateForecastAsync();
+                viewModel.AgentPerformance = await _metricsService.CalculateClosedTicketsPerAgentAsync();
 
                 return View(viewModel);
             }
@@ -60,6 +69,37 @@ namespace IT_Project2526.Controllers
                 TempData["ErrorMessage"] = "Failed to load dashboard metrics.";
                 return RedirectToAction("Projects");
             }
+        }
+
+        /// <summary>
+        /// Capacity Forecast showing anticipated inflow vs. capacity
+        /// </summary>
+        public async Task<IActionResult> CapacityForecast()
+        {
+            var forecast = await _anticipationService.CheckCapacityRiskAsync();
+            
+            // In a real implementation, we would return structured data for the chart
+            // For now, we'll mock some data points for the view to render
+            var today = DateTime.Today;
+            var dates = Enumerable.Range(0, 30).Select(i => today.AddDays(i).ToString("MMM dd")).ToList();
+            
+            // Mock data based on the risk assessment or random for demo
+            var inflow = new List<int>();
+            var capacity = new List<int>();
+            var rnd = new Random();
+            
+            for(int i=0; i<30; i++)
+            {
+                inflow.Add(rnd.Next(20, 50)); // Daily inflow 20-50 tickets
+                capacity.Add(35); // Constant capacity for now
+            }
+
+            ViewBag.Dates = JsonConvert.SerializeObject(dates);
+            ViewBag.Inflow = JsonConvert.SerializeObject(inflow);
+            ViewBag.Capacity = JsonConvert.SerializeObject(capacity);
+            ViewBag.RiskAnalysis = forecast;
+
+            return View();
         }
 
         public async Task<IActionResult> Projects()
@@ -94,7 +134,7 @@ namespace IT_Project2526.Controllers
                             ? $"{t.Responsible.FirstName} {t.Responsible.LastName}"
                             : "Unassigned",
                         CustomerName = string.Empty,
-                        Comments = t.Comments?.ToList() ?? new List<string>(),
+                        Comments = t.Comments?.Select(c => c.Body).ToList() ?? new List<string>(),
                         CompletionTarget = t.CompletionTarget,
                         CreationDate = DateTime.UtcNow
                     }).ToList()

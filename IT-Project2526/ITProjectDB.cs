@@ -65,6 +65,14 @@ namespace IT_Project2526
         public DbSet<Resource> Resources { get; set; }
         public DbSet<Employee> Employees { get; set; }
         public DbSet<Customer> Customers { get; set; }
+        public DbSet<Document> Documents { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
+        public DbSet<AuditLogEntry> AuditLogs { get; set; }
+        public DbSet<TicketComment> TicketComments { get; set; }
+        public DbSet<Department> Departments { get; set; }
+        public DbSet<KnowledgeBaseArticle> KnowledgeBaseArticles { get; set; }
+        public DbSet<QualityReview> QualityReviews { get; set; }
+        public DbSet<SavedFilter> SavedFilters { get; set; }
 
     }
 }

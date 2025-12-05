@@ -132,11 +132,24 @@
                             <input type="text" class="form-control" placeholder="Search..." />
                         </div>
                         
+                        <!-- Notifications -->
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <ul class="navbar-nav">
+                                @await Component.InvokeAsync("Notification")
+                            </ul>
+                        }
+
                         <!-- Dark Mode Toggle -->
                         <button id="themeToggle" class="btn btn-outline-primary btn-sm" aria-label="Toggle dark mode" title="Toggle dark/light mode">
                             <i class="fas fa-moon" id="themeIcon"></i>
                         </button>
                         
+                        <ul class="navbar-nav">
+                              <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="KnowledgeBase" asp-action="Index">Knowledge Base</a>
+                        </li>
+                    </ul>
                         <!-- User Menu -->
                         <partial name="_LoginPartial" />
                     </div>

@@ -25,7 +25,13 @@ public class TicketDetailsViewModel
     public Guid? ProjectGuid { get; set; }
     
     // Comments
-    public List<string> Comments { get; set; } = new();
+    public List<TicketComment> Comments { get; set; } = new();
+    public List<Document> Attachments { get; set; } = new();
+    public List<AuditLogEntry> AuditLogs { get; set; } = new();
+    
+    // Quality Review
+    public ReviewStatus ReviewStatus { get; set; }
+    public List<QualityReview> QualityReviews { get; set; } = new();
     
     // Sub-tickets
     public Guid? ParentTicketGuid { get; set; }

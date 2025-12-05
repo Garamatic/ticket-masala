@@ -97,6 +97,11 @@ builder.Services.AddScoped<ITicketObserver, LoggingTicketObserver>();
 builder.Services.AddScoped<IMetricsService, MetricsService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<IDispatchBacklogService, DispatchBacklogService>();
+builder.Services.AddScoped<IFileService, FileService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IAuditService, AuditService>();
+builder.Services.AddScoped<ICsvImportService, CsvImportService>();
+builder.Services.AddHostedService<EmailIngestionService>();
 
 // Register DbSeeder
 builder.Services.AddScoped<DbSeeder>();

@@ -1,4 +1,5 @@
 using IT_Project2526.Models;
+using IT_Project2526.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace IT_Project2526.Repositories;
@@ -35,32 +36,51 @@ public class EfCoreTicketRepository : ITicketRepository
         return await query.FirstOrDefaultAsync(t => t.Guid == id);
     }
 
-    public async Task<IEnumerable<Ticket>> GetAllAsync()
+    public async Task<IEnumerable<Ticket>> GetAllAsync(Guid? departmentId = null)
     {
-        return await _context.Tickets
+        var query = _context.Tickets
             .Include(t => t.Customer)
             .Include(t => t.Responsible)
-            .ToListAsync();
+            .AsQueryable();
+
+        if (departmentId.HasValue)
+        {
+            query = query.Where(t => t.Project != null && t.Project.DepartmentId == departmentId.Value);
+        }
+
+        return await query.ToListAsync();
     }
 
-    public async Task<IEnumerable<Ticket>> GetUnassignedAsync()
+    public async Task<IEnumerable<Ticket>> GetUnassignedAsync(Guid? departmentId = null)
     {
-        return await _context.Tickets
+        var query = _context.Tickets
             .Include(t => t.Customer)
             .Include(t => t.Project)
             .Where(t => t.ValidUntil == null)
             .Where(t => t.TicketStatus == Status.Pending || 
-                       (t.TicketStatus == Status.Assigned && t.ResponsibleId == null))
-            .ToListAsync();
+                       (t.TicketStatus == Status.Assigned && t.ResponsibleId == null));
+
+        if (departmentId.HasValue)
+        {
+            query = query.Where(t => t.Project != null && t.Project.DepartmentId == departmentId.Value);
+        }
+
+        return await query.ToListAsync();
     }
 
-    public async Task<IEnumerable<Ticket>> GetByStatusAsync(Status status)
+    public async Task<IEnumerable<Ticket>> GetByStatusAsync(Status status, Guid? departmentId = null)
     {
-        return await _context.Tickets
+        var query = _context.Tickets
             .Include(t => t.Customer)
             .Include(t => t.Responsible)
-            .Where(t => t.TicketStatus == status && t.ValidUntil == null)
-            .ToListAsync();
+            .Where(t => t.TicketStatus == status && t.ValidUntil == null);
+
+        if (departmentId.HasValue)
+        {
+            query = query.Where(t => t.Project != null && t.Project.DepartmentId == departmentId.Value);
+        }
+
+        return await query.ToListAsync();
     }
 
     public async Task<IEnumerable<Ticket>> GetByCustomerIdAsync(string customerId)
@@ -91,23 +111,104 @@ public class EfCoreTicketRepository : ITicketRepository
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Ticket>> GetRecentAsync(int timeWindowMinutes)
+    public async Task<IEnumerable<Ticket>> GetRecentAsync(int timeWindowMinutes, Guid? departmentId = null)
     {
         var cutoffTime = DateTime.UtcNow.AddMinutes(-timeWindowMinutes);
-        return await _context.Tickets
+        var query = _context.Tickets
             .Where(t => t.CreationDate >= cutoffTime)
-            .Where(t => t.ValidUntil == null)
-            .ToListAsync();
+            .Where(t => t.ValidUntil == null);
+
+        if (departmentId.HasValue)
+        {
+            query = query.Where(t => t.Project != null && t.Project.DepartmentId == departmentId.Value);
+        }
+
+        return await query.ToListAsync();
     }
 
-    public async Task<IEnumerable<Ticket>> GetPendingOrAssignedAsync()
+    public async Task<IEnumerable<Ticket>> GetPendingOrAssignedAsync(Guid? departmentId = null)
     {
-        return await _context.Tickets
+        var query = _context.Tickets
             .Include(t => t.Customer)
             .Include(t => t.Responsible)
             .Where(t => t.TicketStatus == Status.Pending || t.TicketStatus == Status.Assigned)
+            .Where(t => t.ValidUntil == null);
+
+        if (departmentId.HasValue)
+        {
+            query = query.Where(t => t.Project != null && t.Project.DepartmentId == departmentId.Value);
+        }
+
+        return await query.ToListAsync();
+    }
+
+    public async Task<TicketSearchViewModel> SearchTicketsAsync(TicketSearchViewModel searchModel, Guid? departmentId = null)
+    {
+        var query = _context.Tickets
+            .Include(t => t.Customer)
+            .Include(t => t.Responsible)
+            .Include(t => t.Project)
             .Where(t => t.ValidUntil == null)
+            .AsQueryable();
+
+        // Apply Department Filter
+        if (departmentId.HasValue)
+        {
+            query = query.Where(t => t.Project != null && t.Project.DepartmentId == departmentId.Value);
+        }
+
+        // Apply filters
+        if (!string.IsNullOrWhiteSpace(searchModel.SearchTerm))
+        {
+            var term = searchModel.SearchTerm.ToLower();
+            query = query.Where(t => 
+                t.Description.ToLower().Contains(term) || 
+                (t.Customer != null && (t.Customer.FirstName.ToLower().Contains(term) || t.Customer.LastName.ToLower().Contains(term))) ||
+                (t.Project != null && t.Project.Name.ToLower().Contains(term))
+            );
+        }
+
+        if (searchModel.Status.HasValue)
+        {
+            query = query.Where(t => t.TicketStatus == searchModel.Status.Value);
+        }
+
+        if (searchModel.TicketType.HasValue)
+        {
+            query = query.Where(t => t.TicketType == searchModel.TicketType.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchModel.ResponsibleId))
+        {
+            query = query.Where(t => t.ResponsibleId == searchModel.ResponsibleId);
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchModel.CustomerId))
+        {
+            query = query.Where(t => t.CustomerId == searchModel.CustomerId);
+        }
+
+        if (searchModel.DateFrom.HasValue)
+        {
+            query = query.Where(t => t.CreationDate >= searchModel.DateFrom.Value);
+        }
+
+        if (searchModel.DateTo.HasValue)
+        {
+            query = query.Where(t => t.CreationDate <= searchModel.DateTo.Value);
+        }
+        
+        // Count total items before pagination
+        searchModel.TotalItems = await query.CountAsync();
+
+        // Apply pagination
+        searchModel.Results = await query
+            .OrderByDescending(t => t.CreationDate)
+            .Skip((searchModel.Page - 1) * searchModel.PageSize)
+            .Take(searchModel.PageSize)
             .ToListAsync();
+
+        return searchModel;
     }
 
     public async Task<Ticket> AddAsync(Ticket ticket)

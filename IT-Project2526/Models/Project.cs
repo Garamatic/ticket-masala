@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using IT_Project2526.Utilities;
 
@@ -29,5 +30,9 @@ namespace IT_Project2526.Models
 
         public List<Ticket> Tasks { get; set; } = [];
         public List<Resource> Resources { get; set; } = [];
+
+        public Guid? DepartmentId { get; set; }
+        [ForeignKey("DepartmentId")]
+        public Department? Department { get; set; }
     }
 }

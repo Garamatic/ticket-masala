@@ -1,0 +1,119 @@
+using IT_Project2526.Models;
+using IT_Project2526.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+
+namespace IT_Project2526.Controllers
+{
+    [Authorize(Roles = "Admin,Employee")]
+    public class ImportController : Controller
+    {
+        private readonly ICsvImportService _importService;
+        private readonly ITicketService _ticketService;
+        private readonly ILogger<ImportController> _logger;
+
+        public ImportController(ICsvImportService importService, ITicketService ticketService, ILogger<ImportController> logger)
+        {
+            _importService = importService;
+            _ticketService = ticketService;
+            _logger = logger;
+        }
+
+        [HttpGet]
+        public IActionResult Index()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult Upload(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                TempData["Error"] = "Please select a file.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            try
+            {
+                // Parse CSV to get headers and sample data
+                using var stream = file.OpenReadStream();
+                var rows = _importService.ParseCsv(stream);
+
+                if (rows.Count == 0)
+                {
+                    TempData["Error"] = "CSV file is empty.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Store rows in TempData/Session for next steps (simplified for pilot)
+                // In production, might save to temp file or DB
+                var json = JsonConvert.SerializeObject(rows.Take(5).ToList()); // Store sample
+                TempData["CsvSample"] = json;
+                
+                // Store full data in session or cache? For pilot, maybe just re-upload or keep in memory if small
+                // Better approach for pilot: Save temp file
+                var tempPath = Path.GetTempFileName();
+                using (var fileStream = new FileStream(tempPath, FileMode.Create))
+                {
+                    file.CopyTo(fileStream);
+                }
+                TempData["TempFilePath"] = tempPath;
+
+                // Get headers from first row
+                var firstRow = (IDictionary<string, object>)rows.First();
+                var headers = firstRow.Keys.ToList();
+
+                return View("MapFields", headers);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error parsing CSV");
+                TempData["Error"] = "Error parsing CSV file.";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ExecuteImport(Dictionary<string, string> mapping)
+        {
+            var tempPath = TempData["TempFilePath"]?.ToString();
+            if (string.IsNullOrEmpty(tempPath) || !System.IO.File.Exists(tempPath))
+            {
+                TempData["Error"] = "Session expired. Please upload again.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            try
+            {
+                using var stream = System.IO.File.OpenRead(tempPath);
+                var rows = _importService.ParseCsv(stream);
+
+                var uploaderId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                var departmentId = await _ticketService.GetCurrentUserDepartmentIdAsync();
+
+                if (departmentId == Guid.Empty)
+                {
+                     TempData["Error"] = "User has no department.";
+                     return RedirectToAction(nameof(Index));
+                }
+
+                var count = await _importService.ImportTicketsAsync(rows, mapping, uploaderId, departmentId);
+
+                TempData["Success"] = $"Successfully imported {count} tickets.";
+                
+                // Cleanup
+                System.IO.File.Delete(tempPath);
+                
+                return RedirectToAction("Index", "Ticket");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error executing import");
+                TempData["Error"] = "Error executing import.";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+    }
+}

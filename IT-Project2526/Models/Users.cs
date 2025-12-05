@@ -72,6 +72,13 @@ namespace IT_Project2526.Models
         /// </summary>
         [SafeStringLength(100, ErrorMessage = "Region cannot exceed 100 characters")]
         public string? Region { get; set; }
+
+        [PersonalData]
+        public string? ProfilePicturePath { get; set; }
+
+        public Guid? DepartmentId { get; set; }
+        [ForeignKey("DepartmentId")]
+        public Department? Department { get; set; }
     }
     public class Customer : ApplicationUser
     {

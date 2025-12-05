@@ -17,6 +17,7 @@ namespace IT_Project2526.Services
         Task<List<SelectListItem>> GetCustomerSelectListAsync();
         Task<List<SelectListItem>> GetEmployeeSelectListAsync();
         Task<List<SelectListItem>> GetProjectSelectListAsync();
+        Task<Guid> GetCurrentUserDepartmentIdAsync();
         Task<Ticket> CreateTicketAsync(string description, string customerId, string? responsibleId, Guid? projectGuid, DateTime? completionTarget);
         Task<TicketDetailsViewModel?> GetTicketDetailsAsync(Guid ticketGuid);
         Task<bool> AssignTicketAsync(Guid ticketGuid, string agentId);
@@ -28,6 +29,9 @@ namespace IT_Project2526.Services
         Task<List<SelectListItem>> GetAllUsersSelectListAsync();
         Task<bool> UpdateTicketAsync(Ticket ticket);
         Task<BatchAssignResult> BatchAssignTicketsAsync(BatchAssignRequest request, Func<Guid, Task<string?>> getRecommendedAgent);
+        Task<TicketSearchViewModel> SearchTicketsAsync(TicketSearchViewModel searchModel);
+        Task BatchAssignToAgentAsync(List<Guid> ticketIds, string agentId);
+        Task BatchUpdateStatusAsync(List<Guid> ticketIds, Status status);
     }
 
     public class TicketService : ITicketService
@@ -37,6 +41,9 @@ namespace IT_Project2526.Services
         private readonly IUserRepository _userRepository;
         private readonly IProjectRepository _projectRepository;
         private readonly IEnumerable<ITicketObserver> _observers;
+        private readonly INotificationService _notificationService;
+        private readonly IAuditService _auditService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<TicketService> _logger;
 
         public TicketService(
@@ -45,6 +52,9 @@ namespace IT_Project2526.Services
             IUserRepository userRepository,
             IProjectRepository projectRepository,
             IEnumerable<ITicketObserver> observers,
+            INotificationService notificationService,
+            IAuditService auditService,
+            IHttpContextAccessor httpContextAccessor,
             ILogger<TicketService> logger)
         {
             _context = context;
@@ -52,7 +62,25 @@ namespace IT_Project2526.Services
             _userRepository = userRepository;
             _projectRepository = projectRepository;
             _observers = observers;
+            _notificationService = notificationService;
+            _auditService = auditService;
+            _httpContextAccessor = httpContextAccessor;
             _logger = logger;
+        }
+
+        private string GetCurrentUserId()
+        {
+            return _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "System";
+        }
+
+        public async Task<Guid> GetCurrentUserDepartmentIdAsync()
+        {
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId)) return Guid.Empty;
+
+            var user = await _context.Users.FindAsync(userId);
+            var employee = user as Employee;
+            return employee?.DepartmentId ?? Guid.Empty;
         }
 
         /// <summary>
@@ -99,7 +127,8 @@ namespace IT_Project2526.Services
         /// </summary>
         public async Task<IEnumerable<TicketViewModel>> GetAllTicketsAsync()
         {
-            var tickets = await _ticketRepository.GetAllAsync();
+            var departmentId = await GetCurrentUserDepartmentIdAsync();
+            var tickets = await _ticketRepository.GetAllAsync(departmentId);
             
             return tickets.Select(t => new TicketViewModel
             {
@@ -149,7 +178,7 @@ namespace IT_Project2526.Services
                 TicketType = TicketType.ProjectRequest,
                 CompletionTarget = completionTarget ?? DateTime.UtcNow.AddDays(14),
                 CreatorGuid = Guid.Parse(customer.Id),
-                Comments = new List<string>()
+                Comments = new List<TicketComment>()
             };
 
             // Add ticket via repository
@@ -171,6 +200,9 @@ namespace IT_Project2526.Services
             
             // Notify observers (triggers GERDA processing automatically)
             await NotifyObserversCreatedAsync(ticket);
+
+            // Audit Log
+            await _auditService.LogActionAsync(ticket.Guid, "Created", GetCurrentUserId());
 
             return ticket;
         }
@@ -243,7 +275,11 @@ namespace IT_Project2526.Services
                 // GERDA AI Insights
                 EstimatedEffortPoints = ticket.EstimatedEffortPoints,
                 PriorityScore = ticket.PriorityScore,
-                GerdaTags = ticket.GerdaTags
+                GerdaTags = ticket.GerdaTags,
+                
+                // Review Status
+                ReviewStatus = ticket.ReviewStatus,
+                QualityReviews = ticket.QualityReviews
             };
 
             return viewModel;
@@ -291,6 +327,17 @@ namespace IT_Project2526.Services
             // Notify observers
             await NotifyObserversAssignedAsync(ticket, agent);
             
+            // Send notification to agent
+            await _notificationService.NotifyUserAsync(
+                agentId, 
+                $"You have been assigned to ticket #{ticket.Guid.ToString().Substring(0, 8)}", 
+                $"/Ticket/Detail/{ticket.Guid}", 
+                "Info"
+            );
+            
+            // Audit Log
+            await _auditService.LogActionAsync(ticket.Guid, "Assigned", GetCurrentUserId(), "Responsible", null, agent.Name);
+
             return true;
         }
         
@@ -368,6 +415,20 @@ namespace IT_Project2526.Services
                 // Notify observers
                 await NotifyObserversUpdatedAsync(ticket);
                 
+                // Notify responsible if status changed to Completed or Rejected
+                if (ticket.ResponsibleId != null && (ticket.TicketStatus == Status.Completed || ticket.TicketStatus == Status.Rejected))
+                {
+                    await _notificationService.NotifyUserAsync(
+                        ticket.ResponsibleId, 
+                        $"Ticket #{ticket.Guid.ToString().Substring(0, 8)} status changed to {ticket.TicketStatus}", 
+                        $"/Ticket/Detail/{ticket.Guid}", 
+                        "Info"
+                    );
+                }
+                
+                // Audit Log
+                await _auditService.LogActionAsync(ticket.Guid, "Updated", GetCurrentUserId());
+
                 return true;
             }
             catch (Exception ex)
@@ -561,6 +622,33 @@ namespace IT_Project2526.Services
             }
 
             return result;
+        }
+
+        public async Task<TicketSearchViewModel> SearchTicketsAsync(TicketSearchViewModel searchModel)
+        {
+            var departmentId = await GetCurrentUserDepartmentIdAsync();
+            return await _ticketRepository.SearchTicketsAsync(searchModel, departmentId);
+        }
+
+        public async Task BatchAssignToAgentAsync(List<Guid> ticketIds, string agentId)
+        {
+            foreach (var id in ticketIds)
+            {
+                await AssignTicketAsync(id, agentId);
+            }
+        }
+
+        public async Task BatchUpdateStatusAsync(List<Guid> ticketIds, Status status)
+        {
+            foreach (var id in ticketIds)
+            {
+                var ticket = await _ticketRepository.GetByIdAsync(id, includeRelations: false);
+                if (ticket != null)
+                {
+                    ticket.TicketStatus = status;
+                    await UpdateTicketAsync(ticket);
+                }
+            }
         }
     }
 }

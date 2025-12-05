@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Identity;
 using IT_Project2526.Utilities;
 
@@ -36,6 +37,14 @@ namespace IT_Project2526.Models
         public Project? Project { get; set; }
         public Guid? ProjectGuid { get; set; }
 
-        public List<string> Comments { get; set; } = [];
+        public List<TicketComment> Comments { get; set; } = new();
+        public List<Document> Attachments { get; set; } = [];
+
+        public Guid? SolvedByArticleId { get; set; }
+        [ForeignKey("SolvedByArticleId")]
+        public KnowledgeBaseArticle? SolvedByArticle { get; set; }
+
+        public ReviewStatus ReviewStatus { get; set; } = ReviewStatus.None;
+        public List<QualityReview> QualityReviews { get; set; } = new();
      }
 }

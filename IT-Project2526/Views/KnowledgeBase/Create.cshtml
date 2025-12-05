@@ -1,0 +1,44 @@
+@model IT_Project2526.Models.KnowledgeBaseArticle
+
+@{
+    ViewData["Title"] = "Create Article";
+}
+
+<div class="container mt-4">
+    <h2>Create Knowledge Base Article</h2>
+    <hr />
+    <div class="row">
+        <div class="col-md-8">
+            <form asp-action="Create">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                
+                <div class="mb-3">
+                    <label asp-for="Title" class="form-label"></label>
+                    <input asp-for="Title" class="form-control" />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+                
+                <div class="mb-3">
+                    <label asp-for="Content" class="form-label"></label>
+                    <textarea asp-for="Content" class="form-control" rows="10"></textarea>
+                    <span asp-validation-for="Content" class="text-danger"></span>
+                </div>
+                
+                <div class="mb-3">
+                    <label asp-for="Tags" class="form-label">Tags (comma separated)</label>
+                    <input asp-for="Tags" class="form-control" placeholder="e.g. password, email, setup" />
+                    <span asp-validation-for="Tags" class="text-danger"></span>
+                </div>
+                
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-primary">Create</button>
+                    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

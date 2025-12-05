@@ -453,7 +453,11 @@ namespace IT_Project2526.Data
                     Responsible = support1,
                     CompletionTarget = DateTime.UtcNow.AddDays(7),
                     CompletionDate = DateTime.UtcNow.AddDays(-2),
-                    Comments = new List<string> { "Initial design completed", "Client approved the mockup" },
+                    Comments = new List<TicketComment> 
+                    { 
+                        new TicketComment { Body = "Initial design completed", AuthorId = support1.Id, CreatedAt = DateTime.UtcNow.AddDays(-3) },
+                        new TicketComment { Body = "Client approved the mockup", AuthorId = customer1.Id, CreatedAt = DateTime.UtcNow.AddDays(-2) }
+                    },
                     CreatorGuid = Guid.Parse(customer1.Id),
                     ProjectGuid = project1.Guid
                 },
@@ -465,7 +469,11 @@ namespace IT_Project2526.Data
                     Customer = customer1,
                     Responsible = support2,
                     CompletionTarget = DateTime.UtcNow.AddDays(14),
-                    Comments = new List<string> { "Started implementation", "Mobile view needs adjustment" },
+                    Comments = new List<TicketComment> 
+                    { 
+                        new TicketComment { Body = "Started implementation", AuthorId = support2.Id, CreatedAt = DateTime.UtcNow.AddDays(-1) },
+                        new TicketComment { Body = "Mobile view needs adjustment", AuthorId = support2.Id, CreatedAt = DateTime.UtcNow }
+                    },
                     CreatorGuid = Guid.Parse(customer1.Id),
                     ProjectGuid = project1.Guid
                 },
@@ -477,7 +485,10 @@ namespace IT_Project2526.Data
                     Customer = customer2,
                     Responsible = support1,
                     CompletionTarget = DateTime.UtcNow.AddDays(21),
-                    Comments = new List<string> { "Analyzing requirements" },
+                    Comments = new List<TicketComment> 
+                    { 
+                        new TicketComment { Body = "Analyzing requirements", AuthorId = support1.Id, CreatedAt = DateTime.UtcNow }
+                    },
                     CreatorGuid = Guid.Parse(customer2.Id),
                     ProjectGuid = project2.Guid
                 },
@@ -488,7 +499,7 @@ namespace IT_Project2526.Data
                     TicketType = TicketType.ProjectRequest,
                     Customer = customer1,
                     CompletionTarget = DateTime.UtcNow.AddDays(30),
-                    Comments = new List<string>(),
+                    Comments = new List<TicketComment>(),
                     CreatorGuid = Guid.Parse(customer1.Id),
                     ProjectGuid = project1.Guid
                 },
@@ -500,7 +511,11 @@ namespace IT_Project2526.Data
                     Customer = customer2,
                     Responsible = support2,
                     CompletionTarget = DateTime.UtcNow.AddDays(3),
-                    Comments = new List<string> { "Issue reproduced", "Working on fix" },
+                    Comments = new List<TicketComment> 
+                    { 
+                        new TicketComment { Body = "Issue reproduced", AuthorId = support2.Id, CreatedAt = DateTime.UtcNow.AddHours(-2) },
+                        new TicketComment { Body = "Working on fix", AuthorId = support2.Id, CreatedAt = DateTime.UtcNow }
+                    },
                     CreatorGuid = Guid.Parse(customer2.Id),
                     ProjectGuid = project2.Guid
                 }
@@ -534,7 +549,10 @@ namespace IT_Project2526.Data
                     TicketType = TicketType.ProjectRequest,
                     Customer = customers[0],
                     CompletionTarget = DateTime.UtcNow.AddDays(2),
-                    Comments = new List<string> { "Issue started yesterday" },
+                    Comments = new List<TicketComment> 
+                    { 
+                        new TicketComment { Body = "Issue started yesterday", AuthorId = customers[0].Id }
+                    },
                     CreatorGuid = Guid.Parse(customers[0].Id),
                     EstimatedEffortPoints = 3,
                     PriorityScore = 45.0,
@@ -547,7 +565,10 @@ namespace IT_Project2526.Data
                     TicketType = TicketType.ProjectRequest,
                     Customer = customers[1],
                     CompletionTarget = DateTime.UtcNow.AddDays(1),
-                    Comments = new List<string> { "Urgent - affects entire department" },
+                    Comments = new List<TicketComment> 
+                    { 
+                        new TicketComment { Body = "Urgent - affects entire department", AuthorId = customers[1].Id }
+                    },
                     CreatorGuid = Guid.Parse(customers[1].Id),
                     EstimatedEffortPoints = 2,
                     PriorityScore = 65.0,
@@ -560,7 +581,7 @@ namespace IT_Project2526.Data
                     TicketType = TicketType.ProjectRequest,
                     Customer = customers[2],
                     CompletionTarget = DateTime.UtcNow.AddDays(3),
-                    Comments = new List<string>(),
+                    Comments = new List<TicketComment>(),
                     CreatorGuid = Guid.Parse(customers[2].Id),
                     EstimatedEffortPoints = 1,
                     PriorityScore = 25.0,
@@ -575,7 +596,10 @@ namespace IT_Project2526.Data
                     TicketType = TicketType.ProjectRequest,
                     Customer = customers[3],
                     CompletionTarget = DateTime.UtcNow.AddDays(1),
-                    Comments = new List<string> { "Error message: Connection timeout" },
+                    Comments = new List<TicketComment> 
+                    { 
+                        new TicketComment { Body = "Error message: Connection timeout", AuthorId = customers[3].Id }
+                    },
                     CreatorGuid = Guid.Parse(customers[3].Id),
                     EstimatedEffortPoints = 5,
                     PriorityScore = 55.0,
@@ -588,7 +612,10 @@ namespace IT_Project2526.Data
                     TicketType = TicketType.ProjectRequest,
                     Customer = customers[4],
                     CompletionTarget = DateTime.UtcNow.AddDays(2),
-                    Comments = new List<string> { "Speed test shows 1 Mbps instead of 100 Mbps" },
+                    Comments = new List<TicketComment> 
+                    { 
+                        new TicketComment { Body = "Speed test shows 1 Mbps instead of 100 Mbps", AuthorId = customers[4].Id }
+                    },
                     CreatorGuid = Guid.Parse(customers[4].Id),
                     EstimatedEffortPoints = 3,
                     PriorityScore = 40.0,
@@ -603,7 +630,10 @@ namespace IT_Project2526.Data
                     TicketType = TicketType.ProjectRequest,
                     Customer = customers[0],
                     CompletionTarget = DateTime.UtcNow.AddDays(3),
-                    Comments = new List<string> { "Happens with files over 50MB" },
+                    Comments = new List<TicketComment> 
+                    { 
+                        new TicketComment { Body = "Happens with files over 50MB", AuthorId = customers[0].Id }
+                    },
                     CreatorGuid = Guid.Parse(customers[0].Id),
                     EstimatedEffortPoints = 8,
                     PriorityScore = 50.0,
@@ -616,7 +646,10 @@ namespace IT_Project2526.Data
                     TicketType = TicketType.ProjectRequest,
                     Customer = customers[1],
                     CompletionTarget = DateTime.UtcNow.AddHours(12),
-                    Comments = new List<string> { "Critical - missing important emails" },
+                    Comments = new List<TicketComment> 
+                    { 
+                        new TicketComment { Body = "Critical - missing important emails", AuthorId = customers[1].Id }
+                    },
                     CreatorGuid = Guid.Parse(customers[1].Id),
                     EstimatedEffortPoints = 5,
                     PriorityScore = 75.0,
@@ -629,7 +662,10 @@ namespace IT_Project2526.Data
                     TicketType = TicketType.ProjectRequest,
                     Customer = customers[2],
                     CompletionTarget = DateTime.UtcNow.AddDays(2),
-                    Comments = new List<string> { "Tried restarting multiple times" },
+                    Comments = new List<TicketComment> 
+                    { 
+                        new TicketComment { Body = "Tried restarting multiple times", AuthorId = customers[2].Id }
+                    },
                     CreatorGuid = Guid.Parse(customers[2].Id),
                     EstimatedEffortPoints = 3,
                     PriorityScore = 35.0,
@@ -644,7 +680,10 @@ namespace IT_Project2526.Data
                     TicketType = TicketType.ProjectRequest,
                     Customer = customers[3],
                     CompletionTarget = DateTime.UtcNow.AddHours(6),
-                    Comments = new List<string> { "Need to submit timesheet today" },
+                    Comments = new List<TicketComment> 
+                    { 
+                        new TicketComment { Body = "Need to submit timesheet today", AuthorId = customers[3].Id }
+                    },
                     CreatorGuid = Guid.Parse(customers[3].Id),
                     EstimatedEffortPoints = 1,
                     PriorityScore = 60.0,
@@ -657,7 +696,7 @@ namespace IT_Project2526.Data
                     TicketType = TicketType.ProjectRequest,
                     Customer = customers[4],
                     CompletionTarget = DateTime.UtcNow.AddHours(4),
-                    Comments = new List<string>(),
+                    Comments = new List<TicketComment>(),
                     CreatorGuid = Guid.Parse(customers[4].Id),
                     EstimatedEffortPoints = 1,
                     PriorityScore = 70.0,
@@ -672,7 +711,10 @@ namespace IT_Project2526.Data
                     TicketType = TicketType.ProjectRequest,
                     Customer = customers[0],
                     CompletionTarget = DateTime.UtcNow.AddDays(5),
-                    Comments = new List<string> { "Deducted 30% instead of 25%" },
+                    Comments = new List<TicketComment> 
+                    { 
+                        new TicketComment { Body = "Deducted 30% instead of 25%", AuthorId = customers[0].Id }
+                    },
                     CreatorGuid = Guid.Parse(customers[0].Id),
                     EstimatedEffortPoints = 5,
                     PriorityScore = 55.0,
@@ -685,7 +727,7 @@ namespace IT_Project2526.Data
                     TicketType = TicketType.ProjectRequest,
                     Customer = customers[1],
                     CompletionTarget = DateTime.UtcNow.AddDays(7),
-                    Comments = new List<string>(),
+                    Comments = new List<TicketComment>(),
                     CreatorGuid = Guid.Parse(customers[1].Id),
                     EstimatedEffortPoints = 2,
                     PriorityScore = 30.0,
@@ -700,7 +742,10 @@ namespace IT_Project2526.Data
                     TicketType = TicketType.ProjectRequest,
                     Customer = customers[2],
                     CompletionTarget = DateTime.UtcNow.AddDays(10),
-                    Comments = new List<string> { "Cancelled on Nov 15 but charged on Dec 1" },
+                    Comments = new List<TicketComment> 
+                    { 
+                        new TicketComment { Body = "Cancelled on Nov 15 but charged on Dec 1", AuthorId = customers[2].Id }
+                    },
                     CreatorGuid = Guid.Parse(customers[2].Id),
                     EstimatedEffortPoints = 3,
                     PriorityScore = 40.0,
@@ -715,7 +760,10 @@ namespace IT_Project2526.Data
                     TicketType = TicketType.ProjectRequest,
                     Customer = customers[3],
                     CompletionTarget = DateTime.UtcNow.AddDays(14),
-                    Comments = new List<string> { "Need Jenkins integration with GitHub" },
+                    Comments = new List<TicketComment> 
+                    { 
+                        new TicketComment { Body = "Need Jenkins integration with GitHub", AuthorId = customers[3].Id }
+                    },
                     CreatorGuid = Guid.Parse(customers[3].Id),
                     ProjectGuid = projects.Count > 0 ? projects[0].Guid : null,
                     EstimatedEffortPoints = 13,
@@ -729,7 +777,10 @@ namespace IT_Project2526.Data
                     TicketType = TicketType.ProjectRequest,
                     Customer = customers[4],
                     CompletionTarget = DateTime.UtcNow.AddDays(7),
-                    Comments = new List<string> { "Currently takes 6 hours, should be under 2" },
+                    Comments = new List<TicketComment> 
+                    { 
+                        new TicketComment { Body = "Currently takes 6 hours, should be under 2", AuthorId = customers[4].Id }
+                    },
                     CreatorGuid = Guid.Parse(customers[4].Id),
                     ProjectGuid = projects.Count > 1 ? projects[1].Guid : null,
                     EstimatedEffortPoints = 8,

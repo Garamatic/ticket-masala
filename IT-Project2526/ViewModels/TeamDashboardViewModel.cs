@@ -51,7 +51,24 @@ namespace IT_Project2526.ViewModels
         public List<TagFrequency> TopTags { get; set; } = new List<TagFrequency>();
 
         // Recent Activity
-        public List<RecentActivityItem> RecentActivity { get; set; } = new List<RecentActivityItem>();
+        public List<RecentActivityItem> RecentActivity { get; set; } = new();
+        
+        // New Analytics
+        public List<ForecastData> ForecastData { get; set; } = new();
+        public List<AgentPerformanceMetric> AgentPerformance { get; set; } = new();
+    }
+
+    public class ForecastData
+    {
+        public DateTime Date { get; set; }
+        public int PredictedVolume { get; set; }
+    }
+
+    public class AgentPerformanceMetric
+    {
+        public string AgentId { get; set; }
+        public string AgentName { get; set; }
+        public int ClosedTickets { get; set; }
     }
 
     public class AgentWorkloadMetric

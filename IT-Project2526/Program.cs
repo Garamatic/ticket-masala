@@ -210,7 +210,20 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages(); // keep Razor Pages for Identity UI
 builder.Services.AddHealthChecks();
 
+// Configure Forwarded Headers for Fly.io (Proxy)
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | 
+                               Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+    // Trust all proxies (Fly.io internal network)
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 var app = builder.Build();
+
+// Forward headers must be first middleware
+app.UseForwardedHeaders();
 
 // Seed the database
 using (var scope = app.Services.CreateScope())

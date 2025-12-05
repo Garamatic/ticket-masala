@@ -10,18 +10,12 @@
 
 Edit `fly.toml` if you need a different app name than `ticket-masala`. Choose a primary region near your users (e.g. `ord`, `iad`, `fra`).
 
-## 3. Secrets (Connection String)
+## 3. Data Persistence (SQLite)
+The application is configured to use **SQLite** in production (see `Program.cs`).
+A volume mapped to `/data` ensures the database is persisted across restarts.
 
-The production SQL Server connection string was removed from `appsettings.json`.
-Set it as a Fly secret so EF Core can access it:
+No external SQL Server connection string is required.
 
-```fish
-fly secrets set ConnectionStrings__DefaultConnection="Server=tcp:YOUR_SERVER.database.windows.net,1433;Initial Catalog=TicketMasalaDB;Persist Security Info=False;User ID=USERNAME;Password=STRONG_PASSWORD;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
-```
-
-Server=tcp:itproject2526.database.windows.net,1433;Initial Catalog=TicketMasalaDB;Persist Security Info=False;User ID=itprojectadmin;Password=Eendompasswoord1!;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;
-
-ASP.NET configuration binding will read this environment variable instead of the placeholder.
 
 ## 4. First Launch (if not already created)
 
@@ -80,9 +74,9 @@ fly regions add fra
 | Health check failing | Hit `https://<app>.fly.dev/health`; confirm `Program.cs` has `MapHealthChecks`. |
 | Out of memory | Increase machine size: `fly machine update <id> --memory 1024`. |
 
-## 10. External SQL Server Notes
-
-Fly does not offer managed SQL Server; using Azure SQL is fine. Latency depends on region pairing—ideally deploy in a Fly region geographically close to the Azure SQL region.
+## 10. Database Notes
+Fly.io volumes provide fast, persistent storage for SQLite.
+If you need to scale horizontally (multiple machines), you should migrate to Postgres or an external SQL Server, as SQLite does not support multiple concurrent writers across different machines easily.
 
 ## 11. Local Test of Image
 

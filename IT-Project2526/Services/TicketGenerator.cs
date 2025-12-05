@@ -33,17 +33,34 @@ public class TicketGenerator : ITicketGenerator
         
         var randomCustomer = customer[new Random().Next(customer.Count)];
 
-        // Get a random project (optional, but good for realism)
-        var project = await _context.Projects
-            .Include(p => p.Customers)
-            .Where(p => p.Customers.Any(c => c.Id == randomCustomer.Id))
-            .OrderBy(r => Guid.NewGuid()) // Random sort
-            .FirstOrDefaultAsync(cancellationToken);
+        // Get a random project safely
+        Project? project = null;
 
+        // Strategy 1: Try to find a project for this customer
+        var customerProjectIds = await _context.Projects
+            .Where(p => p.Customers.Any(c => c.Id == randomCustomer.Id))
+            .Select(p => p.Guid)
+            .ToListAsync(cancellationToken);
+
+        if (customerProjectIds.Any())
+        {
+            var randomProjectId = customerProjectIds[new Random().Next(customerProjectIds.Count)];
+            project = await _context.Projects
+                .Include(p => p.ProjectManager)
+                .FirstOrDefaultAsync(p => p.Guid == randomProjectId, cancellationToken);
+        }
+
+        // Strategy 2: Fallback to any project
         if (project == null)
         {
-             // Fallback to any project
-             project = await _context.Projects.OrderBy(r => Guid.NewGuid()).FirstOrDefaultAsync(cancellationToken);
+            var allProjectIds = await _context.Projects.Select(p => p.Guid).ToListAsync(cancellationToken);
+            if (allProjectIds.Any())
+            {
+                 var randomProjectId = allProjectIds[new Random().Next(allProjectIds.Count)];
+                 project = await _context.Projects
+                    .Include(p => p.ProjectManager)
+                    .FirstOrDefaultAsync(p => p.Guid == randomProjectId, cancellationToken);
+            }
         }
 
         if (project == null) return; // No projects exist

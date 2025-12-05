@@ -4,6 +4,7 @@ using IT_Project2526;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace IT_Project2526.Migrations
 {
     [DbContext(typeof(ITProjectDB))]
-    partial class ITProjectDBModelSnapshot : ModelSnapshot
+    [Migration("20251205064927_AddCreationDate")]
+    partial class AddCreationDate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,21 +24,6 @@ namespace IT_Project2526.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("CustomerProject", b =>
-                {
-                    b.Property<string>("CustomersId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<Guid>("ProjectsGuid")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("CustomersId", "ProjectsGuid");
-
-                    b.HasIndex("ProjectsGuid");
-
-                    b.ToTable("ProjectCustomers", (string)null);
-                });
 
             modelBuilder.Entity("IT_Project2526.Models.ApplicationUser", b =>
                 {
@@ -364,36 +352,6 @@ namespace IT_Project2526.Migrations
                     b.ToTable("Projects");
                 });
 
-            modelBuilder.Entity("IT_Project2526.Models.ProjectTemplate", b =>
-                {
-                    b.Property<Guid>("Guid")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreationDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("CreatorGuid")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<DateTime?>("ValidUntil")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Guid");
-
-                    b.ToTable("ProjectTemplates");
-                });
-
             modelBuilder.Entity("IT_Project2526.Models.QualityReview", b =>
                 {
                     b.Property<Guid>("Id")
@@ -497,45 +455,6 @@ namespace IT_Project2526.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("SavedFilters");
-                });
-
-            modelBuilder.Entity("IT_Project2526.Models.TemplateTicket", b =>
-                {
-                    b.Property<Guid>("Guid")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreationDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("CreatorGuid")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<int>("EstimatedEffortPoints")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Priority")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("ProjectTemplateId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("TicketType")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("ValidUntil")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Guid");
-
-                    b.HasIndex("ProjectTemplateId");
-
-                    b.ToTable("TemplateTickets");
                 });
 
             modelBuilder.Entity("IT_Project2526.Models.Ticket", b =>
@@ -674,21 +593,21 @@ namespace IT_Project2526.Migrations
                         new
                         {
                             Id = "2",
-                            ConcurrencyStamp = "6c411ecb-ecf1-46bc-88e5-23c8740c8ae4",
+                            ConcurrencyStamp = "527a5a72-b91a-42c4-b47c-bd750520d8e9",
                             Name = "Employee",
                             NormalizedName = "EMPLOYEE"
                         },
                         new
                         {
                             Id = "1",
-                            ConcurrencyStamp = "a8e53095-fa31-499f-bb7e-9c96c8abbdba",
+                            ConcurrencyStamp = "6e365b04-8e3b-419f-8a3c-807b20636166",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
                             Id = "3",
-                            ConcurrencyStamp = "e68c42bc-3a08-4535-b871-a5e42892fb37",
+                            ConcurrencyStamp = "2122dc9b-17fc-4744-a31f-d4bf99ff941f",
                             Name = "Customer",
                             NormalizedName = "CUSTOMER"
                         });
@@ -849,21 +768,6 @@ namespace IT_Project2526.Migrations
                     b.HasDiscriminator().HasValue("Employee");
                 });
 
-            modelBuilder.Entity("CustomerProject", b =>
-                {
-                    b.HasOne("IT_Project2526.Models.Customer", null)
-                        .WithMany()
-                        .HasForeignKey("CustomersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("IT_Project2526.Models.Project", null)
-                        .WithMany()
-                        .HasForeignKey("ProjectsGuid")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("IT_Project2526.Models.ApplicationUser", b =>
                 {
                     b.HasOne("IT_Project2526.Models.Ticket", null)
@@ -934,9 +838,8 @@ namespace IT_Project2526.Migrations
             modelBuilder.Entity("IT_Project2526.Models.Project", b =>
                 {
                     b.HasOne("IT_Project2526.Models.Customer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .WithMany("Projects")
+                        .HasForeignKey("CustomerId");
 
                     b.HasOne("IT_Project2526.Models.Department", "Department")
                         .WithMany("Projects")
@@ -984,17 +887,6 @@ namespace IT_Project2526.Migrations
                         .HasForeignKey("UserId");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("IT_Project2526.Models.TemplateTicket", b =>
-                {
-                    b.HasOne("IT_Project2526.Models.ProjectTemplate", "ProjectTemplate")
-                        .WithMany("Tickets")
-                        .HasForeignKey("ProjectTemplateId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ProjectTemplate");
                 });
 
             modelBuilder.Entity("IT_Project2526.Models.Ticket", b =>
@@ -1122,11 +1014,6 @@ namespace IT_Project2526.Migrations
                     b.Navigation("Tasks");
                 });
 
-            modelBuilder.Entity("IT_Project2526.Models.ProjectTemplate", b =>
-                {
-                    b.Navigation("Tickets");
-                });
-
             modelBuilder.Entity("IT_Project2526.Models.Ticket", b =>
                 {
                     b.Navigation("Attachments");
@@ -1138,6 +1025,11 @@ namespace IT_Project2526.Migrations
                     b.Navigation("SubTickets");
 
                     b.Navigation("Watchers");
+                });
+
+            modelBuilder.Entity("IT_Project2526.Models.Customer", b =>
+                {
+                    b.Navigation("Projects");
                 });
 #pragma warning restore 612, 618
         }

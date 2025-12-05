@@ -17,6 +17,7 @@ namespace IT_Project2526.Controllers
         private readonly ITicketService _ticketService;
         private readonly IFileService _fileService;
         private readonly IAuditService _auditService;
+        private readonly INotificationService _notificationService;
         private readonly ITProjectDB _context;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<TicketController> _logger;
@@ -26,6 +27,7 @@ namespace IT_Project2526.Controllers
             ITicketService ticketService,
             IFileService fileService,
             IAuditService auditService,
+            INotificationService notificationService,
             ITProjectDB context,
             IHttpContextAccessor httpContextAccessor,
             ILogger<TicketController> logger)
@@ -34,6 +36,7 @@ namespace IT_Project2526.Controllers
             _ticketService = ticketService;
             _fileService = fileService;
             _auditService = auditService;
+            _notificationService = notificationService;
             _context = context;
             _httpContextAccessor = httpContextAccessor;
             _logger = logger;
@@ -282,26 +285,17 @@ namespace IT_Project2526.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddComment(Guid id, string commentBody, bool isInternal)
         {
-            var ticket = await _context.Tickets.FindAsync(id);
-            if (ticket == null) return NotFound();
-
             if (!string.IsNullOrWhiteSpace(commentBody))
             {
-                var comment = new TicketComment
+                var currentUserId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                try 
                 {
-                    Id = Guid.NewGuid(),
-                    TicketId = id,
-                    Body = commentBody,
-                    IsInternal = isInternal,
-                    CreatedAt = DateTime.UtcNow,
-                    AuthorId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-                };
-
-                _context.TicketComments.Add(comment);
-                await _context.SaveChangesAsync();
-
-                // Audit Log
-                await _auditService.LogActionAsync(id, "Commented", comment.AuthorId ?? "System", "Comment", null, isInternal ? "Internal Note" : "Public Reply");
+                    await _ticketService.AddCommentAsync(id, commentBody, isInternal, currentUserId);
+                }
+                catch (ArgumentException)
+                {
+                    return NotFound();
+                }
             }
 
             return RedirectToAction(nameof(Detail), new { id = id });

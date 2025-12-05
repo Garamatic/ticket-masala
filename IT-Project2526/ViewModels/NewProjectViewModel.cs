@@ -63,5 +63,12 @@ namespace IT_Project2526.ViewModels
         [Phone(ErrorMessage = "Invalid phone number")]
         [Display(Name = "Phone Number")]
         public string? NewCustomerPhone { get; set; }
+        [Display(Name = "Project Template")]
+        public Guid? SelectedTemplateId { get; set; }
+        public List<SelectListItem> TemplateList { get; set; } = new List<SelectListItem>();
+
+        [Display(Name = "Additional Stakeholders")]
+        public List<string> SelectedStakeholderIds { get; set; } = new List<string>();
+        public List<SelectListItem> StakeholderList { get; set; } = new List<SelectListItem>();
     }
 }

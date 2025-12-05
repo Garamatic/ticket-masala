@@ -52,13 +52,19 @@ public class LoggingTicketObserver : ITicketObserver
         await Task.CompletedTask;
     }
 
-    public async Task OnTicketUpdatedAsync(Ticket ticket)
+    public Task OnTicketUpdatedAsync(Ticket ticket)
     {
         _logger.LogDebug(
             "Ticket Updated - ID: {TicketGuid}, Status: {Status}",
             ticket.Guid,
             ticket.TicketStatus);
         
-        await Task.CompletedTask;
+        return Task.CompletedTask;
+    }
+
+    public Task OnTicketCommentedAsync(TicketComment comment)
+    {
+        _logger.LogInformation("Ticket {TicketGuid} commented by {AuthorId}", comment.TicketId, comment.AuthorId);
+        return Task.CompletedTask;
     }
 }

@@ -25,6 +25,7 @@ namespace IT_Project2526.Controllers
         private readonly ITicketService _ticketService;
         private readonly IProjectRepository _projectRepository;
         private readonly IAnticipationService _anticipationService;
+        private readonly ITicketGenerator _ticketGenerator;
 
         public ManagerController(
             ILogger<ManagerController> logger,
@@ -34,7 +35,8 @@ namespace IT_Project2526.Controllers
             IDispatchBacklogService dispatchBacklogService,
             ITicketService ticketService,
             IProjectRepository projectRepository,
-            IAnticipationService anticipationService)
+            IAnticipationService anticipationService,
+            ITicketGenerator ticketGenerator)
         {
             _logger = logger;
             _metricsService = metricsService;
@@ -44,6 +46,7 @@ namespace IT_Project2526.Controllers
             _ticketService = ticketService;
             _projectRepository = projectRepository;
             _anticipationService = anticipationService;
+            _ticketGenerator = ticketGenerator;
         }
 
         /// <summary>
@@ -285,6 +288,26 @@ namespace IT_Project2526.Controllers
             {
                 _logger.LogError(ex, "Error auto-dispatching ticket {TicketGuid}", ticketGuid);
                 return Json(new { success = false, message = "Error auto-dispatching ticket" });
+            }
+        }
+
+
+        /// <summary>
+        /// Manually trigger random ticket generation
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GenerateRandomTicket()
+        {
+            try
+            {
+                await _ticketGenerator.GenerateRandomTicketAsync();
+                return Json(new { success = true, message = "Random ticket generated successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating random ticket manually");
+                return Json(new { success = false, message = "Failed to generate ticket" });
             }
         }
     }

@@ -109,64 +109,81 @@ public class DispatchingService : IDispatchingService
         }
 
         // Create prediction engine
-        var predictionEngine = _mlContext.Model.CreatePredictionEngine<AgentCustomerRating, RatingPrediction>(_model);
-
-        // Get current workload for each agent
-        var now = DateTime.UtcNow;
-        var agentWorkloads = await _context.Tickets
-            .Where(t => t.ResponsibleId != null)
-            .Where(t => t.TicketStatus != Status.Completed && t.TicketStatus != Status.Failed)
-            .GroupBy(t => t.ResponsibleId)
-            .Select(g => new { AgentId = g.Key!, Count = g.Count() })
-            .ToDictionaryAsync(x => x.AgentId, x => x.Count);
-
-        // Score each agent
-        var scoredAgents = new List<(string AgentId, double Score)>();
-
-        foreach (var employee in employees)
+        try 
         {
-            var currentWorkload = agentWorkloads.GetValueOrDefault(employee.Id, 0);
+            var predictionEngine = _mlContext.Model.CreatePredictionEngine<AgentCustomerRating, RatingPrediction>(_model);
 
-            // Skip agents who are at max capacity
-            if (currentWorkload >= _config.GerdaAI.Dispatching.MaxAssignedTicketsPerAgent)
+            // Get current workload for each agent
+            var now = DateTime.UtcNow;
+            var agentWorkloads = await _context.Tickets
+                .Where(t => t.ResponsibleId != null)
+                .Where(t => t.TicketStatus != Status.Completed && t.TicketStatus != Status.Failed)
+                .GroupBy(t => t.ResponsibleId)
+                .Select(g => new { AgentId = g.Key!, Count = g.Count() })
+                .ToDictionaryAsync(x => x.AgentId, x => x.Count);
+
+            // Score each agent
+            var scoredAgents = new List<(string AgentId, double Score)>();
+
+            foreach (var employee in employees)
             {
-                continue;
+                var currentWorkload = agentWorkloads.GetValueOrDefault(employee.Id, 0);
+
+                // Skip agents who are at max capacity
+                if (currentWorkload >= _config.GerdaAI.Dispatching.MaxAssignedTicketsPerAgent)
+                {
+                    continue;
+                }
+
+                // Predict affinity score using ML model (Factor 1: Past Interaction)
+                var input = new AgentCustomerRating
+                {
+                    AgentId = employee.Id,
+                    CustomerId = ticket.CustomerId!
+                };
+
+                var prediction = predictionEngine.Predict(input);
+                
+                // Calculate multi-factor affinity score (4 factors: ML prediction, expertise, language, geography)
+                var multiFactorScore = AffinityScoring.CalculateMultiFactorScore(
+                    prediction.Score,
+                    ticket,
+                    employee,
+                    ticket.Customer);
+                
+                // Adjust score based on current workload (penalize busy agents)
+                var workloadPenalty = currentWorkload / (double)_config.GerdaAI.Dispatching.MaxAssignedTicketsPerAgent;
+                var adjustedScore = multiFactorScore * (1.0 - (workloadPenalty * 0.5)); // Up to 50% penalty for full workload
+
+                _logger.LogDebug(
+                    "GERDA-D: Agent {AgentName} scored {Score:F2} for ticket {TicketGuid} - {Explanation}",
+                    $"{employee.FirstName} {employee.LastName}",
+                    adjustedScore,
+                    ticketGuid,
+                    AffinityScoring.GetScoreExplanation(prediction.Score, ticket, employee, ticket.Customer));
+
+                scoredAgents.Add((employee.Id, adjustedScore));
             }
 
-            // Predict affinity score using ML model (Factor 1: Past Interaction)
-            var input = new AgentCustomerRating
+            var results = scoredAgents
+                .OrderByDescending(x => x.Score)
+                .Take(count)
+                .ToList();
+
+            if (results.Count > 0)
             {
-                AgentId = employee.Id,
-                CustomerId = ticket.CustomerId!
-            };
-
-            var prediction = predictionEngine.Predict(input);
+                return results;
+            }
             
-            // Calculate multi-factor affinity score (4 factors: ML prediction, expertise, language, geography)
-            var multiFactorScore = AffinityScoring.CalculateMultiFactorScore(
-                prediction.Score,
-                ticket,
-                employee,
-                ticket.Customer);
-            
-            // Adjust score based on current workload (penalize busy agents)
-            var workloadPenalty = currentWorkload / (double)_config.GerdaAI.Dispatching.MaxAssignedTicketsPerAgent;
-            var adjustedScore = multiFactorScore * (1.0 - (workloadPenalty * 0.5)); // Up to 50% penalty for full workload
-
-            _logger.LogDebug(
-                "GERDA-D: Agent {AgentName} scored {Score:F2} for ticket {TicketGuid} - {Explanation}",
-                $"{employee.FirstName} {employee.LastName}",
-                adjustedScore,
-                ticketGuid,
-                AffinityScoring.GetScoreExplanation(prediction.Score, ticket, employee, ticket.Customer));
-
-            scoredAgents.Add((employee.Id, adjustedScore));
+            _logger.LogWarning("GERDA-D: Model returned no results, falling back to workload");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "GERDA-D: Prediction failed, falling back to workload");
         }
 
-        return scoredAgents
-            .OrderByDescending(x => x.Score)
-            .Take(count)
-            .ToList();
+        // Fallback if model fails or returns no results
+        return await GetWorkloadBasedRecommendationsAsync(employees, count);
     }
 
     public async Task<bool> AutoDispatchTicketAsync(Guid ticketGuid)
@@ -211,16 +228,26 @@ public class DispatchingService : IDispatchingService
         _logger.LogInformation("GERDA-D: Starting model retraining");
 
         // Get historical ticket assignments with completion data
-        var trainingData = await _context.Tickets
+        // Get historical ticket assignments with completion data
+        var rawTickets = await _context.Tickets
             .Where(t => t.ResponsibleId != null && t.CustomerId != null)
             .Where(t => t.TicketStatus == Status.Completed || t.TicketStatus == Status.Failed)
-            .Select(t => new AgentCustomerRating
+            .Select(t => new 
             {
-                AgentId = t.ResponsibleId!,
-                CustomerId = t.CustomerId!,
-                Rating = CalculateImplicitRating(t)
+                t.ResponsibleId,
+                t.CustomerId,
+                t.TicketStatus,
+                t.CompletionDate,
+                t.CreationDate
             })
             .ToListAsync();
+
+        var trainingData = rawTickets.Select(t => new AgentCustomerRating
+        {
+            AgentId = t.ResponsibleId!,
+            CustomerId = t.CustomerId!,
+            Rating = CalculateImplicitRating(t.TicketStatus, t.CompletionDate, t.CreationDate)
+        }).ToList();
 
         if (trainingData.Count < _config.GerdaAI.Dispatching.MinHistoryForAffinityMatch)
         {
@@ -283,23 +310,23 @@ public class DispatchingService : IDispatchingService
         await RetrainModelAsync();
     }
 
-    private float CalculateImplicitRating(Ticket ticket)
+    private float CalculateImplicitRating(Status status, DateTime? completionDate, DateTime creationDate)
     {
         // Implicit rating based on:
         // - Ticket was completed (not failed) = positive signal
         // - Resolution speed = faster is better
         
-        if (ticket.TicketStatus == Status.Failed)
+        if (status == Status.Failed)
         {
             return 1.0f; // Negative signal
         }
 
-        if (!ticket.CompletionDate.HasValue)
+        if (!completionDate.HasValue)
         {
             return 3.0f; // Neutral - completed but no date
         }
 
-        var resolutionTime = (ticket.CompletionDate.Value - ticket.CreationDate).TotalHours;
+        var resolutionTime = (completionDate.Value - creationDate).TotalHours;
         
         // Rating scale 1-5 based on resolution time
         // < 4 hours = excellent (5)
@@ -318,15 +345,23 @@ public class DispatchingService : IDispatchingService
     private async Task<string?> GetFallbackAgentAsync()
     {
         // Fallback: assign to agent with least current workload
+        // Get all employees first
+        var employees = await _context.Users.OfType<Employee>().ToListAsync();
+        if (!employees.Any()) return null;
+
         var agentWorkloads = await _context.Tickets
             .Where(t => t.ResponsibleId != null)
             .Where(t => t.TicketStatus != Status.Completed && t.TicketStatus != Status.Failed)
             .GroupBy(t => t.ResponsibleId)
             .Select(g => new { AgentId = g.Key!, Count = g.Count() })
-            .OrderBy(x => x.Count)
-            .FirstOrDefaultAsync();
+            .ToDictionaryAsync(x => x.AgentId, x => x.Count);
 
-        return agentWorkloads?.AgentId;
+        var bestAgent = employees
+            .Select(e => new { AgentId = e.Id, Count = agentWorkloads.GetValueOrDefault(e.Id, 0) })
+            .OrderBy(x => x.Count)
+            .FirstOrDefault();
+
+        return bestAgent?.AgentId;
     }
 
     private async Task<List<(string AgentId, double Score)>> GetWorkloadBasedRecommendationsAsync(

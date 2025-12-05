@@ -5,11 +5,20 @@
 
 <div class="container-fluid mt-4">
     <div class="row mb-4">
-        <div class="col-12">
-            <h2 class="mb-3">
-                <i class="bi bi-speedometer2"></i> Team Dashboard
-                <small class="text-muted">GERDA AI Intelligence</small>
-            </h2>
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                @Html.AntiForgeryToken()
+                <h2 class="mb-0">
+                    <i class="bi bi-speedometer2"></i> Team Dashboard
+                    <small class="text-muted fs-5 ms-2">GERDA AI Intelligence</small>
+                    <a asp-controller="Import" asp-action="Index" class="btn btn-outline-primary btn-sm ms-3">
+                        <i class="bi bi-upload"></i> Import Tickets
+                    </a>
+                    <button id="btnGenerateTicket" class="btn btn-warning btn-sm ms-2">
+                        <i class="bi bi-magic"></i> Generate Random Ticket
+                    </button>
+                </h2>
+            </div>
         </div>
     </div>
 
@@ -242,6 +251,7 @@
     </div>
 
     <!-- Action Buttons -->
+    <!-- Action Buttons -->
     <div class="row mb-4">
         <div class="col-12">
             <a asp-action="Projects" class="btn btn-secondary">
@@ -254,158 +264,193 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
-        // Forecast Chart
-        const forecastCtx = document.getElementById('forecastChart').getContext('2d');
-        const forecastChart = new Chart(forecastCtx, {
-            type: 'line',
-            data: {
-                labels: @Html.Raw(Json.Serialize(Model.ForecastData.Select(f => f.Date.ToString("MMM dd")))),
-                datasets: [{
-                    label: 'Predicted Volume',
-                    data: @Html.Raw(Json.Serialize(Model.ForecastData.Select(f => f.PredictedVolume))),
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Tickets'
+        document.addEventListener('DOMContentLoaded', function() {
+            // Forecast Chart
+            const forecastCtx = document.getElementById('forecastChart').getContext('2d');
+            const forecastChart = new Chart(forecastCtx, {
+                type: 'line',
+                data: {
+                    labels: @Html.Raw(Json.Serialize(Model.ForecastData.Select(f => f.Date.ToString("MMM dd")))),
+                    datasets: [{
+                        label: 'Predicted Volume',
+                        data: @Html.Raw(Json.Serialize(Model.ForecastData.Select(f => f.PredictedVolume))),
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Tickets'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
                         }
                     }
-                },
-                plugins: {
-                    legend: {
-                        display: false
-                    }
                 }
-            }
-        });
+            });
 
-        // Performance Chart
-        const performanceCtx = document.getElementById('performanceChart').getContext('2d');
-        const performanceChart = new Chart(performanceCtx, {
-            type: 'bar',
-            data: {
-                labels: @Html.Raw(Json.Serialize(Model.AgentPerformance.Select(a => a.AgentName))),
-                datasets: [{
-                    label: 'Closed Tickets',
-                    data: @Html.Raw(Json.Serialize(Model.AgentPerformance.Select(a => a.ClosedTickets))),
-                    backgroundColor: 'rgba(153, 102, 255, 0.7)',
-                    borderColor: 'rgba(153, 102, 255, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: 'y',
-                scales: {
-                    x: {
-                        beginAtZero: true
-                    }
+            // Performance Chart
+            const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+            const performanceChart = new Chart(performanceCtx, {
+                type: 'bar',
+                data: {
+                    labels: @Html.Raw(Json.Serialize(Model.AgentPerformance.Select(a => a.AgentName))),
+                    datasets: [{
+                        label: 'Closed Tickets',
+                        data: @Html.Raw(Json.Serialize(Model.AgentPerformance.Select(a => a.ClosedTickets))),
+                        backgroundColor: 'rgba(153, 102, 255, 0.7)',
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        borderWidth: 1
+                    }]
                 },
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                }
-            }
-        });
-
-        // Priority Distribution Chart
-        const priorityCtx = document.getElementById('priorityChart').getContext('2d');
-        const priorityChart = new Chart(priorityCtx, {
-            type: 'bar',
-            data: {
-                labels: @Html.Raw(Json.Serialize(Model.PriorityDistribution.Keys)),
-                datasets: [{
-                    label: 'Tickets by Priority',
-                    data: @Html.Raw(Json.Serialize(Model.PriorityDistribution.Values)),
-                    backgroundColor: [
-                        'rgba(220, 53, 69, 0.7)',   // Critical - Red
-                        'rgba(255, 193, 7, 0.7)',   // High - Yellow
-                        'rgba(13, 110, 253, 0.7)',  // Medium - Blue
-                        'rgba(25, 135, 84, 0.7)'    // Low - Green
-                    ],
-                    borderColor: [
-                        'rgba(220, 53, 69, 1)',
-                        'rgba(255, 193, 7, 1)',
-                        'rgba(13, 110, 253, 1)',
-                        'rgba(25, 135, 84, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
                         }
                     }
-                },
-                plugins: {
-                    legend: {
-                        display: false
-                    }
                 }
-            }
-        });
+            });
 
-        // Complexity Distribution Chart
-        const complexityCtx = document.getElementById('complexityChart').getContext('2d');
-        const complexityChart = new Chart(complexityCtx, {
-            type: 'bar',
-            data: {
-                labels: @Html.Raw(Json.Serialize(Model.ComplexityDistribution.Keys)),
-                datasets: [{
-                    label: 'Tickets by Complexity',
-                    data: @Html.Raw(Json.Serialize(Model.ComplexityDistribution.Values)),
-                    backgroundColor: [
-                        'rgba(25, 135, 84, 0.7)',   // Trivial - Green
-                        'rgba(13, 202, 240, 0.7)',  // Simple - Cyan
-                        'rgba(13, 110, 253, 0.7)',  // Medium - Blue
-                        'rgba(255, 193, 7, 0.7)',   // Complex - Yellow
-                        'rgba(220, 53, 69, 0.7)'    // Very Complex - Red
-                    ],
-                    borderColor: [
-                        'rgba(25, 135, 84, 1)',
-                        'rgba(13, 202, 240, 1)',
-                        'rgba(13, 110, 253, 1)',
-                        'rgba(255, 193, 7, 1)',
-                        'rgba(220, 53, 69, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
+            // Priority Distribution Chart
+            const priorityCtx = document.getElementById('priorityChart').getContext('2d');
+            const priorityChart = new Chart(priorityCtx, {
+                type: 'bar',
+                data: {
+                    labels: @Html.Raw(Json.Serialize(Model.PriorityDistribution.Keys)),
+                    datasets: [{
+                        label: 'Tickets by Priority',
+                        data: @Html.Raw(Json.Serialize(Model.PriorityDistribution.Values)),
+                        backgroundColor: [
+                            'rgba(220, 53, 69, 0.7)',   // Critical - Red
+                            'rgba(255, 193, 7, 0.7)',   // High - Yellow
+                            'rgba(13, 110, 253, 0.7)',  // Medium - Blue
+                            'rgba(25, 135, 84, 0.7)'    // Low - Green
+                        ],
+                        borderColor: [
+                            'rgba(220, 53, 69, 1)',
+                            'rgba(255, 193, 7, 1)',
+                            'rgba(13, 110, 253, 1)',
+                            'rgba(25, 135, 84, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
                         }
                     }
+                }
+            });
+
+            // Complexity Distribution Chart
+            const complexityCtx = document.getElementById('complexityChart').getContext('2d');
+            const complexityChart = new Chart(complexityCtx, {
+                type: 'bar',
+                data: {
+                    labels: @Html.Raw(Json.Serialize(Model.ComplexityDistribution.Keys)),
+                    datasets: [{
+                        label: 'Tickets by Complexity',
+                        data: @Html.Raw(Json.Serialize(Model.ComplexityDistribution.Values)),
+                        backgroundColor: [
+                            'rgba(25, 135, 84, 0.7)',   // Trivial - Green
+                            'rgba(13, 202, 240, 0.7)',  // Simple - Cyan
+                            'rgba(13, 110, 253, 0.7)',  // Medium - Blue
+                            'rgba(255, 193, 7, 0.7)',   // Complex - Yellow
+                            'rgba(220, 53, 69, 0.7)'    // Very Complex - Red
+                        ],
+                        borderColor: [
+                            'rgba(25, 135, 84, 1)',
+                            'rgba(13, 202, 240, 1)',
+                            'rgba(13, 110, 253, 1)',
+                            'rgba(255, 193, 7, 1)',
+                            'rgba(220, 53, 69, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
                 },
-                plugins: {
-                    legend: {
-                        display: false
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
                     }
                 }
-            }
+            });
+        });
+
+        // Generate Random Ticket
+        document.getElementById('btnGenerateTicket').addEventListener('click', function() {
+            const btn = this;
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...';
+
+            fetch('@Url.Action("GenerateRandomTicket", "Manager")', {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload(); // Reload to see the new ticket
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while generating the ticket.');
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            });
         });
     </script>
 }

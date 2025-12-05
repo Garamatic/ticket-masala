@@ -24,6 +24,8 @@ namespace IT_Project2526.Models
         
         public Customer? Customer { get; set; }
         public string? CustomerId { get; set; }
+        
+        public ICollection<Customer> Customers { get; set; } = new List<Customer>();
 
         public DateTime? CompletionTarget { get; set; }
         public DateTime? CompletionDate { get; set; }

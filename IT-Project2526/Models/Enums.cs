@@ -8,14 +8,24 @@
         InProgress,
         //Postponed,
         Completed,
-        Failed
+        Failed,
+        Cancelled
     }
     public enum TicketType
     {
         Incident,
         ServiceRequest,
         ProjectRequest,
-        Subtask
+        Subtask,
+        Task // Added Task as it was used in TemplateTicket default
+    }
+
+    public enum Priority
+    {
+        Low,
+        Medium,
+        High,
+        Critical
     }
 
     public enum ReviewStatus

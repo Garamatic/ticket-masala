@@ -60,6 +60,8 @@ namespace IT_Project2526.Controllers
                                               .AsNoTracking()
                                               .Include(c => c.Projects)
                                                   .ThenInclude(p => p.ProjectManager)
+                                              .Include(c => c.Projects)
+                                                  .ThenInclude(p => p.Tasks) // Include tasks to count them
                                               .Where(c => c.Id == id)
                                               .Select(customer => new CustomerDetailViewModel
                                               {

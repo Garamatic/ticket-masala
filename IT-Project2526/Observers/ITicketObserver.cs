@@ -28,4 +28,9 @@ public interface ITicketObserver
     /// Called when a ticket is updated (general)
     /// </summary>
     Task OnTicketUpdatedAsync(Ticket ticket);
+
+    /// <summary>
+    /// Called when a comment is added to a ticket
+    /// </summary>
+    Task OnTicketCommentedAsync(TicketComment comment);
 }

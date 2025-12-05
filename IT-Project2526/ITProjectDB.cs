@@ -58,6 +58,20 @@ namespace IT_Project2526
                 .HasForeignKey(t => t.ProjectGuid)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            // Configure Project-Customer Many-to-Many relationship (Stakeholders)
+            modelBuilder.Entity<Project>()
+                .HasMany(p => p.Customers)
+                .WithMany(c => c.Projects)
+                .UsingEntity(j => j.ToTable("ProjectCustomers"));
+
+            // Configure Project-Customer One-to-Many relationship (Primary Owner)
+            // We explicitly state that this relationship does NOT use the Customer.Projects collection
+            modelBuilder.Entity<Project>()
+                .HasOne(p => p.Customer)
+                .WithMany() // Unidirectional: Customer does not have a specific collection for "Primary Projects", they are just in the N:M list too
+                .HasForeignKey(p => p.CustomerId)
+                .OnDelete(DeleteBehavior.SetNull);
+
         }
 
         public DbSet<Project> Projects { get; set; }
@@ -73,6 +87,8 @@ namespace IT_Project2526
         public DbSet<KnowledgeBaseArticle> KnowledgeBaseArticles { get; set; }
         public DbSet<QualityReview> QualityReviews { get; set; }
         public DbSet<SavedFilter> SavedFilters { get; set; }
+        public DbSet<ProjectTemplate> ProjectTemplates { get; set; }
+        public DbSet<TemplateTicket> TemplateTickets { get; set; }
 
     }
 }

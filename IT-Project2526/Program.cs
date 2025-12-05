@@ -92,6 +92,7 @@ builder.Services.AddScoped<IUserRepository, EfCoreUserRepository>();
 // ============================================
 builder.Services.AddScoped<ITicketObserver, GerdaTicketObserver>();
 builder.Services.AddScoped<ITicketObserver, LoggingTicketObserver>();
+builder.Services.AddScoped<ITicketObserver, NotificationTicketObserver>();
 
 // Register Services
 builder.Services.AddScoped<IMetricsService, MetricsService>();
@@ -100,8 +101,17 @@ builder.Services.AddScoped<IDispatchBacklogService, DispatchBacklogService>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
-builder.Services.AddScoped<ICsvImportService, CsvImportService>();
+builder.Services.AddScoped<ITicketImportService, TicketImportService>();
 builder.Services.AddHostedService<EmailIngestionService>();
+
+// Register Background Queue
+builder.Services.AddSingleton<IBackgroundTaskQueue>(ctx => 
+{
+    return new BackgroundQueue(100); // Capacity of 100 items
+});
+builder.Services.AddHostedService<QueuedHostedService>();
+builder.Services.AddHostedService<TicketGeneratorService>();
+builder.Services.AddScoped<ITicketGenerator, TicketGenerator>();
 
 // Register DbSeeder
 builder.Services.AddScoped<DbSeeder>();

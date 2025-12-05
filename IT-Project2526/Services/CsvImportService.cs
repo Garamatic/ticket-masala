@@ -1,28 +1,48 @@
+using System.Data;
 using System.Globalization;
 using CsvHelper;
 using CsvHelper.Configuration;
+using ExcelDataReader;
 using IT_Project2526.Models;
 
 namespace IT_Project2526.Services
 {
-    public interface ICsvImportService
+    public interface ITicketImportService
     {
-        List<dynamic> ParseCsv(Stream fileStream);
+        List<dynamic> ParseFile(Stream fileStream, string fileName);
         Task<int> ImportTicketsAsync(List<dynamic> rows, Dictionary<string, string> mapping, string uploaderId, Guid departmentId);
     }
 
-    public class CsvImportService : ICsvImportService
+    public class TicketImportService : ITicketImportService
     {
         private readonly ITProjectDB _context;
-        private readonly ILogger<CsvImportService> _logger;
+        private readonly ILogger<TicketImportService> _logger;
 
-        public CsvImportService(ITProjectDB context, ILogger<CsvImportService> logger)
+        public TicketImportService(ITProjectDB context, ILogger<TicketImportService> logger)
         {
             _context = context;
             _logger = logger;
         }
 
-        public List<dynamic> ParseCsv(Stream fileStream)
+        public List<dynamic> ParseFile(Stream fileStream, string fileName)
+        {
+            var extension = Path.GetExtension(fileName).ToLower();
+
+            if (extension == ".csv")
+            {
+                return ParseCsv(fileStream);
+            }
+            else if (extension == ".xlsx" || extension == ".xls")
+            {
+                return ParseExcel(fileStream);
+            }
+            else
+            {
+                throw new NotSupportedException($"File extension {extension} is not supported.");
+            }
+        }
+
+        private List<dynamic> ParseCsv(Stream fileStream)
         {
             using var reader = new StreamReader(fileStream);
             using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -32,6 +52,35 @@ namespace IT_Project2526.Services
             });
 
             return csv.GetRecords<dynamic>().ToList();
+        }
+
+        private List<dynamic> ParseExcel(Stream fileStream)
+        {
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+
+            using var reader = ExcelReaderFactory.CreateReader(fileStream);
+            var result = reader.AsDataSet(new ExcelDataSetConfiguration()
+            {
+                ConfigureDataTable = (_) => new ExcelDataTableConfiguration()
+                {
+                    UseHeaderRow = true
+                }
+            });
+
+            var dataTable = result.Tables[0];
+            var rows = new List<dynamic>();
+
+            foreach (DataRow row in dataTable.Rows)
+            {
+                var expando = new System.Dynamic.ExpandoObject() as IDictionary<string, object>;
+                foreach (DataColumn col in dataTable.Columns)
+                {
+                    expando[col.ColumnName] = row[col];
+                }
+                rows.Add(expando);
+            }
+
+            return rows;
         }
 
         public async Task<int> ImportTicketsAsync(List<dynamic> rows, Dictionary<string, string> mapping, string uploaderId, Guid departmentId)

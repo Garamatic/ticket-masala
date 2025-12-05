@@ -11,7 +11,7 @@ using System.Security.Claims;
 
 namespace IT_Project2526.Controllers
 {
-    [Authorize(Roles = Constants.RoleEmployee + "," + Constants.RoleAdmin)]
+    [Authorize(Roles = Constants.RoleEmployee + "," + Constants.RoleAdmin + "," + Constants.RoleCustomer)]
     public class ProjectsController : Controller
     {
         private readonly ITProjectDB _context;
@@ -31,11 +31,23 @@ namespace IT_Project2526.Controllers
         public async Task<IActionResult> Index()
         {
             //Projecten uit Db halen met hun tickets
-            var projectsOfDb = _context.Projects
-                                       .Include(p => p.Tasks.Where(t => t.ValidUntil == null))
-                                       .Include(p => p.ProjectManager)
-                                       .Where(p => p.ValidUntil == null)
-                                       .ToList();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isCustomer = User.IsInRole(Constants.RoleCustomer);
+
+            var query = _context.Projects
+                .Include(p => p.Tasks.Where(t => t.ValidUntil == null))
+                .Include(p => p.ProjectManager)
+                .Include(p => p.Customers) // Include stakeholders
+                .Where(p => p.ValidUntil == null);
+
+            if (isCustomer && !string.IsNullOrEmpty(userId))
+            {
+                // Filter for customers: only projects where they are a stakeholder
+                // Note: The primary customer is also in the Customers collection now
+                query = query.Where(p => p.Customers.Any(c => c.Id == userId));
+            }
+
+            var projectsOfDb = await query.ToListAsync();
 
             //Models naar ViewModels
             List<ProjectTicketViewModel> viewModels = projectsOfDb.Select(p => new ProjectTicketViewModel
@@ -71,12 +83,24 @@ namespace IT_Project2526.Controllers
                 _logger.LogInformation("New project form requested");
                 
                 var existingCustomers = _context.Customers.ToList();
+                var templates = await _context.ProjectTemplates.ToListAsync();
+
                 var viewModel = new NewProject
                 {
                     CustomerList = existingCustomers.Select(c => new SelectListItem
                     {
                         Value = c.Id.ToString(),
                         Text = c.FirstName + " " + c.LastName
+                    }).ToList(),
+                    StakeholderList = existingCustomers.Select(c => new SelectListItem
+                    {
+                        Value = c.Id.ToString(),
+                        Text = c.FirstName + " " + c.LastName
+                    }).ToList(),
+                    TemplateList = templates.Select(t => new SelectListItem
+                    {
+                        Value = t.Guid.ToString(),
+                        Text = t.Name
                     }).ToList(),
                     IsNewCustomer = false
                 };
@@ -148,8 +172,59 @@ namespace IT_Project2526.Controllers
                         CreatorGuid = Guid.Parse(userId)
                     };
 
+                    // Add primary customer to stakeholders
+                    project.Customers.Add(customer);
+
+                    // Add additional stakeholders
+                    if (viewModel.SelectedStakeholderIds != null && viewModel.SelectedStakeholderIds.Any())
+                    {
+                        var additionalStakeholders = await _context.Customers
+                            .Where(c => viewModel.SelectedStakeholderIds.Contains(c.Id))
+                            .ToListAsync();
+                        
+                        foreach (var stakeholder in additionalStakeholders)
+                        {
+                            if (stakeholder.Id != customer.Id) // Avoid duplicate
+                            {
+                                project.Customers.Add(stakeholder);
+                            }
+                        }
+                    }
+
                     _context.Projects.Add(project);
                     await _context.SaveChangesAsync();
+
+                    // Apply Template
+                    if (viewModel.SelectedTemplateId.HasValue)
+                    {
+                        var template = await _context.ProjectTemplates
+                            .Include(t => t.Tickets)
+                            .FirstOrDefaultAsync(t => t.Guid == viewModel.SelectedTemplateId.Value);
+
+                        if (template != null)
+                        {
+                            foreach (var templateTicket in template.Tickets)
+                            {
+                                var ticket = new Ticket
+                                {
+                                    Guid = Guid.NewGuid(),
+                                    Description = templateTicket.Description,
+                                    EstimatedEffortPoints = templateTicket.EstimatedEffortPoints,
+                                    PriorityScore = (double)templateTicket.Priority * 25, // Rough mapping
+                                    TicketType = templateTicket.TicketType,
+                                    TicketStatus = Status.Pending,
+                                    CreationDate = DateTime.UtcNow,
+                                    CreatorGuid = Guid.Parse(userId),
+                                    Customer = customer,
+                                    CustomerId = customer.Id,
+                                    Project = project,
+                                    ProjectGuid = project.Guid
+                                };
+                                _context.Tickets.Add(ticket);
+                            }
+                            await _context.SaveChangesAsync();
+                        }
+                    }
                     
                     _logger.LogInformation("Project created successfully: {ProjectId}", project.Guid);
                     return RedirectToAction("Index");

@@ -22,7 +22,7 @@
 
     <div class="mb-3">
         <label asp-for="CreationDate" class="form-label">Creation Date</label>
-        <input asp-for="CreationDate" class="form-control" type="date" />
+        <input asp-for="CreationDate" class="form-control" type="text" placeholder="dd-mm-yyyy" />
         <span asp-validation-for="CreationDate" class="text-danger"></span>
     </div>
 
@@ -36,6 +36,23 @@
             <option value="Modified">Modified</option>
         </select>
         <span asp-validation-for="ProjectType" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="SelectedTemplateId" class="form-label"></label>
+        <select asp-for="SelectedTemplateId" asp-items="Model.TemplateList" class="form-select">
+            <option value="">-- No Template (Empty Project) --</option>
+        </select>
+        <span asp-validation-for="SelectedTemplateId" class="text-danger"></span>
+        <div class="form-text">Selecting a template will automatically create starter tickets.</div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="SelectedStakeholderIds" class="form-label"></label>
+        <select asp-for="SelectedStakeholderIds" asp-items="Model.StakeholderList" class="form-select" multiple>
+        </select>
+        <span asp-validation-for="SelectedStakeholderIds" class="text-danger"></span>
+        <div class="form-text">Hold Ctrl/Cmd to select multiple additional stakeholders.</div>
     </div>
 
     <div class="mb-3">
@@ -68,11 +85,6 @@
             <label asp-for="NewCustomerFirstName"></label>
             <input asp-for="NewCustomerFirstName" class="form-control" />
             <span asp-validation-for="NewCustomerFirstName" class="text-danger"></span>
-        </div>
-        <div class="form-group">
-            <label asp-for="NewCustomerLastName"></label>
-            <input asp-for="NewCustomerLastName" class="form-control" />
-            <span asp-validation-for="NewCustomerLastName" class="text-danger"></span>
         </div>
         <div class="form-group">
             <label asp-for="NewCustomerLastName"></label>

@@ -8,7 +8,7 @@ namespace IT_Project2526.Models
     {
         [Key]
         public Guid Guid { get; set; } = Guid.NewGuid();
-        public DateTime CreationDate { get; } = DateTime.UtcNow;
+        public DateTime CreationDate { get; set; } = DateTime.UtcNow;
         public DateTime? ValidUntil { get; set;}
         public Guid? CreatorGuid { get; set; }
     }

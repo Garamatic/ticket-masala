@@ -17,7 +17,7 @@ namespace IT_Project2526.Services
         Task<List<SelectListItem>> GetCustomerSelectListAsync();
         Task<List<SelectListItem>> GetEmployeeSelectListAsync();
         Task<List<SelectListItem>> GetProjectSelectListAsync();
-        Task<Guid> GetCurrentUserDepartmentIdAsync();
+        Task<Guid?> GetCurrentUserDepartmentIdAsync();
         Task<Ticket> CreateTicketAsync(string description, string customerId, string? responsibleId, Guid? projectGuid, DateTime? completionTarget);
         Task<TicketDetailsViewModel?> GetTicketDetailsAsync(Guid ticketGuid);
         Task<bool> AssignTicketAsync(Guid ticketGuid, string agentId);
@@ -32,6 +32,7 @@ namespace IT_Project2526.Services
         Task<TicketSearchViewModel> SearchTicketsAsync(TicketSearchViewModel searchModel);
         Task BatchAssignToAgentAsync(List<Guid> ticketIds, string agentId);
         Task BatchUpdateStatusAsync(List<Guid> ticketIds, Status status);
+        Task<TicketComment> AddCommentAsync(Guid ticketId, string body, bool isInternal, string authorId);
     }
 
     public class TicketService : ITicketService
@@ -73,14 +74,14 @@ namespace IT_Project2526.Services
             return _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "System";
         }
 
-        public async Task<Guid> GetCurrentUserDepartmentIdAsync()
+        public async Task<Guid?> GetCurrentUserDepartmentIdAsync()
         {
             var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId)) return Guid.Empty;
+            if (string.IsNullOrEmpty(userId)) return null;
 
             var user = await _context.Users.FindAsync(userId);
             var employee = user as Employee;
-            return employee?.DepartmentId ?? Guid.Empty;
+            return employee?.DepartmentId;
         }
 
         /// <summary>
@@ -425,6 +426,17 @@ namespace IT_Project2526.Services
                         "Info"
                     );
                 }
+
+                // Notify customer on any status change
+                if (ticket.CustomerId != null)
+                {
+                    await _notificationService.NotifyUserAsync(
+                        ticket.CustomerId, 
+                        $"Ticket #{ticket.Guid.ToString().Substring(0, 8)} status changed to {ticket.TicketStatus}", 
+                        $"/Ticket/Detail/{ticket.Guid}", 
+                        "Info"
+                    );
+                }
                 
                 // Audit Log
                 await _auditService.LogActionAsync(ticket.Guid, "Updated", GetCurrentUserId());
@@ -627,6 +639,19 @@ namespace IT_Project2526.Services
         public async Task<TicketSearchViewModel> SearchTicketsAsync(TicketSearchViewModel searchModel)
         {
             var departmentId = await GetCurrentUserDepartmentIdAsync();
+            
+            // If user is a customer, restrict to their own tickets
+            // This is a safety check, though the controller should also enforce this via the view
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var user = await _userRepository.GetUserByIdAsync(userId);
+                if (user is Customer)
+                {
+                    searchModel.CustomerId = userId;
+                }
+            }
+
             return await _ticketRepository.SearchTicketsAsync(searchModel, departmentId);
         }
 
@@ -647,6 +672,56 @@ namespace IT_Project2526.Services
                 {
                     ticket.TicketStatus = status;
                     await UpdateTicketAsync(ticket);
+                }
+            }
+        }
+
+        public async Task<TicketComment> AddCommentAsync(Guid ticketId, string body, bool isInternal, string authorId)
+        {
+            var ticket = await _ticketRepository.GetByIdAsync(ticketId, includeRelations: true);
+            if (ticket == null)
+            {
+                throw new ArgumentException("Ticket not found", nameof(ticketId));
+            }
+
+            var comment = new TicketComment
+            {
+                Id = Guid.NewGuid(),
+                TicketId = ticketId,
+                Body = body,
+                IsInternal = isInternal,
+                CreatedAt = DateTime.UtcNow,
+                AuthorId = authorId,
+                Ticket = ticket // Set navigation property for observers
+            };
+
+            // We need to add the comment to the database. 
+            // Since we don't have a specific CommentRepository, we can use the context directly or add to ticket collection.
+            // Ideally, we should have a repository method, but for now let's use the context via a new method in TicketRepository or direct context if necessary.
+            // Wait, TicketService has _context injected.
+            _context.TicketComments.Add(comment);
+            await _context.SaveChangesAsync();
+
+            // Audit Log
+            await _auditService.LogActionAsync(ticketId, "Commented", authorId ?? "System", "Comment", null, isInternal ? "Internal Note" : "Public Reply");
+
+            // Notify observers
+            await NotifyObserversCommentedAsync(comment);
+
+            return comment;
+        }
+
+        private async Task NotifyObserversCommentedAsync(TicketComment comment)
+        {
+            foreach (var observer in _observers)
+            {
+                try
+                {
+                    await observer.OnTicketCommentedAsync(comment);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Observer {ObserverType} failed on ticket comment", observer.GetType().Name);
                 }
             }
         }

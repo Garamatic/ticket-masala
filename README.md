@@ -2,91 +2,85 @@
 
 ![Logo](IT-Project2526/docs/visual/logo-green.png)
 
-## Informatie
+## 📌 Info
+- **Team**: Charlotte Schröer, Maarten Görtz, Wito De Schrijver, Juan Benjumea
+- **Concept**: Ticketing, Case, and Project Management with AI support
+- **Tech Stack**: Fullstack .NET 8 (MVC), EF Core, Python (AI Microservice)
 
-- Wie : Charlotte Schröer, Maarten Görtz, Wito De Schrijver en Juan Benjumea
-- Concept : Ticketing, Case en Project Management met AI ondersteuning
-- Technologieen: Fullstack .NET en Python
+---
 
-## Basis structuur
+## 🚀 Quick Start Guide
 
-Light-weight beheersysteem met AI-integratie als rode draad in alle lagen.
+### 1. Run the Application
+```bash
+cd IT-Project2526
+dotnet run
+```
+The database will be automatically created and seeded on the first run.
 
-Dashboard-gedreven ontwerp waarbij de gebruiker (klant, stafflid) per rol de relevante informatie ziet. Er zijn drie views: ticketing, case en project management.
+### 2. Login
+Navigate to `https://localhost:[YOUR_PORT]` (usually 5001 or 5054).
+
+### 🔑 Test Accounts
+**Default Passwords:**
+- **Admins**: `Admin123!`
+- **Employees**: `Employee123!`
+- **Customers**: `Customer123!`
+
+| Role | Email | Name | Password |
+|------|-------|------|----------|
+| **Admin** | `admin@ticketmasala.com` | John Administrator | `Admin123!` |
+| **Project Manager** | `mike.pm@ticketmasala.com` | Mike Johnson | `Employee123!` |
+| **Support** | `david.support@ticketmasala.com` | David Martinez | `Employee123!` |
+| **Customer** | `alice.customer@example.com` | Alice Smith | `Customer123!` |
+
+*(See `Data/DbSeeder.cs` for full seed data details)*
+
+---
+
+## 🏗️ Project Structure
+Ticket Masala is a lightweight management system with 4 integrated layers:
+
+1.  **Ticketing**: Entry point for issues and requests.
+2.  **Case Management**: Groups tickets into cases for tracking.
+3.  **Project Management**: Bundles cases into projects (e.g., per customer).
+4.  **AI Helper (GERDA)**: Cross-cutting layer providing context, suggestions, and automation.
 
 ![ERD-model](IT-Project2526/docs/architecture/erd-dark.drawio.png)
 
-### Lagen
+---
 
-- Ticketing: vormt de toegangspoort voor het aanmaken van nieuwe tickets, cases en projecten.
+## 🛠️ Tech Stack & Requirements
+-   **Frontend**: ASP.NET Core MVC (Razor Views), Bootstrap
+-   **Backend**: .NET 8, C#
+-   **Database**: SQL Server / SQLite (EF Core + Migrations)
+-   **Auth**: ASP.NET Identity (Role-based: Admin, Employee, Customer)
+-   **AI**: ML.NET + Python Microservice capabilities
+-   **Hosting**: Docker support ready (`fly.toml`)
 
-- Case Management: groepeert één of meerdere tickets (parent-child). Hier volgt men de voortgang, communicatie en details van een dossier op.
+---
 
-- Project Management: bundelt één of meerdere cases (bijvoorbeeld van verschillende klanten) tot een project. Hier beheert men de algemene voortgang, deadlines en mijlpalen.
+## 🗺️ Roadmap
+- [x] **Core**: Role-based Auth, Multi-tenancy
+- [x] **Ticketing**: Create, Edit, Detail, Index, Batch Operations
+- [x] **Projects**: Overview, Create, Detail
+- [x] **AI**: GERDA Dispatching, Forecasting, Spam Detection
+- [x] **Collaboration**: Rich-text Chat, Notifications, Document Management
+- [ ] **Advanced**: Mobile App, Outlook Integration, 2FA
 
-- AI-helper: biedt contextbewuste ondersteuning in alle lagen door historische gegevens te analyseren en voorstellen te doen voor acties, toewijzingen en samenvattingen. De AI gebruikt lokale of cloudmodellen voor verklaarbaarheid en automatisering.
+---
 
-![Basis UI](IT-Project2526/docs/visual/basic-UI.png)
+## ❓ Troubleshooting
 
-### Interconnectie van lagen
+### Login Failed?
+1.  **Check Logs**: Look for "Database already contains users" in the console.
+2.  **Reset Database**: If passwords don't work, drop the database and restart:
+    ```bash
+    dotnet ef database drop
+    dotnet run
+    ```
+3.  **Manual Seed**: Navigate to `/Seed/TestAccounts` in the browser to trigger seeding manually.
 
-Ticketing → Case Management: elke ticket wordt automatisch een case met AI-aanbevelingen voor opvolging
-
-Case Management → Project Management: cases worden geaggregeerd tot projectoverzicht
-
-AI Helper → Alle lagen: real-time suggesties bij aanmaak, opvolging, planning en rapportage
-
-## Roadmap
-
-Algemeen
-
-- [x] Role based authentication (Identity + Authorize attributen)
-- [ ] Notificaties en berichten
-- [ ] Discussies en comments
-
-Ticketing interface
-
-- [x] Ticket aanmaakfunctie (Create view)
-- [x] Ticket detail en bewerken (Detail, Edit views)
-- [x] Ticket overzicht (Index view)
-- [ ] Filter- en zoekfunctie
-- [ ] Quick actions
-
-Case / Customer management interface
-
-- [x] Customer overzicht (Index view)
-- [x] Customer detail view
-- [ ] Linken, groeperen van tickets
-- [ ] Notities
-- [ ] Berichten
-- [ ] Documentatie en bijlagen bij case
-- [ ] Form / document generation
-
-Project management interface  
-
-- [x] Project overzicht (Index view)
-- [x] Project aanmaken (Create, NewProject views)
-- [x] Project detail en bewerken (Detail, Edit views)
-- [ ] Fases en mijlpalen
-- [ ] Teamleden en verantwoordelijkheden
-- [ ] Kalender
-- [ ] Analytics
-
-AI Helper
-
-- [ ] Similariteitszoektocht en contextuele vergelijking eerdere cases
-- [ ] AI suggestie automatische toewijzing
-- [ ] Explain case en context generatie
-- [ ] Generatie oplossingen, antwoorden, rapporten
-- [ ] Alerts en insights
-- [ ] Planning optimalisatie suggesties
-
-## Functionele en technische vereisten
-
-- Frontend : ASP.NET Core MVC met Razor Views
-- Mobile first en responsive design
-- Backend : ASP.NET Core MVC (.NET 8)
-- Database : Entity Framework Core + Migrations
-- Authenticatie : ASP.NET Identity
-- AI: Python microservice (Ollama / OpenAI / local LLM integration) — voorbereid
-- Deployment: Azure + Docker (fly.toml aanwezig)
+### App Won't Start?
+- Check `appsettings.json` connection string.
+- Ensure SQL Server is running (if not using SQLite).

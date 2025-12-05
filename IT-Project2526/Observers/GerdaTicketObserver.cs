@@ -1,5 +1,7 @@
 using IT_Project2526.Models;
+using IT_Project2526.Services;
 using IT_Project2526.Services.GERDA;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace IT_Project2526.Observers;
 
@@ -9,12 +11,17 @@ namespace IT_Project2526.Observers;
 /// </summary>
 public class GerdaTicketObserver : ITicketObserver
 {
-    private readonly IGerdaService _gerdaService;
+    private readonly IBackgroundTaskQueue _taskQueue;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ILogger<GerdaTicketObserver> _logger;
 
-    public GerdaTicketObserver(IGerdaService gerdaService, ILogger<GerdaTicketObserver> logger)
+    public GerdaTicketObserver(
+        IBackgroundTaskQueue taskQueue, 
+        IServiceScopeFactory serviceScopeFactory,
+        ILogger<GerdaTicketObserver> logger)
     {
-        _gerdaService = gerdaService;
+        _taskQueue = taskQueue;
+        _serviceScopeFactory = serviceScopeFactory;
         _logger = logger;
     }
 
@@ -22,13 +29,30 @@ public class GerdaTicketObserver : ITicketObserver
     {
         try
         {
-            _logger.LogInformation("GERDA Observer: Processing new ticket {TicketGuid}", ticket.Guid);
-            await _gerdaService.ProcessTicketAsync(ticket.Guid);
+            _logger.LogInformation("GERDA Observer: Queueing ticket {TicketGuid} for background processing", ticket.Guid);
+            
+            await _taskQueue.QueueBackgroundWorkItemAsync(async token =>
+            {
+                using (var scope = _serviceScopeFactory.CreateScope())
+                {
+                    var gerdaService = scope.ServiceProvider.GetRequiredService<IGerdaService>();
+                    var logger = scope.ServiceProvider.GetRequiredService<ILogger<GerdaTicketObserver>>();
+                    
+                    try 
+                    {
+                        logger.LogInformation("GERDA Background: Processing ticket {TicketGuid}", ticket.Guid);
+                        await gerdaService.ProcessTicketAsync(ticket.Guid);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex, "GERDA Background: Failed to process ticket {TicketGuid}", ticket.Guid);
+                    }
+                }
+            });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "GERDA Observer: Failed to process ticket {TicketGuid}", ticket.Guid);
-            // Don't throw - observers should not break the main workflow
+            _logger.LogError(ex, "GERDA Observer: Failed to queue ticket {TicketGuid}", ticket.Guid);
         }
     }
 
@@ -81,6 +105,12 @@ public class GerdaTicketObserver : ITicketObserver
             _logger.LogError(ex, "GERDA Observer: Failed to handle update for ticket {TicketGuid}", ticket.Guid);
         }
         
+        await Task.CompletedTask;
+    }
+
+    public async Task OnTicketCommentedAsync(TicketComment comment)
+    {
+        // GERDA currently doesn't react to comments, but could analyze sentiment here
         await Task.CompletedTask;
     }
 }

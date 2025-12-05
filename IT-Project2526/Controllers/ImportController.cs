@@ -9,11 +9,11 @@ namespace IT_Project2526.Controllers
     [Authorize(Roles = "Admin,Employee")]
     public class ImportController : Controller
     {
-        private readonly ICsvImportService _importService;
+        private readonly ITicketImportService _importService;
         private readonly ITicketService _ticketService;
         private readonly ILogger<ImportController> _logger;
 
-        public ImportController(ICsvImportService importService, ITicketService ticketService, ILogger<ImportController> logger)
+        public ImportController(ITicketImportService importService, ITicketService ticketService, ILogger<ImportController> logger)
         {
             _importService = importService;
             _ticketService = ticketService;
@@ -37,13 +37,13 @@ namespace IT_Project2526.Controllers
 
             try
             {
-                // Parse CSV to get headers and sample data
+                // Parse file to get headers and sample data
                 using var stream = file.OpenReadStream();
-                var rows = _importService.ParseCsv(stream);
+                var rows = _importService.ParseFile(stream, file.FileName);
 
                 if (rows.Count == 0)
                 {
-                    TempData["Error"] = "CSV file is empty.";
+                    TempData["Error"] = "File is empty.";
                     return RedirectToAction(nameof(Index));
                 }
 
@@ -60,6 +60,7 @@ namespace IT_Project2526.Controllers
                     file.CopyTo(fileStream);
                 }
                 TempData["TempFilePath"] = tempPath;
+                TempData["OriginalFileName"] = file.FileName; // Store original filename to preserve extension
 
                 // Get headers from first row
                 var firstRow = (IDictionary<string, object>)rows.First();
@@ -67,10 +68,15 @@ namespace IT_Project2526.Controllers
 
                 return View("MapFields", headers);
             }
+            catch (NotSupportedException ex)
+            {
+                TempData["Error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error parsing CSV");
-                TempData["Error"] = "Error parsing CSV file.";
+                _logger.LogError(ex, "Error parsing file");
+                TempData["Error"] = "Error parsing file.";
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -79,6 +85,8 @@ namespace IT_Project2526.Controllers
         public async Task<IActionResult> ExecuteImport(Dictionary<string, string> mapping)
         {
             var tempPath = TempData["TempFilePath"]?.ToString();
+            var originalFileName = TempData["OriginalFileName"]?.ToString() ?? "temp.csv"; // Default to csv if missing
+
             if (string.IsNullOrEmpty(tempPath) || !System.IO.File.Exists(tempPath))
             {
                 TempData["Error"] = "Session expired. Please upload again.";
@@ -88,18 +96,18 @@ namespace IT_Project2526.Controllers
             try
             {
                 using var stream = System.IO.File.OpenRead(tempPath);
-                var rows = _importService.ParseCsv(stream);
+                var rows = _importService.ParseFile(stream, originalFileName);
 
                 var uploaderId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
                 var departmentId = await _ticketService.GetCurrentUserDepartmentIdAsync();
 
-                if (departmentId == Guid.Empty)
+                if (departmentId == null || departmentId == Guid.Empty)
                 {
                      TempData["Error"] = "User has no department.";
                      return RedirectToAction(nameof(Index));
                 }
 
-                var count = await _importService.ImportTicketsAsync(rows, mapping, uploaderId, departmentId);
+                var count = await _importService.ImportTicketsAsync(rows, mapping, uploaderId, departmentId.Value);
 
                 TempData["Success"] = $"Successfully imported {count} tickets.";
                 

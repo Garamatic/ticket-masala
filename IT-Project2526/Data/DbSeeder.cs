@@ -105,10 +105,16 @@ namespace IT_Project2526.Data
                 var userCount = await _context.Users.CountAsync();
                 _logger.LogInformation("Current user count in database: {UserCount}", userCount);
                 
+                // Create Project Templates
+                _logger.LogInformation("Creating project templates...");
+                await CreateProjectTemplates();
+
                 if (userCount > 0)
                 {
-                    _logger.LogWarning("Database already contains {UserCount} users. Skipping seed.", userCount);
-                    _logger.LogInformation("If you want to re-seed, please delete all users first or drop the database");
+                    _logger.LogWarning("Database already contains {UserCount} users. Skipping user/project seed.", userCount);
+                    _logger.LogInformation("If you want to re-seed users, please delete all users first or drop the database");
+                    
+                    _logger.LogInformation("========== DATABASE SEEDING COMPLETED SUCCESSFULLY! ==========");
                     return;
                 }
 
@@ -137,6 +143,8 @@ namespace IT_Project2526.Data
                 // Create Unassigned Tickets for GERDA Dispatch Testing
                 _logger.LogInformation("Creating unassigned tickets for GERDA testing...");
                 await CreateUnassignedTicketsForGerdaTesting();
+
+
 
                 _logger.LogInformation("========== DATABASE SEEDING COMPLETED SUCCESSFULLY! ==========");
                 _logger.LogInformation("You can now login with any of the test accounts");
@@ -792,6 +800,105 @@ namespace IT_Project2526.Data
             _context.Tickets.AddRange(unassignedTickets);
             await _context.SaveChangesAsync();
             _logger.LogInformation("Created {Count} unassigned tickets for GERDA Dispatch testing", unassignedTickets.Count);
+        }
+        private async Task CreateProjectTemplates()
+        {
+            // Define all templates
+            var templates = new List<ProjectTemplate>
+            {
+                new ProjectTemplate
+                {
+                    Guid = Guid.Parse("11111111-1111-1111-1111-111111111111"), // Fixed GUIDs for idempotency
+                    Name = "Standard Web Project",
+                    Description = "Standard template for new web development projects",
+                    Tickets = new List<TemplateTicket>
+                    {
+                        new TemplateTicket { Description = "Setup Development Environment", EstimatedEffortPoints = 3, Priority = Priority.High, TicketType = TicketType.Task },
+                        new TemplateTicket { Description = "Design Database Schema", EstimatedEffortPoints = 5, Priority = Priority.High, TicketType = TicketType.Task },
+                        new TemplateTicket { Description = "Create API Endpoints", EstimatedEffortPoints = 8, Priority = Priority.Medium, TicketType = TicketType.Task },
+                        new TemplateTicket { Description = "Implement Frontend UI", EstimatedEffortPoints = 13, Priority = Priority.Medium, TicketType = TicketType.Task },
+                        new TemplateTicket { Description = "Perform Unit Testing", EstimatedEffortPoints = 5, Priority = Priority.Medium, TicketType = TicketType.Task },
+                        new TemplateTicket { Description = "Deploy to Staging", EstimatedEffortPoints = 2, Priority = Priority.High, TicketType = TicketType.Task }
+                    }
+                },
+                new ProjectTemplate
+                {
+                    Guid = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+                    Name = "Mobile App Launch",
+                    Description = "Template for launching a new mobile application",
+                    Tickets = new List<TemplateTicket>
+                    {
+                        new TemplateTicket { Description = "Design App Icon & Splash Screen", EstimatedEffortPoints = 3, Priority = Priority.Medium, TicketType = TicketType.Task },
+                        new TemplateTicket { Description = "Setup Store Listings (iOS/Android)", EstimatedEffortPoints = 5, Priority = Priority.High, TicketType = TicketType.Task },
+                        new TemplateTicket { Description = "Configure Push Notifications", EstimatedEffortPoints = 5, Priority = Priority.Medium, TicketType = TicketType.Task },
+                        new TemplateTicket { Description = "Beta Testing Coordination", EstimatedEffortPoints = 8, Priority = Priority.High, TicketType = TicketType.Task },
+                        new TemplateTicket { Description = "Final Polish & Bug Fixes", EstimatedEffortPoints = 13, Priority = Priority.Critical, TicketType = TicketType.Task }
+                    }
+                },
+                new ProjectTemplate
+                {
+                    Guid = Guid.Parse("33333333-3333-3333-3333-333333333333"),
+                    Name = "E-commerce Platform Launch",
+                    Description = "Comprehensive template for building an online store",
+                    Tickets = new List<TemplateTicket>
+                    {
+                        new TemplateTicket { Description = "Setup Product Catalog Structure", EstimatedEffortPoints = 5, Priority = Priority.High, TicketType = TicketType.Task },
+                        new TemplateTicket { Description = "Implement Shopping Cart Logic", EstimatedEffortPoints = 8, Priority = Priority.Critical, TicketType = TicketType.Task },
+                        new TemplateTicket { Description = "Integrate Payment Gateway (Stripe/PayPal)", EstimatedEffortPoints = 13, Priority = Priority.Critical, TicketType = TicketType.Task },
+                        new TemplateTicket { Description = "User Account & Order History", EstimatedEffortPoints = 8, Priority = Priority.High, TicketType = TicketType.Task },
+                        new TemplateTicket { Description = "Configure Shipping & Tax Rules", EstimatedEffortPoints = 5, Priority = Priority.Medium, TicketType = TicketType.Task }
+                    }
+                },
+                new ProjectTemplate
+                {
+                    Guid = Guid.Parse("44444444-4444-4444-4444-444444444444"),
+                    Name = "Internal HR Tool",
+                    Description = "System for managing employee data and processes",
+                    Tickets = new List<TemplateTicket>
+                    {
+                        new TemplateTicket { Description = "Employee Database Schema Design", EstimatedEffortPoints = 5, Priority = Priority.High, TicketType = TicketType.Task },
+                        new TemplateTicket { Description = "Leave Management Module", EstimatedEffortPoints = 8, Priority = Priority.Medium, TicketType = TicketType.Task },
+                        new TemplateTicket { Description = "Payroll Integration Interface", EstimatedEffortPoints = 13, Priority = Priority.Critical, TicketType = TicketType.Task },
+                        new TemplateTicket { Description = "Role-Based Access Control Setup", EstimatedEffortPoints = 5, Priority = Priority.High, TicketType = TicketType.Task },
+                        new TemplateTicket { Description = "Generate HR Reports", EstimatedEffortPoints = 3, Priority = Priority.Low, TicketType = TicketType.Task }
+                    }
+                },
+                new ProjectTemplate
+                {
+                    Guid = Guid.Parse("55555555-5555-5555-5555-555555555555"),
+                    Name = "Marketing Campaign",
+                    Description = "Tasks for launching a new digital marketing campaign",
+                    Tickets = new List<TemplateTicket>
+                    {
+                        new TemplateTicket { Description = "Content Strategy & Calendar", EstimatedEffortPoints = 3, Priority = Priority.High, TicketType = TicketType.Task },
+                        new TemplateTicket { Description = "Create Social Media Assets", EstimatedEffortPoints = 5, Priority = Priority.Medium, TicketType = TicketType.Task },
+                        new TemplateTicket { Description = "Setup Email Marketing Automation", EstimatedEffortPoints = 5, Priority = Priority.Medium, TicketType = TicketType.Task },
+                        new TemplateTicket { Description = "Configure Analytics & Tracking", EstimatedEffortPoints = 3, Priority = Priority.High, TicketType = TicketType.Task },
+                        new TemplateTicket { Description = "Launch Ad Campaigns", EstimatedEffortPoints = 2, Priority = Priority.Critical, TicketType = TicketType.Task }
+                    }
+                }
+            };
+
+            var newTemplatesCount = 0;
+            foreach (var template in templates)
+            {
+                // Check if template exists by Name to avoid duplicates
+                if (!await _context.ProjectTemplates.AnyAsync(t => t.Name == template.Name))
+                {
+                    _context.ProjectTemplates.Add(template);
+                    newTemplatesCount++;
+                }
+            }
+
+            if (newTemplatesCount > 0)
+            {
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Created {Count} new project templates", newTemplatesCount);
+            }
+            else
+            {
+                _logger.LogInformation("All project templates already exist. Skipping.");
+            }
         }
     }
 }

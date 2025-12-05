@@ -329,96 +329,100 @@
     </div>
 
     <!-- Right Column: GERDA AI Insights -->
-    <div class="col-md-4">
-        <div class="card border-primary mb-3">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">🤖 GERDA AI Insights</h5>
-            </div>
-            <div class="card-body">
-                <!-- Complexity Estimation -->
-                <div class="mb-3">
-                    <h6 class="text-primary">Complexity</h6>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="fs-4">@Model.EstimatedEffortPoints points</span>
-                        <span class="badge bg-secondary">@Model.ComplexityLabel</span>
-                    </div>
-                    <div class="progress mt-2" style="height: 8px;">
-                        <div class="progress-bar" 
-                             role="progressbar" 
-                             style="width: @((Model.EstimatedEffortPoints / 21.0 * 100))%"
-                             aria-valuenow="@Model.EstimatedEffortPoints" 
-                             aria-valuemin="0" 
-                             aria-valuemax="21">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Priority Ranking -->
-                <div class="mb-3">
-                    <h6 class="text-primary">Priority (WSJF)</h6>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="fs-4">@Model.PriorityScore.ToString("F1")</span>
-                        <span class="@Model.UrgencyBadgeClass">@Model.UrgencyLabel</span>
-                    </div>
-                    <small class="text-muted">Higher score = more urgent</small>
-                </div>
-
-                <!-- AI Tags -->
-                @if (Model.GerdaTagsList.Any())
-                {
-                    <div class="mb-3">
-                        <h6 class="text-primary">AI Tags</h6>
-                        <div class="d-flex flex-wrap gap-1">
-                            @foreach (var tag in Model.GerdaTagsList)
-                            {
-                                <span class="badge bg-light text-dark border">🏷️ @tag</span>
-                            }
-                        </div>
-                    </div>
-                }
-            </div>
-        </div>
-
-        <!-- Recommended Agent (if unassigned) -->
-        @if (Model.RecommendedAgent != null)
-        {
-            <div class="card border-success mb-3">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">✨ Recommended Agent</h5>
+    <!-- Right Column: GERDA AI Insights (Internal Only) -->
+    @if (User.IsInRole(IT_Project2526.Utilities.Constants.RoleAdmin) || User.IsInRole(IT_Project2526.Utilities.Constants.RoleEmployee))
+    {
+        <div class="col-md-4">
+            <div class="card border-primary mb-3">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">🤖 GERDA AI Insights</h5>
                 </div>
                 <div class="card-body">
-                    <h6 class="card-title">@Model.RecommendedAgent.AgentName</h6>
-                    <p class="mb-2">
-                        <span class="badge bg-success">@Model.RecommendedAgent.AffinityLabel</span>
-                        <span class="text-muted ms-2">Score: @Model.RecommendedAgent.AffinityScore.ToString("F2")</span>
-                    </p>
-                    
-                    <div class="mb-2">
-                        <small class="text-muted">Current Workload</small>
-                        <div class="progress" style="height: 20px;">
-                            <div class="progress-bar @(Model.RecommendedAgent.WorkloadPercentage > 80 ? "bg-warning" : "bg-success")" 
+                    <!-- Complexity Estimation -->
+                    <div class="mb-3">
+                        <h6 class="text-primary">Complexity</h6>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fs-4">@Model.EstimatedEffortPoints points</span>
+                            <span class="badge bg-secondary">@Model.ComplexityLabel</span>
+                        </div>
+                        <div class="progress mt-2" style="height: 8px;">
+                            <div class="progress-bar" 
                                  role="progressbar" 
-                                 style="width: @Model.RecommendedAgent.WorkloadPercentage%"
-                                 aria-valuenow="@Model.RecommendedAgent.WorkloadPercentage" 
+                                 style="width: @((Model.EstimatedEffortPoints / 21.0 * 100))%"
+                                 aria-valuenow="@Model.EstimatedEffortPoints" 
                                  aria-valuemin="0" 
-                                 aria-valuemax="100">
-                                @Model.RecommendedAgent.CurrentWorkload / @Model.RecommendedAgent.MaxCapacity pts
+                                 aria-valuemax="21">
                             </div>
                         </div>
                     </div>
 
-                    <form asp-action="AssignToRecommended" method="post" class="mt-3">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="ticketGuid" value="@Model.Guid" />
-                        <input type="hidden" name="agentId" value="@Model.RecommendedAgent.AgentId" />
-                        <button type="submit" class="btn btn-success btn-sm w-100">
-                            Assign to @Model.RecommendedAgent.AgentName
-                        </button>
-                    </form>
+                    <!-- Priority Ranking -->
+                    <div class="mb-3">
+                        <h6 class="text-primary">Priority (WSJF)</h6>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fs-4">@Model.PriorityScore.ToString("F1")</span>
+                            <span class="@Model.UrgencyBadgeClass">@Model.UrgencyLabel</span>
+                        </div>
+                        <small class="text-muted">Higher score = more urgent</small>
+                    </div>
+
+                    <!-- AI Tags -->
+                    @if (Model.GerdaTagsList.Any())
+                    {
+                        <div class="mb-3">
+                            <h6 class="text-primary">AI Tags</h6>
+                            <div class="d-flex flex-wrap gap-1">
+                                @foreach (var tag in Model.GerdaTagsList)
+                                {
+                                    <span class="badge bg-light text-dark border">🏷️ @tag</span>
+                                }
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
-        }
-    </div>
+
+            <!-- Recommended Agent (if unassigned) -->
+            @if (Model.RecommendedAgent != null)
+            {
+                <div class="card border-success mb-3">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">✨ Recommended Agent</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="card-title">@Model.RecommendedAgent.AgentName</h6>
+                        <p class="mb-2">
+                            <span class="badge bg-success">@Model.RecommendedAgent.AffinityLabel</span>
+                            <span class="text-muted ms-2">Score: @Model.RecommendedAgent.AffinityScore.ToString("F2")</span>
+                        </p>
+                        
+                        <div class="mb-2">
+                            <small class="text-muted">Current Workload</small>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar @(Model.RecommendedAgent.WorkloadPercentage > 80 ? "bg-warning" : "bg-success")" 
+                                     role="progressbar" 
+                                     style="width: @Model.RecommendedAgent.WorkloadPercentage%"
+                                     aria-valuenow="@Model.RecommendedAgent.WorkloadPercentage" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    @Model.RecommendedAgent.CurrentWorkload / @Model.RecommendedAgent.MaxCapacity pts
+                                </div>
+                            </div>
+                        </div>
+
+                        <form asp-action="AssignToRecommended" method="post" class="mt-3">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="ticketGuid" value="@Model.Guid" />
+                            <input type="hidden" name="agentId" value="@Model.RecommendedAgent.AgentId" />
+                            <button type="submit" class="btn btn-success btn-sm w-100">
+                                Assign to @Model.RecommendedAgent.AgentName
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    }
 </div>
 
 @if (Model.CompletionTarget.HasValue && Model.TicketStatus != IT_Project2526.Models.Status.Completed)

@@ -4,7 +4,11 @@ using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using IT_Project2526.Services;
 using IT_Project2526.Models;
+using IT_Project2526.Repositories;
+using IT_Project2526.Observers;
+using Microsoft.AspNetCore.Http;
 using IT_Project2526;
+using System.Security.Claims;
 
 namespace IT_Project2526.Tests.Services
 {
@@ -23,12 +27,40 @@ namespace IT_Project2526.Tests.Services
                 .Options;
         }
 
+        private TicketService CreateService(ITProjectDB context)
+        {
+            var ticketRepo = new EfCoreTicketRepository(context, new Mock<ILogger<EfCoreTicketRepository>>().Object);
+            var userRepo = new EfCoreUserRepository(context, new Mock<ILogger<EfCoreUserRepository>>().Object);
+            var projectRepo = new EfCoreProjectRepository(context, new Mock<ILogger<EfCoreProjectRepository>>().Object);
+            
+            var observers = new List<ITicketObserver>();
+            var notificationService = new Mock<INotificationService>();
+            var auditService = new Mock<IAuditService>();
+            var httpContextAccessor = new Mock<IHttpContextAccessor>();
+            
+            // Setup HttpContext
+            var httpContext = new DefaultHttpContext();
+            httpContextAccessor.Setup(x => x.HttpContext).Returns(httpContext);
+
+            return new TicketService(
+                context,
+                ticketRepo,
+                userRepo,
+                projectRepo,
+                observers,
+                notificationService.Object,
+                auditService.Object,
+                httpContextAccessor.Object,
+                _mockLogger.Object
+            );
+        }
+
         [Fact]
         public async Task CreateTicketAsync_WithValidData_CreatesTicket()
         {
             // Arrange
             using var context = new ITProjectDB(_dbOptions);
-            var service = new TicketService(context, _mockLogger.Object);
+            var service = CreateService(context);
             
             var customer = new Customer 
             { 
@@ -65,7 +97,7 @@ namespace IT_Project2526.Tests.Services
         {
             // Arrange
             using var context = new ITProjectDB(_dbOptions);
-            var service = new TicketService(context, _mockLogger.Object);
+            var service = CreateService(context);
             
             var customer = new Customer 
             { 
@@ -112,7 +144,7 @@ namespace IT_Project2526.Tests.Services
         {
             // Arrange
             using var context = new ITProjectDB(_dbOptions);
-            var service = new TicketService(context, _mockLogger.Object);
+            var service = CreateService(context);
 
             // Act & Assert
             await Assert.ThrowsAsync<ArgumentException>(async () =>
@@ -131,7 +163,7 @@ namespace IT_Project2526.Tests.Services
         {
             // Arrange
             using var context = new ITProjectDB(_dbOptions);
-            var service = new TicketService(context, _mockLogger.Object);
+            var service = CreateService(context);
             
             var customer = new Customer 
             { 
@@ -174,7 +206,7 @@ namespace IT_Project2526.Tests.Services
         {
             // Arrange
             using var context = new ITProjectDB(_dbOptions);
-            var service = new TicketService(context, _mockLogger.Object);
+            var service = CreateService(context);
 
             // Act
             var result = await service.GetTicketDetailsAsync(Guid.NewGuid());
@@ -188,7 +220,7 @@ namespace IT_Project2526.Tests.Services
         {
             // Arrange
             using var context = new ITProjectDB(_dbOptions);
-            var service = new TicketService(context, _mockLogger.Object);
+            var service = CreateService(context);
             
             var customer = new Customer 
             { 
@@ -242,7 +274,7 @@ namespace IT_Project2526.Tests.Services
         {
             // Arrange
             using var context = new ITProjectDB(_dbOptions);
-            var service = new TicketService(context, _mockLogger.Object);
+            var service = CreateService(context);
 
             // Act
             var result = await service.AssignTicketAsync(Guid.NewGuid(), "some-agent-id");
@@ -256,7 +288,7 @@ namespace IT_Project2526.Tests.Services
         {
             // Arrange
             using var context = new ITProjectDB(_dbOptions);
-            var service = new TicketService(context, _mockLogger.Object);
+            var service = CreateService(context);
             
             var customer = new Customer 
             { 
@@ -292,7 +324,7 @@ namespace IT_Project2526.Tests.Services
         {
             // Arrange
             using var context = new ITProjectDB(_dbOptions);
-            var service = new TicketService(context, _mockLogger.Object);
+            var service = CreateService(context);
             
             context.Users.AddRange(
                 new Customer 
@@ -330,7 +362,7 @@ namespace IT_Project2526.Tests.Services
         {
             // Arrange
             using var context = new ITProjectDB(_dbOptions);
-            var service = new TicketService(context, _mockLogger.Object);
+            var service = CreateService(context);
             
             context.Users.AddRange(
                 new Employee

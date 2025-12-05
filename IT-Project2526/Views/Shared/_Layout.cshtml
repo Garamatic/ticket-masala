@@ -112,6 +112,9 @@
                 </ul>
             </nav>
         </aside>
+        
+        <!-- Mobile Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
         <!-- Main Content Area -->
         <div class="app-main" id="mainContent">
@@ -187,21 +190,47 @@
             var sidebarToggle = document.getElementById('sidebarToggle');
             var sidebar = document.getElementById('sidebar');
             var mainContent = document.getElementById('mainContent');
+            var sidebarOverlay = document.getElementById('sidebarOverlay');
             
             if (sidebarToggle && sidebar && mainContent) {
-                // Load saved sidebar state from localStorage
-                var savedSidebarState = localStorage.getItem('sidebarCollapsed');
-                if (savedSidebarState === 'true') {
-                    sidebar.classList.add('collapsed');
-                    mainContent.classList.add('expanded');
+                // Load saved sidebar state from localStorage (only for desktop)
+                if (window.innerWidth >= 992) {
+                    var savedSidebarState = localStorage.getItem('sidebarCollapsed');
+                    if (savedSidebarState === 'true') {
+                        sidebar.classList.add('collapsed');
+                        mainContent.classList.add('expanded');
+                    }
                 }
                 
-                sidebarToggle.addEventListener('click', function() {
-                    sidebar.classList.toggle('collapsed');
-                    mainContent.classList.toggle('expanded');
-                    // Save state
-                    localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+                function toggleSidebar() {
+                    // Mobile behavior
+                    if (window.innerWidth < 992) {
+                        sidebar.classList.toggle('show');
+                        if (sidebarOverlay) {
+                            sidebarOverlay.classList.toggle('show');
+                        }
+                    } 
+                    // Desktop behavior
+                    else {
+                        sidebar.classList.toggle('collapsed');
+                        mainContent.classList.toggle('expanded');
+                        // Save state
+                        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+                    }
+                }
+
+                sidebarToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    toggleSidebar();
                 });
+
+                // Close sidebar when clicking overlay (mobile)
+                if (sidebarOverlay) {
+                    sidebarOverlay.addEventListener('click', function() {
+                        sidebar.classList.remove('show');
+                        sidebarOverlay.classList.remove('show');
+                    });
+                }
             }
             
             // Dark Mode Toggle

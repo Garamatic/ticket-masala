@@ -22,25 +22,32 @@ using WebOptimizer;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Use SQLite in production (Fly), SQL Server locally
+// Database Configuration via appsettings.json / appsettings.Production.json
+var dbProvider = builder.Configuration["DatabaseProvider"];
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
 builder.Services.AddDbContext<ITProjectDB>(options =>
 {
-    if (builder.Environment.IsProduction())
+    if (string.Equals(dbProvider, "Sqlite", StringComparison.OrdinalIgnoreCase))
     {
-        // Ensure /data directory exists
-        var dataDir = "/data";
-        if (!Directory.Exists(dataDir))
+        // Ensure /data directory exists for SQLite in production/docker
+        if (connectionString != null && connectionString.Contains("/data/"))
         {
-            Directory.CreateDirectory(dataDir);
+            var dataDir = "/data";
+            if (!Directory.Exists(dataDir))
+            {
+                Console.WriteLine($"Creating database directory: {dataDir}");
+                Directory.CreateDirectory(dataDir);
+            }
         }
         
-        var dbPath = Path.Combine(dataDir, "ticketmasala.db");
-        Console.WriteLine($"Using SQLite database at: {dbPath}");
-        options.UseSqlite($"Data Source={dbPath}");
+        Console.WriteLine($"Using SQLite Provider with connection: {connectionString}");
+        options.UseSqlite(connectionString);
     }
     else
     {
-        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+        // Default to SQL Server
+        Console.WriteLine($"Using SQL Server Provider");
         options.UseSqlServer(connectionString, sqlServerOptions =>
         {
             sqlServerOptions.EnableRetryOnFailure(
@@ -254,12 +261,17 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Configure the HTTP request pipeline.
+// Configure the HTTP request pipeline.
+// FOR DEBUGGING: Force Developer Exception Page in Prod to see errors
+app.UseDeveloperExceptionPage();
+/* 
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+*/
 
 // Use WebOptimizer middleware
 app.UseWebOptimizer();

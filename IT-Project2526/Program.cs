@@ -5,6 +5,8 @@ using IT_Project2526.Models;
 using IT_Project2526.Services;
 using IT_Project2526.Repositories;
 using IT_Project2526.Observers;
+using IT_Project2526.Health;
+using IT_Project2526.Middleware;
 using IT_Project2526.Services.GERDA;
 using IT_Project2526.Services.GERDA.Models;
 using IT_Project2526.Services.GERDA.Grouping;
@@ -16,8 +18,10 @@ using IT_Project2526.Services.GERDA.BackgroundJobs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using System.Threading.RateLimiting;
 using WebOptimizer;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -93,6 +97,7 @@ builder.Services.AddScoped<ApplicationUserManager>();
 builder.Services.AddScoped<ITicketRepository, EfCoreTicketRepository>();
 builder.Services.AddScoped<IProjectRepository, EfCoreProjectRepository>();
 builder.Services.AddScoped<IUserRepository, EfCoreUserRepository>();
+builder.Services.AddScoped<IUnitOfWork, EfCoreUnitOfWork>();
 
 // ============================================
 // Register Observers (Observer Pattern)
@@ -101,12 +106,21 @@ builder.Services.AddScoped<ITicketObserver, GerdaTicketObserver>();
 builder.Services.AddScoped<ITicketObserver, LoggingTicketObserver>();
 builder.Services.AddScoped<ITicketObserver, NotificationTicketObserver>();
 
+// Project Observers
+builder.Services.AddScoped<IProjectObserver, LoggingProjectObserver>();
+builder.Services.AddScoped<IProjectObserver, NotificationProjectObserver>();
+
+// Comment Observers
+builder.Services.AddScoped<ICommentObserver, LoggingCommentObserver>();
+builder.Services.AddScoped<ICommentObserver, NotificationCommentObserver>();
+
 // Register Services
 builder.Services.AddScoped<IMetricsService, MetricsService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<IDispatchBacklogService, DispatchBacklogService>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<ITicketImportService, TicketImportService>();
 builder.Services.AddHostedService<EmailIngestionService>();
@@ -157,6 +171,51 @@ else
 // Add Memory Cache
 builder.Services.AddMemoryCache();
 builder.Services.AddDistributedMemoryCache();
+
+// ============================================
+// Rate Limiting Configuration
+// ============================================
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    
+    // Fixed window rate limiter for API endpoints
+    options.AddFixedWindowLimiter("api", opt =>
+    {
+        opt.PermitLimit = 100;
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit = 10;
+    });
+    
+    // Sliding window for login attempts (stricter)
+    options.AddSlidingWindowLimiter("login", opt =>
+    {
+        opt.PermitLimit = 5;
+        opt.Window = TimeSpan.FromMinutes(15);
+        opt.SegmentsPerWindow = 3;
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit = 0;
+    });
+    
+    // Token bucket for general requests
+    options.AddTokenBucketLimiter("general", opt =>
+    {
+        opt.TokenLimit = 50;
+        opt.TokensPerPeriod = 10;
+        opt.ReplenishmentPeriod = TimeSpan.FromSeconds(10);
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit = 5;
+    });
+});
+
+// ============================================
+// Enhanced Health Checks
+// ============================================
+builder.Services.AddHealthChecks()
+    .AddCheck<GerdaHealthCheck>("gerda-ai")
+    .AddCheck<EmailIngestionHealthCheck>("email-ingestion")
+    .AddCheck<BackgroundQueueHealthCheck>("background-queue");
 
 // Persist DataProtection keys so cookies remain valid across restarts
 if (builder.Environment.IsProduction())
@@ -261,17 +320,21 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Configure the HTTP request pipeline.
-// Configure the HTTP request pipeline.
-// FOR DEBUGGING: Force Developer Exception Page in Prod to see errors
-app.UseDeveloperExceptionPage();
-/* 
-if (!app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+else
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-*/
+
+// Security headers (CSP, X-Frame-Options, etc.)
+app.UseSecurityHeaders();
+
+// Rate limiting
+app.UseRateLimiter();
 
 // Use WebOptimizer middleware
 app.UseWebOptimizer();

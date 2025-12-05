@@ -42,6 +42,7 @@ namespace IT_Project2526.Services
         private readonly IUserRepository _userRepository;
         private readonly IProjectRepository _projectRepository;
         private readonly IEnumerable<ITicketObserver> _observers;
+        private readonly IEnumerable<ICommentObserver> _commentObservers;
         private readonly INotificationService _notificationService;
         private readonly IAuditService _auditService;
         private readonly IHttpContextAccessor _httpContextAccessor;
@@ -53,6 +54,7 @@ namespace IT_Project2526.Services
             IUserRepository userRepository,
             IProjectRepository projectRepository,
             IEnumerable<ITicketObserver> observers,
+            IEnumerable<ICommentObserver> commentObservers,
             INotificationService notificationService,
             IAuditService auditService,
             IHttpContextAccessor httpContextAccessor,
@@ -63,6 +65,7 @@ namespace IT_Project2526.Services
             _userRepository = userRepository;
             _projectRepository = projectRepository;
             _observers = observers;
+            _commentObservers = commentObservers;
             _notificationService = notificationService;
             _auditService = auditService;
             _httpContextAccessor = httpContextAccessor;
@@ -713,6 +716,7 @@ namespace IT_Project2526.Services
 
         private async Task NotifyObserversCommentedAsync(TicketComment comment)
         {
+            // Notify ticket observers (legacy)
             foreach (var observer in _observers)
             {
                 try
@@ -722,6 +726,19 @@ namespace IT_Project2526.Services
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Observer {ObserverType} failed on ticket comment", observer.GetType().Name);
+                }
+            }
+
+            // Notify comment-specific observers (new pattern)
+            foreach (var observer in _commentObservers)
+            {
+                try
+                {
+                    await observer.OnCommentAddedAsync(comment);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "CommentObserver {ObserverType} failed on comment added", observer.GetType().Name);
                 }
             }
         }

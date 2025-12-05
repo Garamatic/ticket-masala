@@ -8,7 +8,9 @@ services:
       - "5054:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=db;Database=TicketMasalaDb;User Id=sa;Password=YourStrong(!)Password;TrustServerCertificate=True;
+      - ConnectionStrings__DefaultConnection=Server=db;Database=TicketMasalaDb;User Id=sa;Password=${DB_PASSWORD:-YourStrong(!)Password};TrustServerCertificate=True;
+    env_file:
+      - .env
     depends_on:
       - db
     restart: on-failure
@@ -17,7 +19,9 @@ services:
     image: mcr.microsoft.com/mssql/server:2022-latest
     environment:
       - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=YourStrong(!)Password
+      - MSSQL_SA_PASSWORD=${DB_PASSWORD:-YourStrong(!)Password}
+    env_file:
+      - .env
     ports:
       - "1433:1433"
     volumes:

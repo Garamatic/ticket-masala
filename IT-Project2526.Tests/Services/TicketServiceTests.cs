@@ -48,6 +48,7 @@ namespace IT_Project2526.Tests.Services
                 userRepo,
                 projectRepo,
                 observers,
+                new List<ICommentObserver>(),
                 notificationService.Object,
                 auditService.Object,
                 httpContextAccessor.Object,

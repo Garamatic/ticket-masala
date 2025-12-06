@@ -504,13 +504,71 @@ To preserve existing data during the transition:
 - **Custom Field Injection:** JSON input must be sanitized
 - **Role Validation:** Transition rules referencing roles must validate against ASP.NET Identity
 
+## 8. Open Questions & Recommendations
+
+### 8.1 Hot Reload
+
+**Question:** Should config changes require app restart?
+
+**Recommendation:** No. Implement a caching layer with manual invalidation.
+
+**Implementation:**
+
+- Current `DomainConfigurationService` already has `ReloadConfiguration()` method
+- Add admin-only `/api/config/reload` endpoint
+- Optionally add file watcher for auto-detection of YAML changes
+
 ---
 
-## 8. Open Questions
+### 8.2 Multi-Tenancy
 
-1. **Hot Reload:** Should config changes require app restart?
-2. **Multi-Tenancy:** Is domain synonymous with tenant, or can one tenant have multiple domains?
-3. **Version Control:** Should domain configs be stored in DB for audit trail?
+**Question:** Is domain synonymous with tenant?
+
+**Recommendation:** No, decouple them:
+
+- **Tenant** = Organization (Company A vs Company B)
+- **Domain** = Business Process within tenant (IT vs HR)
+
+**Implementation:**
+
+- Add `TenantId` column to `Ticket`, `Project`, etc.
+- Filter by `TenantId` in all service calls
+- Consider implementing in a future phase after single-tenant is stable
+
+> [!NOTE]
+> Multi-tenancy is a significant architectural change. Recommend phasing:
+>
+> - Phase 1 (Current): Single-tenant, multi-domain
+> - Phase 2 (Future): Full multi-tenancy
+
+---
+
+### 8.3 Version Control & Audit Trail
+
+**Question:** Should domain configs be stored in DB for audit trail?
+
+**Recommendation:** Yes, for runtime integrity and audit.
+
+**Implementation:**
+
+- Store master YAML in source control (Git)
+- On startup, parse YAML and persist to `ConfigurationAudit` table
+- Include timestamp, version number, and hash
+- Runtime cache uses DB version as source of truth
+
+**Schema:**
+
+```sql
+CREATE TABLE ConfigurationAudit (
+    Id INT PRIMARY KEY,
+    DomainId VARCHAR(50),
+    ConfigJson NVARCHAR(MAX),
+    Version INT,
+    Hash VARCHAR(64),
+    AppliedAt DATETIME,
+    AppliedBy VARCHAR(100)
+);
+```
 
 ---
 

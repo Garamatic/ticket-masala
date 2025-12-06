@@ -7,10 +7,11 @@ namespace TicketMasala.Web.ViewModels.GERDA;
     /// </summary>
     public class GerdaDispatchViewModel
     {
-        public List<TicketDispatchInfo> UnassignedTickets { get; set; } = new();
+        public List<TicketDispatchInfo> LowConfidenceAllocations { get; set; } = new();
         public List<AgentInfo> AvailableAgents { get; set; } = new();
         public DispatchStatistics Statistics { get; set; } = new();
         public List<ProjectOption> Projects { get; set; } = new();
+        public List<TicketDispatchInfo> UnassignedTickets { get; set; } = new();
     }
 
     /// <summary>

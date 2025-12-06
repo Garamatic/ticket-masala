@@ -360,17 +360,16 @@ namespace TicketMasala.Web.Controllers.Api;
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
                     ?? throw new UnauthorizedAccessException("User ID not found");
 
-                Customer? customer;
+                ApplicationUser? customer;
 
                 if (model.IsNewCustomer)
                 {
-                    customer = new Customer
+                    customer = new ApplicationUser
                     {
                         FirstName = model.NewCustomerFirstName ?? string.Empty,
                         LastName = model.NewCustomerLastName ?? string.Empty,
                         Email = model.NewCustomerEmail,
                         Phone = model.NewCustomerPhone,
-                        Code = Guid.NewGuid().ToString().Substring(0, 8).ToUpper(),
                         UserName = model.NewCustomerEmail
                     };
                     

@@ -25,6 +25,42 @@ namespace TicketMasala.Web.Models;
         [SafeStringLength(1000, ErrorMessage = "Tags cannot exceed 1000 characters")]
         public string? GerdaTags { get; set; } // Comma-separated: "AI-Dispatched,Spam-Cluster"
 
+        // GERDA Dispatch fields
+        public string? RecommendedProjectName { get; set; }
+        public string? CurrentProjectName { get; set; }
+
+        // --- RIGID COLUMNS (Indexed, Relational) ---
+        [Required]
+        [MaxLength(50)]
+        public required string DomainId { get; set; } // e.g., "IT", "LEGAL"
+
+        [Required]
+        [MaxLength(20)]
+        public required string Status { get; set; } = "New"; // "New", "Triaged", "Done"
+
+        [Required]
+        [MaxLength(200)]
+        public required string Title { get; set; }
+
+        // Used for Duplicate Detection (SHA256)
+        [MaxLength(64)]
+        public string? ContentHash { get; set; }
+
+        // Link to the Config Version active when this ticket was created
+        [MaxLength(50)]
+        public string? ConfigVersionId { get; set; }
+
+        // --- FLEXIBLE STORAGE (The "Masala" Model) ---
+        [Column(TypeName = "TEXT")]
+        public string CustomFieldsJson { get; set; } = "{}";
+
+        // --- GENERATED COLUMNS (Read-Only Performance Optimizations) ---
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public double? ComputedPriority { get; private set; }
+
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public string? ComputedCategory { get; private set; }
+
         // ═══════════════════════════════════════════
         // DOMAIN EXTENSIBILITY FIELDS
         // ═══════════════════════════════════════════
@@ -34,21 +70,14 @@ namespace TicketMasala.Web.Models;
         /// Defaults to "IT" for backward compatibility.
         /// </summary>
         [SafeStringLength(50)]
-        public string DomainId { get; set; } = "IT";
-        
-        /// <summary>
-        /// The work item type code from domain configuration (e.g., "INCIDENT", "QUOTE_REQUEST").
-        /// Replaces the legacy TicketType enum for extensibility.
-        /// </summary>
-        [SafeStringLength(50)]
         public string? WorkItemTypeCode { get; set; }
-        
+
         /// <summary>
         /// JSON blob storing domain-specific custom field values.
         /// Schema is validated against the domain configuration.
         /// </summary>
         [Column(TypeName = "TEXT")] // For SQLite compatibility; use nvarchar(max) for SQL Server
-        public string? CustomFieldsJson { get; set; }
+        public required string CustomFieldsJson { get; set; } = "{}";
 
         public Ticket? ParentTicket { get; set; }
         public Guid? ParentTicketGuid { get; set; }
@@ -56,11 +85,6 @@ namespace TicketMasala.Web.Models;
         public ApplicationUser? Responsible { get; set; }
         public string? ResponsibleId { get; set; }
         public List<ApplicationUser> Watchers { get; set; } = [];
-        public required ApplicationUser Customer { get; set; }
-        public string? CustomerId { get; set; }
-        public Project? Project { get; set; }
-        public Guid? ProjectGuid { get; set; }
-
         public List<TicketComment> Comments { get; set; } = new();
         public List<Document> Attachments { get; set; } = [];
 

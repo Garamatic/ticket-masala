@@ -1,9 +1,7 @@
-using TicketMasala.Web.Engine.GERDA.Dispatching;
 using TicketMasala.Web.Models;
 using TicketMasala.Web.ViewModels.Tickets;
 using TicketMasala.Web.ViewModels.GERDA;
 using TicketMasala.Web.Repositories;
-using TicketMasala.Web.Engine.GERDA.Dispatching;
 using Microsoft.EntityFrameworkCore;
 
 namespace TicketMasala.Web.Services.Tickets;
@@ -76,84 +74,16 @@ public class DispatchBacklogService : IDispatchBacklogService
             .ToList();
 
         // Build ticket dispatch info with recommendations
-        var ticketDispatchInfos = new List<TicketDispatchInfo>();
-
-        foreach (var ticket in unassignedTickets)
+        // Map unassigned tickets to TicketDispatchInfo
+        var ticketDispatchInfos = unassignedTickets.Select(t => new TicketDispatchInfo
         {
-            var ticketInfo = new TicketDispatchInfo
-            {
-                Guid = ticket.Guid,
-                Description = ticket.Description,
-                TicketStatus = ticket.TicketStatus,
-                CreationDate = ticket.CreationDate,
-                CompletionTarget = ticket.CompletionTarget,
-                CustomerName = ticket.Customer != null 
-                    ? $"{ticket.Customer.FirstName} {ticket.Customer.LastName}" 
-                    : "Unknown",
-                CustomerId = ticket.CustomerId,
-                EstimatedEffortPoints = ticket.EstimatedEffortPoints,
-                PriorityScore = ticket.PriorityScore,
-                GerdaTags = ticket.GerdaTags,
-                CurrentProjectGuid = ticket.ProjectGuid,
-                CurrentProjectName = ticket.Project?.Name
-            };
-
-            // Get GERDA agent recommendations
-            if (_dispatchingService.IsEnabled)
-            {
-                try
-                {
-                    var recommendations = await _dispatchingService.GetTopRecommendedAgentsAsync(ticket.Guid, count: 3);
-                    
-                    foreach (var recommendation in recommendations)
-                    {
-                        var agent = employees.FirstOrDefault(e => e.Id == recommendation.AgentId);
-                        if (agent != null)
-                        {
-                            var workload = agentWorkloads.GetValueOrDefault(recommendation.AgentId, (0, 0));
-                            
-                            ticketInfo.RecommendedAgents.Add(new AgentRecommendation
-                            {
-                                AgentId = recommendation.AgentId,
-                                AgentName = $"{agent.FirstName} {agent.LastName}",
-                                Team = agent.Team,
-                                Score = recommendation.Score,
-                                CurrentWorkload = workload.Item1,
-                                MaxCapacity = agent.MaxCapacityPoints,
-                                Specializations = agent.Specializations,
-                                Language = agent.Language,
-                                Region = agent.Region
-                            });
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to get GERDA recommendations for ticket {TicketGuid}", ticket.Guid);
-                }
-            }
-
-            // Recommend project based on customer
-            if (ticket.ProjectGuid == null && ticket.Customer != null)
-            {
-                var customerProjects = projects.Where(p => p.CustomerId == ticket.CustomerId).ToList();
-                if (customerProjects.Any())
-                {
-                    // Recommend the most recent active project for this customer
-                    var recommendedProject = customerProjects
-                        .OrderByDescending(p => p.CreationDate)
-                        .FirstOrDefault();
-                    
-                    if (recommendedProject != null)
-                    {
-                        ticketInfo.RecommendedProjectGuid = recommendedProject.Guid;
-                        ticketInfo.RecommendedProjectName = recommendedProject.Name;
-                    }
-                }
-            }
-
-            ticketDispatchInfos.Add(ticketInfo);
-        }
+            Guid = t.Guid,
+            Description = t.Description,
+            EstimatedEffortPoints = t.EstimatedEffortPoints,
+            PriorityScore = t.PriorityScore,
+            RecommendedProjectName = t.RecommendedProjectName,
+            CurrentProjectName = t.CurrentProjectName
+        }).ToList();
 
         // Build agent info list
         var agentInfos = employees.Select(e =>

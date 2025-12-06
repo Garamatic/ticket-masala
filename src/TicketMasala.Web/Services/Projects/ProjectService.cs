@@ -244,10 +244,9 @@ public class ProjectService : IProjectService
                     TicketStatus = Status.Pending,
                     CreationDate = DateTime.UtcNow,
                     CreatorGuid = Guid.Parse(userId),
-                    Customer = customer,
-                    CustomerId = customer.Id,
-                    Project = project,
-                    ProjectGuid = project.Guid
+                    DomainId = "DefaultDomain", // Placeholder, replace with actual value
+                    Status = "New", // Default status
+                    Title = "Generated Ticket" // Placeholder, replace with actual title
                 };
                 _context.Tickets.Add(ticket);
             }
@@ -293,7 +292,7 @@ public class ProjectService : IProjectService
         return true;
     }
 
-    public async Task<List<SelectListItem>> GetCustomerSelectListAsync(string? selectedCustomerId = null)
+    public async Task<IEnumerable<SelectListItem>> GetCustomerSelectListAsync(string? selectedCustomerId = null)
     {
         var customers = await _context.Users.ToListAsync(); // Filter by role if needed?
         return customers.Select(c => new SelectListItem
@@ -301,27 +300,27 @@ public class ProjectService : IProjectService
             Value = c.Id.ToString(),
             Text = $"{c.FirstName} {c.LastName}",
             Selected = selectedCustomerId != null && c.Id == selectedCustomerId
-        }).ToList();
+        });
     }
 
-    public async Task<List<SelectListItem>> GetStakeholderSelectListAsync()
+    public async Task<IEnumerable<SelectListItem>> GetStakeholderSelectListAsync()
     {
         var customers = await _context.Users.ToListAsync();
         return customers.Select(c => new SelectListItem
         {
             Value = c.Id.ToString(),
             Text = $"{c.FirstName} {c.LastName}"
-        }).ToList();
+        });
     }
 
-    public async Task<List<SelectListItem>> GetTemplateSelectListAsync()
+    public async Task<IEnumerable<SelectListItem>> GetTemplateSelectListAsync()
     {
         var templates = await _context.ProjectTemplates.ToListAsync();
         return templates.Select(t => new SelectListItem
         {
             Value = t.Guid.ToString(),
             Text = t.Name
-        }).ToList();
+        });
     }
 
     /// <summary>

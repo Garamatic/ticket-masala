@@ -150,7 +150,17 @@ The GERDA Dispatch view aligns with the "Project manager view" section in the fr
   git push
   ```
 
-- **Frontend tooling:** If you plan client-side complexity, introduce a minimal Node toolchain and a `package.json` at the repo root or under `src/TicketMasala.Web/ClientApp`.
+  - **Updated Frontend Tooling**
+
+- **Interactivity:** HTMX is used for declarative interactivity (e.g., `hx-post`, `hx-target`).
+- **Dependencies:** No Node.js or `package.json`. Libraries like HTMX are served directly from `wwwroot/lib` or CDNs.
+- **State Management:** Server-side state with Razor HTML.
+- **CSS:** Standard CSS without a build step.
+
+### HTMX Integration
+
+HTMX has been added to `_Layout.cshtml` to enable declarative interactivity. JSON APIs are replaced with Razor controllers returning HTML partials.
+
 - **Local dev:** Use `dotnet watch` while iterating on Razor views. Use browser dev tools to test AJAX endpoints in `Controllers/Api`.
 - **CI / Tests:** Fix startup registration failures (e.g., missing GERDA strategy registrations) so `dotnet test` works in CI.
 

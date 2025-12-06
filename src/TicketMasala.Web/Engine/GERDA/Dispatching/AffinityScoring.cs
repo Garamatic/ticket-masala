@@ -19,7 +19,7 @@ public static class AffinityScoring
         double mlPrediction,
         Ticket ticket,
         Employee agent,
-        Customer? customer = null)
+        ApplicationUser? customer = null)
     {
         // Factor 1: ML.NET past interaction score (40% weight)
         var pastInteractionScore = mlPrediction * 0.4;

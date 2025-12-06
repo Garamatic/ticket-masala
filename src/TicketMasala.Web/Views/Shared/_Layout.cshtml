@@ -36,7 +36,7 @@
     
     @RenderSection("Styles", required: false)
 </head>
-<body>
+<body hx-boost="true">
     <div class="app-wrapper">
         <!-- Sidebar Navigation -->
         <aside class="app-sidebar" id="sidebar">
@@ -233,6 +233,12 @@
 
     <!-- Bundled Scripts (jQuery + Bootstrap + Site.js + Toast.js) -->
     <script src="~/js/bundle.js" asp-append-version="true"></script>
+
+    <!-- HTMX Library -->
+    <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
+
+    <!-- HTMX Configuration -->
+    <meta name="htmx-config" content='{"includeAspNetAntiforgeryToken": true}'>
 
     <!-- Sidebar Toggle & Dark Mode Script -->
     <script>

@@ -40,17 +40,17 @@ public interface IProjectService
     /// <summary>
     /// Get customer dropdown list
     /// </summary>
-    Task<List<SelectListItem>> GetCustomerSelectListAsync(string? selectedCustomerId = null);
+    Task<IEnumerable<SelectListItem>> GetCustomerSelectListAsync(string? selectedCustomerId = null);
 
     /// <summary>
     /// Get stakeholder dropdown list
     /// </summary>
-    Task<List<SelectListItem>> GetStakeholderSelectListAsync();
+    Task<IEnumerable<SelectListItem>> GetStakeholderSelectListAsync();
 
     /// <summary>
     /// Get project templates dropdown list
     /// </summary>
-    Task<List<SelectListItem>> GetTemplateSelectListAsync();
+    Task<IEnumerable<SelectListItem>> GetTemplateSelectListAsync();
 
     /// <summary>
     /// Prepare ViewModel for creating a project from a ticket

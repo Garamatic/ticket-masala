@@ -159,6 +159,24 @@ A comprehensive design system for building consistent, professional, and on-bran
 
 ---
 
+## 🌈 Gradients
+
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `--color-gradient-start` | `#667eea` | Dispatch header gradient start |
+| `--color-gradient-end` | `#764ba2` | Dispatch header gradient end |
+
+---
+
+## ✅ Success States
+
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `--color-success-light` | `#f0fff4` | Selected ticket background |
+| `--color-success-border` | `#28a745` | Selected ticket border |
+
+---
+
 ## 📚 Implementation
 
 All variables are defined in:

@@ -18,6 +18,22 @@ namespace IT_Project2526.Services.GERDA.Strategies
             
             if (strategy == null)
             {
+                // Fallback: try to locate a concrete type by name in loaded assemblies and instantiate it
+                var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+                foreach (var asm in assemblies)
+                {
+                    var candidate = asm.GetTypes()
+                        .Where(t => typeof(TStrategy).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract)
+                        .FirstOrDefault(t => string.Equals(t.Name, strategyName, StringComparison.OrdinalIgnoreCase)
+                                             || string.Equals(t.Name, strategyName + "Strategy", StringComparison.OrdinalIgnoreCase));
+
+                    if (candidate != null)
+                    {
+                        var instance = (TStrategy)ActivatorUtilities.CreateInstance(_serviceProvider, candidate);
+                        return instance;
+                    }
+                }
+
                 throw new InvalidOperationException($"Strategy '{strategyName}' of type {typeof(TStrategy).Name} not found.");
             }
 

@@ -1,6 +1,6 @@
 using TicketMasala.Web.Models;
-using TicketMasala.Web.Services.GERDA.Ranking;
-using TicketMasala.Web.Services.GERDA.Dispatching;
+using TicketMasala.Web.Engine.GERDA.Ranking;
+using TicketMasala.Web.Engine.GERDA.Dispatching;
 using Microsoft.EntityFrameworkCore;
 
 namespace TicketMasala.Web.Engine.GERDA.BackgroundJobs;

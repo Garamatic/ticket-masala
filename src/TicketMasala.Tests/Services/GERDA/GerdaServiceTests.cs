@@ -1,9 +1,9 @@
 using TicketMasala.Web.Engine.GERDA;
-using TicketMasala.Web.Services.GERDA.Models;
-using TicketMasala.Web.Services.GERDA.Grouping;
-using TicketMasala.Web.Services.GERDA.Estimating;
-using TicketMasala.Web.Services.GERDA.Ranking;
-using TicketMasala.Web.Services.GERDA.Dispatching;
+using TicketMasala.Web.Engine.GERDA.Models;
+using TicketMasala.Web.Engine.GERDA.Grouping;
+using TicketMasala.Web.Engine.GERDA.Estimating;
+using TicketMasala.Web.Engine.GERDA.Ranking;
+using TicketMasala.Web.Engine.GERDA.Dispatching;
 using TicketMasala.Web.Models;
 using TicketMasala.Web.Repositories;
 using Microsoft.Extensions.Logging;

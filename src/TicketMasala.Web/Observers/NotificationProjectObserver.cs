@@ -106,13 +106,11 @@ public class NotificationProjectObserver : IProjectObserver
         }
     }
 
-    public async Task OnStakeholderAddedAsync(Project project, Customer stakeholder)
+    public async Task OnCustomerAddedToProjectAsync(string projectId, ApplicationUser customer)
     {
         try
         {
             await _notificationService.NotifyUserAsync(
-                stakeholder.Id,
-                $"You have been added as a stakeholder to project: {project.Name}",
                 $"/Projects/Details/{project.Guid}",
                 "Info");
         }

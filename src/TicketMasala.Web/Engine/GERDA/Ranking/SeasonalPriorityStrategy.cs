@@ -1,5 +1,5 @@
 using TicketMasala.Web.Models;
-using TicketMasala.Web.Services.GERDA.Models;
+using TicketMasala.Web.Engine.GERDA.Models;
 
 namespace TicketMasala.Web.Engine.GERDA.Ranking;
     // Minimal seasonal priority strategy used as a fallback for tests

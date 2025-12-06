@@ -39,7 +39,6 @@ public class TicketFactory : ITicketFactory
             EstimatedEffortPoints = 0,
             Comments = new List<TicketComment>(),
             SubTickets = new List<Ticket>(),
-            SubTickets = new List<Ticket>()
             // QualityReviews removed
         };
     }
@@ -71,7 +70,6 @@ public class TicketFactory : ITicketFactory
             EstimatedEffortPoints = 0,
             Comments = new List<TicketComment>(),
             SubTickets = new List<Ticket>(),
-            SubTickets = new List<Ticket>()
             // QualityReviews removed
         };
         
@@ -119,7 +117,6 @@ public class TicketFactory : ITicketFactory
             EstimatedEffortPoints = 0,
             Comments = new List<TicketComment>(),
             SubTickets = new List<Ticket>(),
-            SubTickets = new List<Ticket>()
             // QualityReviews removed
         };
         

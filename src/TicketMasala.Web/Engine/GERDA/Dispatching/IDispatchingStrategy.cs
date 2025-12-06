@@ -1,5 +1,5 @@
 using TicketMasala.Web.Models;
-using TicketMasala.Web.Services.GERDA.Strategies;
+using TicketMasala.Web.Engine.GERDA.Strategies;
 
 namespace TicketMasala.Web.Engine.GERDA.Dispatching;
     public interface IDispatchingStrategy : IStrategy<List<(string AgentId, double Score)>>

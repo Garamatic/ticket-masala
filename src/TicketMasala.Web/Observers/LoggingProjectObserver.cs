@@ -45,13 +45,10 @@ public class LoggingProjectObserver : IProjectObserver
         return Task.CompletedTask;
     }
 
-    public Task OnStakeholderAddedAsync(Project project, Customer stakeholder)
+    public Task OnCustomerAddedToProjectAsync(string projectId, ApplicationUser customer)
     {
         _logger.LogInformation(
             "Stakeholder added to project: {ProjectId} - Stakeholder {StakeholderId} ({StakeholderName})",
-            project.Guid,
-            stakeholder.Id,
-            $"{stakeholder.FirstName} {stakeholder.LastName}");
         return Task.CompletedTask;
     }
 

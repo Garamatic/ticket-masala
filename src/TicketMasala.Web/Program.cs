@@ -13,13 +13,13 @@ using TicketMasala.Web.Engine.Ingestion;
 using TicketMasala.Web.Services.Background;
 using TicketMasala.Web.Engine.Compiler;
 using TicketMasala.Web.Engine.GERDA;
-using TicketMasala.Web.Services.GERDA.Models;
-using TicketMasala.Web.Services.GERDA.Grouping;
-using TicketMasala.Web.Services.GERDA.Estimating;
-using TicketMasala.Web.Services.GERDA.Ranking;
-using TicketMasala.Web.Services.GERDA.Dispatching;
-using TicketMasala.Web.Services.GERDA.Anticipation;
-using TicketMasala.Web.Services.GERDA.BackgroundJobs;
+using TicketMasala.Web.Engine.GERDA.Models;
+using TicketMasala.Web.Engine.GERDA.Grouping;
+using TicketMasala.Web.Engine.GERDA.Estimating;
+using TicketMasala.Web.Engine.GERDA.Ranking;
+using TicketMasala.Web.Engine.GERDA.Dispatching;
+using TicketMasala.Web.Engine.GERDA.Anticipation;
+using TicketMasala.Web.Engine.GERDA.BackgroundJobs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
@@ -134,8 +134,8 @@ builder.Services.AddScoped<TicketMasala.Web.Services.Validation.ICustomFieldVali
     TicketMasala.Web.Services.Validation.CustomFieldValidationService>();
 
 // Rule Engine Service
-builder.Services.AddScoped<TicketMasala.Web.Services.Rules.IRuleEngineService,
-    TicketMasala.Web.Services.Rules.RuleEngineService>();
+builder.Services.AddScoped<TicketMasala.Web.Engine.Compiler.IRuleEngineService,
+    TicketMasala.Web.Engine.Compiler.RuleEngineService>();
 
 builder.Services.AddScoped<IMetricsService, MetricsService>();
 
@@ -185,7 +185,7 @@ if (File.Exists(gerdaConfigPath))
         builder.Services.AddScoped<IEstimatingService, EstimatingService>();
         
         // Strategy Factory & Strategies
-        builder.Services.AddScoped<TicketMasala.Web.Services.GERDA.Strategies.IStrategyFactory, TicketMasala.Web.Services.GERDA.Strategies.StrategyFactory>();
+        builder.Services.AddScoped<TicketMasala.Web.Engine.GERDA.Strategies.IStrategyFactory, TicketMasala.Web.Engine.GERDA.Strategies.StrategyFactory>();
         builder.Services.AddScoped<IJobRankingStrategy, WeightedShortestJobFirstStrategy>();
         // Register the seasonal priority strategy so domains that reference it can be validated
         builder.Services.AddScoped<IJobRankingStrategy, SeasonalPriorityStrategy>();
@@ -193,10 +193,10 @@ if (File.Exists(gerdaConfigPath))
         builder.Services.AddScoped<IDispatchingStrategy, MatrixFactorizationDispatchingStrategy>();
 
         // Rule Engine
-        builder.Services.AddSingleton<TicketMasala.Web.Services.Rules.RuleCompilerService>();
+        builder.Services.AddSingleton<TicketMasala.Web.Engine.Compiler.RuleCompilerService>();
         
         // AI Features
-        builder.Services.AddScoped<TicketMasala.Web.Services.GERDA.Features.IFeatureExtractor, TicketMasala.Web.Services.GERDA.Features.DynamicFeatureExtractor>();
+        builder.Services.AddScoped<TicketMasala.Web.Engine.GERDA.Features.IFeatureExtractor, TicketMasala.Web.Engine.GERDA.Features.DynamicFeatureExtractor>();
 
         builder.Services.AddScoped<IRankingService, RankingService>();
         builder.Services.AddScoped<IDispatchingService, DispatchingService>();
@@ -397,7 +397,7 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var domainService = services.GetRequiredService<TicketMasala.Web.Services.Configuration.IDomainConfigurationService>();
-    var strategyFactory = services.GetRequiredService<TicketMasala.Web.Services.GERDA.Strategies.IStrategyFactory>();
+    var strategyFactory = services.GetRequiredService<TicketMasala.Web.Engine.GERDA.Strategies.IStrategyFactory>();
     var logger = services.GetRequiredService<ILogger<Program>>();
 
     logger.LogInformation("==================================================");
@@ -410,13 +410,13 @@ using (var scope = app.Services.CreateScope())
         try
         {
             var rankingName = domain.AiStrategies?.Ranking ?? "WSJF";
-            strategyFactory.GetStrategy<TicketMasala.Web.Services.GERDA.Ranking.IJobRankingStrategy, double>(rankingName);
+            strategyFactory.GetStrategy<TicketMasala.Web.Engine.GERDA.Ranking.IJobRankingStrategy, double>(rankingName);
 
             var estimatingName = domain.AiStrategies?.Estimating ?? "CategoryLookup";
-            strategyFactory.GetStrategy<TicketMasala.Web.Services.GERDA.Estimating.IEstimatingStrategy, int>(estimatingName);
+            strategyFactory.GetStrategy<TicketMasala.Web.Engine.GERDA.Estimating.IEstimatingStrategy, int>(estimatingName);
 
             var dispatchingName = domain.AiStrategies?.Dispatching ?? "MatrixFactorization";
-            strategyFactory.GetStrategy<TicketMasala.Web.Services.GERDA.Dispatching.IDispatchingStrategy, List<(string AgentId, double Score)>>(dispatchingName);
+            strategyFactory.GetStrategy<TicketMasala.Web.Engine.GERDA.Dispatching.IDispatchingStrategy, List<(string AgentId, double Score)>>(dispatchingName);
             
             logger.LogInformation("Domain '{Domain}' configured strategies validated successfully.", domain.DisplayName);
         }

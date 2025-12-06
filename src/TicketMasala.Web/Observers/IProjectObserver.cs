@@ -27,6 +27,6 @@ public interface IProjectObserver
     /// <summary>
     /// Called when a stakeholder is added to a project
     /// </summary>
-    Task OnStakeholderAddedAsync(Project project, Customer stakeholder);
+    Task OnCustomerAddedToProjectAsync(string projectId, ApplicationUser customer);
 
 }

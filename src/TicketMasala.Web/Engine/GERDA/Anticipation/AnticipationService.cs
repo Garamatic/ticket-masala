@@ -1,4 +1,4 @@
-using TicketMasala.Web.Services.GERDA.Models;
+using TicketMasala.Web.Engine.GERDA.Models;
 using TicketMasala.Web.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.ML;

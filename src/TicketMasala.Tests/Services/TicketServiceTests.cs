@@ -58,9 +58,20 @@ namespace TicketMasala.Tests.Services;
             userRepository.Setup(r => r.GetAllEmployeesAsync())
                 .ReturnsAsync(() => context.Users.OfType<Employee>().ToList());
 
+            userRepository.Setup(r => r.GetUserByIdAsync(It.IsAny<string>()))
+                .ReturnsAsync((string id) => context.Users.Find(id));
+
             // Wire up TicketRepository Mocks
             ticketRepository.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<bool>()))
-                .ReturnsAsync((Guid id, bool includeRelations) => context.Tickets.Find(id));
+                .ReturnsAsync((Guid id, bool includeRelations) => 
+                {
+                    if (includeRelations)
+                    {
+                        var query = context.Tickets.Include(t => t.Customer).AsQueryable();
+                        return query.FirstOrDefault(t => t.Guid == id);
+                    }
+                    return context.Tickets.Find(id);
+                });
             
             ticketRepository.Setup(r => r.UpdateAsync(It.IsAny<Ticket>()))
                 .Callback((Ticket t) => {
@@ -101,7 +112,7 @@ namespace TicketMasala.Tests.Services;
             
             var customer = new ApplicationUser
             {
-                Id = "customer-id",
+                Id = "11111111-1111-1111-1111-111111111111",
                 UserName = "customer@example.com",
                 Email = "customer@example.com",
                 FirstName = "John",
@@ -137,7 +148,7 @@ namespace TicketMasala.Tests.Services;
             
             var customer = new ApplicationUser
             {
-                Id = "customer-id",
+                Id = "11111111-1111-1111-1111-111111111111",
                 UserName = "customer@example.com",
                 Email = "customer@example.com",
                 FirstName = "John",
@@ -203,7 +214,7 @@ namespace TicketMasala.Tests.Services;
             
             var customer = new ApplicationUser
             {
-                Id = "customer-id",
+                Id = "11111111-1111-1111-1111-111111111111",
                 UserName = "customer@example.com",
                 Email = "customer@example.com",
                 FirstName = "John",
@@ -222,7 +233,9 @@ namespace TicketMasala.Tests.Services;
                 CustomFieldsJson = "{}",
                 TicketStatus = Status.Pending,
                 EstimatedEffortPoints = 5,
-                PriorityScore = 10.5
+                PriorityScore = 10.5,
+
+                CustomerId = customer.Id
             };
             
             context.Tickets.Add(ticket);
@@ -263,7 +276,7 @@ namespace TicketMasala.Tests.Services;
             
             var customer = new ApplicationUser
             {
-                Id = "customer-id",
+                Id = "11111111-1111-1111-1111-111111111111",
                 UserName = "customer@example.com",
                 Email = "customer@example.com",
                 FirstName = "John",
@@ -292,7 +305,8 @@ namespace TicketMasala.Tests.Services;
                 Status = "New",
                 Title = "Test Ticket",
                 CustomFieldsJson = "{}",
-                TicketStatus = Status.Pending
+                TicketStatus = Status.Pending,
+                CustomerId = customer.Id
             };
             
             context.Tickets.Add(ticket);
@@ -334,7 +348,7 @@ namespace TicketMasala.Tests.Services;
             
             var customer = new ApplicationUser
             {
-                Id = "customer-id",
+                Id = "11111111-1111-1111-1111-111111111111",
                 UserName = "customer@example.com",
                 Email = "customer@example.com",
                 FirstName = "John",
@@ -351,7 +365,8 @@ namespace TicketMasala.Tests.Services;
                 Status = "New",
                 Title = "Test Ticket",
                 CustomFieldsJson = "{}",
-                TicketStatus = Status.Pending
+                TicketStatus = Status.Pending,
+                CustomerId = customer.Id
             };
             
             context.Tickets.Add(ticket);

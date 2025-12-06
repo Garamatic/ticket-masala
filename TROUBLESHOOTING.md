@@ -15,314 +15,311 @@ This document provides comprehensive solutions to common errors and issues encou
 
 ---
 
-## 🔴 Current Build Errors
+## 🔴 Current Build Errors (29 Errors, 38 Warnings)
 
-### 1. Missing Properties in ViewModels
+> **Last Updated:** 2025-12-06 20:47  
+> **Build Status:** ❌ FAILED  
+> **Project:** TicketMasala.Web (net10.0)
+
+### 1. Missing `QualityReviews` Property in ViewModel
 
 **Error:**
 
 ```
-CS1061: 'TicketSearchViewModel' does not contain a definition for 'ProjectId'
-CS1061: 'TicketSearchViewModel' does not contain a definition for 'AssignedToId'
-CS1061: 'TicketSearchViewModel' does not contain a definition for 'IsOverdue'
-CS1061: 'TicketSearchViewModel' does not contain a definition for 'IsDueSoon'
+CS1061: 'TicketDetailsViewModel' does not contain a definition for 'QualityReviews'
+CS0117: 'TicketDetailsViewModel' does not contain a definition for 'QualityReviews'
 ```
 
-**Location:**
+**Locations:**
 
-- `Controllers/TicketController.cs` (lines 96, 97, 99, 100, 121, 122, 124, 125)
-- `Views/Ticket/Index.cshtml` (lines 129, 130)
+- `Controllers/TicketController.cs` (line 309)
+- `Views/Ticket/Detail.cshtml` (lines 141, 145)
+- `Engine/GERDA/Tickets/TicketService.cs` (line 295)
 
 **Solution:**
-Add missing properties to `TicketSearchViewModel`:
+Add the `QualityReviews` property to `TicketDetailsViewModel`:
 
 ```csharp
-public class TicketSearchViewModel
+public class TicketDetailsViewModel
 {
     // Existing properties...
     
-    // Add these properties:
-    public Guid? ProjectId { get; set; }
-    public string? AssignedToId { get; set; }
-    public bool IsOverdue { get; set; }
-    public bool IsDueSoon { get; set; }
+    public List<QualityReview> QualityReviews { get; set; } = new();
 }
 ```
 
 ---
 
-### 2. Missing DepartmentId Property
+### 2. Missing `Reviewer` Property in QualityReview
 
 **Error:**
 
 ```
-CS1061: 'ApplicationUser' does not contain a definition for 'DepartmentId'
+CS1061: 'QualityReview' does not contain a definition for 'Reviewer'
 ```
 
-**Location:** `Services/TicketService.cs` (line 82)
+**Location:** `Controllers/TicketController.cs` (line 310)
 
 **Solution:**
-Either:
-
-- **Option A:** Add `DepartmentId` property to `ApplicationUser` model
-- **Option B:** Remove department-based filtering if not needed
-- **Option C:** Use a different approach (e.g., through roles or claims)
+Add navigation property to `QualityReview` model:
 
 ```csharp
-// Option A: Add to ApplicationUser
-public class ApplicationUser : IdentityUser
+public class QualityReview
+{
+    // Existing properties...
+    
+    public ApplicationUser? Reviewer { get; set; }
+}
+```
+
+---
+
+### 3. Missing GERDA Namespace
+
+**Error:**
+
+```
+CS0234: The type or namespace name 'GERDA' does not exist in the namespace 'TicketMasala.Web.Services'
+```
+
+**Location:** `Controllers/TicketController.cs` (line 320)
+
+**Solution:**
+Update the namespace reference:
+
+```csharp
+// Wrong:
+using TicketMasala.Web.Services.GERDA;
+
+// Correct:
+using TicketMasala.Web.Engine.GERDA;
+```
+
+---
+
+### 4. Missing `DepartmentId` in Project Model
+
+**Error:**
+
+```
+CS1061: 'Project' does not contain a definition for 'DepartmentId'
+```
+
+**Locations:** `Repositories/EfCoreTicketRepository.cs` (lines 49, 66, 81, 124, 140, 158)
+
+**Solution:**
+Either add the property or remove department filtering:
+
+```csharp
+// Option A: Add to Project model
+public class Project
 {
     // Existing properties...
     public Guid? DepartmentId { get; set; }
 }
 
-// Option B: Remove the line or replace with alternative logic
-// Remove: user.DepartmentId
+// Option B: Remove department filtering from queries
+// Remove: && p.DepartmentId == departmentId
 ```
 
 ---
 
-### 3. Missing Service Injection
+### 5. Type Conversion - IEnumerable to List
 
 **Error:**
 
 ```
-CS0103: The name '_anticipationService' does not exist in the current context
+CS0266: Cannot implicitly convert type 'IEnumerable<SelectListItem>' to 'List<SelectListItem>'
 ```
 
-**Location:** `Controllers/ManagerController.cs` (line 76)
+**Locations:**
+
+- `Controllers/ProjectsController.cs` (line 191)
+- `Services/Projects/ProjectService.cs` (line 148)
 
 **Solution:**
-
-1. Add the service field and inject it in the constructor:
+Add `.ToList()` to convert:
 
 ```csharp
-public class ManagerController : Controller
+// Wrong:
+List<SelectListItem> items = _context.Users.Select(u => new SelectListItem { ... });
+
+// Correct:
+List<SelectListItem> items = _context.Users
+    .Select(u => new SelectListItem { ... })
+    .ToList();
+```
+
+---
+
+### 6. Undefined Variable `project`
+
+**Error:**
+
+```
+CS0103: The name 'project' does not exist in the current context
+```
+
+**Location:** `Observers/NotificationProjectObserver.cs` (lines 114, 119)
+
+**Solution:**
+Declare the variable or check the method parameter name:
+
+```csharp
+// Ensure project is defined in the method
+public async Task OnProjectUpdated(Project proj)
 {
-    private readonly IAnticipationService _anticipationService;
+    // Either rename parameter to 'project' or use 'proj' in the method
+}
+```
+
+---
+
+### 7. Missing `Customer` Type
+
+**Error:**
+
+```
+CS0246: The type or namespace name 'Customer' could not be found
+```
+
+**Locations:**
+
+- `Data/DbSeeder.cs` (lines 346, 356, 366, 376, 386)
+- `Engine/GERDA/Tickets/TicketService.cs` (line 703)
+
+**Solution:**
+Replace `Customer` with `ApplicationUser`:
+
+```csharp
+// Wrong:
+Customer customer = new Customer { ... };
+
+// Correct:
+ApplicationUser customer = new ApplicationUser { ... };
+```
+
+---
+
+### 8. Undefined Variable `title`
+
+**Error:**
+
+```
+CS0103: The name 'title' does not exist in the current context
+```
+
+**Location:** `Engine/Ingestion/CsvImportService.cs` (line 138)
+
+**Solution:**
+Define the variable or use the correct property name:
+
+```csharp
+// Check if it should be:
+var title = row["Title"] ?? row["Description"];
+// or
+var description = row["Description"];
+```
+
+---
+
+### 9. Type Conversion - string to Guid?
+
+**Error:**
+
+```
+CS0029: Cannot implicitly convert type 'string' to 'System.Guid?'
+```
+
+**Location:** `Engine/GERDA/Tickets/TicketService.cs` (line 95)
+
+**Solution:**
+Parse the string to Guid:
+
+```csharp
+// Wrong:
+Guid? projectId = "some-string";
+
+// Correct:
+Guid? projectId = Guid.TryParse(stringValue, out var guid) ? guid : null;
+// or
+Guid? projectId = string.IsNullOrEmpty(stringValue) ? null : Guid.Parse(stringValue);
+```
+
+---
+
+### 10. Missing `CreatorGuid` Property
+
+**Error:**
+
+```
+CS1061: '<anonymous type>' does not contain a definition for 'CreatorGuid'
+```
+
+**Location:** `Engine/GERDA/Dispatching/MatrixFactorizationDispatchingStrategy.cs` (line 176)
+
+**Solution:**
+Add `CreatorGuid` to the anonymous type projection:
+
+```csharp
+var data = tickets.Select(t => new
+{
+    t.ResponsibleId,
+    t.CustomerId,
+    t.Status,
+    t.CompletionDate,
+    t.CreationDate,
+    t.CreatorGuid  // Add this
+});
+```
+
+---
+
+### 11. Type Conversion - string to Status Enum
+
+**Error:**
+
+```
+CS1503: Argument 1: cannot convert from 'string' to 'TicketMasala.Web.Models.Status'
+```
+
+**Location:** `Engine/GERDA/Dispatching/MatrixFactorizationDispatchingStrategy.cs` (line 177)
+
+**Solution:**
+Parse the string to enum:
+
+```csharp
+// Wrong:
+Status status = "InProgress";
+
+// Correct:
+Status status = Enum.Parse<Status>(statusString);
+// or with safety:
+Status status = Enum.TryParse<Status>(statusString, out var s) ? s : Status.Pending;
+```
+
+---
+
+### 12. Missing `Status` Property in TicketDispatchInfo
+
+**Error:**
+
+```
+CS1061: 'TicketDispatchInfo' does not contain a definition for 'Status'
+```
+
+**Location:** `Views/Manager/DispatchBacklog.cshtml` (lines 425, 429, 435)
+
+**Solution:**
+Add `Status` property to `TicketDispatchInfo`:
+
+```csharp
+public class TicketDispatchInfo
+{
+    // Existing properties...
     
-    public ManagerController(
-        // ... other parameters
-        IAnticipationService anticipationService)
-    {
-        // ... other assignments
-        _anticipationService = anticipationService;
-    }
+    public Status Status { get; set; }
 }
-```
-
-2. Register the service in `Program.cs`:
-
-```csharp
-builder.Services.AddScoped<IAnticipationService, AnticipationService>();
-```
-
----
-
-### 4. Type Conversion Issues
-
-**Error:**
-
-```
-CS0029: Cannot implicitly convert type 'List<string>' to 'List<TicketComment>'
-CS0019: Operator '??' cannot be applied to operands of type 'List<TicketComment>' and 'List<string>'
-```
-
-**Location:**
-
-- `Services/TicketService.cs` (line 180)
-- `Controllers/ManagerController.cs` (line 134)
-
-**Solution:**
-Fix the type mismatch:
-
-```csharp
-// Wrong:
-ticket.Comments = new List<string>(); // or ticket.Comments ?? new List<string>()
-
-// Correct:
-ticket.Comments = new List<TicketComment>();
-// or
-ticket.Comments ??= new List<TicketComment>();
-```
-
----
-
-### 5. Missing Enum Value
-
-**Error:**
-
-```
-CS0117: 'TicketType' does not contain a definition for 'Subtask'
-```
-
-**Location:** `Data/DbSeeder.cs` (lines 451, 468, 484, 510)
-
-**Solution:**
-Add `Subtask` to the `TicketType` enum:
-
-```csharp
-public enum TicketType
-{
-    Bug,
-    Feature,
-    Support,
-    Subtask  // Add this
-}
-```
-
-Or replace with an existing enum value:
-
-```csharp
-// Replace:
-TicketType = TicketType.Subtask,
-// With:
-TicketType = TicketType.Support,
-```
-
----
-
-### 6. Missing Model Properties
-
-**Error:**
-
-```
-CS0117: 'Ticket' does not contain a definition for 'CreatedDate'
-CS0117: 'Ticket' does not contain a definition for 'DepartmentId'
-```
-
-**Location:** `Services/CsvImportService.cs` (lines 48, 50)
-
-**Solution:**
-Use the correct property names from the `Ticket` model:
-
-```csharp
-// Replace:
-CreatedDate = DateTime.UtcNow,  // Wrong
-DepartmentId = departmentId,     // Wrong
-
-// With:
-CreationDate = DateTime.UtcNow,  // Correct
-// Remove DepartmentId or add to model
-```
-
----
-
-### 7. Required Members Not Set
-
-**Error:**
-
-```
-CS9035: Required member 'Ticket.Description' must be set in the object initializer
-CS9035: Required member 'Ticket.Customer' must be set in the object initializer
-CS9035: Required member 'ApplicationUser.Phone' must be set in the object initializer
-```
-
-**Location:**
-
-- `Services/CsvImportService.cs` (line 45)
-- `Services/EmailIngestionService.cs` (line 83)
-
-**Solution:**
-Set all required properties in object initializers:
-
-```csharp
-// For Ticket:
-var ticket = new Ticket
-{
-    Description = row["description"] ?? "No description",  // Add this
-    Customer = customer,                                    // Add this
-    // ... other properties
-};
-
-// For ApplicationUser:
-var user = new ApplicationUser
-{
-    Email = email,
-    UserName = email,
-    Phone = phone ?? string.Empty,  // Add this
-    // ... other properties
-};
-```
-
----
-
-### 8. Missing Method
-
-**Error:**
-
-```
-CS1061: 'IFileService' does not contain a definition for 'GetFileAsync'
-```
-
-**Location:** `Controllers/TicketController.cs` (lines 440, 452)
-
-**Solution:**
-Either:
-
-- **Option A:** Add the method to `IFileService` interface and implementation
-- **Option B:** Use the correct method name
-
-```csharp
-// Option A: Add to IFileService
-public interface IFileService
-{
-    Task<byte[]?> GetFileAsync(Guid fileId);
-    // ... other methods
-}
-
-// Option B: Check if method exists with different name
-var file = await _fileService.GetFile(fileId);  // or similar
-```
-
----
-
-### 9. Undefined Variable
-
-**Error:**
-
-```
-CS0103: The name 'ticket' does not exist in the current context
-```
-
-**Location:** `Controllers/TicketController.cs` (line 234)
-
-**Solution:**
-Ensure the variable is declared before use:
-
-```csharp
-// Check if 'ticket' is declared earlier in the method
-var ticket = await _context.Tickets.FindAsync(id);
-if (ticket == null)
-{
-    return NotFound();
-}
-// Now you can use 'ticket'
-```
-
----
-
-### 10. Header Dictionary Issue
-
-**Error:**
-
-```
-ASP0019: Use IHeaderDictionary.Append or the indexer to append or set headers
-```
-
-**Location:** `Controllers/TicketController.cs` (line 456)
-
-**Solution:**
-Use the correct method to add headers:
-
-```csharp
-// Wrong:
-Response.Headers.Add("Content-Disposition", "attachment; filename=file.pdf");
-
-// Correct:
-Response.Headers.Append("Content-Disposition", "attachment; filename=file.pdf");
-// or
-Response.Headers["Content-Disposition"] = "attachment; filename=file.pdf";
 ```
 
 ---

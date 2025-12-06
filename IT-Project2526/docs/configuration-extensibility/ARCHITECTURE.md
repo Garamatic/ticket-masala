@@ -59,8 +59,29 @@ These abstractions are **immutable in code** but their **labels, fields, and beh
 │  - External System Connectors (ERP, CRM, Tax DB)                 │
 │  - Webhook Endpoints                                             │
 │  - API Keys & Auth                                               │
+│  - Ingestion Methods (API, CSV, Email, ERP Sync)                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+### 1.3 Integration Configuration (Per Domain)
+
+Each domain can define its own **ingestion sources** and **outbound integrations**:
+
+| Ingestion Type | Example Domain | Description |
+|----------------|----------------|-------------|
+| **API Endpoint** | Landscaping | External website form POSTs to `/api/v1/tickets/external` |
+| **ERP Sync** | Procurement | Pull orders from SAP every 15 minutes |
+| **CSV Import** | HR | Weekly upload of employee requests |
+| **Email Ingestion** | IT Support | Parse emails from <support@company.com> |
+| **Webhook Push** | Government | External system pushes cases via webhook |
+
+**Outbound Integrations:**
+
+| Integration Type | Example |
+|------------------|---------|
+| **Webhook** | Notify ERP when ticket status changes |
+| **API Call** | Update CRM when ticket is closed |
+| **Email** | Send notification to customer |
 
 ---
 
@@ -252,6 +273,35 @@ domains:
     
     ai_prompts:
       summarize: "Summarize this IT ticket and suggest troubleshooting steps."
+    
+    # ─────────────────────────────────────────
+    # INTEGRATION CONFIGURATION
+    # ─────────────────────────────────────────
+    integrations:
+      ingestion:
+        - type: email
+          enabled: true
+          config:
+            mailbox: "support@company.com"
+            protocol: IMAP
+            polling_interval_minutes: 5
+        - type: api
+          enabled: true
+          config:
+            endpoint: "/api/v1/tickets/external"
+            auth: api_key
+      
+      outbound:
+        - type: webhook
+          trigger: on_status_change
+          config:
+            url: "https://erp.company.com/tickets/update"
+            method: POST
+        - type: email
+          trigger: on_resolved
+          config:
+            template: "ticket_resolved"
+            to: "{{customer.email}}"
   
   # ════════════════════════════════════════════════════════════
   # LANDSCAPING DOMAIN
@@ -311,7 +361,30 @@ domains:
     
     ai_prompts:
       summarize: "Summarize this landscaping request. Note any plant health concerns."
-
+    
+    # ─────────────────────────────────────────
+    # INTEGRATION CONFIGURATION
+    # ─────────────────────────────────────────
+    integrations:
+      ingestion:
+        - type: api
+          enabled: true
+          config:
+            endpoint: "/api/v1/tickets/external"
+            source_filter: "greenscape-landscaping"
+            auth: api_key
+      
+      outbound:
+        - type: webhook
+          trigger: on_status_change
+          config:
+            url: "https://greenscape.com/api/job-status"
+            method: POST
+        - type: email
+          trigger: on_quoted
+          config:
+            template: "quote_ready"
+            to: "{{customer.email}}"
   # ════════════════════════════════════════════════════════════
   # GOVERNMENT / TAX LAW DOMAIN
   # ════════════════════════════════════════════════════════════

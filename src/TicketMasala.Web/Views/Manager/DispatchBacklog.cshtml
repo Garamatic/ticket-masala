@@ -422,11 +422,11 @@
 
                         <!-- Ticket Status Badge -->
                         <div class="mt-2">
-                            @if (ticket.Status == "Dispatching")
+                            @if (ticket.Status.ToString() == "Dispatching")
                             {
                                 <span class="badge-dispatching">Dispatching</span>
                             }
-                            else if (ticket.Status == "Anticipation")
+                            else if (ticket.Status.ToString() == "Anticipation")
                             {
                                 <span class="badge-anticipation">Anticipation</span>
                             }

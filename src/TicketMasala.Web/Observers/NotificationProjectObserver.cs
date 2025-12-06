@@ -111,12 +111,14 @@ public class NotificationProjectObserver : IProjectObserver
         try
         {
             await _notificationService.NotifyUserAsync(
-                $"/Projects/Details/{project.Guid}",
+                customer.Id,
+                $"You have been added as a stakeholder to a project",
+                $"/Projects/Details/{projectId}",
                 "Info");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to send stakeholder notification for {ProjectId}", project.Guid);
+            _logger.LogError(ex, "Failed to send stakeholder notification for {ProjectId}", projectId);
         }
     }
 

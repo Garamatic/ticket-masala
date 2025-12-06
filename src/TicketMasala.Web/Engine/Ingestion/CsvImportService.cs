@@ -131,6 +131,10 @@ namespace TicketMasala.Web.Engine.Ingestion;
                         continue;
                     }
 
+                    // Extract title from description or use default
+                    var title = description.Split('\n')[0];
+                    if (title.Length > 100) title = title.Substring(0, 100);
+
                     // 3. Create Ticket with required properties
                     var ticket = new Ticket
                     {

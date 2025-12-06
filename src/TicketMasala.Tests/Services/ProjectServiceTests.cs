@@ -3,6 +3,7 @@ using Moq;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web;
+using TicketMasala.Web.Data;
 using TicketMasala.Web.Services.Core;
 using TicketMasala.Web.Services.Tickets;
 using TicketMasala.Web.Services.Projects;
@@ -32,7 +33,25 @@ namespace TicketMasala.Tests.Services;
 
         private ProjectService CreateService(MasalaDbContext context)
         {
-            return new ProjectService(context);
+            var mockProjectRepo = new Mock<IProjectRepository>();
+            var mockUserManager = MockUserManager();
+            var mockObservers = new List<IProjectObserver>();
+            
+            return new ProjectService(
+                context,
+                mockProjectRepo.Object,
+                mockUserManager.Object,
+                mockObservers,
+                _mockLogger.Object
+            );
+        }
+
+        private Mock<UserManager<ApplicationUser>> MockUserManager()
+        {
+            var store = new Mock<IUserStore<ApplicationUser>>();
+            var mockUserManager = new Mock<UserManager<ApplicationUser>>(
+                store.Object, null, null, null, null, null, null, null, null);
+            return mockUserManager;
         }
 
         private ApplicationUser CreateTestCustomer(string suffix = "")
@@ -301,7 +320,7 @@ namespace TicketMasala.Tests.Services;
             var result = await service.GetCustomerSelectListAsync();
 
             // Assert
-            Assert.Equal(2, result.Count);
+            Assert.Equal(2, result.Count());
         }
 
         [Fact]
@@ -321,7 +340,7 @@ namespace TicketMasala.Tests.Services;
             var result = await service.GetTemplateSelectListAsync();
 
             // Assert
-            Assert.Equal(2, result.Count);
+            Assert.Equal(2, result.Count());
             Assert.Contains(result, t => t.Text == "Template 1");
             Assert.Contains(result, t => t.Text == "Template 2");
         }

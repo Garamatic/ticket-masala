@@ -8,6 +8,7 @@ services:
     restart: unless-stopped
 
     # LIMITS: We are "Lite", so we prove it.
+    # If the engine exceeds 512MB, we have a memory leak
     deploy:
       resources:
         limits:
@@ -34,6 +35,6 @@ services:
       # Environment
       - ASPNETCORE_ENVIRONMENT=Production
 
-      # Override default paths if needed
+      # Optional: Override default paths
       - MASALA_CONFIG_PATH=/app/config
       - MASALA_DB_PATH=/app/data/masala.db

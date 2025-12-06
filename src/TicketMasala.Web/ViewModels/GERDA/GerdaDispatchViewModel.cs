@@ -22,6 +22,7 @@ namespace TicketMasala.Web.ViewModels.GERDA;
         public Guid Guid { get; set; }
         public string Description { get; set; } = string.Empty;
         public Status TicketStatus { get; set; }
+        public Status Status { get; set; }  // Added for view compatibility
         public DateTime CreationDate { get; set; }
         public DateTime? CompletionTarget { get; set; }
         public string CustomerName { get; set; } = string.Empty;

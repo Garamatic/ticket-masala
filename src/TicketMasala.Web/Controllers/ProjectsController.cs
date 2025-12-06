@@ -188,7 +188,7 @@ namespace TicketMasala.Web.Controllers;
                 var correlationId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
                 _logger.LogError(ex, "Error updating project {ProjectId}. CorrelationId: {CorrelationId}", id, correlationId);
 
-                viewModel.CustomerList = await _projectService.GetCustomerSelectListAsync();
+                viewModel.CustomerList = (await _projectService.GetCustomerSelectListAsync()).ToList();
                 ModelState.AddModelError(string.Empty, "An error occurred while updating the project. Please try again.");
                 return View(viewModel);
             }

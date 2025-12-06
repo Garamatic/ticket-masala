@@ -32,5 +32,6 @@ namespace TicketMasala.Web.Models;
         public List<Ticket> Tasks { get; set; } = [];
         public List<Resource> Resources { get; set; } = [];
 
-        // Department deleted
-}
+        // Department reference (optional, for organizational hierarchy)
+        public Guid? DepartmentId { get; set; }
+    }

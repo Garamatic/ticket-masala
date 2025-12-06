@@ -49,7 +49,7 @@ namespace TicketMasala.Tests.Services;
             // Arrange
             using var context = new MasalaDbContext(_dbOptions);
             
-            var customer = new Customer 
+            var customer = new ApplicationUser 
             { 
                 Id = Guid.NewGuid().ToString(),
                 UserName = "test@example.com",
@@ -116,7 +116,7 @@ namespace TicketMasala.Tests.Services;
             // Arrange
             using var context = new MasalaDbContext(_dbOptions);
             
-            var customer = new Customer 
+            var customer = new ApplicationUser 
             { 
                 Id = Guid.NewGuid().ToString(),
                 UserName = "test@example.com",
@@ -162,7 +162,7 @@ namespace TicketMasala.Tests.Services;
             // Arrange
             using var context = new MasalaDbContext(_dbOptions);
             
-            var customer = new Customer 
+            var customer = new ApplicationUser 
             { 
                 Id = Guid.NewGuid().ToString(),
                 UserName = "test@example.com",
@@ -227,7 +227,7 @@ namespace TicketMasala.Tests.Services;
             // Arrange
             using var context = new MasalaDbContext(_dbOptions);
             
-            var customer = new Customer 
+            var customer = new ApplicationUser 
             { 
                 Id = Guid.NewGuid().ToString(),
                 UserName = "test@example.com",

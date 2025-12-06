@@ -487,3 +487,7 @@ $RECYCLE.BIN/
 *.db
 *.db-wal
 *.db-shm
+
+# Docker data directory
+data/*
+!data/.keep

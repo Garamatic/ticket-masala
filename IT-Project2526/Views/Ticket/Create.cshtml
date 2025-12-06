@@ -124,6 +124,13 @@
                 </div>
             </div>
 
+            @* Custom Fields from Domain Configuration *@
+            @if (ViewBag.CustomFields != null)
+            {
+                <hr class="my-4" />
+                @await Html.PartialAsync("_CustomFieldsPartial", ViewBag.CustomFields as IEnumerable<IT_Project2526.Models.Configuration.CustomFieldDefinition>)
+            }
+
             <div class="mt-4">
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-save me-2"></i>

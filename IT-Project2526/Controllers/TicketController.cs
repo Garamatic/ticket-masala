@@ -159,11 +159,12 @@ namespace IT_Project2526.Controllers
             ViewBag.Employees = await _ticketService.GetEmployeeSelectListAsync();
             ViewBag.Projects = await _ticketService.GetProjectSelectListAsync();
             
-            // Load domain configuration for dynamic work item types
+            // Load domain configuration for dynamic work item types and custom fields
             var defaultDomain = _domainConfig.GetDefaultDomainId();
             ViewBag.DomainId = defaultDomain;
             ViewBag.EntityLabels = _domainConfig.GetEntityLabels(defaultDomain);
             ViewBag.WorkItemTypes = _domainConfig.GetWorkItemTypes(defaultDomain).ToList();
+            ViewBag.CustomFields = _domainConfig.GetCustomFields(defaultDomain).ToList();
 
             return View();
         }
@@ -196,10 +197,11 @@ namespace IT_Project2526.Controllers
                 ViewBag.Employees = await _ticketService.GetEmployeeSelectListAsync();
                 ViewBag.Projects = await _ticketService.GetProjectSelectListAsync();
                 
-                var defaultDomain = _domainConfig.GetDefaultDomainId();
-                ViewBag.DomainId = defaultDomain;
-                ViewBag.EntityLabels = _domainConfig.GetEntityLabels(defaultDomain);
-                ViewBag.WorkItemTypes = _domainConfig.GetWorkItemTypes(defaultDomain).ToList();
+                var reloadDomain = _domainConfig.GetDefaultDomainId();
+                ViewBag.DomainId = reloadDomain;
+                ViewBag.EntityLabels = _domainConfig.GetEntityLabels(reloadDomain);
+                ViewBag.WorkItemTypes = _domainConfig.GetWorkItemTypes(reloadDomain).ToList();
+                ViewBag.CustomFields = _domainConfig.GetCustomFields(reloadDomain).ToList();
 
                 return View();
             }
@@ -212,11 +214,40 @@ namespace IT_Project2526.Controllers
                 // Set domain extensibility fields
                 ticket.DomainId = domainId ?? _domainConfig.GetDefaultDomainId();
                 ticket.WorkItemTypeCode = workItemTypeCode;
+                
+                // Extract custom fields from form and serialize to JSON
+                var customFieldValues = new Dictionary<string, object?>();
+                var customFieldDefs = _domainConfig.GetCustomFields(ticket.DomainId);
+                
+                foreach (var field in customFieldDefs)
+                {
+                    var formKey = $"customFields[{field.Name}]";
+                    if (Request.Form.TryGetValue(formKey, out var values))
+                    {
+                        var value = values.FirstOrDefault();
+                        if (!string.IsNullOrEmpty(value))
+                        {
+                            // Convert to appropriate type
+                            customFieldValues[field.Name] = field.Type.ToLowerInvariant() switch
+                            {
+                                "number" or "currency" => decimal.TryParse(value, out var num) ? num : value,
+                                "boolean" => value.Equals("true", StringComparison.OrdinalIgnoreCase),
+                                _ => value
+                            };
+                        }
+                    }
+                }
+                
+                if (customFieldValues.Count > 0)
+                {
+                    ticket.CustomFieldsJson = System.Text.Json.JsonSerializer.Serialize(customFieldValues);
+                }
+                
                 await _ticketService.UpdateTicketAsync(ticket);
 
                 // Process with GERDA AI
-                _logger.LogInformation("Processing ticket {TicketGuid} with GERDA AI (Domain: {DomainId}, Type: {WorkItemTypeCode})", 
-                    ticket.Guid, ticket.DomainId, ticket.WorkItemTypeCode);
+                _logger.LogInformation("Processing ticket {TicketGuid} with GERDA AI (Domain: {DomainId}, Type: {WorkItemTypeCode}, CustomFields: {CustomFieldCount})", 
+                    ticket.Guid, ticket.DomainId, ticket.WorkItemTypeCode, customFieldValues.Count);
                 await _gerdaService.ProcessTicketAsync(ticket.Guid);
                 
                 var entityLabel = _domainConfig.GetEntityLabels(ticket.DomainId).WorkItem;

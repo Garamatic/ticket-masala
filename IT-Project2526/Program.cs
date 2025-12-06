@@ -118,9 +118,14 @@ builder.Services.AddScoped<ICommentObserver, NotificationCommentObserver>();
 // Register Services (CQRS + Factory Pattern)
 // ============================================
 
+
 // Domain Configuration Service (loads masala_domains.yaml)
 builder.Services.AddSingleton<IT_Project2526.Services.Configuration.IDomainConfigurationService, 
     IT_Project2526.Services.Configuration.DomainConfigurationService>();
+
+// Custom Field Validation Service
+builder.Services.AddScoped<IT_Project2526.Services.Validation.ICustomFieldValidationService,
+    IT_Project2526.Services.Validation.CustomFieldValidationService>();
 
 builder.Services.AddScoped<IMetricsService, MetricsService>();
 

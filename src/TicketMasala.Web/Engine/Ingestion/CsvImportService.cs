@@ -131,12 +131,19 @@ namespace TicketMasala.Web.Engine.Ingestion;
                         continue;
                     }
 
-                    // Extract title from description or use default
-                    var title = description.Split('\n')[0];
-                    if (title.Length > 100) title = title.Substring(0, 100);
-
                     // 3. Create Ticket with required properties
-                    var title = rowDict.ContainsKey("Title") ? rowDict["Title"]?.ToString() ?? "Imported Ticket" : "Imported Ticket";
+                    string title;
+                    if (rowDict.ContainsKey("Title") && rowDict["Title"] != null)
+                    {
+                        title = rowDict["Title"].ToString() ?? "Imported Ticket";
+                    }
+                    else
+                    {
+                        // Fallback to description
+                        title = description.Split('\n')[0];
+                        if (title.Length > 100) title = title.Substring(0, 100);
+                        if (string.IsNullOrWhiteSpace(title)) title = "Imported Ticket";
+                    }
                     var ticket = new Ticket
                     {
                         Guid = Guid.NewGuid(),

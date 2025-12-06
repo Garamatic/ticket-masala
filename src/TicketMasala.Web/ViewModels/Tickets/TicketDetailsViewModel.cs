@@ -37,7 +37,7 @@ public class TicketDetailsViewModel
     // Quality Review
     public List<QualityReview> QualityReviews { get; set; } = new();
     public ReviewStatus ReviewStatus { get; set; }
-    public List<QualityReview> QualityReviews { get; set; } = new();
+
     
     // Sub-tickets
     public Guid? ParentTicketGuid { get; set; }

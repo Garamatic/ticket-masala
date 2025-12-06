@@ -20,8 +20,8 @@ WORKDIR /app
 RUN mkdir -p /app/config /app/data
 
 # Create a non-root user for security
-RUN groupadd --system --gid 1000 masala && \
-    useradd --system --uid 1000 --gid masala --shell /bin/sh masala
+RUN groupadd --system --gid 1001 masala && \
+    useradd --system --uid 1001 --gid masala --shell /bin/sh masala
 
 # Chown the directories so the app can write to Data but only Read config
 # (Config is technically read-only, but the user needs access to list files)

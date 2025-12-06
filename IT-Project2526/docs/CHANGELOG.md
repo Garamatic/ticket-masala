@@ -24,8 +24,3 @@ All notable changes to the Ticket Masala project will be documented in this file
 - **ProjectsController**: Added `CreateFromTicket` action to handle project creation validation and view logic.
 - **Ticket Views**: Enhanced `Ticket/Detail.cshtml` to contextually show "Create Project" or "View Project" buttons.
 - **Architecture**: Validated Modular Monolith structure with new distinct Integration Layer (API Controllers).
-
-### Fixed
-
-- **Missing Button Bug**: Resolved issue where "Create from Ticket" entry point was missing from the Projects dashboard.
-- **API Connectivity**: Fixed port mismatch (5000 vs 5054) in landscaping demo client code.

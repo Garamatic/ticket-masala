@@ -26,6 +26,31 @@ namespace IT_Project2526.Models
         [SafeStringLength(1000, ErrorMessage = "Tags cannot exceed 1000 characters")]
         public string? GerdaTags { get; set; } // Comma-separated: "AI-Dispatched,Spam-Cluster"
 
+        // ═══════════════════════════════════════════
+        // DOMAIN EXTENSIBILITY FIELDS
+        // ═══════════════════════════════════════════
+        
+        /// <summary>
+        /// The domain this ticket belongs to (e.g., "IT", "Gardening", "TaxLaw").
+        /// Defaults to "IT" for backward compatibility.
+        /// </summary>
+        [SafeStringLength(50)]
+        public string DomainId { get; set; } = "IT";
+        
+        /// <summary>
+        /// The work item type code from domain configuration (e.g., "INCIDENT", "QUOTE_REQUEST").
+        /// Replaces the legacy TicketType enum for extensibility.
+        /// </summary>
+        [SafeStringLength(50)]
+        public string? WorkItemTypeCode { get; set; }
+        
+        /// <summary>
+        /// JSON blob storing domain-specific custom field values.
+        /// Schema is validated against the domain configuration.
+        /// </summary>
+        [Column(TypeName = "TEXT")] // For SQLite compatibility; use nvarchar(max) for SQL Server
+        public string? CustomFieldsJson { get; set; }
+
         public Ticket? ParentTicket { get; set; }
         public Guid? ParentTicketGuid { get; set; }
         public List<Ticket> SubTickets { get; set; } = [];

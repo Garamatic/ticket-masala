@@ -20,7 +20,10 @@ public interface ITicketFactory
         string title,
         string description,
         ApplicationUser customer,
-        Priority priority = Priority.Medium);
+        Priority priority = Priority.Medium,
+        Employee? responsible = null,
+        Guid? projectGuid = null,
+        DateTime? completionTarget = null);
 
     /// <summary>
     /// Create a ticket from email ingestion

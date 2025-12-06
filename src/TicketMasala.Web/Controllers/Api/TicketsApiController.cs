@@ -117,14 +117,14 @@ public class TicketsApiController : ControllerBase
     /// <summary>
     /// Find existing customer or create a new one
     /// </summary>
-    private async Task<Customer?> FindOrCreateCustomerAsync(string email, string name)
+    private async Task<ApplicationUser?> FindOrCreateCustomerAsync(string email, string name)
     {
         // Try to find existing customer
         var existingUser = await _userRepository.GetUserByEmailAsync(email);
         
-        if (existingUser is Customer existingCustomer)
+        if (existingUser != null)
         {
-            return existingCustomer;
+            return existingUser;
         }
 
         // Create new customer
@@ -132,7 +132,7 @@ public class TicketsApiController : ControllerBase
         var firstName = nameParts[0];
         var lastName = nameParts.Length > 1 ? nameParts[1] : "";
 
-        var newCustomer = new Customer
+        var newCustomer = new ApplicationUser
         {
             UserName = email,
             Email = email,

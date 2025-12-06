@@ -49,6 +49,9 @@ public class LoggingProjectObserver : IProjectObserver
     {
         _logger.LogInformation(
             "Stakeholder added to project: {ProjectId} - Stakeholder {StakeholderId} ({StakeholderName})",
+            projectId,
+            customer.Id,
+            $"{customer.FirstName} {customer.LastName}");
         return Task.CompletedTask;
     }
 

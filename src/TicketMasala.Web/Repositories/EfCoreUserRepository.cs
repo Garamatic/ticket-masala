@@ -35,15 +35,18 @@ public class EfCoreUserRepository : IUserRepository
             .ToListAsync();
     }
 
-    public async Task<Customer?> GetCustomerByIdAsync(string id)
+    public async Task<ApplicationUser?> GetCustomerByIdAsync(string id)
     {
-        return await _context.Users.OfType<Customer>()
-            .FirstOrDefaultAsync(c => c.Id == id);
+        return await _context.Users
+            .Where(u => u.Id == id && !(u is Employee))
+            .FirstOrDefaultAsync();
     }
 
-    public async Task<IEnumerable<Customer>> GetAllCustomersAsync()
+    public async Task<IEnumerable<ApplicationUser>> GetAllCustomersAsync()
     {
-        return await _context.Users.OfType<Customer>().ToListAsync();
+        return await _context.Users
+            .Where(u => !(u is Employee))
+            .ToListAsync();
     }
 
     public async Task<ApplicationUser?> GetUserByIdAsync(string id)

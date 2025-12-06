@@ -13,8 +13,8 @@ public interface IUserRepository
     Task<IEnumerable<Employee>> GetEmployeesByTeamAsync(string team);
     
     // Customer operations
-    Task<Customer?> GetCustomerByIdAsync(string id);
-    Task<IEnumerable<Customer>> GetAllCustomersAsync();
+    Task<ApplicationUser?> GetCustomerByIdAsync(string id);
+    Task<IEnumerable<ApplicationUser>> GetAllCustomersAsync();
     
     // General user operations
     Task<ApplicationUser?> GetUserByIdAsync(string id);

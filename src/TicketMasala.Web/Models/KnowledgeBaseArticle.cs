@@ -23,8 +23,7 @@ namespace TicketMasala.Web.Models;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
 
-        // Optional: Link to Department for isolation
-        public Guid? DepartmentId { get; set; }
-        [ForeignKey("DepartmentId")]
-        public Department? Department { get; set; }
+        // Department link removed
+        // public Guid? DepartmentId { get; set; }
+        // public Department? Department { get; set; }
 }

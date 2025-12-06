@@ -78,14 +78,14 @@ public static class AffinityScoring
     /// Calculate language match score (0-5 scale)
     /// Perfect match = 5.0, Partial match = 3.5, No match = 1.0
     /// </summary>
-    private static double CalculateLanguageScore(Employee agent, Customer? customer)
+    private static double CalculateLanguageScore(Employee agent, ApplicationUser? customer)
     {
         if (customer == null || string.IsNullOrWhiteSpace(agent.Language))
             return 3.0; // Neutral if no data
 
         // For now, we don't have customer language in the model
         // So we return neutral score
-        // TODO: Add Language field to Customer model
+        // TODO: Add Language field to ApplicationUser model
         return 3.0;
     }
 
@@ -93,14 +93,14 @@ public static class AffinityScoring
     /// Calculate geography match score (0-5 scale)
     /// Same region = 5.0, Different region = 2.0
     /// </summary>
-    private static double CalculateGeographyScore(Employee agent, Customer? customer)
+    private static double CalculateGeographyScore(Employee agent, ApplicationUser? customer)
     {
         if (customer == null || string.IsNullOrWhiteSpace(agent.Region))
             return 3.0; // Neutral if no data
 
         // For now, we don't have customer region in the model
         // So we return neutral score
-        // TODO: Add Region field to Customer model
+        // TODO: Add Region field to ApplicationUser model
         return 3.0;
     }
 
@@ -170,7 +170,7 @@ public static class AffinityScoring
         double mlPrediction,
         Ticket ticket,
         Employee agent,
-        Customer? customer = null)
+        ApplicationUser? customer = null)
     {
         var expertiseScore = CalculateExpertiseScore(ticket, agent);
         var languageScore = CalculateLanguageScore(agent, customer);

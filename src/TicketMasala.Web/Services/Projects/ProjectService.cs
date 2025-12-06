@@ -150,26 +150,26 @@ public class ProjectService : IProjectService
 
     public async Task<Project> CreateProjectAsync(NewProject viewModel, string userId)
     {
-        Customer? customer;
+        ApplicationUser? customer;
 
         if (viewModel.IsNewCustomer)
         {
-            customer = new Customer
+            customer = new ApplicationUser
             {
                 FirstName = viewModel.NewCustomerFirstName ?? string.Empty,
                 LastName = viewModel.NewCustomerLastName ?? string.Empty,
                 Email = viewModel.NewCustomerEmail,
                 Phone = viewModel.NewCustomerPhone,
-                Code = Guid.NewGuid().ToString().Substring(0, 8).ToUpper(),
                 UserName = viewModel.NewCustomerEmail
             };
 
             await _userManager.CreateAsync(customer);
+            // Assign password or handle defaults as per identity logic
             await _userManager.AddToRoleAsync(customer, Utilities.Constants.RoleCustomer);
         }
         else
         {
-            customer = await _context.Customers
+            customer = await _context.Users
                 .FirstOrDefaultAsync(c => c.Id == viewModel.SelectedCustomerId);
 
             if (customer == null)
@@ -194,7 +194,7 @@ public class ProjectService : IProjectService
         // Add additional stakeholders
         if (viewModel.SelectedStakeholderIds != null && viewModel.SelectedStakeholderIds.Any())
         {
-            var additionalStakeholders = await _context.Customers
+            var additionalStakeholders = await _context.Users
                 .Where(c => viewModel.SelectedStakeholderIds.Contains(c.Id))
                 .ToListAsync();
 
@@ -224,7 +224,7 @@ public class ProjectService : IProjectService
         return project;
     }
 
-    private async Task ApplyTemplateAsync(Project project, Guid templateId, string userId, Customer customer)
+    private async Task ApplyTemplateAsync(Project project, Guid templateId, string userId, ApplicationUser customer)
     {
         var template = await _context.ProjectTemplates
             .Include(t => t.Tickets)
@@ -273,7 +273,7 @@ public class ProjectService : IProjectService
 
         if (!string.IsNullOrEmpty(viewModel.SelectedCustomerId))
         {
-            var customer = await _context.Customers
+            var customer = await _context.Users
                 .FirstOrDefaultAsync(c => c.Id == viewModel.SelectedCustomerId);
 
             if (customer != null)
@@ -295,7 +295,7 @@ public class ProjectService : IProjectService
 
     public async Task<List<SelectListItem>> GetCustomerSelectListAsync(string? selectedCustomerId = null)
     {
-        var customers = await _context.Customers.ToListAsync();
+        var customers = await _context.Users.ToListAsync(); // Filter by role if needed?
         return customers.Select(c => new SelectListItem
         {
             Value = c.Id.ToString(),
@@ -306,7 +306,7 @@ public class ProjectService : IProjectService
 
     public async Task<List<SelectListItem>> GetStakeholderSelectListAsync()
     {
-        var customers = await _context.Customers.ToListAsync();
+        var customers = await _context.Users.ToListAsync();
         return customers.Select(c => new SelectListItem
         {
             Value = c.Id.ToString(),
@@ -443,7 +443,7 @@ public class ProjectService : IProjectService
         var customer = ticket.Customer;
         if (customer == null && !string.IsNullOrEmpty(viewModel.CustomerId))
         {
-            customer = await _context.Customers.FirstOrDefaultAsync(c => c.Id == viewModel.CustomerId);
+            customer = await _context.Users.FirstOrDefaultAsync(c => c.Id == viewModel.CustomerId);
         }
 
         // Create project

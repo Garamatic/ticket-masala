@@ -55,12 +55,7 @@ namespace TicketMasala.Web.Models;
         [Column(TypeName = "TEXT")]
         public required string CustomFieldsJson { get; set; } = "{}";
 
-        // --- GENERATED COLUMNS (Read-Only Performance Optimizations) ---
-        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-        public double? ComputedPriority { get; private set; }
 
-        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-        public string? ComputedCategory { get; private set; }
 
         // ═══════════════════════════════════════════
         // DOMAIN EXTENSIBILITY FIELDS

@@ -42,15 +42,7 @@ public class MasalaDbContext : DbContext
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.ContentHash); // Fast duplicate check
 
-            // 2. The JSON Strategy (Generated Columns)
-            entity.Property(e => e.ComputedPriority)
-                  .HasComputedColumnSql("json_extract(CustomFieldsJson, '$.priority_score')", stored: true);
 
-            entity.Property(e => e.ComputedCategory)
-                  .HasComputedColumnSql("json_extract(CustomFieldsJson, '$.category')", stored: true);
-
-            // Index the generated columns
-            entity.HasIndex(e => e.ComputedPriority);
         });
 
         // 2. Config Versioning

@@ -11,7 +11,7 @@ using TicketMasala.Web.Data;
 namespace TicketMasala.Web.Migrations
 {
     [DbContext(typeof(MasalaDbContext))]
-    [Migration("20251206224020_FixPendingModelChanges")]
+    [Migration("20251206224209_FixPendingModelChanges")]
     partial class FixPendingModelChanges
     {
         /// <inheritdoc />
@@ -536,16 +536,6 @@ namespace TicketMasala.Web.Migrations
                     b.Property<DateTime?>("CompletionTarget")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("ComputedCategory")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("TEXT")
-                        .HasComputedColumnSql("json_extract(CustomFieldsJson, '$.category')", true);
-
-                    b.Property<double?>("ComputedPriority")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("REAL")
-                        .HasComputedColumnSql("json_extract(CustomFieldsJson, '$.priority_score')", true);
-
                     b.Property<string>("ConfigVersionId")
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
@@ -635,8 +625,6 @@ namespace TicketMasala.Web.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Guid");
-
-                    b.HasIndex("ComputedPriority");
 
                     b.HasIndex("ContentHash");
 

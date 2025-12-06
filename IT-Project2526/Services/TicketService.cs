@@ -283,7 +283,12 @@ namespace IT_Project2526.Services
                 
                 // Review Status
                 ReviewStatus = ticket.ReviewStatus,
-                QualityReviews = ticket.QualityReviews
+                QualityReviews = ticket.QualityReviews,
+                
+                // Domain Extensibility Fields
+                DomainId = ticket.DomainId,
+                WorkItemTypeCode = ticket.WorkItemTypeCode,
+                CustomFieldsJson = ticket.CustomFieldsJson
             };
 
             return viewModel;

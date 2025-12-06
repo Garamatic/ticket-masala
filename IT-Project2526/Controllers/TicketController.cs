@@ -338,6 +338,30 @@ namespace IT_Project2526.Controllers
                 }
             }
 
+            // Pass domain configuration for custom fields display
+            var domainId = viewModel.DomainId ?? _domainConfig.GetDefaultDomainId();
+            ViewBag.DomainId = domainId;
+            ViewBag.EntityLabels = _domainConfig.GetEntityLabels(domainId);
+            ViewBag.CustomFields = _domainConfig.GetCustomFields(domainId).ToList();
+            ViewBag.WorkItemTypeCode = viewModel.WorkItemTypeCode;
+            
+            // Parse existing custom field values
+            if (!string.IsNullOrEmpty(viewModel.CustomFieldsJson))
+            {
+                try
+                {
+                    ViewBag.CustomFieldValues = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(viewModel.CustomFieldsJson);
+                }
+                catch
+                {
+                    ViewBag.CustomFieldValues = new Dictionary<string, object>();
+                }
+            }
+            else
+            {
+                ViewBag.CustomFieldValues = new Dictionary<string, object>();
+            }
+
             return View(viewModel);
         }
 
@@ -402,6 +426,30 @@ namespace IT_Project2526.Controllers
                 // Fill the dropdown list
                 ResponsibleUsers = responsibleUsers
             };
+            
+            // Pass domain configuration for custom fields
+            var domainId = ticket.DomainId ?? _domainConfig.GetDefaultDomainId();
+            ViewBag.DomainId = domainId;
+            ViewBag.EntityLabels = _domainConfig.GetEntityLabels(domainId);
+            ViewBag.CustomFields = _domainConfig.GetCustomFields(domainId).ToList();
+            ViewBag.WorkItemTypeCode = ticket.WorkItemTypeCode;
+            
+            // Parse existing custom field values
+            if (!string.IsNullOrEmpty(ticket.CustomFieldsJson))
+            {
+                try
+                {
+                    ViewBag.CustomFieldValues = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(ticket.CustomFieldsJson);
+                }
+                catch
+                {
+                    ViewBag.CustomFieldValues = new Dictionary<string, object>();
+                }
+            }
+            else
+            {
+                ViewBag.CustomFieldValues = new Dictionary<string, object>();
+            }
 
             return View(viewModel);
         }
@@ -421,6 +469,34 @@ namespace IT_Project2526.Controllers
                 ticketToUpdate.Description = viewModel.Description;
                 ticketToUpdate.TicketStatus = viewModel.TicketStatus;
                 ticketToUpdate.CompletionTarget = viewModel.CompletionTarget;
+                
+                // Extract custom fields from form and serialize to JSON
+                var domainId = ticketToUpdate.DomainId ?? _domainConfig.GetDefaultDomainId();
+                var customFieldValues = new Dictionary<string, object?>();
+                var customFieldDefs = _domainConfig.GetCustomFields(domainId);
+                
+                foreach (var field in customFieldDefs)
+                {
+                    var formKey = $"customFields[{field.Name}]";
+                    if (Request.Form.TryGetValue(formKey, out var values))
+                    {
+                        var value = values.FirstOrDefault();
+                        if (!string.IsNullOrEmpty(value))
+                        {
+                            customFieldValues[field.Name] = field.Type.ToLowerInvariant() switch
+                            {
+                                "number" or "currency" => decimal.TryParse(value, out var num) ? num : value,
+                                "boolean" => value.Equals("true", StringComparison.OrdinalIgnoreCase),
+                                _ => value
+                            };
+                        }
+                    }
+                }
+                
+                if (customFieldValues.Count > 0)
+                {
+                    ticketToUpdate.CustomFieldsJson = System.Text.Json.JsonSerializer.Serialize(customFieldValues);
+                }
 
                 try
                 {
@@ -440,8 +516,15 @@ namespace IT_Project2526.Controllers
                 }
             }
 
-            // If validation fails, reload the dropdowns and show the view again
+            // If validation fails, reload the dropdowns and custom fields config
             viewModel.ResponsibleUsers = await _ticketService.GetAllUsersSelectListAsync();
+            
+            var reloadDomainId = _domainConfig.GetDefaultDomainId();
+            ViewBag.DomainId = reloadDomainId;
+            ViewBag.EntityLabels = _domainConfig.GetEntityLabels(reloadDomainId);
+            ViewBag.CustomFields = _domainConfig.GetCustomFields(reloadDomainId).ToList();
+            ViewBag.CustomFieldValues = new Dictionary<string, object>();
+            
             return View(viewModel);
         }
 

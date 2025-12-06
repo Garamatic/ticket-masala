@@ -24,6 +24,11 @@ public class TicketDetailsViewModel
     public string? ProjectName { get; set; }
     public Guid? ProjectGuid { get; set; }
     
+    // Domain Extensibility Fields
+    public string? DomainId { get; set; }
+    public string? WorkItemTypeCode { get; set; }
+    public string? CustomFieldsJson { get; set; }
+    
     // Comments
     public List<TicketComment> Comments { get; set; } = new();
     public List<Document> Attachments { get; set; } = new();

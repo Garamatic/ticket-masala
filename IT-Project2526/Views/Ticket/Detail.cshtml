@@ -80,6 +80,14 @@
                     }
                 </dl>
 
+                @* Custom Fields Display *@
+                @if (ViewBag.CustomFields != null)
+                {
+                    <div class="mt-4">
+                        @await Html.PartialAsync("_CustomFieldsDisplayPartial", ViewBag.CustomFields as IEnumerable<IT_Project2526.Models.Configuration.CustomFieldDefinition>)
+                    </div>
+                }
+
                 <hr />
 
                 <div class="card mb-4">

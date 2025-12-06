@@ -36,37 +36,41 @@ var builder = WebApplication.CreateBuilder(args);
 var dbProvider = builder.Configuration["DatabaseProvider"];
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-builder.Services.AddDbContext<MasalaDbContext>(options =>
+// Database Configuration via appsettings.json / appsettings.Production.json
+if (!builder.Environment.IsEnvironment("Testing"))
 {
-    if (string.Equals(dbProvider, "Sqlite", StringComparison.OrdinalIgnoreCase))
+    builder.Services.AddDbContext<MasalaDbContext>(options =>
     {
-        // Ensure /data directory exists for SQLite in production/docker
-        if (connectionString != null && connectionString.Contains("/data/"))
+        if (string.Equals(dbProvider, "Sqlite", StringComparison.OrdinalIgnoreCase))
         {
-            var dataDir = "/data";
-            if (!Directory.Exists(dataDir))
+            // Ensure /data directory exists for SQLite in production/docker
+            if (connectionString != null && connectionString.Contains("/data/"))
             {
-                Console.WriteLine($"Creating database directory: {dataDir}");
-                Directory.CreateDirectory(dataDir);
+                var dataDir = "/data";
+                if (!Directory.Exists(dataDir))
+                {
+                    Console.WriteLine($"Creating database directory: {dataDir}");
+                    Directory.CreateDirectory(dataDir);
+                }
             }
+            
+            Console.WriteLine($"Using SQLite Provider with connection: {connectionString}");
+            options.UseSqlite(connectionString);
         }
-        
-        Console.WriteLine($"Using SQLite Provider with connection: {connectionString}");
-        options.UseSqlite(connectionString);
-    }
-    else
-    {
-        // Default to SQL Server
-        Console.WriteLine($"Using SQL Server Provider");
-        options.UseSqlServer(connectionString, sqlServerOptions =>
+        else
         {
-            sqlServerOptions.EnableRetryOnFailure(
-                maxRetryCount: 5,
-                maxRetryDelay: TimeSpan.FromSeconds(10),
-                errorNumbersToAdd: null);
-        });
-    }
-});
+            // Default to SQL Server
+            Console.WriteLine($"Using SQL Server Provider");
+            options.UseSqlServer(connectionString, sqlServerOptions =>
+            {
+                sqlServerOptions.EnableRetryOnFailure(
+                    maxRetryCount: 5,
+                    maxRetryDelay: TimeSpan.FromSeconds(10),
+                    errorNumbersToAdd: null);
+            });
+        }
+    });
+}
 
 //Identity configuration
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -191,6 +195,7 @@ if (File.Exists(gerdaConfigPath))
         builder.Services.AddScoped<IJobRankingStrategy, SeasonalPriorityStrategy>();
         builder.Services.AddScoped<IEstimatingStrategy, CategoryBasedEstimatingStrategy>();
         builder.Services.AddScoped<IDispatchingStrategy, MatrixFactorizationDispatchingStrategy>();
+        builder.Services.AddScoped<IDispatchingStrategy, ZoneBasedDispatchingStrategy>();
 
         // Rule Engine
         builder.Services.AddSingleton<TicketMasala.Web.Engine.Compiler.RuleCompilerService>();
@@ -266,8 +271,12 @@ builder.Services.AddHealthChecks()
 // Persist DataProtection keys so cookies remain valid across restarts
 if (builder.Environment.IsProduction())
 {
+    // Use a writable path for keys in production/pilot (e.g., ./keys/ relative to app)
+    var keyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "keys");
+    Directory.CreateDirectory(keyPath);
+
     builder.Services.AddDataProtection()
-        .PersistKeysToFileSystem(new DirectoryInfo("/data/keys"))
+        .PersistKeysToFileSystem(new DirectoryInfo(keyPath))
         .SetApplicationName("ticket-masala");
 }
 else

@@ -491,3 +491,4 @@ $RECYCLE.BIN/
 # Docker data directory
 data/*
 !data/.keep
+deploy/

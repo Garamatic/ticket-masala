@@ -23,7 +23,7 @@ public class QualityReview
 
     [Required]
     [MaxLength(5000)]
-    public string Comments { get; set; }
+    public string Comments { get; set; } = string.Empty;
 
     [MaxLength(5000)]
     public string? Feedback { get; set; }

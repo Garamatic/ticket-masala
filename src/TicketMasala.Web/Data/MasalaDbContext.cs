@@ -4,14 +4,17 @@ using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web.Models;
 using System.Data.Common;
 
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+
 namespace TicketMasala.Web.Data;
 
-public class MasalaDbContext : DbContext
+public class MasalaDbContext : IdentityDbContext<ApplicationUser>
 {
     public DbSet<Ticket> Tickets { get; set; }
     public DbSet<WorkItem> WorkItems { get; set; }
     public DbSet<Project> Projects { get; set; }
-    public DbSet<ApplicationUser> Users { get; set; }
+    // Users DbSet is provided by IdentityDbContext
+    // public DbSet<ApplicationUser> Users { get; set; }
     // Backwards-compatible DbSets: older code expects `Customers` and `Employees`.
     // Keep these mapped to the same entity types to minimize refactor churn.
     public DbSet<ApplicationUser> Customers { get; set; }

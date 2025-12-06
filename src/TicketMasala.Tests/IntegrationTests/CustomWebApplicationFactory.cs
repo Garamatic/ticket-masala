@@ -12,15 +12,19 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.UseEnvironment("Testing");
+        
         builder.ConfigureServices(services =>
         {
             // Remove the app's DbContext registration.
-            var descriptor = services.SingleOrDefault(
-                d => d.ServiceType == typeof(DbContextOptions<MasalaDbContext>));
+            // Remove the app's DbContext registration.
+            var descriptors = services.Where(
+                d => d.ServiceType == typeof(DbContextOptions<MasalaDbContext>) ||
+                     d.ServiceType == typeof(DbContextOptions)).ToList();
 
-            if (descriptor != null)
+            foreach (var d in descriptors)
             {
-                services.Remove(descriptor);
+                services.Remove(d);
             }
 
             var dbContextDescriptor = services.SingleOrDefault(

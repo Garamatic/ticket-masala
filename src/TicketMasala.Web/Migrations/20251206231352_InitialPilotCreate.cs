@@ -3,11 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
-
-namespace TicketMasala.Web.Migrations;
+namespace TicketMasala.Web.Migrations
+{
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialPilotCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -27,16 +26,17 @@ namespace TicketMasala.Web.Migrations;
                 });
 
             migrationBuilder.CreateTable(
-                name: "Departments",
+                name: "DomainConfigVersion",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    Code = table.Column<string>(type: "TEXT", maxLength: 10, nullable: false)
+                    Hash = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    ConfigurationJson = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Departments", x => x.Id);
+                    table.PrimaryKey("PK_DomainConfigVersion", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -53,6 +53,19 @@ namespace TicketMasala.Web.Migrations;
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ProjectTemplates", x => x.Guid);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "WorkItems",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Payload = table.Column<string>(type: "TEXT", nullable: false),
+                    Status = table.Column<string>(type: "TEXT", nullable: true, computedColumnSql: "json_extract(Payload, '$.Status')", stored: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WorkItems", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -156,9 +169,10 @@ namespace TicketMasala.Web.Migrations;
                     FirstName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     LastName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     Phone = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
-                    Discriminator = table.Column<string>(type: "TEXT", maxLength: 21, nullable: false),
-                    TicketGuid = table.Column<Guid>(type: "TEXT", nullable: true),
                     Code = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
+                    Discriminator = table.Column<string>(type: "TEXT", maxLength: 21, nullable: false),
+                    ProjectGuid = table.Column<Guid>(type: "TEXT", nullable: true),
+                    TicketGuid = table.Column<Guid>(type: "TEXT", nullable: true),
                     Team = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
                     Level = table.Column<int>(type: "INTEGER", nullable: true),
                     Language = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
@@ -166,7 +180,7 @@ namespace TicketMasala.Web.Migrations;
                     MaxCapacityPoints = table.Column<int>(type: "INTEGER", nullable: true),
                     Region = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
                     ProfilePicturePath = table.Column<string>(type: "TEXT", nullable: true),
-                    DepartmentId = table.Column<Guid>(type: "TEXT", nullable: true),
+                    DepartmentId = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
                     UserName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
@@ -185,11 +199,6 @@ namespace TicketMasala.Web.Migrations;
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_AspNetUsers_Departments_DepartmentId",
-                        column: x => x.DepartmentId,
-                        principalTable: "Departments",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -222,8 +231,7 @@ namespace TicketMasala.Web.Migrations;
                     Tags = table.Column<string>(type: "TEXT", nullable: false),
                     AuthorId = table.Column<string>(type: "TEXT", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    DepartmentId = table.Column<Guid>(type: "TEXT", nullable: true)
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -232,11 +240,6 @@ namespace TicketMasala.Web.Migrations;
                         name: "FK_KnowledgeBaseArticles_AspNetUsers_AuthorId",
                         column: x => x.AuthorId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_KnowledgeBaseArticles_Departments_DepartmentId",
-                        column: x => x.DepartmentId,
-                        principalTable: "Departments",
                         principalColumn: "Id");
                 });
 
@@ -287,17 +290,11 @@ namespace TicketMasala.Web.Migrations;
                         name: "FK_Projects_AspNetUsers_CustomerId",
                         column: x => x.CustomerId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Projects_AspNetUsers_ProjectManagerId",
                         column: x => x.ProjectManagerId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Projects_Departments_DepartmentId",
-                        column: x => x.DepartmentId,
-                        principalTable: "Departments",
                         principalColumn: "Id");
                 });
 
@@ -328,31 +325,7 @@ namespace TicketMasala.Web.Migrations;
                 });
 
             migrationBuilder.CreateTable(
-                name: "ProjectCustomers",
-                columns: table => new
-                {
-                    CustomersId = table.Column<string>(type: "TEXT", nullable: false),
-                    ProjectsGuid = table.Column<Guid>(type: "TEXT", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ProjectCustomers", x => new { x.CustomersId, x.ProjectsGuid });
-                    table.ForeignKey(
-                        name: "FK_ProjectCustomers_AspNetUsers_CustomersId",
-                        column: x => x.CustomersId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_ProjectCustomers_Projects_ProjectsGuid",
-                        column: x => x.ProjectsGuid,
-                        principalTable: "Projects",
-                        principalColumn: "Guid",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Resources",
+                name: "Resource",
                 columns: table => new
                 {
                     Guid = table.Column<Guid>(type: "TEXT", nullable: false),
@@ -364,9 +337,9 @@ namespace TicketMasala.Web.Migrations;
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Resources", x => x.Guid);
+                    table.PrimaryKey("PK_Resource", x => x.Guid);
                     table.ForeignKey(
-                        name: "FK_Resources_Projects_ProjectGuid",
+                        name: "FK_Resource_Projects_ProjectGuid",
                         column: x => x.ProjectGuid,
                         principalTable: "Projects",
                         principalColumn: "Guid");
@@ -385,10 +358,20 @@ namespace TicketMasala.Web.Migrations;
                     EstimatedEffortPoints = table.Column<int>(type: "INTEGER", nullable: false),
                     PriorityScore = table.Column<double>(type: "REAL", nullable: false),
                     GerdaTags = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
+                    RecommendedProjectName = table.Column<string>(type: "TEXT", nullable: true),
+                    CurrentProjectName = table.Column<string>(type: "TEXT", nullable: true),
+                    DomainId = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    Status = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
+                    Title = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    ContentHash = table.Column<string>(type: "TEXT", maxLength: 64, nullable: true),
+                    ConfigVersionId = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
+                    CustomFieldsJson = table.Column<string>(type: "TEXT", nullable: false),
+                    WorkItemTypeCode = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
+                    DomainCustomFieldsJson = table.Column<string>(type: "TEXT", nullable: true),
                     ParentTicketGuid = table.Column<Guid>(type: "TEXT", nullable: true),
-                    ResponsibleId = table.Column<string>(type: "TEXT", nullable: true),
                     CustomerId = table.Column<string>(type: "TEXT", nullable: true),
                     ProjectGuid = table.Column<Guid>(type: "TEXT", nullable: true),
+                    ResponsibleId = table.Column<string>(type: "TEXT", nullable: true),
                     SolvedByArticleId = table.Column<Guid>(type: "TEXT", nullable: true),
                     ReviewStatus = table.Column<int>(type: "INTEGER", nullable: false),
                     CreationDate = table.Column<DateTime>(type: "TEXT", nullable: false),
@@ -417,8 +400,7 @@ namespace TicketMasala.Web.Migrations;
                         name: "FK_Tickets_Projects_ProjectGuid",
                         column: x => x.ProjectGuid,
                         principalTable: "Projects",
-                        principalColumn: "Guid",
-                        onDelete: ReferentialAction.SetNull);
+                        principalColumn: "Guid");
                     table.ForeignKey(
                         name: "FK_Tickets_Tickets_ParentTicketGuid",
                         column: x => x.ParentTicketGuid,
@@ -491,9 +473,11 @@ namespace TicketMasala.Web.Migrations;
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     TicketId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    ReviewerId = table.Column<string>(type: "TEXT", nullable: true),
+                    ReviewerId = table.Column<string>(type: "TEXT", nullable: false),
+                    Comments = table.Column<string>(type: "TEXT", maxLength: 5000, nullable: false),
+                    Feedback = table.Column<string>(type: "TEXT", maxLength: 5000, nullable: true),
                     Score = table.Column<int>(type: "INTEGER", nullable: false),
-                    Feedback = table.Column<string>(type: "TEXT", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     ReviewDate = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
@@ -503,7 +487,8 @@ namespace TicketMasala.Web.Migrations;
                         name: "FK_QualityReviews_AspNetUsers_ReviewerId",
                         column: x => x.ReviewerId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_QualityReviews_Tickets_TicketId",
                         column: x => x.TicketId,
@@ -539,16 +524,6 @@ namespace TicketMasala.Web.Migrations;
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.InsertData(
-                table: "AspNetRoles",
-                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
-                values: new object[,]
-                {
-                    { "1", "3598c83b-2265-4d1b-939a-23b9bf81f6cf", "Admin", "ADMIN" },
-                    { "2", "03537bd2-c547-4c06-859d-bdb8f3f4e117", "Employee", "EMPLOYEE" },
-                    { "3", "ddfbf5a3-f6a5-438f-a747-9708972c3d43", "Customer", "CUSTOMER" }
-                });
-
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -581,9 +556,9 @@ namespace TicketMasala.Web.Migrations;
                 column: "NormalizedEmail");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AspNetUsers_DepartmentId",
+                name: "IX_AspNetUsers_ProjectGuid",
                 table: "AspNetUsers",
-                column: "DepartmentId");
+                column: "ProjectGuid");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetUsers_TicketGuid",
@@ -617,14 +592,15 @@ namespace TicketMasala.Web.Migrations;
                 column: "UploaderId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_DomainConfigVersion_Hash",
+                table: "DomainConfigVersion",
+                column: "Hash",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_KnowledgeBaseArticles_AuthorId",
                 table: "KnowledgeBaseArticles",
                 column: "AuthorId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_KnowledgeBaseArticles_DepartmentId",
-                table: "KnowledgeBaseArticles",
-                column: "DepartmentId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Notifications_UserId",
@@ -632,19 +608,9 @@ namespace TicketMasala.Web.Migrations;
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ProjectCustomers_ProjectsGuid",
-                table: "ProjectCustomers",
-                column: "ProjectsGuid");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Projects_CustomerId",
                 table: "Projects",
                 column: "CustomerId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Projects_DepartmentId",
-                table: "Projects",
-                column: "DepartmentId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Projects_ProjectManagerId",
@@ -662,8 +628,8 @@ namespace TicketMasala.Web.Migrations;
                 column: "TicketId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Resources_ProjectGuid",
-                table: "Resources",
+                name: "IX_Resource_ProjectGuid",
+                table: "Resource",
                 column: "ProjectGuid");
 
             migrationBuilder.CreateIndex(
@@ -687,9 +653,19 @@ namespace TicketMasala.Web.Migrations;
                 column: "TicketId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Tickets_ContentHash",
+                table: "Tickets",
+                column: "ContentHash");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Tickets_CustomerId",
                 table: "Tickets",
                 column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tickets_DomainId",
+                table: "Tickets",
+                column: "DomainId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tickets_ParentTicketGuid",
@@ -710,6 +686,16 @@ namespace TicketMasala.Web.Migrations;
                 name: "IX_Tickets_SolvedByArticleId",
                 table: "Tickets",
                 column: "SolvedByArticleId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tickets_Status",
+                table: "Tickets",
+                column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_WorkItems_Status",
+                table: "WorkItems",
+                column: "Status");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_AspNetUserClaims_AspNetUsers_UserId",
@@ -734,6 +720,13 @@ namespace TicketMasala.Web.Migrations;
                 principalTable: "AspNetUsers",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_AspNetUsers_Projects_ProjectGuid",
+                table: "AspNetUsers",
+                column: "ProjectGuid",
+                principalTable: "Projects",
+                principalColumn: "Guid");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_AspNetUsers_Tickets_TicketGuid",
@@ -788,16 +781,16 @@ namespace TicketMasala.Web.Migrations;
                 name: "Documents");
 
             migrationBuilder.DropTable(
-                name: "Notifications");
+                name: "DomainConfigVersion");
 
             migrationBuilder.DropTable(
-                name: "ProjectCustomers");
+                name: "Notifications");
 
             migrationBuilder.DropTable(
                 name: "QualityReviews");
 
             migrationBuilder.DropTable(
-                name: "Resources");
+                name: "Resource");
 
             migrationBuilder.DropTable(
                 name: "SavedFilters");
@@ -807,6 +800,9 @@ namespace TicketMasala.Web.Migrations;
 
             migrationBuilder.DropTable(
                 name: "TicketComments");
+
+            migrationBuilder.DropTable(
+                name: "WorkItems");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
@@ -825,8 +821,6 @@ namespace TicketMasala.Web.Migrations;
 
             migrationBuilder.DropTable(
                 name: "Projects");
-
-            migrationBuilder.DropTable(
-                name: "Departments");
         }
+    }
 }

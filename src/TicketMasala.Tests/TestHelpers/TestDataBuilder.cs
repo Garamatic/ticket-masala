@@ -89,8 +89,7 @@ public static class TestDataBuilder
         {
             Guid = Guid.NewGuid(),
             Name = _faker.Commerce.ProductName() + " Template",
-            Description = _faker.Lorem.Paragraph(),
-            EstimatedDuration = _faker.Random.Int(30, 180)
+            Description = _faker.Lorem.Paragraph()
         };
     }
 

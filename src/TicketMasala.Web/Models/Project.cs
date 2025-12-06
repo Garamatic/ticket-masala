@@ -33,4 +33,5 @@ namespace TicketMasala.Web.Models;
         public List<Resource> Resources { get; set; } = [];
 
         // Department deleted
+        public Guid? DepartmentId { get; set; }
 }

@@ -45,6 +45,39 @@ namespace TicketMasala.Tests.Services;
             var ruleEngine = new Mock<IRuleEngineService>();
             var logger = new Mock<ILogger<TicketService>>();
 
+            // Wire up Repository Mocks to use the InMemory Context
+            userRepository.Setup(r => r.GetCustomerByIdAsync(It.IsAny<string>()))
+                .ReturnsAsync((string id) => context.Users.OfType<ApplicationUser>().FirstOrDefault(u => u.Id == id));
+            
+            userRepository.Setup(r => r.GetEmployeeByIdAsync(It.IsAny<string>()))
+                .ReturnsAsync((string id) => context.Users.OfType<Employee>().FirstOrDefault(u => u.Id == id));
+
+            userRepository.Setup(r => r.GetAllCustomersAsync())
+                .ReturnsAsync(() => context.Users.OfType<ApplicationUser>().ToList());
+
+            userRepository.Setup(r => r.GetAllEmployeesAsync())
+                .ReturnsAsync(() => context.Users.OfType<Employee>().ToList());
+
+            // Wire up TicketRepository Mocks
+            ticketRepository.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<bool>()))
+                .ReturnsAsync((Guid id, bool includeRelations) => context.Tickets.Find(id));
+            
+            ticketRepository.Setup(r => r.UpdateAsync(It.IsAny<Ticket>()))
+                .Callback((Ticket t) => {
+                    var existing = context.Tickets.Find(t.Guid);
+                    if (existing != null)
+                    {
+                        context.Entry(existing).CurrentValues.SetValues(t);
+                    }
+                })
+                .Returns(Task.CompletedTask);
+
+             ticketRepository.Setup(r => r.AddAsync(It.IsAny<Ticket>()))
+                .Callback((Ticket t) => {
+                    context.Tickets.Add(t);
+                })
+                .ReturnsAsync((Ticket t) => t);
+
             return new TicketService(
                 context,
                 ticketRepository.Object,

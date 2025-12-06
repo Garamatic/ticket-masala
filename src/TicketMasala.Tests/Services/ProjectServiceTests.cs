@@ -14,6 +14,7 @@ using TicketMasala.Web.Observers;
 using TicketMasala.Web.ViewModels.Projects;
 using TicketMasala.Web.ViewModels.Customers;
 using Microsoft.AspNetCore.Identity;
+using TicketMasala.Web.Data;
 
 namespace TicketMasala.Tests.Services;
     public class ProjectServiceTests
@@ -32,7 +33,12 @@ namespace TicketMasala.Tests.Services;
 
         private ProjectService CreateService(MasalaDbContext context)
         {
-            return new ProjectService(context);
+            var projectRepository = new Mock<IProjectRepository>();
+            var store = new Mock<IUserStore<ApplicationUser>>();
+            var userManager = new Mock<UserManager<ApplicationUser>>(store.Object, null, null, null, null, null, null, null, null);
+            var observers = new List<IProjectObserver>();
+            
+            return new ProjectService(context, projectRepository.Object, userManager.Object, observers, _mockLogger.Object);
         }
 
         private ApplicationUser CreateTestCustomer(string suffix = "")
@@ -301,7 +307,7 @@ namespace TicketMasala.Tests.Services;
             var result = await service.GetCustomerSelectListAsync();
 
             // Assert
-            Assert.Equal(2, result.Count);
+            Assert.Equal(2, result.Count());
         }
 
         [Fact]
@@ -321,7 +327,7 @@ namespace TicketMasala.Tests.Services;
             var result = await service.GetTemplateSelectListAsync();
 
             // Assert
-            Assert.Equal(2, result.Count);
+            Assert.Equal(2, result.Count());
             Assert.Contains(result, t => t.Text == "Template 1");
             Assert.Contains(result, t => t.Text == "Template 2");
         }

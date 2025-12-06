@@ -18,6 +18,9 @@ public class QualityReview
     [Required]
     public string ReviewerId { get; set; }
 
+    [ForeignKey("ReviewerId")]
+    public ApplicationUser? Reviewer { get; set; }
+
     [Required]
     [MaxLength(5000)]
     public string Comments { get; set; }

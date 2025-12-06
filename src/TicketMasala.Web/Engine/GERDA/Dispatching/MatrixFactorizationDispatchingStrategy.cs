@@ -163,7 +163,7 @@ namespace TicketMasala.Web.Engine.GERDA.Dispatching;
                 .Select(t => new 
                 {
                     t.ResponsibleId,
-                    CustomerId = t.CreatorGuid.ToString(),
+                    t.CreatorGuid,
                     t.Status,
                     t.CompletionDate,
                     t.CreationDate
@@ -174,7 +174,7 @@ namespace TicketMasala.Web.Engine.GERDA.Dispatching;
             {
                 AgentId = t.ResponsibleId!,
                 CustomerId = t.CreatorGuid.ToString(),
-                Rating = CalculateImplicitRating(t.Status, t.CompletionDate, t.CreationDate)
+                Rating = CalculateImplicitRating(Enum.Parse<Status>(t.Status), t.CompletionDate, t.CreationDate)
             }).ToList();
 
             if (trainingData.Count < _config.GerdaAI.Dispatching.MinHistoryForAffinityMatch)

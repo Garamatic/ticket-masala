@@ -343,7 +343,7 @@ namespace TicketMasala.Web.Data;
         {
             var customers = new[]
             {
-                new Customer
+                new ApplicationUser
                 {
                     UserName = "alice.customer@example.com",
                     Email = "alice.customer@example.com",
@@ -353,7 +353,7 @@ namespace TicketMasala.Web.Data;
                     Phone = "+1-555-1000",
                     Code = "CUST001"
                 },
-                new Customer
+                new ApplicationUser
                 {
                     UserName = "bob.jones@example.com",
                     Email = "bob.jones@example.com",
@@ -363,7 +363,7 @@ namespace TicketMasala.Web.Data;
                     Phone = "+1-555-1001",
                     Code = "CUST002"
                 },
-                new Customer
+                new ApplicationUser
                 {
                     UserName = "carol.white@techcorp.com",
                     Email = "carol.white@techcorp.com",
@@ -373,7 +373,7 @@ namespace TicketMasala.Web.Data;
                     Phone = "+1-555-1002",
                     Code = "CUST003"
                 },
-                new Customer
+                new ApplicationUser
                 {
                     UserName = "daniel.brown@startup.io",
                     Email = "daniel.brown@startup.io",
@@ -383,7 +383,7 @@ namespace TicketMasala.Web.Data;
                     Phone = "+1-555-1003",
                     Code = "CUST004"
                 },
-                new Customer
+                new ApplicationUser
                 {
                     UserName = "emily.davis@enterprise.net",
                     Email = "emily.davis@enterprise.net",

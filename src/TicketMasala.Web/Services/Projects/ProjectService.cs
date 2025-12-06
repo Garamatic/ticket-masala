@@ -145,7 +145,7 @@ public class ProjectService : IProjectService
             SelectedCustomerId = project.Customer?.Id,
             CreationDate = project.CompletionTarget,
             IsNewCustomer = false,
-            CustomerList = await GetCustomerSelectListAsync(project.Customer?.Id)
+            CustomerList = (await GetCustomerSelectListAsync(project.Customer?.Id)).ToList()
         };
     }
 

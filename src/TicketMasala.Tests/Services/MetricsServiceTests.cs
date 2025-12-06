@@ -9,6 +9,7 @@ using TicketMasala.Web.Engine.Ingestion;
 using TicketMasala.Web.Services.Background;
 using TicketMasala.Web.Models;
 using TicketMasala.Web.Data;
+using Customer = TicketMasala.Web.Models.ApplicationUser;
 
 namespace TicketMasala.Tests.Services;
     public class MetricsServiceTests

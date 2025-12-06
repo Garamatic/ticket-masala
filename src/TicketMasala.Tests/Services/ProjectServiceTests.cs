@@ -15,6 +15,7 @@ using TicketMasala.Web.Observers;
 using TicketMasala.Web.ViewModels.Projects;
 using TicketMasala.Web.ViewModels.Customers;
 using Microsoft.AspNetCore.Identity;
+using TicketMasala.Web.Data;
 
 namespace TicketMasala.Tests.Services;
     public class ProjectServiceTests

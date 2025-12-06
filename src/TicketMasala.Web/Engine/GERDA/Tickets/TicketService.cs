@@ -6,7 +6,6 @@ using TicketMasala.Web.ViewModels.GERDA;
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.Observers;
 using TicketMasala.Web.Services.Core;
-using TicketMasala.Web.Engine.Compiler;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web.Data;
@@ -92,7 +91,6 @@ namespace TicketMasala.Web.Services.Tickets;
 
             var user = await _context.Users.FindAsync(userId);
             var employee = user as Employee;
-            
             // Parse DepartmentId string to Guid
             if (employee?.DepartmentId != null && Guid.TryParse(employee.DepartmentId, out var deptGuid))
             {

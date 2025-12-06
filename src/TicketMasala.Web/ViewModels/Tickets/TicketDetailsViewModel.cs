@@ -35,6 +35,7 @@ public class TicketDetailsViewModel
     public List<AuditLogEntry> AuditLogs { get; set; } = new();
     
     // Quality Review
+    public List<QualityReview> QualityReviews { get; set; } = new();
     public ReviewStatus ReviewStatus { get; set; }
     public List<QualityReview> QualityReviews { get; set; } = new();
     

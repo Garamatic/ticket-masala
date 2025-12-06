@@ -136,6 +136,7 @@ namespace TicketMasala.Web.Engine.Ingestion;
                     if (title.Length > 100) title = title.Substring(0, 100);
 
                     // 3. Create Ticket with required properties
+                    var title = rowDict.ContainsKey("Title") ? rowDict["Title"]?.ToString() ?? "Imported Ticket" : "Imported Ticket";
                     var ticket = new Ticket
                     {
                         Guid = Guid.NewGuid(),

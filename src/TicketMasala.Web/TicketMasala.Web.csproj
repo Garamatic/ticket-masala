@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>TicketMasala.Web</RootNamespace>
     <UserSecretsId>b898b7a7-ccb8-47ea-8fc7-9f71fa9abaa9</UserSecretsId>
+    <AllowMissingPrunePackageData>true</AllowMissingPrunePackageData>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,6 +22,15 @@
 
   <ItemGroup>
     <None Include="Controllers\ApplicationUserController.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="masala_config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="masala_domains.yaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>

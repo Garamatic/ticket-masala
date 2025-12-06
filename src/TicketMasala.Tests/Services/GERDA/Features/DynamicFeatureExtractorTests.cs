@@ -3,6 +3,7 @@ using TicketMasala.Web.Models.Configuration;
 using TicketMasala.Web.Engine.GERDA.Features;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
+using Customer = TicketMasala.Web.Models.ApplicationUser;
 
 namespace TicketMasala.Tests.Services.GERDA.Features;
     public class DynamicFeatureExtractorTests

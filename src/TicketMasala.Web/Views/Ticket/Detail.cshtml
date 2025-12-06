@@ -147,11 +147,11 @@
                                     <li class="list-group-item px-0">
                                         <div class="d-flex justify-content-between">
                                             <strong>@(review.Reviewer?.FirstName ?? "Unknown")</strong>
-                                            <small class="text-muted">@review.ReviewDate.ToString("g")</small>
+                                            <small class="text-muted">@review.CreatedAt.ToString("g")</small>
                                         </div>
                                         <div>
                                             @for(int i=0; i<review.Score; i++) { <i class="fas fa-star text-warning"></i> }
-                                            <span class="ms-2">@review.Feedback</span>
+                                            <span class="ms-2">@review.Comments</span>
                                         </div>
                                     </li>
                                 }

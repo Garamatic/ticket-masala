@@ -309,7 +309,7 @@ namespace TicketMasala.Web.Controllers;
             viewModel.QualityReviews = await _context.QualityReviews
                 .Include(r => r.Reviewer)
                 .Where(r => r.TicketId == id.Value)
-                .OrderByDescending(r => r.ReviewDate)
+                .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
 
             // Get recommended agent from Dispatching service (if ticket is unassigned)

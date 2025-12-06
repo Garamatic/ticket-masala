@@ -186,7 +186,7 @@ public class GerdaServiceTests
     {
         // Arrange
         var service = CreateService();
-        var customer = new Customer { FirstName = "Test", LastName = "Customer", Phone = "555-1234" };
+        var customer = new ApplicationUser { Id = Guid.NewGuid().ToString(), FirstName = "Test", LastName = "Customer", Email = "test@example.com", Phone = "555-1234" };
         var tickets = new List<Ticket>
         {
             new() { Guid = Guid.NewGuid(), Description = "Test 1", Customer = customer, TicketStatus = Status.Pending },

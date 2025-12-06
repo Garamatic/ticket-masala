@@ -3,6 +3,7 @@ using Moq;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web;
+using TicketMasala.Web.Data;
 using TicketMasala.Web.Services.Core;
 using TicketMasala.Web.Services.Tickets;
 using TicketMasala.Web.Services.Projects;
@@ -33,12 +34,25 @@ namespace TicketMasala.Tests.Services;
 
         private ProjectService CreateService(MasalaDbContext context)
         {
-            var projectRepository = new Mock<IProjectRepository>();
-            var store = new Mock<IUserStore<ApplicationUser>>();
-            var userManager = new Mock<UserManager<ApplicationUser>>(store.Object, null, null, null, null, null, null, null, null);
-            var observers = new List<IProjectObserver>();
+            var mockProjectRepo = new Mock<IProjectRepository>();
+            var mockUserManager = MockUserManager();
+            var mockObservers = new List<IProjectObserver>();
             
-            return new ProjectService(context, projectRepository.Object, userManager.Object, observers, _mockLogger.Object);
+            return new ProjectService(
+                context,
+                mockProjectRepo.Object,
+                mockUserManager.Object,
+                mockObservers,
+                _mockLogger.Object
+            );
+        }
+
+        private Mock<UserManager<ApplicationUser>> MockUserManager()
+        {
+            var store = new Mock<IUserStore<ApplicationUser>>();
+            var mockUserManager = new Mock<UserManager<ApplicationUser>>(
+                store.Object, null, null, null, null, null, null, null, null);
+            return mockUserManager;
         }
 
         private ApplicationUser CreateTestCustomer(string suffix = "")

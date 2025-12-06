@@ -24,7 +24,7 @@ namespace TicketMasala.Tests.Services.GERDA.Features;
                 CustomFieldsJson = "{\"soil_ph\": 7.0}",
                 TicketStatus = Status.Pending,
                 Description = "Test Ticket",
-                Customer = new Customer { Id = "C1", FirstName = "Test", LastName = "Customer", Email = "test@example.com", Phone = "1234567890" }
+                Customer = new ApplicationUser { Id = "C1", FirstName = "Test", LastName = "Customer", Email = "test@example.com", Phone = "1234567890", UserName = "test@example.com" }
             };
 
             var config = new GerdaModelConfig
@@ -62,7 +62,7 @@ namespace TicketMasala.Tests.Services.GERDA.Features;
                 CustomFieldsJson = "{\"zone\": \"Z1\"}",
                 TicketStatus = Status.Pending,
                 Description = "Test Ticket",
-                Customer = new Customer { Id = "C1", FirstName = "Test", LastName = "Customer", Email = "test@example.com", Phone = "1234567890" }
+                Customer = new ApplicationUser { Id = "C1", FirstName = "Test", LastName = "Customer", Email = "test@example.com", Phone = "1234567890", UserName = "test@example.com" }
             };
 
             var config = new GerdaModelConfig
@@ -99,7 +99,7 @@ namespace TicketMasala.Tests.Services.GERDA.Features;
                 CustomFieldsJson = "{\"zone\": \"Z2\"}",
                 TicketStatus = Status.Pending,
                 Description = "Test Ticket",
-                Customer = new Customer { Id = "C1", FirstName = "Test", LastName = "Customer", Email = "test@example.com", Phone = "1234567890" }
+                Customer = new ApplicationUser { Id = "C1", FirstName = "Test", LastName = "Customer", Email = "test@example.com", Phone = "1234567890", UserName = "test@example.com" }
             };
 
             var config = new GerdaModelConfig

@@ -91,7 +91,12 @@ namespace TicketMasala.Web.Services.Tickets;
 
             var user = await _context.Users.FindAsync(userId);
             var employee = user as Employee;
-            return Guid.TryParse(employee?.DepartmentId, out var g) ? g : null;
+            // Parse DepartmentId string to Guid
+            if (employee?.DepartmentId != null && Guid.TryParse(employee.DepartmentId, out var deptGuid))
+            {
+                return deptGuid;
+            }
+            return null;
         }
 
         /// <summary>
@@ -699,7 +704,8 @@ namespace TicketMasala.Web.Services.Tickets;
             if (!string.IsNullOrEmpty(userId))
             {
                 var user = await _userRepository.GetUserByIdAsync(userId);
-                if (user is ApplicationUser)
+                // Check if user is a customer (not an Employee)
+                if (user != null && user is not Employee)
                 {
                     searchModel.CustomerId = userId;
                 }

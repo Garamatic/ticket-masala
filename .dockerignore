@@ -1,0 +1,8 @@
+# Add SQLite database file
+data/masala.db
+
+# Add any generated config backups
+config/*.backup
+
+# Docker volumes
+data/

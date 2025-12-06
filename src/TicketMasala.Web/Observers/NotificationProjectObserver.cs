@@ -112,7 +112,7 @@ public class NotificationProjectObserver : IProjectObserver
         {
             await _notificationService.NotifyUserAsync(
                 customer.Id,
-                "You have been added to the project.",
+                $"You have been added as a stakeholder to a project",
                 $"/Projects/Details/{projectId}",
                 "Info");
         }

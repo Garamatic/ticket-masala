@@ -1,0 +1,174 @@
+@model List<TicketMasala.Web.ViewModels.Projects.ProjectTicketViewModel>
+@using TicketMasala.Web.Models
+@using TicketMasala.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> Localizer
+
+@{
+    ViewData["Title"] = Localizer["Projects"];
+    ViewData["Description"] = Localizer["Manage your projects and track progress"];
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <i class="fas fa-folder-open text-primary me-2"></i>
+            @Localizer["Projects"]
+        </h1>
+        <p class="page-subtitle">@Localizer["Manage your projects and track progress"]</p>
+    </div>
+    <div class="page-actions">
+        @if (User.IsInRole(TicketMasala.Web.Utilities.Constants.RoleAdmin) || User.IsInRole(TicketMasala.Web.Utilities.Constants.RoleEmployee))
+        {
+            <a asp-controller="Projects" asp-action="NewProject" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>
+                @Localizer["New Project"]
+            </a>
+            <a asp-controller="Ticket" asp-action="Index" class="btn btn-outline-primary ms-2">
+                <i class="fas fa-ticket-alt me-2"></i>
+                @Localizer["Create from Ticket"]
+            </a>
+        }
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="filters-bar">
+    <div class="search-box">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" class="form-control" id="projectSearch" placeholder="@Localizer["Search projects..."]" />
+    </div>
+    
+    <select class="form-select" id="statusFilter" style="max-width: 180px;">
+        <option value="">@Localizer["All Status"]</option>
+        <option value="Pending">@Localizer["Pending"]</option>
+        <option value="InProgress">@Localizer["In Progress"]</option>
+        <option value="Completed">@Localizer["Completed"]</option>
+    </select>
+</div>
+
+@if (Model != null && Model.Any())
+{
+    <div class="row g-4">
+        @foreach (var item in Model)
+        {
+            <div class="col-12">
+                <div class="project-card">
+                    <div class="project-card-header">
+                        <h3 class="project-card-title">
+                            <a asp-controller="Projects" asp-action="Details" asp-route-id="@item.ProjectDetails.Guid">
+                                <i class="fas fa-folder text-primary me-2"></i>
+                                @item.ProjectDetails.Name
+                            </a>
+                        </h3>
+                    </div>
+                    
+                    <div class="project-card-meta">
+                        <span>
+                            <i class="fas fa-user-tie"></i>
+                            @item.ProjectDetails.ProjectManagerName
+                        </span>
+                        <span>
+                            <i class="fas fa-ticket-alt"></i>
+                            @item.ProjectDetails.TicketCount @Localizer["Tickets"]
+                        </span>
+                    </div>
+                    
+                    @if (item.Tasks != null && item.Tasks.Any())
+                    {
+                        <div class="table-responsive mt-3">
+                            <table class="table table-sm mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>@Localizer["Ticket ID"]</th>
+                                        <th>@Localizer["Status"]</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var ticket in item.Tasks.Take(5))
+                                    {
+                                        var statusClass = ticket.TicketStatus switch
+                                        {
+                                            Status.Pending => "status-pending",
+                                            Status.Rejected => "status-rejected",
+                                            Status.Assigned => "status-assigned",
+                                            Status.InProgress => "status-inProgress",
+                                            Status.Completed => "status-completed",
+                                            Status.Failed => "status-failed",
+                                            _ => ""
+                                        };
+                                        
+                                        <tr>
+                                            <td>
+                                                <code class="text-muted">@ticket.Guid.ToString()[..8]...</code>
+                                            </td>
+                                            <td>
+                                                <span class="status-badge @statusClass">
+                                                    @ticket.TicketStatus.ToString()
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        @if (item.Tasks.Count > 5)
+                        {
+                            <div class="mt-2 text-center">
+                                <a asp-controller="Projects" asp-action="Details" asp-route-id="@item.ProjectDetails.Guid" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    @Localizer["View all {0} tickets", item.Tasks.Count]
+                                    <i class="fas fa-arrow-right ms-1"></i>
+                                </a>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-info-circle me-1"></i>
+                            @Localizer["No active tickets"]
+                        </p>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="empty-state">
+        <div class="empty-state-icon">
+            <i class="fas fa-folder-open"></i>
+        </div>
+        <h3 class="empty-state-title">@Localizer["No projects yet"]</h3>
+        <p class="empty-state-text">@Localizer["Get started by creating your first project."]</p>
+        @if (User.IsInRole(TicketMasala.Web.Utilities.Constants.RoleAdmin) || User.IsInRole(TicketMasala.Web.Utilities.Constants.RoleEmployee))
+        {
+            <a asp-controller="Projects" asp-action="NewProject" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>
+                @Localizer["Create Project"]
+            </a>
+        }
+    </div>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('projectSearch');
+            const projectCards = document.querySelectorAll('.project-card');
+            
+            searchInput?.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                
+                projectCards.forEach(card => {
+                    const text = card.textContent.toLowerCase();
+                    card.closest('.col-12').style.display = text.includes(searchTerm) ? '' : 'none';
+                });
+            });
+        });
+    </script>
+}

@@ -1,0 +1,406 @@
+@model TicketMasala.Web.ViewModels.Tickets.TicketSearchViewModel
+@using TicketMasala.Web.Models
+@using TicketMasala.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> Localizer
+
+@{
+    ViewData["Title"] = Localizer["Tickets"];
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <i class="fas fa-ticket-alt text-primary me-2"></i>
+            @Localizer["Tickets"]
+        </h1>
+        <p class="page-subtitle">@Localizer["View and manage all support tickets"]</p>
+    </div>
+    <div class="page-actions">
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>
+            @Localizer["New Ticket"]
+        </a>
+    </div>
+</div>
+
+<!-- Search & Filter Form -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form asp-action="Index" method="get" class="row g-3">
+            <div class="col-md-4">
+                <label asp-for="SearchTerm" class="form-label">@Localizer["Search"]</label>
+                <input asp-for="SearchTerm" class="form-control" placeholder="@Localizer["Search..."]" />
+            </div>
+            <div class="col-md-2">
+                <label asp-for="Status" class="form-label">@Localizer["Status"]</label>
+                <select asp-for="Status" asp-items="Html.GetEnumSelectList<Status>()" class="form-select">
+                    <option value="">@Localizer["All Statuses"]</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label asp-for="TicketType" class="form-label">@Localizer["Type"]</label>
+                <select asp-for="TicketType" asp-items="Html.GetEnumSelectList<TicketType>()" class="form-select">
+                    <option value="">@Localizer["All Types"]</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label asp-for="ResponsibleId" class="form-label">@Localizer["Assigned To"]</label>
+                <select asp-for="ResponsibleId" asp-items="ViewBag.Employees" class="form-select">
+                    <option value="">@Localizer["All Agents"]</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label asp-for="CustomerId" class="form-label">@Localizer["Customer"]</label>
+                <select asp-for="CustomerId" asp-items="ViewBag.Customers" class="form-select">
+                    <option value="">@Localizer["All Customers"]</option>
+                </select>
+            </div>
+            <div class="col-md-12 d-flex justify-content-between align-items-end">
+                <div class="bulk-actions d-none" id="bulkActions">
+                    <span class="me-2"><span id="selectedCount">0</span> @Localizer["selected"]</span>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            @Localizer["Bulk Actions"]
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><button class="dropdown-item" onclick="bulkAssign()">@Localizer["Assign to Agent..."]</button></li>
+                            <li><button class="dropdown-item" onclick="bulkStatus()">@Localizer["Change Status..."]</button></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <!-- Saved Filters Dropdown -->
+                    @if (ViewBag.SavedFilters != null && ((List<SavedFilter>)ViewBag.SavedFilters).Any())
+                    {
+                        <div class="dropdown">
+                            <button class="btn btn-outline-info dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-bookmark"></i> @Localizer["Saved Filters"]
+                            </button>
+                            <ul class="dropdown-menu">
+                                @foreach (var filter in (List<SavedFilter>)ViewBag.SavedFilters)
+                                {
+                                    <li>
+                                        <div class="d-flex justify-content-between align-items-center px-3 py-1">
+                                            <a asp-action="LoadFilter" asp-route-id="@filter.Id" class="text-decoration-none text-dark flex-grow-1">
+                                                @filter.Name
+                                            </a>
+                                            <form asp-action="DeleteFilter" method="post" class="d-inline ms-2">
+                                                <input type="hidden" name="id" value="@filter.Id" />
+                                                <button type="submit" class="btn btn-link text-danger p-0 btn-sm" title="@Localizer["Delete"]">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#saveFilterModal">
+                        <i class="fas fa-save"></i> @Localizer["Save Filter"]
+                    </button>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> @Localizer["Search"]
+                    </button>
+                    <button type="submit" asp-action="ExportTickets" class="btn btn-outline-success" title="@Localizer["Export"]">
+                        <i class="fas fa-file-csv"></i> @Localizer["Export"]
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary" title="@Localizer["Reset"]">
+                        <i class="fas fa-times"></i> @Localizer["Reset"]
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Save Filter Modal -->
+<div class="modal fade" id="saveFilterModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="SaveFilter" method="post">
+                <!-- Hidden fields to preserve current search params -->
+                <input type="hidden" asp-for="SearchTerm" />
+                <input type="hidden" asp-for="Status" />
+                <input type="hidden" asp-for="TicketType" />
+                <input type="hidden" asp-for="ResponsibleId" />
+                <input type="hidden" asp-for="CustomerId" />
+                <input type="hidden" asp-for="IsOverdue" />
+                <input type="hidden" asp-for="IsDueSoon" />
+
+                <div class="modal-header">
+                    <h5 class="modal-title">@Localizer["Save Current Filter"]</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="filterName" class="form-label">@Localizer["Filter Name"]</label>
+                        <input type="text" class="form-control" id="filterName" name="name" required placeholder="e.g., My Urgent Tickets">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Cancel"]</button>
+                    <button type="submit" class="btn btn-primary">@Localizer["Save Filter"]</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@if (Model.Results != null && Model.Results.Any())
+{
+    <form id="bulkForm" method="post">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">
+                            <input type="checkbox" id="selectAll" class="form-check-input" />
+                        </th>
+                        <th>@Localizer["Title"]</th>
+                        <th class="d-none d-md-table-cell">@Localizer["Status"]</th>
+                        <th class="d-none d-lg-table-cell">@Localizer["Created"]</th>
+                        <th class="d-none d-sm-table-cell">@Localizer["Customer"]</th>
+                        <th class="d-none d-lg-table-cell">@Localizer["Responsible"]</th>
+                        <th class="d-none d-md-table-cell">@Localizer["Due Date"]</th>
+                        <th class="text-end">@Localizer["Actions"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var ticket in Model.Results)
+                    {
+                        <tr>
+                            <td>
+                                <input type="checkbox" name="selectedTickets" value="@ticket.Guid" class="form-check-input ticket-checkbox" />
+                            </td>
+                            <td>
+                                <div class="fw-bold text-truncate" style="max-width: 200px;" title="@ticket.Description">
+                                    <a asp-action="Detail" asp-route-id="@ticket.Guid" class="text-decoration-none">
+                                        @ticket.Description
+                                    </a>
+                                </div>
+                                <div class="d-md-none small mt-1">
+                                    <span class="badge bg-secondary">@ticket.TicketStatus</span>
+                                    <span class="text-muted ms-1">@ticket.Customer?.FirstName ?? "—" @(ticket.Customer?.LastName ?? "")</span>
+                                </div>
+                            </td>
+                            <td class="d-none d-md-table-cell">
+                                <span class="badge bg-@(ticket.TicketStatus == TicketMasala.Web.Models.Status.Completed ? "success" : "primary")">
+                                    @ticket.TicketStatus
+                                </span>
+                            </td>
+                            <td>@(ticket.Customer?.FirstName ?? "—") @(ticket.Customer?.LastName ?? "")</td>
+                            <td>@(ticket.Responsible?.FirstName ?? Localizer["Unassigned"].Value) @(ticket.Responsible?.LastName ?? "")</td>
+                            <td>
+                            @if (ticket.CompletionTarget.HasValue)
+                            {
+                                var timeRemaining = ticket.CompletionTarget.Value - DateTime.UtcNow;
+                                var isOverdue = timeRemaining.TotalSeconds < 0;
+                                var isAtRisk = !isOverdue && timeRemaining.TotalHours < 24;
+                                
+                                <div class="@(isOverdue ? "text-danger fw-bold" : (isAtRisk ? "text-warning fw-bold" : ""))">
+                                    @ticket.CompletionTarget.Value.ToString("MMM dd, yyyy")
+                                    
+                                    @if (isOverdue)
+                                    {
+                                        <i class="fas fa-exclamation-circle ms-1" title="@Localizer["Overdue"]"></i>
+                                    }
+                                    else if (isAtRisk)
+                                    {
+                                        <i class="fas fa-exclamation-triangle ms-1" title="@Localizer["Due soon"]"></i>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a asp-action="Detail" asp-route-id="@ticket.Guid" 
+                                       class="btn btn-outline-primary" title="@Localizer["View Details"]">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@ticket.Guid" 
+                                       class="btn btn-outline-secondary" title="@Localizer["Edit"]">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </form>
+    
+    <!-- Pagination -->
+    @if (Model.TotalPages > 1)
+    {
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(i == Model.Page ? "active" : "")">
+                        <a class="page-link" asp-action="Index" 
+                           asp-route-Page="@i"
+                           asp-route-SearchTerm="@Model.SearchTerm"
+                           asp-route-Status="@Model.Status"
+                           asp-route-TicketType="@Model.TicketType"
+                           asp-route-ResponsibleId="@Model.ResponsibleId"
+                           asp-route-CustomerId="@Model.CustomerId">@i</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+}
+else
+{
+    <div class="empty-state">
+        <div class="empty-state-icon">
+            <i class="fas fa-ticket-alt"></i>
+        </div>
+        <h3 class="empty-state-title">@Localizer["No tickets found"]</h3>
+        <p class="empty-state-text">@Localizer["Try adjusting your search filters or create a new ticket."]</p>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>
+            @Localizer["Create Ticket"]
+        </a>
+    </div>
+}
+
+<!-- Bulk Assign Modal -->
+<div class="modal fade" id="bulkAssignModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="BatchAssign" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title">@Localizer["Bulk Assign Tickets"]</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>@Localizer["Assign {0} tickets to:", "<span id=\"assignCount\">0</span>"]</p>
+                    <div class="mb-3">
+                        <label class="form-label">@Localizer["Agent"]</label>
+                        <select name="agentId" class="form-select" required>
+                            <option value="">@Localizer["Select Agent..."]</option>
+                            @foreach (var item in ViewBag.Employees as List<SelectListItem> ?? new List<SelectListItem>())
+                            {
+                                <option value="@item.Value">@item.Text</option>
+                            }
+                        </select>
+                    </div>
+                    <div id="assignTicketIds"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Cancel"]</button>
+                    <button type="submit" class="btn btn-primary">@Localizer["Assign"]</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Status Modal -->
+<div class="modal fade" id="bulkStatusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="BatchStatus" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title">@Localizer["Bulk Change Status"]</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>@Localizer["Change status of {0} tickets to:", "<span id=\"statusCount\">0</span>"]</p>
+                    <div class="mb-3">
+                        <label class="form-label">@Localizer["Status"]</label>
+                        <select name="status" class="form-select" asp-items="Html.GetEnumSelectList<Status>()" required>
+                        </select>
+                    </div>
+                    <div id="statusTicketIds"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Cancel"]</button>
+                    <button type="submit" class="btn btn-primary">@Localizer["Update Status"]</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.ticket-checkbox');
+            const bulkActions = document.getElementById('bulkActions');
+            const selectedCount = document.getElementById('selectedCount');
+            
+            function updateBulkActions() {
+                const checked = document.querySelectorAll('.ticket-checkbox:checked');
+                selectedCount.textContent = checked.length;
+                if (checked.length > 0) {
+                    bulkActions.classList.remove('d-none');
+                } else {
+                    bulkActions.classList.add('d-none');
+                }
+            }
+            
+            selectAll?.addEventListener('change', function() {
+                checkboxes.forEach(cb => cb.checked = selectAll.checked);
+                updateBulkActions();
+            });
+            
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', function() {
+                    updateBulkActions();
+                    if (!cb.checked) selectAll.checked = false;
+                });
+            });
+            
+            window.bulkAssign = function() {
+                const checked = document.querySelectorAll('.ticket-checkbox:checked');
+                const container = document.getElementById('assignTicketIds');
+                const countSpan = document.getElementById('assignCount');
+                
+                container.innerHTML = '';
+                countSpan.textContent = checked.length;
+                
+                checked.forEach(cb => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'ticketIds';
+                    input.value = cb.value;
+                    container.appendChild(input);
+                });
+                
+                new bootstrap.Modal(document.getElementById('bulkAssignModal')).show();
+            };
+            
+            window.bulkStatus = function() {
+                const checked = document.querySelectorAll('.ticket-checkbox:checked');
+                const container = document.getElementById('statusTicketIds');
+                const countSpan = document.getElementById('statusCount');
+                
+                container.innerHTML = '';
+                countSpan.textContent = checked.length;
+                
+                checked.forEach(cb => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'ticketIds';
+                    input.value = cb.value;
+                    container.appendChild(input);
+                });
+                
+                new bootstrap.Modal(document.getElementById('bulkStatusModal')).show();
+            };
+        });
+    </script>
+}

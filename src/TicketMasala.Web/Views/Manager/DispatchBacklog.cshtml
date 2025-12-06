@@ -1,0 +1,715 @@
+@model TicketMasala.Web.ViewModels.GERDA.GerdaDispatchViewModel
+@using TicketMasala.Web.Models
+
+@{
+    ViewData["Title"] = "GERDA Dispatch Backlog";
+    ViewData["Description"] = "AI-powered ticket assignment dashboard";
+}
+
+<style>
+    .dispatch-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+    }
+    
+    .ticket-card {
+        background: white;
+        border-left: 4px solid #667eea;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+    }
+    
+    .ticket-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+    }
+    
+    .ticket-card.selected {
+        border-left-color: #28a745;
+        background: #f0fff4;
+    }
+    
+    .agent-recommendation {
+        background: #f8f9fa;
+        border-radius: 6px;
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        border: 2px solid transparent;
+        transition: all 0.2s;
+    }
+    
+    .agent-recommendation:hover {
+        border-color: #667eea;
+        background: #e9ecef;
+    }
+    
+    .agent-recommendation.top-pick {
+        border-color: #28a745;
+        background: #d4edda;
+    }
+    
+    .score-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+    
+    .score-high {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .score-medium {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .score-low {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .workload-bar {
+        height: 8px;
+        background: #e9ecef;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 0.5rem;
+    }
+    
+    .workload-fill {
+        height: 100%;
+        transition: width 0.3s;
+    }
+    
+    .workload-low { background: #28a745; }
+    .workload-medium { background: #ffc107; }
+    .workload-high { background: #dc3545; }
+    
+    .priority-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .priority-high { background: #dc3545; color: white; }
+    .priority-medium { background: #ffc107; color: #212529; }
+    .priority-low { background: #6c757d; color: white; }
+    
+    .gerda-tag {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        background: #667eea;
+        color: white;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        margin-right: 0.25rem;
+    }
+    
+    .batch-controls {
+        position: sticky;
+        top: 0;
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+        z-index: 100;
+    }
+
+    /* Dark Mode Overrides */
+    [data-theme="dark"] .stat-card,
+    [data-theme="dark"] .ticket-card,
+    [data-theme="dark"] .batch-controls {
+        background: #1e293b;
+        color: #f1f5f9;
+        border: 1px solid #334155;
+    }
+
+    [data-theme="dark"] .stat-value {
+        color: #818cf8;
+    }
+    
+    [data-theme="dark"] .stat-label {
+        color: #94a3b8;
+    }
+
+    [data-theme="dark"] .agent-recommendation {
+        background: #0f172a;
+        color: #cbd5e1;
+    }
+    
+    [data-theme="dark"] .agent-recommendation:hover {
+        background: #1e293b;
+        border-color: #6366f1;
+    }
+
+    [data-theme="dark"] .ticket-card.selected {
+        background: rgba(46, 125, 50, 0.2); 
+    }
+</style>
+
+<!-- Header -->
+<div class="dispatch-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="mb-2">
+                <i class="fas fa-robot me-2"></i>
+                GERDA Dispatch Backlog
+            </h1>
+            <p class="mb-0 opacity-75">AI-powered ticket assignment and workload balancing</p>
+        </div>
+        <div class="text-end">
+            <button class="btn btn-light" onclick="location.reload()">
+                <i class="fas fa-sync-alt me-2"></i>
+                Refresh
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Overview -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-value">@Model.Statistics.TotalUnassignedTickets</div>
+            <div class="stat-label">Unassigned Tickets</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-value">@Model.Statistics.TicketsWithAgentRecommendation</div>
+            <div class="stat-label">With AI Recommendations</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-value">@Model.Statistics.TotalAvailableAgents</div>
+            <div class="stat-label">Available Agents</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-value text-danger">@Model.Statistics.TicketsOlderThan24Hours</div>
+            <div class="stat-label">Tickets > 24h Old</div>
+        </div>
+    </div>
+</div>
+
+<!-- Batch Controls -->
+@if (Model.UnassignedTickets.Any())
+{
+    <div class="batch-controls">
+        <div class="row align-items-center">
+            <div class="col-md-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="selectAll" onchange="toggleSelectAll(this)">
+                    <label class="form-check-label fw-bold" for="selectAll">
+                        Select All (<span id="selectedCount">0</span> selected)
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-8 text-end">
+                <button class="btn btn-primary" onclick="batchAssignWithGerda()" id="batchGerdaBtn" disabled>
+                    <i class="fas fa-robot me-2"></i>
+                    Auto-Assign Selected (GERDA)
+                </button>
+                <button class="btn btn-secondary" onclick="showManualBatchAssign()" id="batchManualBtn" disabled>
+                    <i class="fas fa-user-cog me-2"></i>
+                    Manual Assign Selected
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Main Content -->
+<div class="row">
+    <!-- Tickets List -->
+    <div class="col-lg-8">
+        <h3 class="mb-3">
+            <i class="fas fa-inbox me-2"></i>
+            Pending Tickets
+        </h3>
+        
+        @if (!Model.UnassignedTickets.Any())
+        {
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>All clear!</strong> No unassigned tickets in the backlog.
+            </div>
+        }
+        else
+        {
+            <div id="ticketsList">
+                @foreach (var ticket in Model.UnassignedTickets)
+                {
+                    <div class="ticket-card" data-ticket-id="@ticket.Guid">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="form-check">
+                                <input class="form-check-input ticket-checkbox" type="checkbox" 
+                                       value="@ticket.Guid" onchange="updateSelectedCount()">
+                                <label class="form-check-label">
+                                    <strong>Ticket #@ticket.Guid.ToString()[..8]</strong>
+                                </label>
+                            </div>
+                            <div>
+                                @if (ticket.PriorityScore >= 75)
+                                {
+                                    <span class="priority-badge priority-high">
+                                        <i class="fas fa-exclamation-circle"></i> HIGH
+                                    </span>
+                                }
+                                else if (ticket.PriorityScore >= 40)
+                                {
+                                    <span class="priority-badge priority-medium">
+                                        <i class="fas fa-exclamation-triangle"></i> MEDIUM
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="priority-badge priority-low">
+                                        <i class="fas fa-info-circle"></i> LOW
+                                    </span>
+                                }
+                                <span class="badge bg-secondary ms-2">
+                                    <i class="fas fa-clock"></i> @ticket.TimeInBacklogDisplay
+                                </span>
+                            </div>
+                        </div>
+
+                        <p class="mb-2">@ticket.Description</p>
+
+                        <div class="row mb-2">
+                            <div class="col-md-6">
+                                <small class="text-muted">
+                                    <i class="fas fa-user me-1"></i>
+                                    Customer: <strong>@ticket.CustomerName</strong>
+                                </small>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted">
+                                    <i class="fas fa-chart-line me-1"></i>
+                                    Effort: <strong>@ticket.EstimatedEffortPoints pts</strong> | 
+                                    Priority: <strong>@ticket.PriorityScore.ToString("F1")</strong>
+                                </small>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(ticket.GerdaTags))
+                        {
+                            <div class="mb-2">
+                                @foreach (var tag in ticket.GerdaTags.Split(','))
+                                {
+                                    <span class="gerda-tag">@tag</span>
+                                }
+                            </div>
+                        }
+
+                        @if (ticket.RecommendedProjectGuid.HasValue)
+                        {
+                            <div class="alert alert-info py-2 mb-2">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                <strong>Recommended Project:</strong> @ticket.RecommendedProjectName
+                            </div>
+                        }
+
+                        @if (ticket.RecommendedAgents.Any())
+                        {
+                            <div class="mt-3">
+                                <h6 class="text-muted mb-2">
+                                    <i class="fas fa-robot me-1"></i>
+                                    GERDA Agent Recommendations:
+                                </h6>
+                                @for (int i = 0; i < ticket.RecommendedAgents.Count; i++)
+                                {
+                                    var agent = ticket.RecommendedAgents[i];
+                                    var isTopPick = i == 0;
+                                    
+                                    <div class="agent-recommendation @(isTopPick ? "top-pick" : "")" 
+                                         onclick="assignTicketToAgent('@ticket.Guid', '@agent.AgentId', '@agent.AgentName')">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <strong>
+                                                    @if (isTopPick)
+                                                    {
+                                                        <i class="fas fa-star text-warning me-1"></i>
+                                                    }
+                                                    @agent.AgentName
+                                                </strong>
+                                                <br>
+                                                <small class="text-muted">
+                                                    @agent.Team
+                                                    @if (!string.IsNullOrEmpty(agent.Language))
+                                                    {
+                                                        <span> | <i class="fas fa-language"></i> @agent.Language</span>
+                                                    }
+                                                </small>
+                                            </div>
+                                            <div class="text-end">
+                                                <span class="score-badge @(agent.Score >= 70 ? "score-high" : agent.Score >= 40 ? "score-medium" : "score-low")">
+                                                    Score: @agent.ScoreDisplay
+                                                </span>
+                                                <br>
+                                                <small class="text-muted">Load: @agent.WorkloadDisplay</small>
+                                            </div>
+                                        </div>
+                                        <div class="workload-bar">
+                                            <div class="workload-fill @(agent.WorkloadPercentage < 60 ? "workload-low" : agent.WorkloadPercentage < 90 ? "workload-medium" : "workload-high")" 
+                                                 style="width: @(Math.Min(agent.WorkloadPercentage, 100))%"></div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning py-2 mt-3">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                No GERDA recommendations available. Manual assignment required.
+                            </div>
+                        }
+
+                        <div class="mt-3 text-end">
+                            <button class="btn btn-sm btn-outline-primary" 
+                                    onclick="showAssignModal('@ticket.Guid')">
+                                <i class="fas fa-user-plus me-1"></i>
+                                Manual Assign
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- Agent Availability Sidebar -->
+    <div class="col-lg-4">
+        <div class="position-sticky" style="top: 1rem;">
+            <h3 class="mb-3">
+                <i class="fas fa-users me-2"></i>
+                Agent Availability
+            </h3>
+            
+            @foreach (var team in Model.AvailableAgents.GroupBy(a => a.Team))
+            {
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <strong>@team.Key</strong>
+                    </div>
+                    <div class="card-body p-2">
+                        @foreach (var agent in team)
+                        {
+                            <div class="mb-3 pb-2 border-bottom">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong>@agent.Name</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            @agent.CurrentWorkload / @agent.MaxCapacity tickets
+                                            <br>
+                                            @agent.CurrentEffortPoints / @agent.MaxCapacityPoints points
+                                        </small>
+                                    </div>
+                                    <div>
+                                        @if (agent.IsAvailable)
+                                        {
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check"></i> Available
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-times"></i> Full
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="workload-bar mt-2">
+                                    <div class="workload-fill @(agent.WorkloadPercentage < 60 ? "workload-low" : agent.WorkloadPercentage < 90 ? "workload-medium" : "workload-high")" 
+                                         style="width: @(Math.Min(agent.WorkloadPercentage, 100))%"></div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Manual Assignment Modal -->
+<div class="modal fade" id="assignModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Assign Ticket</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="assignTicketGuid">
+                
+                <div class="mb-3">
+                    <label class="form-label">Agent</label>
+                    <select class="form-select" id="assignAgentId">
+                        <option value="">-- Select Agent --</option>
+                        @foreach (var agent in Model.AvailableAgents.OrderBy(a => a.Team).ThenBy(a => a.Name))
+                        {
+                            <option value="@agent.Id">@agent.Name (@agent.Team) - @agent.CurrentWorkload/@agent.MaxCapacity</option>
+                        }
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Project (Optional)</label>
+                    <select class="form-select" id="assignProjectGuid">
+                        <option value="">-- No Project --</option>
+                        @foreach (var project in Model.Projects.OrderBy(p => p.Name))
+                        {
+                            <option value="@project.Guid">@project.Name (@project.CustomerName)</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitManualAssign()">Assign</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let selectedTickets = new Set();
+
+    function updateSelectedCount() {
+        selectedTickets.clear();
+        document.querySelectorAll('.ticket-checkbox:checked').forEach(cb => {
+            selectedTickets.add(cb.value);
+            cb.closest('.ticket-card').classList.add('selected');
+        });
+        document.querySelectorAll('.ticket-checkbox:not(:checked)').forEach(cb => {
+            cb.closest('.ticket-card').classList.remove('selected');
+        });
+        
+        const count = selectedTickets.size;
+        document.getElementById('selectedCount').textContent = count;
+        document.getElementById('batchGerdaBtn').disabled = count === 0;
+        document.getElementById('batchManualBtn').disabled = count === 0;
+    }
+
+    function toggleSelectAll(checkbox) {
+        document.querySelectorAll('.ticket-checkbox').forEach(cb => {
+            cb.checked = checkbox.checked;
+        });
+        updateSelectedCount();
+    }
+
+    async function assignTicketToAgent(ticketGuid, agentId, agentName) {
+        if (!confirm(`Assign this ticket to ${agentName}?`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch('@Url.Action("AssignTicket", "Manager")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: new URLSearchParams({
+                    ticketGuid: ticketGuid,
+                    agentId: agentId
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('Ticket assigned successfully!');
+                location.reload();
+            } else {
+                alert('Error: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to assign ticket');
+        }
+    }
+
+    async function batchAssignWithGerda() {
+        if (selectedTickets.size === 0) {
+            alert('Please select at least one ticket');
+            return;
+        }
+
+        if (!confirm(`Auto-assign ${selectedTickets.size} ticket(s) using GERDA AI?`)) {
+            return;
+        }
+
+        const btn = document.getElementById('batchGerdaBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+
+        try {
+            const response = await fetch('@Url.Action("BatchAssignTickets", "Manager")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: JSON.stringify({
+                    ticketGuids: Array.from(selectedTickets),
+                    useGerdaRecommendations: true
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                alert(`Successfully assigned ${result.successCount} ticket(s)!\nFailed: ${result.failureCount}`);
+                location.reload();
+            } else {
+                alert('Error: ' + result.message);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-robot me-2"></i>Auto-Assign Selected (GERDA)';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to batch assign tickets');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-robot me-2"></i>Auto-Assign Selected (GERDA)';
+        }
+    }
+
+    function showAssignModal(ticketGuid) {
+        document.getElementById('assignTicketGuid').value = ticketGuid;
+        document.getElementById('assignAgentId').value = '';
+        document.getElementById('assignProjectGuid').value = '';
+        
+        const modal = new bootstrap.Modal(document.getElementById('assignModal'));
+        modal.show();
+    }
+
+    async function submitManualAssign() {
+        const ticketGuid = document.getElementById('assignTicketGuid').value;
+        const agentId = document.getElementById('assignAgentId').value;
+        const projectGuid = document.getElementById('assignProjectGuid').value || null;
+
+        if (!agentId) {
+            alert('Please select an agent');
+            return;
+        }
+
+        try {
+            const response = await fetch('@Url.Action("AssignTicket", "Manager")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: new URLSearchParams({
+                    ticketGuid: ticketGuid,
+                    agentId: agentId,
+                    projectGuid: projectGuid
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('Ticket assigned successfully!');
+                location.reload();
+            } else {
+                alert('Error: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to assign ticket');
+        }
+    }
+
+    function showManualBatchAssign() {
+        // For simplicity, prompt for agent selection
+        const agentSelect = document.getElementById('assignAgentId');
+        const agentId = prompt('Enter agent ID for batch assignment (or leave empty to skip):');
+        
+        if (agentId === null) return; // Cancelled
+        
+        if (confirm(`Assign ${selectedTickets.size} ticket(s) to the selected agent?`)) {
+            batchAssignManual(agentId);
+        }
+    }
+
+    async function batchAssignManual(agentId) {
+        const btn = document.getElementById('batchManualBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+
+        try {
+            const response = await fetch('@Url.Action("BatchAssignTickets", "Manager")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: JSON.stringify({
+                    ticketGuids: Array.from(selectedTickets),
+                    useGerdaRecommendations: false,
+                    forceAgentId: agentId || null
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                alert(`Successfully assigned ${result.successCount} ticket(s)!\nFailed: ${result.failureCount}`);
+                location.reload();
+            } else {
+                alert('Error: ' + result.message);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-user-cog me-2"></i>Manual Assign Selected';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to batch assign tickets');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-user-cog me-2"></i>Manual Assign Selected';
+        }
+    }
+</script>
+}
+
+@Html.AntiForgeryToken()

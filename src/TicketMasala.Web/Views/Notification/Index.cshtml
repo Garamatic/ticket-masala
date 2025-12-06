@@ -1,0 +1,36 @@
+@model List<TicketMasala.Web.Models.Notification>
+
+@{
+    ViewData["Title"] = "Notifications";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Notifications</h1>
+        <form asp-action="MarkAllRead" method="post">
+            <button type="submit" class="btn btn-outline-primary">Mark All as Read</button>
+        </form>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="list-group">
+            @foreach (var notification in Model)
+            {
+                <a href="@Url.Action("Read", "Notification", new { id = notification.Id })" class="list-group-item list-group-item-action @(notification.IsRead ? "" : "active")" aria-current="true">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">@notification.Type</h5>
+                        <small>@notification.CreatedAt.ToString("g")</small>
+                    </div>
+                    <p class="mb-1">@notification.Message</p>
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            You have no notifications.
+        </div>
+    }
+</div>

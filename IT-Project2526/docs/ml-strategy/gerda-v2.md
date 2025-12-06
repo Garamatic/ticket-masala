@@ -1,139 +1,126 @@
-# GERDA: AI Operations Engine (v2)
+# GERDA: AI Operations Engine (v2.1)
 
 **Project:** Ticket Masala
-**Version:** 2.2 (Feature Extraction Edition)
+**Version:** 2.1 (Critique Addressed)
 **Last Updated:** December 2025
+**Framework Target:** .NET 9 LTS
 
 ---
 
 ## 1. Executive Summary
 
-GERDA (Groups, Estimates, Ranks, Dispatches, Anticipates) has evolved from a fixed set of algorithms into a **flexible, configuration-driven AI pipeline**.
-
-In v2, GERDA decouples the *algorithm* (e.g., Matrix Factorization) from the *data source* (e.g., Ticket fields) using a **Feature Extraction Layer**. This allows each Domain (IT, HR, Gardening) to define its own inputs for the AI models without changing code.
+GERDA (Groups, Estimates, Ranks, Dispatches, Anticipates) has evolved into a fully **configuration-driven AI pipeline**. This version addresses critical performance and extensibility critiques, specifically removing hardcoded business logic in favor of YAML configuration and compiled rules.
 
 ---
 
-## 2. The Semantic Shift
+## 2. Critical Architectural Decisions
 
-| Concept | v1 Implementation | v2 Implementation |
-|---------|-------------------|-------------------|
-| **Strategy Selection** | Hardcoded `if/else` | **Strategy Factory** (Configurable) |
-| **Model Inputs** | Hardcoded Properties (`Priority`, `Size`) | **Feature Extractor** (YAML Definition) |
-| **Dispatching** | Rule-based Fallback | Multi-Strategy (ML -> Rule -> Random) |
-| **Ranking** | WSJF Only | Pluggable (WSJF, RiskScore, Seasonal) |
+| Concern | v1 "Hardcoded" | v2 "Configurable" (Current) |
+|---------|----------------|-----------------------------|
+| **Ranking Logic** | C# `if (breach < 1 day) * 10` | **YAML Formula** + Dynamic Multipliers |
+| **Duplicate Detection** | Memory-heavy LINQ Query | **Ingestion Content Hash** (SHA256) |
+| **Dispatch Weights** | Hardcoded `0.4 * ML + 0.3 * Skill` | **Configurable Weights** in YAML |
+| **Expertise Match** | String `Contains()` | **SQLite FTS5** Semantic Search |
+| **Model Storage** | Docker Image | **/app/data Volume** (Persists retrains) |
+| **Training** | Main Thread | **Background Semaphore** (Low CPU priority) |
 
 ---
 
-## 3. Architecture: The Feature Pipeline
+## 3. The Five Modules (Refactored)
 
-The core innovation in v2 is the **Dynamic Feature Extractor**.
+### 3.1 G — Grouping (The Noise Filter)
 
-### 3.1 Configuration (`masala_domains.yaml`)
+*Pattern: Ingestion Deduplication*
 
-Domains define how to transform raw data into machine-readable features.
+Instead of scanning history on every ticket (O(N)), we compute a hash at ingestion.
+
+1. **Ingestion:** Compute `SHA256(Description + CustomerId)`.
+2. **Storage:** Save to `Ticket.ContentHash` (Indexed).
+3. **Check:** `SELECT Id FROM Tickets WHERE ContentHash = @Hash AND Created > @Window`.
+4. **Result:** Zero-allocation instant duplicate check.
+
+### 3.2 E — Estimating (The Sizer)
+
+*Pattern: Category Lookup*
+
+Remains simple for now (KISS). Maps keywords/categories to Fibonacci points via YAML config.
+
+### 3.3 R — Ranking (The Prioritizer)
+
+*Pattern: Rule Engine*
+
+**Problem:** Changing "Breach Multiplier" required a redeploy.
+**Solution:** Logic is now defined in `masala_domains.yaml` and executed by `RuleCompilerService`.
 
 ```yaml
-ai_models:
-  dispatching:
-    features:
-      - name: "zone_code_encoded"
-        source_field: "zone"  # From CustomFieldsJson
-        transformation: "one_hot"
-        params: { target: "Z1" }
-      - name: "urgency_norm"
-        source_field: "urgency"
-        transformation: "min_max"
-        params: { min: 0, max: 10 }
+ranking:
+  base_formula: "cost_of_delay / job_size"
+  multipliers:
+    - condition: "days_until_breach <= 0"
+      value: 10.0
+    - condition: "days_until_breach <= 1"
+      value: 5.0
+    - condition: "customer_tier == 'VIP'"
+      value: 2.0
 ```
 
-### 3.2 Feature Extractor Service
+### 3.4 D — Dispatching (The Matchmaker)
 
-The `DynamicFeatureExtractor` reads this config and produces a normalized float vector.
+*Pattern: Feature-Driven Scoring*
 
-```csharp
-// Input: Ticket { CustomFields: { "zone": "Z1", "urgency": 9 } }
-// Config: Mapping rules above
-// Output: float[] { 1.0, 0.9 }
+**Problem:** Definition of "Good Match" was hardcoded.
+**Solution:** Weights are injected from configuration.
+
+```yaml
+dispatching:
+  weights:
+    ml_score: 0.4
+    expertise_match: 0.3
+    language_match: 0.2
+    geo_match: 0.1
+  constraints:
+    max_capacity_penalty: 0.5
 ```
 
-This vector is then passed to the ML Strategy (e.g., ML.NET Prediction Engine).
+**Implementation Update:**
+
+- **Expertise Matching:** Uses SQLite FTS5 (`MATCH 'Tax OR Fraud'`) instead of costly string contains.
+- **Model Training:** Wrapped in `SemaphoreSlim` and run on low-priority threads to prevent web API starvation.
+
+### 3.5 A — Anticipation (The Weather Report)
+
+*Pattern: Time Series SSA*
+
+Uses ML.NET SSA (Singular Spectrum Analysis) to forecast volume.
+*Constraint:* Model files stored in `/app/data/models/` to persist across container restarts.
 
 ---
 
-## 4. The Five Modules (Revised)
+## 4. The Feature Extraction Pipeline
 
-### 4.1 G — Grouping (Spam & Cluster)
+To support the above configurable logic, the application uses a dynamic feature extractor.
 
-*Status: Configurable Strategies*
-
-- **Strategies:**
-  - `TimeWindowClustering`: Groups tickets from same user within X minutes.
-  - `TextSimilarity`: (Future) Uses TF-IDF to find duplicate content.
-
-### 4.2 E — Estimating (Sizing)
-
-*Status: Domain-Specific Lookups*
-
-- **Strategies:**
-  - `CategoryLookup`: Maps "Password Reset" -> 1 point.
-  - `LlmEstimator`: (Experimental) Sends description to LLM for fibonacci guess.
-
-### 4.3 R — Ranking (Prioritization)
-
-*Status: Pluggable Formulas*
-
-- **Strategies:**
-  - `WSJF` (IT Default): Cost of Delay / Job Size.
-  - `RiskScore` (Tax Default): (Value * RiskFactor) + Deadline.
-  - `SeasonalPriority` (Gardening): Boosts maintenance in Spring/Summer.
-
-### 4.4 D — Dispatching (Assignment)
-
-*Status: Feature-Driven ML*
-
-- **The Flow:**
-    1. **Extract Features:** `DynamicFeatureExtractor` converts ticket to vector.
-    2. **Predict Scores:** `MatrixFactorizationStrategy` predicts Agent affinity.
-    3. **Apply Constraints:** Filter by Availability, Role, and Language.
-    4. **Fallback:** If ML uncertain, fall back to `RoundRobin` or `LeastLoaded`.
-
-### 4.5 A — Anticipation (Forecasting)
-
-*Status: Time Series*
-
-- **Strategies:**
-  - `SsaForecasting`: Singular Spectrum Analysis on historical volume.
-  - `MovingAverage`: Simple baseline for low-volume domains.
+1. **Config:** User defines `feature_mapping` in YAML.
+2. **Extract:** `DynamicFeatureExtractor` converts Ticket -> `float[]` or `Dictionary<string, object>`.
+3. **Execute:**
+    - **Ranking:** `RuleCompiler` evaluates YAML conditions against extracted dictionary.
+    - **Dispatching:** Strategies weight the ML prediction against extracted feature matches.
 
 ---
 
-## 5. Developer Guide: Adding a Strategy
+## 5. Deployment Constraints (Single Container)
 
-To add a new AI capability (e.g., "Sentiment Analysis Ranking"):
+To maintain the "In-Process" architecture:
 
-1. **Implement Interface:** Create class implementing `IJobRankingStrategy`.
-2. **Register:** Add to DI Container with a Key (e.g., `"SentimentRank"`).
-3. **Configure:** Update `masala_domains.yaml` to use `ranking: SentimentRank`.
-4. **Define Features:** (Optional) Add feature mappings if the strategy needs specific inputs.
-
----
-
-## 6. Implementation Status
-
-| Component | Status | Notes |
-|-----------|--------|-------|
-| **Strategy Factory** | ✅ Complete | Resolves by string key |
-| **Feature Extractor** | ✅ Complete | Supports OneHot, MinMax, Bool |
-| **Dispatching Integration**| ✅ Complete | Matrices + Fallbacks |
-| **Ranking Integration** | ✅ Complete | WSJF fully ported |
-| **Estimating Integration**| ✅ Complete | Category lookup |
-| **ML Training Pipeline** | 🟡 Partial | Manual trigger only |
+1. **File Storage:** All ML models (`.zip`, `.onnx`) MUST reside in `/app/data/`.
+2. **Concurrency:** Training jobs must be rate-limited (1 concurrent training job max).
+3. **Database:** SQLite in WAL Mode is required for concurrent ML reads + Web writes.
 
 ---
 
-## 7. Future Directions
+## 6. Implementation Checklist
 
-- **Auto-ML:** Allow GERDA to self-select the best model for a domain based on accuracy metrics.
-- **Model Hosting:** Move high-memory models (LLMs) to a sidecar process if "In-Process" limits are hit.
-- **Feedback Loop:** Explicit "Good/Bad Recommendation" buttons for Reinforced Learning.
+- [ ] **Refactor Grouping:** Add `ContentHash` column and migration.
+- [ ] **Refactor Ranking:** Port C# logic to `RuleCompilerService`.
+- [ ] **Refactor Dispatching:** Inject `DispatchWeightsOptions` from config.
+- [ ] **Infrastructure:** Ensure `/app/data` volume mount for model persistence.

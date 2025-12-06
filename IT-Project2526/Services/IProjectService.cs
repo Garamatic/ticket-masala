@@ -49,4 +49,20 @@ public interface IProjectService
     /// Get project templates dropdown list
     /// </summary>
     Task<List<SelectListItem>> GetTemplateSelectListAsync();
+
+    /// <summary>
+    /// Prepare ViewModel for creating a project from a ticket
+    /// Includes GERDA PM recommendation
+    /// </summary>
+    Task<CreateProjectFromTicketViewModel?> PrepareCreateFromTicketViewModelAsync(Guid ticketId);
+
+    /// <summary>
+    /// Create a project from an existing ticket with template and PM assignment
+    /// </summary>
+    Task<Guid?> CreateProjectFromTicketAsync(CreateProjectFromTicketViewModel viewModel, string userId);
+
+    /// <summary>
+    /// Get employee dropdown list for PM selection
+    /// </summary>
+    Task<SelectList> GetEmployeeSelectListAsync(string? selectedId = null);
 }

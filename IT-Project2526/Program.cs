@@ -1,6 +1,5 @@
 using IT_Project2526;
 using IT_Project2526.Data;
-using IT_Project2526.Managers;
 using IT_Project2526.Models;
 using IT_Project2526.Services;
 using IT_Project2526.Repositories;
@@ -22,6 +21,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Localization;
 using WebOptimizer;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -88,8 +88,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     .AddDefaultTokenProviders()
     .AddDefaultUI(); //for identity pages
 
-// Register Managers (if needed in future)
-builder.Services.AddScoped<ApplicationUserManager>();
+// Register Managers (removed ApplicationUserManager - merged into IUserRepository)
 
 // ============================================
 // Register Repositories (Repository Pattern)
@@ -114,9 +113,20 @@ builder.Services.AddScoped<IProjectObserver, NotificationProjectObserver>();
 builder.Services.AddScoped<ICommentObserver, LoggingCommentObserver>();
 builder.Services.AddScoped<ICommentObserver, NotificationCommentObserver>();
 
-// Register Services
+// ============================================
+// Register Services (CQRS + Factory Pattern)
+// ============================================
 builder.Services.AddScoped<IMetricsService, MetricsService>();
-builder.Services.AddScoped<ITicketService, TicketService>();
+
+// TicketService implements all three interfaces (for backward compatibility)
+builder.Services.AddScoped<TicketService>();
+builder.Services.AddScoped<ITicketService>(sp => sp.GetRequiredService<TicketService>());
+builder.Services.AddScoped<ITicketQueryService>(sp => sp.GetRequiredService<TicketService>());
+builder.Services.AddScoped<ITicketCommandService>(sp => sp.GetRequiredService<TicketService>());
+
+// Factory Pattern for Ticket creation
+builder.Services.AddScoped<ITicketFactory, TicketFactory>();
+
 builder.Services.AddScoped<IDispatchBacklogService, DispatchBacklogService>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
@@ -272,7 +282,17 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 // Add services to the container.
-builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+builder.Services.AddLocalization();
+
+// Enable CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", 
+        builder => builder
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+});
 
 builder.Services.AddControllersWithViews()
     .AddViewLocalization(Microsoft.AspNetCore.Mvc.Razor.LanguageViewLocationExpanderFormat.Suffix)
@@ -302,6 +322,9 @@ var localizationOptions = new RequestLocalizationOptions()
     .SetDefaultCulture(supportedCultures[0])
     .AddSupportedCultures(supportedCultures)
     .AddSupportedUICultures(supportedCultures);
+
+// Add cookie provider for language switcher support
+localizationOptions.RequestCultureProviders.Insert(0, new CookieRequestCultureProvider());
 
 app.UseRequestLocalization(localizationOptions);
 
@@ -363,6 +386,9 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+// Use CORS
+app.UseCors("AllowAll");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -370,7 +396,8 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-app.MapRazorPages(); // Identity pages like /Identity/Login
+app.MapRazorPages(); 
+
 app.MapHealthChecks("/health").AllowAnonymous();
 
 app.Run();

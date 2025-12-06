@@ -457,10 +457,14 @@
         <i class="fas fa-edit me-2"></i> Edit Ticket
     </a>
     
-    @if (Model.ProjectGuid.HasValue)
-    {
         <a asp-controller="Projects" asp-action="Details" asp-route-id="@Model.ProjectGuid" class="btn btn-outline-secondary">
             <i class="fas fa-folder me-2"></i> View Project
+        </a>
+    }
+    else
+    {
+        <a asp-controller="Projects" asp-action="CreateFromTicket" asp-route-ticketId="@Model.Guid" class="btn btn-outline-success">
+            <i class="fas fa-plus-circle me-2"></i> Create Project
         </a>
     }
     

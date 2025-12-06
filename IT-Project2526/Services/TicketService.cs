@@ -35,7 +35,7 @@ namespace IT_Project2526.Services
         Task<TicketComment> AddCommentAsync(Guid ticketId, string body, bool isInternal, string authorId);
     }
 
-    public class TicketService : ITicketService
+    public class TicketService : ITicketService, ITicketQueryService, ITicketCommandService
     {
         private readonly ITProjectDB _context;
         private readonly ITicketRepository _ticketRepository;

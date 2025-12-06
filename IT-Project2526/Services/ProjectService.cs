@@ -359,4 +359,144 @@ public class ProjectService : IProjectService
             }
         }
     }
+
+    /// <summary>
+    /// Prepare ViewModel for creating a project from a ticket
+    /// </summary>
+    public async Task<CreateProjectFromTicketViewModel?> PrepareCreateFromTicketViewModelAsync(Guid ticketId)
+    {
+        var ticket = await _context.Tickets
+            .Include(t => t.Customer)
+            .FirstOrDefaultAsync(t => t.Guid == ticketId);
+
+        if (ticket == null)
+        {
+            return null;
+        }
+
+        // Get GERDA PM recommendation
+        string? recommendedPMId = null;
+        string? recommendedPMName = null;
+        
+        // Try to get PM recommendation from dispatching service (if available via DI)
+        // For now, use workload-based fallback
+        var employees = await _context.Users.OfType<Employee>().ToListAsync();
+        var pmProjectCounts = await _context.Projects
+            .Where(p => p.ProjectManagerId != null)
+            .Where(p => p.Status != Status.Completed && p.Status != Status.Failed)
+            .GroupBy(p => p.ProjectManagerId)
+            .Select(g => new { PMId = g.Key!, Count = g.Count() })
+            .ToDictionaryAsync(x => x.PMId, x => x.Count);
+
+        var bestPM = employees
+            .Select(e => new { Employee = e, Count = pmProjectCounts.GetValueOrDefault(e.Id, 0) })
+            .OrderBy(x => x.Count)
+            .FirstOrDefault();
+
+        if (bestPM != null)
+        {
+            recommendedPMId = bestPM.Employee.Id;
+            recommendedPMName = $"{bestPM.Employee.FirstName} {bestPM.Employee.LastName}";
+        }
+
+        // Extract subject from description (first line or first 100 chars)
+        var subject = ticket.Description.Split('\n')[0];
+        if (subject.Length > 100) subject = subject.Substring(0, 100) + "...";
+
+        return new CreateProjectFromTicketViewModel
+        {
+            TicketId = ticketId,
+            TicketDescription = ticket.Description,
+            CustomerName = ticket.Customer != null 
+                ? $"{ticket.Customer.FirstName} {ticket.Customer.LastName}" 
+                : null,
+            CustomerId = ticket.CustomerId,
+            ProjectName = $"Project: {subject}",
+            ProjectDescription = ticket.Description,
+            RecommendedPMId = recommendedPMId,
+            RecommendedPMName = recommendedPMName,
+            SelectedPMId = recommendedPMId, // Pre-select the recommendation
+            TargetCompletionDate = DateTime.UtcNow.AddDays(30),
+            TemplateList = new SelectList(await GetTemplateSelectListAsync(), "Value", "Text"),
+            ProjectManagerList = await GetEmployeeSelectListAsync(recommendedPMId)
+        };
+    }
+
+    /// <summary>
+    /// Create a project from an existing ticket
+    /// </summary>
+    public async Task<Guid?> CreateProjectFromTicketAsync(CreateProjectFromTicketViewModel viewModel, string userId)
+    {
+        var ticket = await _context.Tickets
+            .Include(t => t.Customer)
+            .FirstOrDefaultAsync(t => t.Guid == viewModel.TicketId);
+
+        if (ticket == null)
+        {
+            _logger.LogWarning("Ticket not found for project creation: {TicketId}", viewModel.TicketId);
+            return null;
+        }
+
+        // Get customer
+        var customer = ticket.Customer;
+        if (customer == null && !string.IsNullOrEmpty(viewModel.CustomerId))
+        {
+            customer = await _context.Customers.FirstOrDefaultAsync(c => c.Id == viewModel.CustomerId);
+        }
+
+        // Create project
+        var project = new Project
+        {
+            Name = viewModel.ProjectName,
+            Description = viewModel.ProjectDescription ?? ticket.Description,
+            Status = Status.Pending,
+            Customer = customer,
+            CompletionTarget = viewModel.TargetCompletionDate,
+            CreatorGuid = Guid.Parse(userId),
+            ProjectManagerId = viewModel.SelectedPMId
+        };
+
+        // Add customer as stakeholder
+        if (customer != null)
+        {
+            project.Customers.Add(customer);
+        }
+
+        _context.Projects.Add(project);
+        await _context.SaveChangesAsync();
+
+        // Apply template if selected
+        if (viewModel.SelectedTemplateId.HasValue && customer != null)
+        {
+            await ApplyTemplateAsync(project, viewModel.SelectedTemplateId.Value, userId, customer);
+        }
+
+        // Link the original ticket to this project
+        ticket.ProjectGuid = project.Guid;
+        ticket.Project = project;
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Project {ProjectId} created from ticket {TicketId}", project.Guid, viewModel.TicketId);
+
+        // Notify observers
+        await NotifyObserversCreatedAsync(project);
+
+        return project.Guid;
+    }
+
+    /// <summary>
+    /// Get employee dropdown list for PM selection
+    /// </summary>
+    public async Task<SelectList> GetEmployeeSelectListAsync(string? selectedId = null)
+    {
+        var employees = await _context.Users.OfType<Employee>().ToListAsync();
+        var items = employees.Select(e => new SelectListItem
+        {
+            Value = e.Id,
+            Text = $"{e.FirstName} {e.LastName}",
+            Selected = selectedId != null && e.Id == selectedId
+        }).ToList();
+
+        return new SelectList(items, "Value", "Text", selectedId);
+    }
 }

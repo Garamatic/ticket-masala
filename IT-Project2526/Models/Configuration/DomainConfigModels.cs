@@ -22,7 +22,29 @@ public class DomainConfig
     public WorkflowConfig Workflow { get; set; } = new();
     public AiStrategiesConfig AiStrategies { get; set; } = new();
     public Dictionary<string, string> AiPrompts { get; set; } = new();
+    public Dictionary<string, GerdaModelConfig> AiModels { get; set; } = new();
     public IntegrationConfig Integrations { get; set; } = new();
+}
+
+/// <summary>
+/// Configuration for an AI Model (ONNX, ML.NET) and its feature map
+/// </summary>
+public class GerdaModelConfig
+{
+    public string Type { get; set; } = "ML.NET"; // ONNX, ML.NET
+    public string Path { get; set; } = string.Empty;
+    public List<FeatureDefinition> Features { get; set; } = new();
+}
+
+/// <summary>
+/// Definition of a feature to extract from the Ticket
+/// </summary>
+public class FeatureDefinition
+{
+    public string Name { get; set; } = string.Empty;
+    public string SourceField { get; set; } = string.Empty;
+    public string Transformation { get; set; } = "none"; // none, min_max, one_hot
+    public Dictionary<string, object> Params { get; set; } = new();
 }
 
 /// <summary>

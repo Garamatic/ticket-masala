@@ -9,6 +9,7 @@ using IT_Project2526.Observers;
 using Microsoft.AspNetCore.Http;
 using IT_Project2526;
 using System.Security.Claims;
+using IT_Project2526.Services.Rules;
 
 namespace IT_Project2526.Tests.Services
 {
@@ -38,6 +39,8 @@ namespace IT_Project2526.Tests.Services
             var auditService = new Mock<IAuditService>();
             var httpContextAccessor = new Mock<IHttpContextAccessor>();
             
+            var ruleEngine = new Mock<IRuleEngineService>();
+            
             // Setup HttpContext
             var httpContext = new DefaultHttpContext();
             httpContextAccessor.Setup(x => x.HttpContext).Returns(httpContext);
@@ -52,6 +55,7 @@ namespace IT_Project2526.Tests.Services
                 notificationService.Object,
                 auditService.Object,
                 httpContextAccessor.Object,
+                ruleEngine.Object,
                 _mockLogger.Object
             );
         }

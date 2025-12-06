@@ -90,17 +90,17 @@ public class DomainConfigurationService : IDomainConfigurationService
                     {
                         States = new List<WorkflowStateDefinition>
                         {
-                            new() { Code = "NEW", Name = "New", Color = "#6c757d" },
-                            new() { Code = "IN_PROGRESS", Name = "In Progress", Color = "#007bff" },
-                            new() { Code = "RESOLVED", Name = "Resolved", Color = "#28a745" },
-                            new() { Code = "CLOSED", Name = "Closed", Color = "#343a40" }
+                            new() { Code = "Pending", Name = "Pending", Color = "#6c757d" },
+                            new() { Code = "InProgress", Name = "In Progress", Color = "#007bff" },
+                            new() { Code = "Completed", Name = "Completed", Color = "#28a745" },
+                            new() { Code = "Cancelled", Name = "Cancelled", Color = "#343a40" }
                         },
                         Transitions = new Dictionary<string, List<string>>
                         {
-                            ["NEW"] = new() { "IN_PROGRESS", "CLOSED" },
-                            ["IN_PROGRESS"] = new() { "RESOLVED" },
-                            ["RESOLVED"] = new() { "CLOSED", "IN_PROGRESS" },
-                            ["CLOSED"] = new()
+                            ["Pending"] = new() { "InProgress", "Cancelled" },
+                            ["InProgress"] = new() { "Completed", "Cancelled" },
+                            ["Completed"] = new() { "InProgress" }, // Reopen
+                            ["Cancelled"] = new()
                         }
                     }
                 }
@@ -117,6 +117,11 @@ public class DomainConfigurationService : IDomainConfigurationService
     public DomainConfig? GetDomain(string domainId)
     {
         return _config.Domains.TryGetValue(domainId, out var domain) ? domain : null;
+    }
+
+    public Dictionary<string, DomainConfig> GetAllDomains()
+    {
+        return _config.Domains;
     }
 
     public IEnumerable<string> GetAllDomainIds()

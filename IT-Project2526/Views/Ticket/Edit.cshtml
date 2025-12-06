@@ -44,7 +44,10 @@
                 <div class="col-md-4">
                     <div class="mb-3">
                         <label asp-for="TicketStatus" class="form-label">Status</label>
-                        <select asp-for="TicketStatus" asp-items="Html.GetEnumSelectList<Status>()" class="form-select"></select>
+                        @{
+                            var statusList = ViewBag.ValidStatuses as SelectList ?? Html.GetEnumSelectList<IT_Project2526.Models.Status>();
+                        }
+                        <select asp-for="TicketStatus" asp-items="statusList" class="form-select"></select>
                         <span asp-validation-for="TicketStatus" class="text-danger"></span>
                     </div>
                 </div>

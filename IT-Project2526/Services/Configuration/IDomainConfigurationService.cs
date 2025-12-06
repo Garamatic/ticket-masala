@@ -12,6 +12,11 @@ public interface IDomainConfigurationService
     /// Gets the full configuration for a specific domain.
     /// </summary>
     DomainConfig? GetDomain(string domainId);
+
+    /// <summary>
+    /// Gets all configured domains.
+    /// </summary>
+    Dictionary<string, DomainConfig> GetAllDomains();
     
     /// <summary>
     /// Gets all configured domain IDs.

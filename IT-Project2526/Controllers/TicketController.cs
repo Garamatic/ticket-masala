@@ -4,6 +4,7 @@ using IT_Project2526.ViewModels;
 using IT_Project2526.Services;
 using IT_Project2526.Services.GERDA;
 using IT_Project2526.Services.Configuration;
+using IT_Project2526.Services.Rules;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -22,6 +23,7 @@ namespace IT_Project2526.Controllers
         private readonly IDomainConfigurationService _domainConfig;
         private readonly ITProjectDB _context;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IRuleEngineService _ruleEngine;
         private readonly ILogger<TicketController> _logger;
 
         public TicketController(
@@ -33,6 +35,7 @@ namespace IT_Project2526.Controllers
             IDomainConfigurationService domainConfig,
             ITProjectDB context,
             IHttpContextAccessor httpContextAccessor,
+            IRuleEngineService ruleEngine,
             ILogger<TicketController> logger)
         {
             _gerdaService = gerdaService;
@@ -43,6 +46,7 @@ namespace IT_Project2526.Controllers
             _domainConfig = domainConfig;
             _context = context;
             _httpContextAccessor = httpContextAccessor;
+            _ruleEngine = ruleEngine;
             _logger = logger;
         }
 
@@ -451,6 +455,12 @@ namespace IT_Project2526.Controllers
                 ViewBag.CustomFieldValues = new Dictionary<string, object>();
             }
 
+            // Filter Valid Next States
+            var validStates = _ruleEngine.GetValidNextStates(ticket, User);
+            // Ensure allowed transitions + current status are included
+            var allowedStatuses = validStates.Union(new[] { ticket.TicketStatus }).Distinct().ToList();
+            ViewBag.ValidStatuses = new SelectList(allowedStatuses);
+
             return View(viewModel);
         }
 
@@ -510,15 +520,28 @@ namespace IT_Project2526.Controllers
                         ModelState.AddModelError("", "Failed to update ticket. Please try again.");
                     }
                 }
+                catch (DomainRuleException ex)
+                {
+                    ModelState.AddModelError("", ex.Message);
+                }
                 catch (DbUpdateConcurrencyException)
                 {
                     throw;
                 }
             }
 
-            // If validation fails, reload the dropdowns and custom fields config
+            // If validation fails, reload dropdowns
             viewModel.ResponsibleUsers = await _ticketService.GetAllUsersSelectListAsync();
             
+            // Reload valid statuses
+            var reloadTicket = await _ticketService.GetTicketForEditAsync(id);
+            if (reloadTicket != null)
+            {
+                 var validStates = _ruleEngine.GetValidNextStates(reloadTicket, User);
+                 var allowedStatuses = validStates.Union(new[] { reloadTicket.TicketStatus }).Distinct().ToList();
+                 ViewBag.ValidStatuses = new SelectList(allowedStatuses);
+            }
+
             var reloadDomainId = _domainConfig.GetDefaultDomainId();
             ViewBag.DomainId = reloadDomainId;
             ViewBag.EntityLabels = _domainConfig.GetEntityLabels(reloadDomainId);

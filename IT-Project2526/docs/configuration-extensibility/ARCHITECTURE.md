@@ -28,9 +28,24 @@ The system recognizes three **universal abstractions** that exist across all dom
 
 These abstractions are **immutable in code** but their **labels, fields, and behaviors are mutable via configuration**.
 
-### 1.2 The Configuration Hierarchy
+### 1.2 The "In-Process" Architecture (KISS Principle)
 
-```
+We replace infrastructure components with .NET abstractions to create **"Logical Separation" without "Physical Separation."**
+
+| "Enterprise" Component | "Origins" Replacement (C#) | Why it works |
+|------------------------|---------------------------|--------------|
+| **RabbitMQ** | `System.Threading.Channels` | High-perf in-memory queue. |
+| **Worker Service** | `IHostedService` | Runs a background thread inside same app. |
+| **Redis** | `IMemoryCache` | Uses container RAM. Faster than network. |
+| **PostgreSQL** | `SQLite (WAL Mode)` | "Write-Ahead Logging" allows concurrent reads/writes. |
+| **Elasticsearch** | `SQLite FTS5` | Full-text search engine built into SQLite. |
+
+**The Exit Strategy:**
+Code shouldn't leak "SQLite-isms". Use EF Core abstractions (e.g., `HasComputedColumnSql`) so that upgrading to Postgres later is just a connection string and provider change.
+
+### 1.3 The Configuration Hierarchy
+
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                      DOMAIN CONFIGURATION                        │
 │  (YAML/JSON: masala_domain.yaml)                                 │
@@ -124,7 +139,7 @@ public class Ticket : BaseModel
 }
 ```
 
-### 2.2 Custom Fields Storage
+### 2.2 Custom Fields Storage & Performance
 
 Custom fields are stored as a JSON object:
 
@@ -136,6 +151,13 @@ Custom fields are stored as a JSON object:
   "last_watering_date": "2025-12-01"
 }
 ```
+
+> [!IMPORTANT]
+> **Performance Requirement:** Filtering on custom fields (e.g., `soil_ph < 6.0`) must not trigger full table scans.
+>
+> - **PostgreSQL:** MUST use `jsonb` column type with **GIN Indexing**.
+> - **SQL Server:** MUST use **Computed Columns with Indexes** for frequently queried fields.
+> - **Querying:** Do not treat the JSON column as a simple string blob; use native JSON query operators.
 
 ### 2.3 Custom Fields Validation
 
@@ -168,18 +190,20 @@ public interface IDomainConfigurationService
 }
 ```
 
-### 3.2 Rule Engine Service
+### 3.2 Rule Engine Service (Compiled)
 
-Executes domain-specific business rules defined in YAML.
+Executes domain-specific business rules. To ensure performance, rules are **compiled at startup** into delegates using Expression Trees, rather than interpreted at runtime.
 
 ```csharp
 public interface IRuleEngineService
 {
+    // Implementation uses compiled Func<WorkItem, bool> cached by Domain+State
     bool CanTransition(Ticket ticket, string targetState, ClaimsPrincipal user);
-    IEnumerable<string> GetRequiredFieldsForState(string domainId, string state);
-    double CalculatePriority(Ticket ticket); // Uses domain-specific formula
 }
 ```
+
+**Architecture Pattern:** Specification Pattern + Expression Trees.
+**Performance:** Avoids repeated JSON parsing and string evaluation.
 
 **Example Rule (YAML):**
 
@@ -198,26 +222,34 @@ transitions:
 Dynamically injects the correct AI strategy based on domain configuration.
 
 ```csharp
-public interface IGerdaStrategyFactory
+### 3.3 GERDA AI Architecture
+
+Transforms from simple Strategy selection to a **Feature Extraction Pipeline**.
+
+1.  **Strategy Factory (`IStrategyFactory`):** Resolves the configured strategy implementation for the domain (e.g., loading `MatrixFactorization` for Dispatching in IT).
+2.  **Feature Extraction (`IFeatureExtractor`):** Extracts and normalizes data (from JSON or SQL) into a vector.
+    - Implemented by `DynamicFeatureExtractor`, driven by `masala_domains.yaml`.
+    - Supports transformations: `min_max`, `one_hot`, `bool`.
+3.  **Inference:** Strategies use the extracted features to run models (ML.NET/ONNX) or heuristic logic.
+
+```csharp
+public interface IFeatureExtractor
 {
-    IRankingStrategy GetRankingStrategy(string domainId);
-    IDispatchingStrategy GetDispatchingStrategy(string domainId);
-    IEstimatingStrategy GetEstimatingStrategy(string domainId);
+    // Maps Ticket + Config -> Float[]
+    float[] ExtractFeatures(Ticket ticket, GerdaModelConfig config);
 }
 ```
 
 **Registered Strategies (via DI):**
 
-| Domain | Ranking | Dispatching |
-|--------|---------|-------------|
-| IT | WSJFRankingStrategy | MatrixFactorizationDispatcher |
-| TaxLaw | RiskScoreRankingStrategy | RegionBasedDispatcher |
-| Gardening | SeasonalPriorityStrategy | ZoneBasedDispatcher |
+| Domain Type | Service Interface | Implementation | Config Key |
+|-------------|-------------------|----------------|------------|
+| Ranking | `IJobRankingStrategy` | `WeightedShortestJobFirstStrategy` | `WSJF` |
+| Estimating | `IEstimatingStrategy` | `CategoryBasedEstimatingStrategy` | `CategoryLookup` |
+| Dispatching | `IDispatchingStrategy` | `MatrixFactorizationDispatchingStrategy` | `MatrixFactorization` |
 
----
-
-## 4. Configuration File Structure (YAML)
-
+> [!NOTE]
+>
 ### 4.1 Master Domain Configuration
 
 **File:** `masala_domains.yaml`
@@ -543,32 +575,30 @@ To preserve existing data during the transition:
 
 ---
 
-### 8.3 Version Control & Audit Trail
+### 8.3 Configuration Versioning & Snapshot Strategy (CRITICAL)
 
-**Question:** Should domain configs be stored in DB for audit trail?
+**The Risk:** Changing a rule in `masala_domains.yaml` could break validation for existing tickets created under previous rules.
 
-**Recommendation:** Yes, for runtime integrity and audit.
+**The Solution:** Snapshot Strategy.
 
-**Implementation:**
+1. **DomainConfigVersion Entity:** Stores immutable snapshots of configuration.
 
-- Store master YAML in source control (Git)
-- On startup, parse YAML and persist to `ConfigurationAudit` table
-- Include timestamp, version number, and hash
-- Runtime cache uses DB version as source of truth
+    ```csharp
+    public class DomainConfigVersion {
+        public int Id { get; set; }
+        public string DomainId { get; set; }
+        public string ConfigJson { get; set; }
+        public string VersionHash { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+    ```
 
-**Schema:**
+2. **Ticket Link:** `Ticket` entity stores `ConfigVersionId` at creation time.
+3. **Rule Engine:** Requests the *specific version* of rules matching the ticket, not just the logical "Live" version.
+4. **Lazy Compilation Cache:** `Dictionary<(string DomainId, string VersionHash), CompiledPolicy>`.
+    - On request, if version not in cache, compile and cache on demand.
 
-```sql
-CREATE TABLE ConfigurationAudit (
-    Id INT PRIMARY KEY,
-    DomainId VARCHAR(50),
-    ConfigJson NVARCHAR(MAX),
-    Version INT,
-    Hash VARCHAR(64),
-    AppliedAt DATETIME,
-    AppliedBy VARCHAR(100)
-);
-```
+**Recommendation:** **MANDATORY** before Phase 5 (Rule Compiler).
 
 ---
 

@@ -4,6 +4,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using IT_Project2526.Services.GERDA.Dispatching;
 using IT_Project2526.Services.GERDA.Models;
+using IT_Project2526.Services.GERDA.Strategies;
+using IT_Project2526.Services.Configuration;
 using IT_Project2526.Models;
 using IT_Project2526;
 
@@ -42,7 +44,17 @@ namespace IT_Project2526.Tests.Services
         {
             // Arrange
             using var context = new ITProjectDB(_dbOptions);
-            var service = new DispatchingService(context, _config, _mockLogger.Object);
+            var strategyFactory = new Mock<IStrategyFactory>();
+            var domainConfig = new Mock<IDomainConfigurationService>();
+            // Mock fallback strategy
+            var mockStrategy = new Mock<IDispatchingStrategy>();
+            mockStrategy.Setup(x => x.GetRecommendedAgentsAsync(It.IsAny<Ticket>(), It.IsAny<int>()))
+                .ReturnsAsync(new List<(string, double)> { ("emp1", 1.0) });
+
+            strategyFactory.Setup(x => x.GetStrategy<IDispatchingStrategy, List<(string, double)>>(It.IsAny<string>()))
+                .Returns(mockStrategy.Object); 
+
+            var service = new DispatchingService(context, _config, strategyFactory.Object, domainConfig.Object, _mockLogger.Object);
 
             var customer = new Customer 
             { 
@@ -88,7 +100,17 @@ namespace IT_Project2526.Tests.Services
         {
             // Arrange
             using var context = new ITProjectDB(_dbOptions);
-            var service = new DispatchingService(context, _config, _mockLogger.Object);
+            var strategyFactory = new Mock<IStrategyFactory>();
+            var domainConfig = new Mock<IDomainConfigurationService>();
+            // Mock fallback strategy
+            var mockStrategy = new Mock<IDispatchingStrategy>();
+            mockStrategy.Setup(x => x.GetRecommendedAgentsAsync(It.IsAny<Ticket>(), It.IsAny<int>()))
+                .ReturnsAsync(new List<(string, double)> { ("free", 1.0) });
+
+            strategyFactory.Setup(x => x.GetStrategy<IDispatchingStrategy, List<(string, double)>>(It.IsAny<string>()))
+                .Returns(mockStrategy.Object); 
+
+            var service = new DispatchingService(context, _config, strategyFactory.Object, domainConfig.Object, _mockLogger.Object);
 
             var customer = new Customer 
             { 

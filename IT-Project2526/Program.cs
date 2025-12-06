@@ -127,6 +127,10 @@ builder.Services.AddSingleton<IT_Project2526.Services.Configuration.IDomainConfi
 builder.Services.AddScoped<IT_Project2526.Services.Validation.ICustomFieldValidationService,
     IT_Project2526.Services.Validation.CustomFieldValidationService>();
 
+// Rule Engine Service
+builder.Services.AddScoped<IT_Project2526.Services.Rules.IRuleEngineService,
+    IT_Project2526.Services.Rules.RuleEngineService>();
+
 builder.Services.AddScoped<IMetricsService, MetricsService>();
 
 // TicketService implements all three interfaces (for backward compatibility)
@@ -173,6 +177,19 @@ if (File.Exists(gerdaConfigPath))
         builder.Services.AddSingleton(gerdaConfig);
         builder.Services.AddScoped<IGroupingService, GroupingService>();
         builder.Services.AddScoped<IEstimatingService, EstimatingService>();
+        
+        // Strategy Factory & Strategies
+        builder.Services.AddScoped<IT_Project2526.Services.GERDA.Strategies.IStrategyFactory, IT_Project2526.Services.GERDA.Strategies.StrategyFactory>();
+        builder.Services.AddScoped<IJobRankingStrategy, WeightedShortestJobFirstStrategy>();
+        builder.Services.AddScoped<IEstimatingStrategy, CategoryBasedEstimatingStrategy>();
+        builder.Services.AddScoped<IDispatchingStrategy, MatrixFactorizationDispatchingStrategy>();
+
+        // Rule Engine
+        builder.Services.AddSingleton<IT_Project2526.Services.Rules.RuleCompilerService>();
+        
+        // AI Features
+        builder.Services.AddScoped<IT_Project2526.Services.GERDA.Features.IFeatureExtractor, IT_Project2526.Services.GERDA.Features.DynamicFeatureExtractor>();
+
         builder.Services.AddScoped<IRankingService, RankingService>();
         builder.Services.AddScoped<IDispatchingService, DispatchingService>();
         builder.Services.AddScoped<IAnticipationService, AnticipationService>();
@@ -364,6 +381,42 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "CRITICAL: An error occurred while seeding the database.");
         logger.LogError(ex, "==================================================");
         logger.LogError("You may need to manually create test users or check your database connection");
+    }
+}
+
+// Validate AI Strategies Configuration
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var domainService = services.GetRequiredService<IT_Project2526.Services.Configuration.IDomainConfigurationService>();
+    var strategyFactory = services.GetRequiredService<IT_Project2526.Services.GERDA.Strategies.IStrategyFactory>();
+    var logger = services.GetRequiredService<ILogger<Program>>();
+
+    logger.LogInformation("==================================================");
+    logger.LogInformation("Validating AI Strategy Implementations...");
+    logger.LogInformation("==================================================");
+
+    var domains = domainService.GetAllDomains();
+    foreach (var domain in domains.Values)
+    {
+        try
+        {
+            var rankingName = domain.AiStrategies?.Ranking ?? "WSJF";
+            strategyFactory.GetStrategy<IT_Project2526.Services.GERDA.Ranking.IJobRankingStrategy, double>(rankingName);
+
+            var estimatingName = domain.AiStrategies?.Estimating ?? "CategoryLookup";
+            strategyFactory.GetStrategy<IT_Project2526.Services.GERDA.Estimating.IEstimatingStrategy, int>(estimatingName);
+
+            var dispatchingName = domain.AiStrategies?.Dispatching ?? "MatrixFactorization";
+            strategyFactory.GetStrategy<IT_Project2526.Services.GERDA.Dispatching.IDispatchingStrategy, List<(string AgentId, double Score)>>(dispatchingName);
+            
+            logger.LogInformation("Domain '{Domain}' configured strategies validated successfully.", domain.DisplayName);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "CRITICAL: Configuration error for domain '{Domain}'. Validation FAILED. Application will shut down.", domain.DisplayName);
+            throw; // Fail fast on startup
+        }
     }
 }
 

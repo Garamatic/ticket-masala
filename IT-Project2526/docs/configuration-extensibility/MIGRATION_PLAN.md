@@ -11,12 +11,13 @@
 | Aspect | Current Architecture | Target Architecture |
 |--------|---------------------|---------------------|
 | **Philosophy** | IT Ticketing System with AI | Generic Workflow Engine with AI |
+| **Philosophy** | IT Ticketing System with AI | Generic Workflow Engine with AI |
 | **Domain Model** | Fixed (Ticket, Project, Employee) | Configurable (Work Item, Container, Handler) |
 | **Data Schema** | Static EF Core entities | Hybrid: Static core + JSON custom fields |
 | **Ticket Types** | C# Enum (`TicketType`) | YAML-defined string codes |
 | **Workflow States** | C# Enum (`Status`) | YAML-defined per domain |
 | **Business Rules** | Hardcoded in `TicketService.cs` | Rule Engine driven by YAML |
-| **AI Strategies** | Single implementation per module | Strategy Pattern with domain injection |
+| **AI Strategies** | Single implementation per module | **DONE:** Strategy Pattern with domain injection |
 | **Configuration** | `masala_config.json` (flat) | `masala_domains.yaml` (hierarchical) |
 | **Multi-Domain** | Not supported | First-class citizen |
 
@@ -95,12 +96,14 @@ Services/
 ├── GERDA/
 │   ├── GerdaService.cs                   → Injects strategies per domain
 │   ├── Strategies/
-│   │   ├── IRankingStrategy.cs           → NEW: Interface
-│   │   ├── WSJFRankingStrategy.cs        → Current logic extracted
-│   │   ├── RiskScoreRankingStrategy.cs   → NEW
-│   │   └── SeasonalPriorityStrategy.cs   → NEW
-│   ├── IDispatchingStrategy.cs           → NEW
-│   └── ...
+│   │   ├── IStrategyFactory.cs           → NEW: Resolves strategies
+│   │   ├── IJobRankingStrategy.cs        → NEW: Interface
+│   │   ├── WeightedShortestJobFirstStrategy.cs → Extracted logic
+│   │   ├── IEstimatingStrategy.cs        → NEW: Interface
+│   │   ├── CategoryBasedEstimatingStrategy.cs  → Extracted logic
+│   │   ├── IDispatchingStrategy.cs       → NEW: Interface
+│   │   └── MatrixFactorizationDispatchingStrategy.cs → Extracted logic
+└── ...
 ```
 
 | Gap | Migration Action |
@@ -263,20 +266,20 @@ domains:
 
 ---
 
-### Phase 4: GERDA Strategy Pattern (Week 7-8)
+### Phase 4: GERDA Strategy Pattern (Completed)
 
 **Goal:** Pluggable AI algorithms per domain.
 
-| Task | File(s) | Effort |
-|------|---------|--------|
-| Extract `IRankingStrategy` interface | `Services/GERDA/Strategies/` | S |
-| Refactor current WSJF to `WSJFRankingStrategy` | `Services/GERDA/Ranking/` | M |
-| Implement `RiskScoreRankingStrategy` | `Services/GERDA/Ranking/` | M |
-| Create `IGerdaStrategyFactory` | `Services/GERDA/` | M |
-| Update `GerdaService` to use factory | `GerdaService.cs` | M |
-| Add `ai_strategies` to domain YAML | `masala_domains.yaml` | S |
+| Task | File(s) | Effort | Status |
+|------|---------|--------|--------|
+| Extract `IStrategy` & `IStrategyFactory` interfaces | `Services/GERDA/Strategies/` | S | ✅ |
+| Implement `StrategyFactory` | `Services/GERDA/Strategies/` | M | ✅ |
+| Refactor `RankingService` to `WeightedShortestJobFirstStrategy` | `Services/GERDA/Ranking/` | M | ✅ |
+| Refactor `EstimatingService` to `CategoryBasedEstimatingStrategy` | `Services/GERDA/Estimating/` | M | ✅ |
+| Refactor `DispatchingService` to `MatrixFactorizationDispatchingStrategy` | `Services/GERDA/Dispatching/` | M | ✅ |
+| Add startup validation for strategies | `Program.cs` | S | ✅ |
 
-**Deliverable:** Tax cases use Risk Score; IT uses WSJF automatically.
+**Outcome:** All AI services (Ranking, Estimating, Dispatching) now use the Strategy Pattern. Validated at startup.
 
 ---
 

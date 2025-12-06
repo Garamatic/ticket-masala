@@ -2,6 +2,7 @@ using IT_Project2526.Models;
 using IT_Project2526.ViewModels;
 using IT_Project2526.Repositories;
 using IT_Project2526.Observers;
+using IT_Project2526.Services.Rules;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
@@ -46,6 +47,7 @@ namespace IT_Project2526.Services
         private readonly INotificationService _notificationService;
         private readonly IAuditService _auditService;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IRuleEngineService _ruleEngine;
         private readonly ILogger<TicketService> _logger;
 
         public TicketService(
@@ -58,6 +60,7 @@ namespace IT_Project2526.Services
             INotificationService notificationService,
             IAuditService auditService,
             IHttpContextAccessor httpContextAccessor,
+            IRuleEngineService ruleEngine,
             ILogger<TicketService> logger)
         {
             _context = context;
@@ -69,6 +72,7 @@ namespace IT_Project2526.Services
             _notificationService = notificationService;
             _auditService = auditService;
             _httpContextAccessor = httpContextAccessor;
+            _ruleEngine = ruleEngine;
             _logger = logger;
         }
 
@@ -419,6 +423,43 @@ namespace IT_Project2526.Services
         {
             try
             {
+                // Validate Transition Rules
+                var entry = _context.Entry(ticket);
+                if (entry.State == EntityState.Modified)
+                {
+                    var originalStatus = (Status)entry.Property(t => t.TicketStatus).OriginalValue;
+                    if (originalStatus != ticket.TicketStatus)
+                    {
+                        var user = _httpContextAccessor.HttpContext?.User;
+                        if (user != null)
+                        {
+                            // Create a temporary ticket with original status to check transition FROM that status
+                            // We can't easily clone the ticket, but CanTransition mainly needs TicketStatus and CustomFieldsJson and DomainId.
+                            // However, we can simply pass the CURRENT ticket object but knowing that its TicketStatus is the TARGET.
+                            // Wait, CanTransition Logic:
+                            // CanTransition(Ticket ticket, Status targetStatus, ClaimsPrincipal user)
+                            // The 'ticket' arg should be in the FROM state?
+                            // Let's check RuleEngineService.CanTransition implementation:
+                            // var currentStatus = ticket.TicketStatus.ToString();
+                            // var targetStatusStr = targetStatus.ToString();
+                            // It uses ticket.TicketStatus as FROM.
+                            
+                            // So we MUST temporarily restore the original status on the ticket object validation
+                            var currentStatus = ticket.TicketStatus; // Logic: new status
+                            ticket.TicketStatus = originalStatus; // Set back to old status for check
+                            
+                            var canTransition = _ruleEngine.CanTransition(ticket, currentStatus, user);
+                            
+                            ticket.TicketStatus = currentStatus; // Restore new status
+                            
+                            if (!canTransition)
+                            {
+                                throw new DomainRuleException($"Transition from {originalStatus} to {ticket.TicketStatus} is not allowed by domain rules.");
+                            }
+                        }
+                    }
+                }
+
                 await _ticketRepository.UpdateAsync(ticket);
                 
                 // Notify observers

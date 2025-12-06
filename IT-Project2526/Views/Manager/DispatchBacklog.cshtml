@@ -146,6 +146,37 @@
         margin-bottom: 1rem;
         z-index: 100;
     }
+
+    /* Dark Mode Overrides */
+    [data-theme="dark"] .stat-card,
+    [data-theme="dark"] .ticket-card,
+    [data-theme="dark"] .batch-controls {
+        background: #1e293b;
+        color: #f1f5f9;
+        border: 1px solid #334155;
+    }
+
+    [data-theme="dark"] .stat-value {
+        color: #818cf8;
+    }
+    
+    [data-theme="dark"] .stat-label {
+        color: #94a3b8;
+    }
+
+    [data-theme="dark"] .agent-recommendation {
+        background: #0f172a;
+        color: #cbd5e1;
+    }
+    
+    [data-theme="dark"] .agent-recommendation:hover {
+        background: #1e293b;
+        border-color: #6366f1;
+    }
+
+    [data-theme="dark"] .ticket-card.selected {
+        background: rgba(46, 125, 50, 0.2); 
+    }
 </style>
 
 <!-- Header -->

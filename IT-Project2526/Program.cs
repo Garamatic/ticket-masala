@@ -272,7 +272,12 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+
+builder.Services.AddControllersWithViews()
+    .AddViewLocalization(Microsoft.AspNetCore.Mvc.Razor.LanguageViewLocationExpanderFormat.Suffix)
+    .AddDataAnnotationsLocalization();
+
 builder.Services.AddRazorPages(); // keep Razor Pages for Identity UI
 builder.Services.AddHealthChecks();
 
@@ -290,6 +295,15 @@ var app = builder.Build();
 
 // Forward headers must be first middleware
 app.UseForwardedHeaders();
+
+// Localization Configuration
+var supportedCultures = new[] { "en", "fr", "nl" };
+var localizationOptions = new RequestLocalizationOptions()
+    .SetDefaultCulture(supportedCultures[0])
+    .AddSupportedCultures(supportedCultures)
+    .AddSupportedUICultures(supportedCultures);
+
+app.UseRequestLocalization(localizationOptions);
 
 // Seed the database
 using (var scope = app.Services.CreateScope())
@@ -360,3 +374,5 @@ app.MapRazorPages(); // Identity pages like /Identity/Login
 app.MapHealthChecks("/health").AllowAnonymous();
 
 app.Run();
+
+public partial class Program { }

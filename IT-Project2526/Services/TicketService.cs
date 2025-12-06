@@ -72,9 +72,9 @@ namespace IT_Project2526.Services
             _logger = logger;
         }
 
-        private string GetCurrentUserId()
+        private string? GetCurrentUserId()
         {
-            return _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "System";
+            return _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? null;
         }
 
         public async Task<Guid?> GetCurrentUserDepartmentIdAsync()
@@ -706,7 +706,7 @@ namespace IT_Project2526.Services
             await _context.SaveChangesAsync();
 
             // Audit Log
-            await _auditService.LogActionAsync(ticketId, "Commented", authorId ?? "System", "Comment", null, isInternal ? "Internal Note" : "Public Reply");
+            await _auditService.LogActionAsync(ticketId, "Commented", authorId, "Comment", null, isInternal ? "Internal Note" : "Public Reply");
 
             // Notify observers
             await NotifyObserversCommentedAsync(comment);

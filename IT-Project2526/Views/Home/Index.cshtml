@@ -1,15 +1,23 @@
-﻿@{
-    ViewData["Title"] = "Dashboard";
-    ViewData["Description"] = "Welcome to Ticket Masala - Your Project Management Hub";
+﻿@using Microsoft.AspNetCore.Identity
+@using IT_Project2526.Models
+@using IT_Project2526
+@using Microsoft.Extensions.Localization
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject IStringLocalizer<SharedResource> Localizer
+
+@{
+    ViewData["Title"] = Localizer["Dashboard"];
+    ViewData["Description"] = Localizer["Your all-in-one project and ticket management solution"];
 }
 
 <!-- Dashboard Header -->
 <div class="dashboard-header text-center">
     <h1 class="dashboard-title">
-        Welcome to <span class="text-primary">Ticket Masala</span>
+        @Localizer["Welcome to Ticket Masala"]
     </h1>
     <p class="dashboard-subtitle">
-        Your all-in-one project and ticket management solution
+        @Localizer["Your all-in-one project and ticket management solution"]
     </p>
 </div>
 
@@ -20,44 +28,44 @@
         <div class="stat-card">
             <div class="stat-card-title">
                 <i class="fas fa-folder-open me-2"></i>
-                Your Projects
+                @Localizer["Your Projects"]
             </div>
             <div class="stat-card-value">12</div>
             <div class="stat-card-change">
-                <i class="fas fa-arrow-up me-1"></i> 3 new this week
+                <i class="fas fa-arrow-up me-1"></i> @Localizer["3 new this week"]
             </div>
         </div>
         
         <div class="stat-card secondary">
             <div class="stat-card-title">
                 <i class="fas fa-ticket-alt me-2"></i>
-                Active Tickets
+                @Localizer["Active Tickets"]
             </div>
             <div class="stat-card-value">28</div>
             <div class="stat-card-change">
-                <i class="fas fa-check me-1"></i> 5 completed today
+                <i class="fas fa-check me-1"></i> @Localizer["5 completed today"]
             </div>
         </div>
         
         <div class="stat-card warning">
             <div class="stat-card-title">
                 <i class="fas fa-clock me-2"></i>
-                Pending Tasks
+                @Localizer["Pending Tasks"]
             </div>
             <div class="stat-card-value">8</div>
             <div class="stat-card-change">
-                <i class="fas fa-exclamation-circle me-1"></i> 2 due soon
+                <i class="fas fa-exclamation-circle me-1"></i> @Localizer["2 due soon"]
             </div>
         </div>
         
         <div class="stat-card success">
             <div class="stat-card-title">
                 <i class="fas fa-chart-line me-2"></i>
-                Completion Rate
+                @Localizer["Completion Rate"]
             </div>
             <div class="stat-card-value">85%</div>
             <div class="stat-card-change">
-                <i class="fas fa-trophy me-1"></i> Great progress!
+                <i class="fas fa-trophy me-1"></i> @Localizer["Great progress!"]
             </div>
         </div>
     </div>
@@ -70,11 +78,11 @@
                     <div class="mb-3">
                         <i class="fas fa-plus-circle fa-3x text-primary"></i>
                     </div>
-                    <h3 class="card-title h5">Create Project</h3>
-                    <p class="text-secondary mb-3">Start a new project and invite your team</p>
+                    <h3 class="card-title h5">@Localizer["Create Project"]</h3>
+                    <p class="text-secondary mb-3">@Localizer["Start a new project and invite your team"]</p>
                     <a asp-controller="Projects" asp-action="NewProject" class="btn btn-primary">
                         <i class="fas fa-arrow-right me-2"></i>
-                        Get Started
+                        @Localizer["Get Started"]
                     </a>
                 </div>
             </div>
@@ -86,11 +94,11 @@
                     <div class="mb-3">
                         <i class="fas fa-tasks fa-3x text-success"></i>
                     </div>
-                    <h3 class="card-title h5">View Projects</h3>
-                    <p class="text-secondary mb-3">Manage and track all your active projects</p>
+                    <h3 class="card-title h5">@Localizer["View Projects"]</h3>
+                    <p class="text-secondary mb-3">@Localizer["Manage and track all your active projects"]</p>
                     <a asp-controller="Projects" asp-action="Index" class="btn btn-success">
                         <i class="fas fa-arrow-right me-2"></i>
-                        View All
+                        @Localizer["View All"]
                     </a>
                 </div>
             </div>
@@ -104,11 +112,11 @@
                         <div class="mb-3">
                             <i class="fas fa-users fa-3x text-info"></i>
                         </div>
-                        <h3 class="card-title h5">Manage Team</h3>
-                        <p class="text-secondary mb-3">View customers and team members</p>
+                        <h3 class="card-title h5">@Localizer["Manage Team"]</h3>
+                        <p class="text-secondary mb-3">@Localizer["View customers and team members"]</p>
                         <a asp-controller="Customer" asp-action="Index" class="btn btn-info">
                             <i class="fas fa-arrow-right me-2"></i>
-                            View Customers
+                            @Localizer["View Customers"]
                         </a>
                     </div>
                 </div>
@@ -121,7 +129,7 @@
         <div class="card-header">
             <h3 class="card-title">
                 <i class="fas fa-history me-2"></i>
-                Recent Activity
+                @Localizer["Recent Activity"]
             </h3>
         </div>
         <div class="card-body">
@@ -129,7 +137,7 @@
                 <div class="ticket-item">
                     <div class="ticket-header">
                         <span class="ticket-id">#TM-1234</span>
-                        <span class="badge badge-success">Completed</span>
+                        <span class="badge badge-success">@Localizer["Completed"]</span>
                     </div>
                     <div class="ticket-description">Updated project documentation for Website Redesign</div>
                     <div class="ticket-footer text-secondary">
@@ -141,7 +149,7 @@
                 <div class="ticket-item">
                     <div class="ticket-header">
                         <span class="ticket-id">#TM-1233</span>
-                        <span class="badge badge-in-progress">In Progress</span>
+                        <span class="badge badge-in-progress">@Localizer["In Progress"]</span>
                     </div>
                     <div class="ticket-description">Implement new authentication system</div>
                     <div class="ticket-footer text-secondary">
@@ -153,7 +161,7 @@
                 <div class="ticket-item">
                     <div class="ticket-header">
                         <span class="ticket-id">#TM-1232</span>
-                        <span class="badge badge-pending">Pending</span>
+                        <span class="badge badge-pending">@Localizer["Pending"]</span>
                     </div>
                     <div class="ticket-description">Design new landing page mockups</div>
                     <div class="ticket-footer text-secondary">
@@ -171,7 +179,7 @@ else
     <div class="row align-items-center mb-5">
         <div class="col-lg-6">
             <h2 class="display-4 fw-bold mb-4">
-                Streamline Your <span class="text-primary">Project Management</span>
+                @Localizer["Streamline Your Project Management"]
             </h2>
             <p class="lead text-secondary mb-4">
                 Ticket Masala helps teams collaborate, track progress, and deliver projects on time.
@@ -180,7 +188,7 @@ else
             <div class="d-flex gap-3">
                 <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-primary btn-lg">
                     <i class="fas fa-sign-in-alt me-2"></i>
-                    Sign In to Get Started
+                    @Localizer["Sign In to Get Started"]
                 </a>
             </div>
         </div>
@@ -195,9 +203,9 @@ else
             <div class="card h-100">
                 <div class="card-body text-center">
                     <i class="fas fa-rocket fa-3x text-primary mb-3"></i>
-                    <h3 class="h5">Fast & Efficient</h3>
+                    <h3 class="h5">@Localizer["Fast & Efficient"]</h3>
                     <p class="text-secondary">
-                        Get your projects up and running in minutes with our intuitive interface.
+                        @Localizer["Get your projects up and running in minutes with our intuitive interface."]
                     </p>
                 </div>
             </div>
@@ -207,9 +215,9 @@ else
             <div class="card h-100">
                 <div class="card-body text-center">
                     <i class="fas fa-shield-alt fa-3x text-success mb-3"></i>
-                    <h3 class="h5">Secure & Reliable</h3>
+                    <h3 class="h5">@Localizer["Secure & Reliable"]</h3>
                     <p class="text-secondary">
-                        Your data is protected with enterprise-grade security and encryption.
+                        @Localizer["Your data is protected with enterprise-grade security and encryption."]
                     </p>
                 </div>
             </div>
@@ -219,9 +227,9 @@ else
             <div class="card h-100">
                 <div class="card-body text-center">
                     <i class="fas fa-users fa-3x text-info mb-3"></i>
-                    <h3 class="h5">Team Collaboration</h3>
+                    <h3 class="h5">@Localizer["Team Collaboration"]</h3>
                     <p class="text-secondary">
-                        Work together seamlessly with real-time updates and notifications.
+                        @Localizer["Work together seamlessly with real-time updates and notifications."]
                     </p>
                 </div>
             </div>

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="Dashboard" xml:space="preserve">
+    <value>Dashboard</value>
+  </data>
+  <data name="Projects" xml:space="preserve">
+    <value>Projecten</value>
+  </data>
+  <data name="Customers" xml:space="preserve">
+    <value>Klanten</value>
+  </data>
+  <data name="Tickets" xml:space="preserve">
+    <value>Tickets</value>
+  </data>
+  <data name="Team Dashboard" xml:space="preserve">
+    <value>Team Dashboard</value>
+  </data>
+  <data name="GERDA Dispatch" xml:space="preserve">
+    <value>GERDA Dispatch</value>
+  </data>
+  <data name="All Projects" xml:space="preserve">
+    <value>Alle Projecten</value>
+  </data>
+  <data name="Privacy" xml:space="preserve">
+    <value>Privacy</value>
+  </data>
+  <data name="Knowledge Base" xml:space="preserve">
+    <value>Kennisbank</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Taal</value>
+  </data>
+  <data name="Logout" xml:space="preserve">
+    <value>Uitloggen</value>
+  </data>
+  <data name="Hello {0}!" xml:space="preserve">
+    <value>Hallo {0}!</value>
+  </data>
+  <data name="Create Project" xml:space="preserve">
+    <value>Project Maken</value>
+  </data>
+  <data name="View Projects" xml:space="preserve">
+    <value>Bekijk Projecten</value>
+  </data>
+  <data name="Manage Team" xml:space="preserve">
+    <value>Team Beheren</value>
+  </data>
+  <data name="Recent Activity" xml:space="preserve">
+    <value>Recente Activiteit</value>
+  </data>
+  <data name="Streamline Your Project Management" xml:space="preserve">
+    <value>Stroomlijn uw projectbeheer</value>
+  </data>
+  <data name="Sign In to Get Started" xml:space="preserve">
+    <value>Meld u aan om te beginnen</value>
+  </data>
+  <data name="Fast &amp; Efficient" xml:space="preserve">
+    <value>Snel &amp; Efficiënt</value>
+  </data>
+  <data name="Secure &amp; Reliable" xml:space="preserve">
+    <value>Veilig &amp; Betrouwbaar</value>
+  </data>
+  <data name="Team Collaboration" xml:space="preserve">
+    <value>Team Samenwerking</value>
+  </data>
+  <data name="Welcome to Ticket Masala" xml:space="preserve">
+    <value>Welkom bij Ticket Masala</value>
+  </data>
+  <data name="Your all-in-one project and ticket management solution" xml:space="preserve">
+    <value>Uw alles-in-één oplossing voor project- en ticketbeheer</value>
+  </data>
+  <data name="Sign In" xml:space="preserve">
+    <value>Inloggen</value>
+  </data>
+  <data name="Email" xml:space="preserve">
+    <value>E-mail</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Wachtwoord</value>
+  </data>
+  <data name="Remember me" xml:space="preserve">
+    <value>Onthoud mij</value>
+  </data>
+  <data name="Forgot your password?" xml:space="preserve">
+    <value>Wachtwoord vergeten?</value>
+  </data>
+  <data name="Register as a new user" xml:space="preserve">
+    <value>Registreer als nieuwe gebruiker</value>
+  </data>
+  <data name="Spice up your project management with intelligent ticket handling" xml:space="preserve">
+    <value>Verrijk uw projectbeheer met intelligente ticketverwerking</value>
+  </data>
+</root>

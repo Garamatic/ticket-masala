@@ -254,9 +254,41 @@ namespace IT_Project2526.Data
                     Level = EmployeeType.Support,
                     // GERDA AI Fields
                     Language = "EN,ES",
-                    Specializations = "[\"Hardware Support\",\"Network Troubleshooting\",\"Password Reset\"]",
+                    Specializations = "[\"Hardware Support\",\"Network Troubleshooting\",\"System Outage\"]",
                     MaxCapacityPoints = 40,
-                    Region = "Latin America"
+                    Region = "North America"
+                },
+                new Employee
+                {
+                    UserName = "claude.support@ticketmasala.com",
+                    Email = "claude.support@ticketmasala.com",
+                    EmailConfirmed = true,
+                    FirstName = "Claude",
+                    LastName = "Dubois",
+                    Phone = "+32-555-0400",
+                    Team = "European Support",
+                    Level = EmployeeType.Support,
+                    // GERDA AI Fields
+                    Language = "FR,EN",
+                    Specializations = "[\"Software Troubleshooting\",\"Refund Request\",\"Tax Processing\"]",
+                    MaxCapacityPoints = 45,
+                    Region = "Europe"
+                },
+                new Employee
+                {
+                    UserName = "pieter.support@ticketmasala.com",
+                    Email = "pieter.support@ticketmasala.com",
+                    EmailConfirmed = true,
+                    FirstName = "Pieter",
+                    LastName = "Vandenberg",
+                    Phone = "+31-555-0500",
+                    Team = "Benelux Support",
+                    Level = EmployeeType.Support,
+                    // GERDA AI Fields
+                    Language = "NL,EN,FR",
+                    Specializations = "[\"Project Management\",\"Agile\",\"Infrastructure\"]",
+                    MaxCapacityPoints = 42,
+                    Region = "Europe"
                 },
                 new Employee
                 {

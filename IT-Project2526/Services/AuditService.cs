@@ -14,7 +14,7 @@ namespace IT_Project2526.Services
             _logger = logger;
         }
 
-        public async Task LogActionAsync(Guid ticketId, string action, string userId, string? propertyName = null, string? oldValue = null, string? newValue = null)
+        public async Task LogActionAsync(Guid ticketId, string action, string? userId, string? propertyName = null, string? oldValue = null, string? newValue = null)
         {
             try
             {

@@ -3,6 +3,7 @@ using IT_Project2526.Models;
 using IT_Project2526.ViewModels;
 using IT_Project2526.Services;
 using IT_Project2526.Services.GERDA;
+using IT_Project2526.Services.Configuration;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -18,6 +19,7 @@ namespace IT_Project2526.Controllers
         private readonly IFileService _fileService;
         private readonly IAuditService _auditService;
         private readonly INotificationService _notificationService;
+        private readonly IDomainConfigurationService _domainConfig;
         private readonly ITProjectDB _context;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<TicketController> _logger;
@@ -28,6 +30,7 @@ namespace IT_Project2526.Controllers
             IFileService fileService,
             IAuditService auditService,
             INotificationService notificationService,
+            IDomainConfigurationService domainConfig,
             ITProjectDB context,
             IHttpContextAccessor httpContextAccessor,
             ILogger<TicketController> logger)
@@ -37,6 +40,7 @@ namespace IT_Project2526.Controllers
             _fileService = fileService;
             _auditService = auditService;
             _notificationService = notificationService;
+            _domainConfig = domainConfig;
             _context = context;
             _httpContextAccessor = httpContextAccessor;
             _logger = logger;
@@ -154,13 +158,26 @@ namespace IT_Project2526.Controllers
             ViewBag.Customers = await _ticketService.GetCustomerSelectListAsync();
             ViewBag.Employees = await _ticketService.GetEmployeeSelectListAsync();
             ViewBag.Projects = await _ticketService.GetProjectSelectListAsync();
+            
+            // Load domain configuration for dynamic work item types
+            var defaultDomain = _domainConfig.GetDefaultDomainId();
+            ViewBag.DomainId = defaultDomain;
+            ViewBag.EntityLabels = _domainConfig.GetEntityLabels(defaultDomain);
+            ViewBag.WorkItemTypes = _domainConfig.GetWorkItemTypes(defaultDomain).ToList();
 
             return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(string description, string customerId, string? responsibleId, Guid? projectGuid, DateTime? completionTarget)
+        public async Task<IActionResult> Create(
+            string description, 
+            string customerId, 
+            string? responsibleId, 
+            Guid? projectGuid, 
+            DateTime? completionTarget,
+            string? domainId,
+            string? workItemTypeCode)
         {
             if (string.IsNullOrWhiteSpace(description))
             {
@@ -174,10 +191,15 @@ namespace IT_Project2526.Controllers
 
             if (!ModelState.IsValid)
             {
-                // Reload dropdowns
+                // Reload dropdowns and domain config
                 ViewBag.Customers = await _ticketService.GetCustomerSelectListAsync();
                 ViewBag.Employees = await _ticketService.GetEmployeeSelectListAsync();
                 ViewBag.Projects = await _ticketService.GetProjectSelectListAsync();
+                
+                var defaultDomain = _domainConfig.GetDefaultDomainId();
+                ViewBag.DomainId = defaultDomain;
+                ViewBag.EntityLabels = _domainConfig.GetEntityLabels(defaultDomain);
+                ViewBag.WorkItemTypes = _domainConfig.GetWorkItemTypes(defaultDomain).ToList();
 
                 return View();
             }
@@ -186,18 +208,25 @@ namespace IT_Project2526.Controllers
             {
                 // Create ticket via service
                 var ticket = await _ticketService.CreateTicketAsync(description, customerId, responsibleId, projectGuid, completionTarget);
+                
+                // Set domain extensibility fields
+                ticket.DomainId = domainId ?? _domainConfig.GetDefaultDomainId();
+                ticket.WorkItemTypeCode = workItemTypeCode;
+                await _ticketService.UpdateTicketAsync(ticket);
 
                 // Process with GERDA AI
-                _logger.LogInformation("Processing ticket {TicketGuid} with GERDA AI", ticket.Guid);
+                _logger.LogInformation("Processing ticket {TicketGuid} with GERDA AI (Domain: {DomainId}, Type: {WorkItemTypeCode})", 
+                    ticket.Guid, ticket.DomainId, ticket.WorkItemTypeCode);
                 await _gerdaService.ProcessTicketAsync(ticket.Guid);
                 
-                TempData["Success"] = "Ticket created successfully! GERDA AI has processed the ticket (estimated effort, priority, and tags assigned).";
+                var entityLabel = _domainConfig.GetEntityLabels(ticket.DomainId).WorkItem;
+                TempData["Success"] = $"{entityLabel} created successfully! GERDA AI has processed the {entityLabel.ToLower()} (estimated effort, priority, and tags assigned).";
                 _logger.LogInformation("GERDA processing completed for ticket {TicketGuid}", ticket.Guid);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating or processing ticket");
-                TempData["Warning"] = "Ticket creation encountered an error. Please try again.";
+                TempData["Warning"] = "Creation encountered an error. Please try again.";
             }
 
             return RedirectToAction(nameof(Index));

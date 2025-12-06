@@ -1,0 +1,390 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- Navigation -->
+  <data name="Dashboard" xml:space="preserve">
+    <value>Tableau de bord</value>
+  </data>
+  <data name="Projects" xml:space="preserve">
+    <value>Projets</value>
+  </data>
+  <data name="Customers" xml:space="preserve">
+    <value>Clients</value>
+  </data>
+  <data name="Tickets" xml:space="preserve">
+    <value>Tickets</value>
+  </data>
+  <data name="Team Dashboard" xml:space="preserve">
+    <value>Tableau d'équipe</value>
+  </data>
+  <data name="GERDA Dispatch" xml:space="preserve">
+    <value>Répartition GERDA</value>
+  </data>
+  <data name="All Projects" xml:space="preserve">
+    <value>Tous les projets</value>
+  </data>
+  <data name="Privacy" xml:space="preserve">
+    <value>Confidentialité</value>
+  </data>
+  <data name="Knowledge Base" xml:space="preserve">
+    <value>Base de connaissances</value>
+  </data>
+  
+  <!-- Auth -->
+  <data name="Logout" xml:space="preserve">
+    <value>Déconnexion</value>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>Connexion</value>
+  </data>
+  <data name="Register" xml:space="preserve">
+    <value>S'inscrire</value>
+  </data>
+  <data name="Hello {0}!" xml:space="preserve">
+    <value>Bonjour {0} !</value>
+  </data>
+  <data name="Sign In" xml:space="preserve">
+    <value>Se connecter</value>
+  </data>
+  <data name="Email" xml:space="preserve">
+    <value>E-mail</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Mot de passe</value>
+  </data>
+  <data name="Remember me" xml:space="preserve">
+    <value>Se souvenir de moi</value>
+  </data>
+  <data name="Forgot your password?" xml:space="preserve">
+    <value>Mot de passe oublié ?</value>
+  </data>
+  <data name="Register as a new user" xml:space="preserve">
+    <value>S'inscrire comme nouvel utilisateur</value>
+  </data>
+  
+  <!-- Common UI -->
+  <data name="Search..." xml:space="preserve">
+    <value>Rechercher...</value>
+  </data>
+  <data name="Toggle dark/light mode" xml:space="preserve">
+    <value>Basculer mode sombre/clair</value>
+  </data>
+  <data name="Select Language" xml:space="preserve">
+    <value>Choisir la langue</value>
+  </data>
+  <data name="All rights reserved" xml:space="preserve">
+    <value>Tous droits réservés</value>
+  </data>
+  <data name="Privacy Policy" xml:space="preserve">
+    <value>Politique de confidentialité</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Enregistrer</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Annuler</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Modifier</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Supprimer</value>
+  </data>
+  <data name="Actions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Reset" xml:space="preserve">
+    <value>Réinitialiser</value>
+  </data>
+  <data name="Export" xml:space="preserve">
+    <value>Exporter</value>
+  </data>
+  <data name="View All" xml:space="preserve">
+    <value>Voir tout</value>
+  </data>
+  <data name="Get Started" xml:space="preserve">
+    <value>Commencer</value>
+  </data>
+  
+  <!-- Home Page -->
+  <data name="Welcome to Ticket Masala" xml:space="preserve">
+    <value>Bienvenue sur Ticket Masala</value>
+  </data>
+  <data name="Your all-in-one project and ticket management solution" xml:space="preserve">
+    <value>Votre solution tout-en-un de gestion de projets et de tickets</value>
+  </data>
+  <data name="Spice up your project management with intelligent ticket handling" xml:space="preserve">
+    <value>Pimentez votre gestion de projet avec une gestion intelligente des tickets</value>
+  </data>
+  <data name="Streamline Your Project Management" xml:space="preserve">
+    <value>Optimisez votre gestion de projet</value>
+  </data>
+  <data name="Sign In to Get Started" xml:space="preserve">
+    <value>Connectez-vous pour commencer</value>
+  </data>
+  <data name="Fast &amp; Efficient" xml:space="preserve">
+    <value>Rapide et efficace</value>
+  </data>
+  <data name="Secure &amp; Reliable" xml:space="preserve">
+    <value>Sécurisé et fiable</value>
+  </data>
+  <data name="Team Collaboration" xml:space="preserve">
+    <value>Collaboration d'équipe</value>
+  </data>
+  <data name="Get your projects up and running in minutes with our intuitive interface." xml:space="preserve">
+    <value>Lancez vos projets en quelques minutes grâce à notre interface intuitive.</value>
+  </data>
+  <data name="Your data is protected with enterprise-grade security and encryption." xml:space="preserve">
+    <value>Vos données sont protégées par une sécurité et un chiffrement de niveau entreprise.</value>
+  </data>
+  <data name="Work together seamlessly with real-time updates and notifications." xml:space="preserve">
+    <value>Travaillez ensemble en toute fluidité avec des mises à jour et notifications en temps réel.</value>
+  </data>
+  
+  <!-- Dashboard Stats -->
+  <data name="Your Projects" xml:space="preserve">
+    <value>Vos projets</value>
+  </data>
+  <data name="Active Tickets" xml:space="preserve">
+    <value>Tickets actifs</value>
+  </data>
+  <data name="Pending Tasks" xml:space="preserve">
+    <value>Tâches en attente</value>
+  </data>
+  <data name="Completion Rate" xml:space="preserve">
+    <value>Taux d'achèvement</value>
+  </data>
+  <data name="3 new this week" xml:space="preserve">
+    <value>3 nouveaux cette semaine</value>
+  </data>
+  <data name="5 completed today" xml:space="preserve">
+    <value>5 terminés aujourd'hui</value>
+  </data>
+  <data name="2 due soon" xml:space="preserve">
+    <value>2 à échéance proche</value>
+  </data>
+  <data name="Great progress!" xml:space="preserve">
+    <value>Excellente progression !</value>
+  </data>
+  
+  <!-- Quick Actions -->
+  <data name="Create Project" xml:space="preserve">
+    <value>Créer un projet</value>
+  </data>
+  <data name="View Projects" xml:space="preserve">
+    <value>Voir les projets</value>
+  </data>
+  <data name="Manage Team" xml:space="preserve">
+    <value>Gérer l'équipe</value>
+  </data>
+  <data name="Start a new project and invite your team" xml:space="preserve">
+    <value>Démarrez un nouveau projet et invitez votre équipe</value>
+  </data>
+  <data name="Manage and track all your active projects" xml:space="preserve">
+    <value>Gérez et suivez tous vos projets actifs</value>
+  </data>
+  <data name="View customers and team members" xml:space="preserve">
+    <value>Voir les clients et les membres de l'équipe</value>
+  </data>
+  <data name="View Customers" xml:space="preserve">
+    <value>Voir les clients</value>
+  </data>
+  <data name="Recent Activity" xml:space="preserve">
+    <value>Activité récente</value>
+  </data>
+  
+  <!-- Ticket Status -->
+  <data name="Pending" xml:space="preserve">
+    <value>En attente</value>
+  </data>
+  <data name="In Progress" xml:space="preserve">
+    <value>En cours</value>
+  </data>
+  <data name="Completed" xml:space="preserve">
+    <value>Terminé</value>
+  </data>
+  <data name="Rejected" xml:space="preserve">
+    <value>Rejeté</value>
+  </data>
+  <data name="Assigned" xml:space="preserve">
+    <value>Assigné</value>
+  </data>
+  <data name="Failed" xml:space="preserve">
+    <value>Échoué</value>
+  </data>
+  
+  <!-- Ticket Page -->
+  <data name="New Ticket" xml:space="preserve">
+    <value>Nouveau ticket</value>
+  </data>
+  <data name="View and manage all support tickets" xml:space="preserve">
+    <value>Voir et gérer tous les tickets de support</value>
+  </data>
+  <data name="Search" xml:space="preserve">
+    <value>Rechercher</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>Statut</value>
+  </data>
+  <data name="Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Assigned To" xml:space="preserve">
+    <value>Assigné à</value>
+  </data>
+  <data name="Customer" xml:space="preserve">
+    <value>Client</value>
+  </data>
+  <data name="All Statuses" xml:space="preserve">
+    <value>Tous les statuts</value>
+  </data>
+  <data name="All Types" xml:space="preserve">
+    <value>Tous les types</value>
+  </data>
+  <data name="All Agents" xml:space="preserve">
+    <value>Tous les agents</value>
+  </data>
+  <data name="All Customers" xml:space="preserve">
+    <value>Tous les clients</value>
+  </data>
+  <data name="selected" xml:space="preserve">
+    <value>sélectionné(s)</value>
+  </data>
+  <data name="Bulk Actions" xml:space="preserve">
+    <value>Actions groupées</value>
+  </data>
+  <data name="Assign to Agent..." xml:space="preserve">
+    <value>Assigner à un agent...</value>
+  </data>
+  <data name="Change Status..." xml:space="preserve">
+    <value>Changer le statut...</value>
+  </data>
+  <data name="Saved Filters" xml:space="preserve">
+    <value>Filtres enregistrés</value>
+  </data>
+  <data name="Save Filter" xml:space="preserve">
+    <value>Enregistrer le filtre</value>
+  </data>
+  <data name="Save Current Filter" xml:space="preserve">
+    <value>Enregistrer le filtre actuel</value>
+  </data>
+  <data name="Filter Name" xml:space="preserve">
+    <value>Nom du filtre</value>
+  </data>
+  <data name="Title" xml:space="preserve">
+    <value>Titre</value>
+  </data>
+  <data name="Created" xml:space="preserve">
+    <value>Créé</value>
+  </data>
+  <data name="Responsible" xml:space="preserve">
+    <value>Responsable</value>
+  </data>
+  <data name="Due Date" xml:space="preserve">
+    <value>Date d'échéance</value>
+  </data>
+  <data name="Overdue" xml:space="preserve">
+    <value>En retard</value>
+  </data>
+  <data name="Due soon" xml:space="preserve">
+    <value>Échéance proche</value>
+  </data>
+  <data name="No tickets found" xml:space="preserve">
+    <value>Aucun ticket trouvé</value>
+  </data>
+  <data name="Try adjusting your search filters or create a new ticket." xml:space="preserve">
+    <value>Essayez d'ajuster vos filtres de recherche ou créez un nouveau ticket.</value>
+  </data>
+  <data name="Create Ticket" xml:space="preserve">
+    <value>Créer un ticket</value>
+  </data>
+  <data name="Bulk Assign Tickets" xml:space="preserve">
+    <value>Assigner des tickets en masse</value>
+  </data>
+  <data name="Assign {0} tickets to:" xml:space="preserve">
+    <value>Assigner {0} tickets à :</value>
+  </data>
+  <data name="Agent" xml:space="preserve">
+    <value>Agent</value>
+  </data>
+  <data name="Select Agent..." xml:space="preserve">
+    <value>Sélectionner un agent...</value>
+  </data>
+  <data name="Assign" xml:space="preserve">
+    <value>Assigner</value>
+  </data>
+  <data name="Bulk Change Status" xml:space="preserve">
+    <value>Changer le statut en masse</value>
+  </data>
+  <data name="Change status of {0} tickets to:" xml:space="preserve">
+    <value>Changer le statut de {0} tickets en :</value>
+  </data>
+  <data name="Update Status" xml:space="preserve">
+    <value>Mettre à jour le statut</value>
+  </data>
+  <data name="View Details" xml:space="preserve">
+    <value>Voir les détails</value>
+  </data>
+  <data name="Unassigned" xml:space="preserve">
+    <value>Non assigné</value>
+  </data>
+  
+  <!-- Project Page -->
+  <data name="New Project" xml:space="preserve">
+    <value>Nouveau projet</value>
+  </data>
+  <data name="Manage your projects and track progress" xml:space="preserve">
+    <value>Gérez vos projets et suivez la progression</value>
+  </data>
+  <data name="Search projects..." xml:space="preserve">
+    <value>Rechercher des projets...</value>
+  </data>
+  <data name="All Status" xml:space="preserve">
+    <value>Tous les statuts</value>
+  </data>
+  <data name="Ticket ID" xml:space="preserve">
+    <value>ID du ticket</value>
+  </data>
+  <data name="View all {0} tickets" xml:space="preserve">
+    <value>Voir les {0} tickets</value>
+  </data>
+  <data name="No active tickets" xml:space="preserve">
+    <value>Aucun ticket actif</value>
+  </data>
+  <data name="No projects yet" xml:space="preserve">
+    <value>Aucun projet pour l'instant</value>
+  </data>
+  <data name="Get started by creating your first project." xml:space="preserve">
+    <value>Commencez par créer votre premier projet.</value>
+  </data>
+  
+  <!-- Customer Page -->
+  <data name="Customers: Overview" xml:space="preserve">
+    <value>Clients : Aperçu</value>
+  </data>
+  <data name="First Name" xml:space="preserve">
+    <value>Prénom</value>
+  </data>
+  <data name="Last Name" xml:space="preserve">
+    <value>Nom</value>
+  </data>
+  <data name="Details" xml:space="preserve">
+    <value>Détails</value>
+  </data>
+  
+  <!-- Knowledge Base Page -->
+  <data name="Create Article" xml:space="preserve">
+    <value>Créer un article</value>
+  </data>
+  <data name="Search articles..." xml:space="preserve">
+    <value>Rechercher des articles...</value>
+  </data>
+  <data name="By {0} on {1}" xml:space="preserve">
+    <value>Par {0} le {1}</value>
+  </data>
+  <data name="Read More" xml:space="preserve">
+    <value>Lire la suite</value>
+  </data>
+  <data name="Unknown" xml:space="preserve">
+    <value>Inconnu</value>
+  </data>
+</root>

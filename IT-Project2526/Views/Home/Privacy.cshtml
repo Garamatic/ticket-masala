@@ -1,6 +1,165 @@
-﻿@{
+﻿@using System.Globalization
+@{
     ViewData["Title"] = "Privacy Policy";
+    var culture = CultureInfo.CurrentUICulture.Name;
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<div class="container py-5">
+    
+    @if (culture.StartsWith("fr"))
+    {
+        <!-- French Content -->
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="text-center mb-5">
+                    <i class="fas fa-shield-alt fa-3x text-success mb-3"></i>
+                    <h1 class="display-5 fw-bold">Politique de Confidentialité</h1>
+                    <p class="text-secondary lead">Dernière mise à jour : @DateTime.Now.ToString("dd MMMM yyyy")</p>
+                </div>
+
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body p-4 p-md-5">
+                        <p class="lead">
+                            Chez <strong>Ticket Masala</strong>, nous prenons votre vie privée au sérieux. Cette politique de confidentialité explique comment nous collectons, utilisons, divulguons et protégeons vos informations lorsque vous visitez notre site web ou utilisez nos services.
+                        </p>
+                        <h3 class="h5 fw-bold text-dark mt-4 mb-3">1. Collecte de vos informations</h3>
+                        <p>Nous pouvons collecter des informations vous concernant de diverses manières. Les informations que nous pouvons collecter sur le Site incluent :</p>
+                        <ul class="mb-4">
+                            <li><strong>Données Personnelles :</strong> Informations personnellement identifiables, telles que votre nom, adresse d'expédition, adresse e-mail et numéro de téléphone.</li>
+                            <li><strong>Données Dérivées :</strong> Informations que nos serveurs collectent automatiquement lorsque vous accédez au Site, telles que votre adresse IP, votre type de navigateur, etc.</li>
+                        </ul>
+
+                        <h3 class="h5 fw-bold text-dark mt-4 mb-3">2. Utilisation de vos informations</h3>
+                        <p>Avoir des informations précises sur vous nous permet de vous offrir une expérience fluide. Plus précisément, nous utilisons vos informations pour :</p>
+                        <ul class="mb-4">
+                            <li>Créer et gérer votre compte.</li>
+                            <li>Traiter vos transactions et gérer les projets.</li>
+                            <li>Vous envoyer des e-mails concernant votre compte.</li>
+                            <li>Améliorer l'efficacité du Site.</li>
+                        </ul>
+
+                        <h3 class="h5 fw-bold text-dark mt-4 mb-3">3. Contactez-nous</h3>
+                        <p>Si vous avez des questions, contactez-nous à :</p>
+                        <address class="ms-3 border-start border-3 border-success ps-3">
+                            <strong>Support Ticket Masala</strong><br>
+                            123 Project Lane<br>
+                            Tech City, TC 90210<br>
+                            <a href="mailto:privacy@ticketmasala.com" class="text-decoration-none text-success">privacy@ticketmasala.com</a>
+                        </address>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else if (culture.StartsWith("nl"))
+    {
+        <!-- Dutch Content -->
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="text-center mb-5">
+                    <i class="fas fa-shield-alt fa-3x text-success mb-3"></i>
+                    <h1 class="display-5 fw-bold">Privacybeleid</h1>
+                    <p class="text-secondary lead">Laatst bijgewerkt: @DateTime.Now.ToString("dd MMMM yyyy")</p>
+                </div>
+
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body p-4 p-md-5">
+                        <p class="lead">
+                            Bij <strong>Ticket Masala</strong> nemen we uw privacy serieus. Dit privacybeleid legt uit hoe we uw informatie verzamelen, gebruiken, bekendmaken en beschermen wanneer u onze website bezoekt.
+                        </p>
+                        <h3 class="h5 fw-bold text-dark mt-4 mb-3">1. Verzameling van uw gegevens</h3>
+                        <p>We kunnen op verschillende manieren informatie over u verzamelen, waaronder:</p>
+                        <ul class="mb-4">
+                            <li><strong>Persoonlijke Gegevens:</strong> Identificeerbare informatie zoals uw naam, adres, e-mailadres en telefoonnummer.</li>
+                            <li><strong>Afgeleide Gegevens:</strong> Informatie die onze servers automatisch verzamelen, zoals uw IP-adres, browsertype, enz.</li>
+                        </ul>
+
+                        <h3 class="h5 fw-bold text-dark mt-4 mb-3">2. Gebruik van uw gegevens</h3>
+                        <p>Dankzij nauwkeurige informatie kunnen we u een soepele ervaring bieden. We gebruiken uw informatie om:</p>
+                        <ul class="mb-4">
+                            <li>Uw account aan te maken en te beheren.</li>
+                            <li>Transacties te verwerken en projecten te beheren.</li>
+                            <li>U te e-mailen over uw account.</li>
+                            <li>De efficiëntie van de site te verbeteren.</li>
+                        </ul>
+
+                        <h3 class="h5 fw-bold text-dark mt-4 mb-3">3. Neem contact op</h3>
+                        <p>Als u vragen heeft, neem dan contact met ons op:</p>
+                        <address class="ms-3 border-start border-3 border-success ps-3">
+                            <strong>Ticket Masala Support</strong><br>
+                            123 Project Lane<br>
+                            Tech City, TC 90210<br>
+                            <a href="mailto:privacy@ticketmasala.com" class="text-decoration-none text-success">privacy@ticketmasala.com</a>
+                        </address>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- British/English Content (Default) -->
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="text-center mb-5">
+                    <i class="fas fa-shield-alt fa-3x text-success mb-3"></i>
+                    <h1 class="display-5 fw-bold">Privacy Policy</h1>
+                    <p class="text-secondary lead">Last updated: @DateTime.Now.ToString("MMMM dd, yyyy")</p>
+                </div>
+
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body p-4 p-md-5">
+                        <p class="lead">
+                            At <strong>Ticket Masala</strong>, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website or use our project management services.
+                        </p>
+                        <p>
+                            Please read this privacy policy carefully. If you do not agree with the terms of this privacy policy, please do not access the site.
+                        </p>
+
+                        <hr class="my-4">
+
+                        <h3 class="h5 fw-bold text-dark mt-4 mb-3">1. Collection of Your Information</h3>
+                        <p>We may collect information about you in a variety of ways. The information we may collect on the Site includes:</p>
+                        <ul class="mb-4">
+                            <li><strong>Personal Data:</strong> Personally identifiable information, such as your name, shipping address, email address, and telephone number, that you voluntarily give to us when you register with the Site or when you choose to participate in various activities related to the Site.</li>
+                            <li><strong>Derivative Data:</strong> Information our servers automatically collect when you access the Site, such as your IP address, your browser type, your operating system, your access times, and the pages you have viewed directly before and after accessing the Site.</li>
+                        </ul>
+
+                        <h3 class="h5 fw-bold text-dark mt-4 mb-3">2. Use of Your Information</h3>
+                        <p>Having accurate information about you permits us to provide you with a smooth, efficient, and customized experience. Specifically, we may use information collected about you via the Site to:</p>
+                        <ul class="mb-4">
+                            <li>Create and manage your account.</li>
+                            <li>Process your transactions and manage projects.</li>
+                            <li>Email you regarding your account or order.</li>
+                            <li>Enable user-to-user communications.</li>
+                            <li>Increase the efficiency and operation of the Site.</li>
+                            <li>Monitor and analyze usage and trends to improve your experience with the Site.</li>
+                            <li>Perform other business activities as needed.</li>
+                        </ul>
+
+                        <h3 class="h5 fw-bold text-dark mt-4 mb-3">3. Disclosure of Your Information</h3>
+                        <p>We may share information we have collected about you in certain situations. Your information may be disclosed as follows:</p>
+                        <ul class="mb-4">
+                            <li><strong>By Law or to Protect Rights:</strong> If we believe the release of information about you is necessary to respond to legal process, to investigate or remedy potential violations of our policies, or to protect the rights, property, and safety of others, we may share your information as permitted or required by any applicable law, rule, or regulation.</li>
+                            <li><strong>Third-Party Service Providers:</strong> We may share your information with third parties that perform services for us or on our behalf, including payment processing, data analysis, email delivery, hosting services, customer service, and marketing assistance.</li>
+                        </ul>
+
+                        <h3 class="h5 fw-bold text-dark mt-4 mb-3">4. Security of Your Information</h3>
+                        <p>
+                            We use administrative, technical, and physical security measures to help protect your personal information. While we have taken reasonable steps to secure the personal information you provide to us, please be aware that despite our efforts, no security measures are perfect or impenetrable, and no method of data transmission can be guaranteed against any interception or other type of misuse.
+                        </p>
+
+                        <h3 class="h5 fw-bold text-dark mt-4 mb-3">5. Contact Us</h3>
+                        <p>If you have questions or comments about this Privacy Policy, please contact us at:</p>
+                        <address class="ms-3 border-start border-3 border-success ps-3">
+                            <strong>Ticket Masala Support</strong><br>
+                            123 Project Lane<br>
+                            Tech City, TC 90210<br>
+                            <a href="mailto:privacy@ticketmasala.com" class="text-decoration-none text-success">privacy@ticketmasala.com</a>
+                        </address>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

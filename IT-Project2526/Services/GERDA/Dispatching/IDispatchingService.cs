@@ -29,6 +29,14 @@ public interface IDispatchingService
     Task RetrainModelAsync();
     
     /// <summary>
+    /// Get recommended project manager for a ticket/project
+    /// Uses same affinity model but filters to employees with PM capabilities
+    /// </summary>
+    /// <param name="ticketGuid">The ticket to find a PM for</param>
+    /// <returns>Recommended PM user ID, or null if no recommendation</returns>
+    Task<string?> GetRecommendedProjectManagerAsync(Guid ticketGuid);
+    
+    /// <summary>
     /// Check if dispatching is enabled
     /// </summary>
     bool IsEnabled { get; }

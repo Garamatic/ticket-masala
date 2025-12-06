@@ -1,7 +1,10 @@
 @model List<IT_Project2526.ViewModels.CustomerListViewModel>
+@using IT_Project2526.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> Localizer
 
 @{
-    ViewData["Title"] = "Customers: Overview";
+    ViewData["Title"] = Localizer["Customers: Overview"];
 }
 
 <h1>@ViewData["Title"]</h1>
@@ -9,23 +12,23 @@
 <table class="table">
     <thead>
         <tr>
-            <th>First Name</th>
-            <th>Last Name</th>
-            <th>Email</th>
-            <th>Projects</th>
-            <th>Actions</th>
+            <th>@Localizer["First Name"]</th>
+            <th>@Localizer["Last Name"]</th>
+            <th>@Localizer["Email"]</th>
+            <th>@Localizer["Projects"]</th>
+            <th>@Localizer["Actions"]</th>
         </tr>
     </thead>
     <tbody>
         @foreach (var customer in Model ?? new List<IT_Project2526.ViewModels.CustomerListViewModel>())
         {
             <tr>
-                <td>@(string.Concat(customer.FirstName, " ", customer.LastName).Trim())</td>
+                <td>@customer.FirstName</td>
+                <td>@customer.LastName</td>
                 <td>@customer.Email</td>
                 <td>@customer.ProjectCount</td>
                 <td>
-                    @* De link naar de detailpagina *@
-                    <a asp-action="Detail" asp-route-id="@customer.Id" class="btn btn-info">Details</a>
+                    <a asp-action="Detail" asp-route-id="@customer.Id" class="btn btn-info">@Localizer["Details"]</a>
                 </td>
             </tr>
         }

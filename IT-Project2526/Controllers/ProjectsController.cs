@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Authorization;
 using IT_Project2526.Models;
 using IT_Project2526.ViewModels;
@@ -184,6 +185,82 @@ namespace IT_Project2526.Controllers
 
                 viewModel.CustomerList = await _projectService.GetCustomerSelectListAsync();
                 ModelState.AddModelError(string.Empty, "An error occurred while updating the project. Please try again.");
+                return View(viewModel);
+            }
+        }
+
+        /// <summary>
+        /// Create a new project from an existing ticket
+        /// Shows form with pre-filled data and GERDA PM recommendation
+        /// </summary>
+        [HttpGet]
+        [Authorize(Roles = Constants.RoleEmployee + "," + Constants.RoleAdmin)]
+        public async Task<IActionResult> CreateFromTicket(Guid ticketId)
+        {
+            try
+            {
+                _logger.LogInformation("Create project from ticket requested for ticket: {TicketId}", ticketId);
+
+                var viewModel = await _projectService.PrepareCreateFromTicketViewModelAsync(ticketId);
+                
+                if (viewModel == null)
+                {
+                    _logger.LogWarning("Ticket not found: {TicketId}", ticketId);
+                    return NotFound();
+                }
+
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                var correlationId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+                _logger.LogError(ex, "Error loading create from ticket form for ticket {TicketId}. CorrelationId: {CorrelationId}", ticketId, correlationId);
+                return StatusCode(500);
+            }
+        }
+
+        /// <summary>
+        /// Create a new project from an existing ticket (POST)
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = Constants.RoleEmployee + "," + Constants.RoleAdmin)]
+        public async Task<IActionResult> CreateFromTicket(CreateProjectFromTicketViewModel viewModel)
+        {
+            try
+            {
+                _logger.LogInformation("Attempting to create project from ticket: {TicketId}", viewModel.TicketId);
+
+                if (ModelState.IsValid)
+                {
+                    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                        ?? throw new InvalidOperationException("User ID not found");
+
+                    var projectId = await _projectService.CreateProjectFromTicketAsync(viewModel, userId);
+                    
+                    if (projectId.HasValue)
+                    {
+                        return RedirectToAction("Details", new { id = projectId.Value });
+                    }
+                    
+                    ModelState.AddModelError(string.Empty, "Failed to create project from ticket.");
+                }
+
+                // Reload select lists
+                viewModel.TemplateList = new SelectList(await _projectService.GetTemplateSelectListAsync(), "Value", "Text");
+                viewModel.ProjectManagerList = await _projectService.GetEmployeeSelectListAsync();
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                var correlationId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+                _logger.LogError(ex, "Error creating project from ticket: {TicketId}. CorrelationId: {CorrelationId}",
+                    viewModel.TicketId, correlationId);
+
+                ModelState.AddModelError(string.Empty, "An error occurred while creating the project. Please try again.");
+
+                viewModel.TemplateList = new SelectList(await _projectService.GetTemplateSelectListAsync(), "Value", "Text");
+                viewModel.ProjectManagerList = await _projectService.GetEmployeeSelectListAsync();
                 return View(viewModel);
             }
         }

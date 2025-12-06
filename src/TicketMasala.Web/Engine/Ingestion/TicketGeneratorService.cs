@@ -3,6 +3,7 @@ using TicketMasala.Web.Utilities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web;
+using System.Threading.Channels;
 
 namespace TicketMasala.Web.Engine.Ingestion;
 
@@ -13,6 +14,7 @@ public class TicketGeneratorService : BackgroundService
     private readonly IConfiguration _configuration;
     private readonly TimeSpan _interval;
     private readonly bool _enabled;
+    private readonly Channel<WorkItem> _channel;
 
     public TicketGeneratorService(
         IServiceProvider serviceProvider,
@@ -26,6 +28,7 @@ public class TicketGeneratorService : BackgroundService
         _enabled = _configuration.GetValue<bool>("TicketGenerator:Enabled");
         var intervalSeconds = _configuration.GetValue<int>("TicketGenerator:IntervalSeconds", 60);
         _interval = TimeSpan.FromSeconds(intervalSeconds);
+        _channel = Channel.CreateUnbounded<WorkItem>();
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -38,12 +41,11 @@ public class TicketGeneratorService : BackgroundService
 
         _logger.LogInformation("Ticket Generator started. Interval: {Interval}", _interval);
 
-        using var timer = new PeriodicTimer(_interval);
-        while (await timer.WaitForNextTickAsync(stoppingToken))
+        await foreach (var workItem in _channel.Reader.ReadAllAsync(stoppingToken))
         {
             try
             {
-                await GenerateRandomTicketAsync(stoppingToken);
+                await GenerateRandomTicketAsync(workItem, stoppingToken);
             }
             catch (Exception ex)
             {
@@ -52,7 +54,7 @@ public class TicketGeneratorService : BackgroundService
         }
     }
 
-    private async Task GenerateRandomTicketAsync(CancellationToken stoppingToken)
+    private async Task GenerateRandomTicketAsync(WorkItem workItem, CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
         var ticketGenerator = scope.ServiceProvider.GetRequiredService<ITicketGenerator>();

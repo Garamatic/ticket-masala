@@ -1,3 +1,4 @@
+using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.GERDA.Models;
 using TicketMasala.Web.Models;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +14,7 @@ namespace TicketMasala.Web.Engine.GERDA.Anticipation;
 /// </summary>
 public class AnticipationService : IAnticipationService
 {
-    private readonly ITProjectDB _context;
+    private readonly MasalaDbContext _context;
     private readonly GerdaConfig _config;
     private readonly ILogger<AnticipationService> _logger;
     private readonly MLContext _mlContext;
@@ -21,7 +22,7 @@ public class AnticipationService : IAnticipationService
     private readonly string _modelPath;
 
     public AnticipationService(
-        ITProjectDB context,
+        MasalaDbContext context,
         GerdaConfig config,
         ILogger<AnticipationService> logger)
     {

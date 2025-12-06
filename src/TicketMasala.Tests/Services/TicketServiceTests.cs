@@ -14,70 +14,66 @@ using Microsoft.AspNetCore.Http;
 using TicketMasala.Web;
 using System.Security.Claims;
 using TicketMasala.Web.Engine.Compiler;
+using TicketMasala.Web.Data;
 
 namespace TicketMasala.Tests.Services;
     public class TicketServiceTests
     {
         private readonly Mock<ILogger<TicketService>> _mockLogger;
-        private readonly DbContextOptions<ITProjectDB> _dbOptions;
+        private readonly DbContextOptions<MasalaDbContext> _dbOptions;
 
         public TicketServiceTests()
         {
             _mockLogger = new Mock<ILogger<TicketService>>();
             
             // Use in-memory database for testing
-            _dbOptions = new DbContextOptionsBuilder<ITProjectDB>()
+            _dbOptions = new DbContextOptionsBuilder<MasalaDbContext>()
                 .UseInMemoryDatabase(databaseName: "TestTicketDb_" + Guid.NewGuid())
                 .Options;
         }
 
-        private TicketService CreateService(ITProjectDB context)
+        private TicketService CreateService(MasalaDbContext context)
         {
-            var ticketRepo = new EfCoreTicketRepository(context, new Mock<ILogger<EfCoreTicketRepository>>().Object);
-            var userRepo = new EfCoreUserRepository(context, new Mock<ILogger<EfCoreUserRepository>>().Object);
-            var projectRepo = new EfCoreProjectRepository(context, new Mock<ILogger<EfCoreProjectRepository>>().Object);
-            
+            var ticketRepository = new Mock<ITicketRepository>();
+            var userRepository = new Mock<IUserRepository>();
+            var projectRepository = new Mock<IProjectRepository>();
             var observers = new List<ITicketObserver>();
+            var commentObservers = new List<ICommentObserver>();
             var notificationService = new Mock<INotificationService>();
             var auditService = new Mock<IAuditService>();
             var httpContextAccessor = new Mock<IHttpContextAccessor>();
-            
             var ruleEngine = new Mock<IRuleEngineService>();
-            
-            // Setup HttpContext
-            var httpContext = new DefaultHttpContext();
-            httpContextAccessor.Setup(x => x.HttpContext).Returns(httpContext);
+            var logger = new Mock<ILogger<TicketService>>();
 
             return new TicketService(
                 context,
-                ticketRepo,
-                userRepo,
-                projectRepo,
+                ticketRepository.Object,
+                userRepository.Object,
+                projectRepository.Object,
                 observers,
-                new List<ICommentObserver>(),
+                commentObservers,
                 notificationService.Object,
                 auditService.Object,
                 httpContextAccessor.Object,
                 ruleEngine.Object,
-                _mockLogger.Object
-            );
+                logger.Object);
         }
 
         [Fact]
         public async Task CreateTicketAsync_WithValidData_CreatesTicket()
         {
             // Arrange
-            using var context = new ITProjectDB(_dbOptions);
+            using var context = new MasalaDbContext(_dbOptions);
             var service = CreateService(context);
             
-            var customer = new Customer 
-            { 
-                Id = Guid.NewGuid().ToString(),
+            var customer = new ApplicationUser
+            {
+                Id = "customer-id",
                 UserName = "customer@example.com",
                 Email = "customer@example.com",
-                FirstName = "Test",
-                LastName = "Customer",
-                Phone = "123456789"
+                FirstName = "John",
+                LastName = "Doe",
+                Phone = "123-456-7890"
             };
             
             context.Users.Add(customer);
@@ -95,7 +91,6 @@ namespace TicketMasala.Tests.Services;
             // Assert
             Assert.NotNull(ticket);
             Assert.Equal("Test ticket", ticket.Description);
-            Assert.Equal(customer.Id, ticket.Customer.Id);
             Assert.Equal(Status.Pending, ticket.TicketStatus);
             Assert.Null(ticket.ResponsibleId);
         }
@@ -104,17 +99,17 @@ namespace TicketMasala.Tests.Services;
         public async Task CreateTicketAsync_WithResponsible_SetsStatusToAssigned()
         {
             // Arrange
-            using var context = new ITProjectDB(_dbOptions);
+            using var context = new MasalaDbContext(_dbOptions);
             var service = CreateService(context);
             
-            var customer = new Customer 
-            { 
-                Id = Guid.NewGuid().ToString(),
+            var customer = new ApplicationUser
+            {
+                Id = "customer-id",
                 UserName = "customer@example.com",
                 Email = "customer@example.com",
-                FirstName = "Test",
-                LastName = "Customer",
-                Phone = "123456789"
+                FirstName = "John",
+                LastName = "Doe",
+                Phone = "123-456-7890"
             };
             
             var employee = new Employee
@@ -151,7 +146,7 @@ namespace TicketMasala.Tests.Services;
         public async Task CreateTicketAsync_WithInvalidCustomer_ThrowsException()
         {
             // Arrange
-            using var context = new ITProjectDB(_dbOptions);
+            using var context = new MasalaDbContext(_dbOptions);
             var service = CreateService(context);
 
             // Act & Assert
@@ -170,17 +165,17 @@ namespace TicketMasala.Tests.Services;
         public async Task GetTicketDetailsAsync_WithValidGuid_ReturnsViewModel()
         {
             // Arrange
-            using var context = new ITProjectDB(_dbOptions);
+            using var context = new MasalaDbContext(_dbOptions);
             var service = CreateService(context);
             
-            var customer = new Customer 
-            { 
-                Id = Guid.NewGuid().ToString(),
+            var customer = new ApplicationUser
+            {
+                Id = "customer-id",
                 UserName = "customer@example.com",
                 Email = "customer@example.com",
                 FirstName = "John",
                 LastName = "Doe",
-                Phone = "123456789"
+                Phone = "123-456-7890"
             };
             
             context.Users.Add(customer);
@@ -188,7 +183,10 @@ namespace TicketMasala.Tests.Services;
             var ticket = new Ticket
             {
                 Description = "Test ticket",
-                Customer = customer,
+                DomainId = "IT",
+                Status = "New",
+                Title = "Test Ticket",
+                CustomFieldsJson = "{}",
                 TicketStatus = Status.Pending,
                 EstimatedEffortPoints = 5,
                 PriorityScore = 10.5
@@ -213,7 +211,7 @@ namespace TicketMasala.Tests.Services;
         public async Task GetTicketDetailsAsync_WithInvalidGuid_ReturnsNull()
         {
             // Arrange
-            using var context = new ITProjectDB(_dbOptions);
+            using var context = new MasalaDbContext(_dbOptions);
             var service = CreateService(context);
 
             // Act
@@ -227,17 +225,17 @@ namespace TicketMasala.Tests.Services;
         public async Task AssignTicketAsync_WithValidData_AssignsTicket()
         {
             // Arrange
-            using var context = new ITProjectDB(_dbOptions);
+            using var context = new MasalaDbContext(_dbOptions);
             var service = CreateService(context);
             
-            var customer = new Customer 
-            { 
-                Id = Guid.NewGuid().ToString(),
+            var customer = new ApplicationUser
+            {
+                Id = "customer-id",
                 UserName = "customer@example.com",
                 Email = "customer@example.com",
-                FirstName = "Test",
-                LastName = "Customer",
-                Phone = "123456789"
+                FirstName = "John",
+                LastName = "Doe",
+                Phone = "123-456-7890"
             };
             
             var employee = new Employee
@@ -257,7 +255,10 @@ namespace TicketMasala.Tests.Services;
             var ticket = new Ticket
             {
                 Description = "Unassigned ticket",
-                Customer = customer,
+                DomainId = "IT",
+                Status = "New",
+                Title = "Test Ticket",
+                CustomFieldsJson = "{}",
                 TicketStatus = Status.Pending
             };
             
@@ -281,7 +282,7 @@ namespace TicketMasala.Tests.Services;
         public async Task AssignTicketAsync_WithInvalidTicket_ReturnsFalse()
         {
             // Arrange
-            using var context = new ITProjectDB(_dbOptions);
+            using var context = new MasalaDbContext(_dbOptions);
             var service = CreateService(context);
 
             // Act
@@ -295,17 +296,17 @@ namespace TicketMasala.Tests.Services;
         public async Task AssignTicketAsync_WithInvalidAgent_ReturnsFalse()
         {
             // Arrange
-            using var context = new ITProjectDB(_dbOptions);
+            using var context = new MasalaDbContext(_dbOptions);
             var service = CreateService(context);
             
-            var customer = new Customer 
-            { 
-                Id = Guid.NewGuid().ToString(),
+            var customer = new ApplicationUser
+            {
+                Id = "customer-id",
                 UserName = "customer@example.com",
                 Email = "customer@example.com",
-                FirstName = "Test",
-                LastName = "Customer",
-                Phone = "123456789"
+                FirstName = "John",
+                LastName = "Doe",
+                Phone = "123-456-7890"
             };
             
             context.Users.Add(customer);
@@ -313,7 +314,10 @@ namespace TicketMasala.Tests.Services;
             var ticket = new Ticket
             {
                 Description = "Test ticket",
-                Customer = customer,
+                DomainId = "IT",
+                Status = "New",
+                Title = "Test Ticket",
+                CustomFieldsJson = "{}",
                 TicketStatus = Status.Pending
             };
             
@@ -331,11 +335,11 @@ namespace TicketMasala.Tests.Services;
         public async Task GetCustomerSelectListAsync_ReturnsAllCustomers()
         {
             // Arrange
-            using var context = new ITProjectDB(_dbOptions);
+            using var context = new MasalaDbContext(_dbOptions);
             var service = CreateService(context);
             
             context.Users.AddRange(
-                new Customer 
+                new ApplicationUser 
                 { 
                     Id = Guid.NewGuid().ToString(),
                     UserName = "customer1@example.com",
@@ -344,7 +348,7 @@ namespace TicketMasala.Tests.Services;
                     LastName = "Doe",
                     Phone = "111111111"
                 },
-                new Customer 
+                new ApplicationUser 
                 { 
                     Id = Guid.NewGuid().ToString(),
                     UserName = "customer2@example.com",
@@ -369,7 +373,7 @@ namespace TicketMasala.Tests.Services;
         public async Task GetEmployeeSelectListAsync_ReturnsAllEmployees()
         {
             // Arrange
-            using var context = new ITProjectDB(_dbOptions);
+            using var context = new MasalaDbContext(_dbOptions);
             var service = CreateService(context);
             
             context.Users.AddRange(

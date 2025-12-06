@@ -3,14 +3,15 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web.Models;
 using TicketMasala.Web.Utilities;
+using TicketMasala.Web.Data;
 
 namespace TicketMasala.Web.Controllers;
     [Authorize(Roles = Constants.RoleAdmin)]
     public class ProjectTemplateController : Controller
     {
-        private readonly ITProjectDB _context;
+        private readonly MasalaDbContext _context;
 
-        public ProjectTemplateController(ITProjectDB context)
+        public ProjectTemplateController(MasalaDbContext context)
         {
             _context = context;
         }

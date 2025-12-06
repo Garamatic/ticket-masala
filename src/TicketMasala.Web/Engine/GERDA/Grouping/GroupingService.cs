@@ -1,5 +1,6 @@
 using TicketMasala.Web.Engine.GERDA.Models;
 using TicketMasala.Web.Models;
+using TicketMasala.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -10,12 +11,12 @@ namespace TicketMasala.Web.Engine.GERDA.Grouping;
 /// </summary>
 public class GroupingService : IGroupingService
 {
-    private readonly ITProjectDB _context;
+    private readonly MasalaDbContext _context;
     private readonly GerdaConfig _config;
     private readonly ILogger<GroupingService> _logger;
 
     public GroupingService(
-        ITProjectDB context,
+        MasalaDbContext context,
         GerdaConfig config,
         ILogger<GroupingService> logger)
     {

@@ -68,10 +68,9 @@ namespace TicketMasala.Web.Engine.GERDA.Ranking;
         /// </summary>
         private double GetCategoryUrgencyMultiplier(Ticket ticket, GerdaConfig config)
         {
-            // Find the queue config for this ticket's project
+            // Find the queue config for this ticket's domain
             var queueConfig = config.Queues.FirstOrDefault(q => 
-                ticket.ProjectGuid.HasValue && 
-                q.Code == GetQueueCodeFromProjectGuid(ticket.ProjectGuid.Value));
+                q.Code == ticket.DomainId);
 
             if (queueConfig == null)
             {

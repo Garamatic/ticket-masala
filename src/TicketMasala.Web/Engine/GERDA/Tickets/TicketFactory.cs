@@ -22,7 +22,7 @@ public class TicketFactory : ITicketFactory
 
     /// <summary>
     /// Create a ticket with sensible defaults.
-    /// Note: Description and Customer are required and must be set after calling this method.
+    /// Note: Description, Title, DomainId are required and must be set after calling this method.
     /// </summary>
     public Ticket CreateWithDefaults()
     {
@@ -30,10 +30,12 @@ public class TicketFactory : ITicketFactory
         {
             Guid = Guid.NewGuid(),
             Description = string.Empty, // Required, must be set by caller
-            Customer = null!, // Required, must be set by caller
+            Title = string.Empty, // Required, must be set by caller
+            DomainId = "IT", // Required, can be overridden by caller
+            Status = "New", // Required
+            TicketStatus = Models.Status.Pending,
+            CustomFieldsJson = "{}",
             CreationDate = DateTime.UtcNow,
-            TicketStatus = Status.Pending,
-            TicketType = TicketType.ProjectRequest,
             CompletionTarget = DateTime.UtcNow.AddDays(14),
             PriorityScore = 50,
             EstimatedEffortPoints = 0,
@@ -58,13 +60,14 @@ public class TicketFactory : ITicketFactory
         var ticket = new Ticket
         {
             Guid = Guid.NewGuid(),
+            Title = title,
             Description = description,
-            Customer = customer,
-            CustomerId = customer.Id,
+            DomainId = "IT",
+            Status = responsible != null ? "Assigned" : "New",
+            TicketStatus = responsible != null ? Models.Status.Assigned : Models.Status.Pending,
+            CustomFieldsJson = "{}",
             CreatorGuid = Guid.Parse(customer.Id),
             CreationDate = DateTime.UtcNow,
-            TicketStatus = responsible != null ? Status.Assigned : Status.Pending,
-            TicketType = TicketType.ProjectRequest,
             CompletionTarget = completionTarget ?? DateTime.UtcNow.AddDays(14),
             PriorityScore = 50,
             EstimatedEffortPoints = 0,
@@ -106,12 +109,12 @@ public class TicketFactory : ITicketFactory
         var ticket = new Ticket
         {
             Guid = Guid.NewGuid(),
+            Title = subject,
             Description = description,
-            Customer = customer!, // May be null if customer not found
-            TicketType = TicketType.ServiceRequest, // Email tickets are service requests
+            DomainId = "IT",
+            Status = "New",
             GerdaTags = "Email-Ingested",
             CreationDate = DateTime.UtcNow,
-            TicketStatus = Status.Pending,
             CompletionTarget = DateTime.UtcNow.AddDays(14),
             PriorityScore = 50,
             EstimatedEffortPoints = 0,
@@ -122,7 +125,6 @@ public class TicketFactory : ITicketFactory
         
         if (customer != null)
         {
-            ticket.CustomerId = customer.Id;
             ticket.CreatorGuid = Guid.Parse(customer.Id);
         }
         

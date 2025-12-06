@@ -8,19 +8,20 @@ using TicketMasala.Web.Engine.GERDA.Strategies;
 using TicketMasala.Web.Services.Configuration;
 using TicketMasala.Web.Models;
 using TicketMasala.Web;
+using TicketMasala.Web.Data;
 
 namespace TicketMasala.Tests.Services;
     public class DispatchingServiceTests
     {
         private readonly Mock<ILogger<DispatchingService>> _mockLogger;
-        private readonly DbContextOptions<ITProjectDB> _dbOptions;
+        private readonly DbContextOptions<MasalaDbContext> _dbOptions;
         private readonly GerdaConfig _config;
 
         public DispatchingServiceTests()
         {
             _mockLogger = new Mock<ILogger<DispatchingService>>();
             
-            _dbOptions = new DbContextOptionsBuilder<ITProjectDB>()
+            _dbOptions = new DbContextOptionsBuilder<MasalaDbContext>()
                 .UseInMemoryDatabase(databaseName: "TestDispatchDb_" + Guid.NewGuid())
                 .Options;
 
@@ -42,7 +43,7 @@ namespace TicketMasala.Tests.Services;
         public async Task GetRecommendedAgentAsync_FreshSystem_ReturnsAgentViaFallback()
         {
             // Arrange
-            using var context = new ITProjectDB(_dbOptions);
+            using var context = new MasalaDbContext(_dbOptions);
             var strategyFactory = new Mock<IStrategyFactory>();
             var domainConfig = new Mock<IDomainConfigurationService>();
             // Mock fallback strategy
@@ -55,10 +56,14 @@ namespace TicketMasala.Tests.Services;
 
             var service = new DispatchingService(context, _config, strategyFactory.Object, domainConfig.Object, _mockLogger.Object);
 
-            var customer = new Customer 
-            { 
-                Id = "cust1", UserName = "cust1", Email = "cust1@test.com",
-                FirstName = "Test", LastName = "Customer", Phone = "123"
+            var customer = new ApplicationUser
+            {
+                Id = "customer-id",
+                UserName = "customer@example.com",
+                Email = "customer@example.com",
+                FirstName = "John",
+                LastName = "Doe",
+                Phone = "123-456-7890"
             };
             var employee1 = new Employee 
             { 
@@ -79,8 +84,10 @@ namespace TicketMasala.Tests.Services;
             { 
                 Guid = Guid.NewGuid(),
                 Description = "Test Ticket",
-                CustomerId = customer.Id,
-                Customer = customer,
+                DomainId = "IT",
+                Status = "New",
+                Title = "Test Ticket",
+                CustomFieldsJson = "{}",
                 TicketStatus = Status.Pending
             };
             context.Tickets.Add(ticket);
@@ -98,7 +105,7 @@ namespace TicketMasala.Tests.Services;
         public async Task GetRecommendedAgentAsync_WithWorkload_ReturnsLeastBusyAgent()
         {
             // Arrange
-            using var context = new ITProjectDB(_dbOptions);
+            using var context = new MasalaDbContext(_dbOptions);
             var strategyFactory = new Mock<IStrategyFactory>();
             var domainConfig = new Mock<IDomainConfigurationService>();
             // Mock fallback strategy
@@ -111,10 +118,14 @@ namespace TicketMasala.Tests.Services;
 
             var service = new DispatchingService(context, _config, strategyFactory.Object, domainConfig.Object, _mockLogger.Object);
 
-            var customer = new Customer 
-            { 
-                Id = "cust1", UserName = "cust1", Email = "cust1@test.com",
-                FirstName = "Test", LastName = "Customer", Phone = "123"
+            var customer = new ApplicationUser
+            {
+                Id = "customer-id",
+                UserName = "customer@example.com",
+                Email = "customer@example.com",
+                FirstName = "John",
+                LastName = "Doe",
+                Phone = "123-456-7890"
             };
             var busyEmployee = new Employee 
             { 
@@ -138,7 +149,10 @@ namespace TicketMasala.Tests.Services;
                 { 
                     Guid = Guid.NewGuid(), 
                     Description = $"Busy Ticket {i}",
-                    Customer = customer,
+                    DomainId = "IT",
+                    Status = "New",
+                    Title = $"Busy Ticket {i}",
+                    CustomFieldsJson = "{}",
                     ResponsibleId = busyEmployee.Id,
                     TicketStatus = Status.Assigned
                 });
@@ -148,8 +162,10 @@ namespace TicketMasala.Tests.Services;
             { 
                 Guid = Guid.NewGuid(),
                 Description = "New Ticket",
-                CustomerId = customer.Id,
-                Customer = customer,
+                DomainId = "IT",
+                Status = "New",
+                Title = "New Ticket",
+                CustomFieldsJson = "{}",
                 TicketStatus = Status.Pending
             };
             context.Tickets.Add(ticket);

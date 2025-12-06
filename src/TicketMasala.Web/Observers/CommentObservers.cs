@@ -55,18 +55,19 @@ public class NotificationCommentObserver : ICommentObserver
         }
 
         // Notify customer (only for non-internal comments)
+        var customerId = ticket.CreatorGuid.ToString();
         if (!comment.IsInternal && 
-            !string.IsNullOrEmpty(ticket.CustomerId) && 
-            ticket.CustomerId != authorId)
+            !string.IsNullOrEmpty(customerId) && 
+            customerId != authorId)
         {
             await _notificationService.NotifyUserAsync(
-                ticket.CustomerId,
+                customerId,
                 $"New reply on your ticket #{ticketShortId}",
                 $"/Ticket/Detail/{ticket.Guid}",
                 "Info");
             
             _logger.LogDebug("Notified customer {UserId} of comment on ticket {TicketId}", 
-                ticket.CustomerId, ticket.Guid);
+                customerId, ticket.Guid);
         }
 
         _logger.LogInformation("Comment notifications sent for ticket {TicketId}", ticket.Guid);

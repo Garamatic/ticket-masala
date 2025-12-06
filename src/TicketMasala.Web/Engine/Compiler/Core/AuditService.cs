@@ -1,13 +1,14 @@
 using TicketMasala.Web.Models;
 using Microsoft.EntityFrameworkCore;
+using TicketMasala.Web.Data;
 
 namespace TicketMasala.Web.Services.Core;
     public class AuditService : IAuditService
     {
-        private readonly ITProjectDB _context;
+        private readonly MasalaDbContext _context;
         private readonly ILogger<AuditService> _logger;
 
-        public AuditService(ITProjectDB context, ILogger<AuditService> logger)
+        public AuditService(MasalaDbContext context, ILogger<AuditService> logger)
         {
             _context = context;
             _logger = logger;

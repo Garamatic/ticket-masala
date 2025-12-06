@@ -3,6 +3,10 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using TicketMasala.Web.Utilities;
+// Backwards-compatibility alias: treat `Customer` as an `ApplicationUser` so
+// existing code that declares `Customer` variables can be assigned
+// `ApplicationUser` instances without wide-ranging changes.
+using Customer = TicketMasala.Web.Models.ApplicationUser;
 
 namespace TicketMasala.Web.Models;
     public class ApplicationUser : IdentityUser 
@@ -29,6 +33,10 @@ namespace TicketMasala.Web.Models;
         [DisplayName("Name")]
         [NotMapped]
         public string Name => $"{FirstName} {LastName}".Trim();
+
+        // Backwards-compatible code used in ingestion and seeding
+        [SafeStringLength(50)]
+        public string? Code { get; set; }
     }
 
     public class Guest : ApplicationUser { }
@@ -75,6 +83,10 @@ namespace TicketMasala.Web.Models;
         [PersonalData]
         public string? ProfilePicturePath { get; set; }
 
+        // Backwards-compat: some code references DepartmentId on Employee
+        [SafeStringLength(50)]
+        public string? DepartmentId { get; set; }
+
         // Department deleted
     }
-    // Customer deleted
+    // Note: `Customer` is a source-level alias for `ApplicationUser` (see top of file).

@@ -8,21 +8,21 @@ using TicketMasala.Web.Services.Projects;
 using TicketMasala.Web.Engine.Ingestion;
 using TicketMasala.Web.Services.Background;
 using TicketMasala.Web.Models;
-using TicketMasala.Web;
+using TicketMasala.Web.Data;
 
 namespace TicketMasala.Tests.Services;
     public class MetricsServiceTests
     {
         private readonly Mock<ILogger<MetricsService>> _mockLogger;
-        private readonly DbContextOptions<ITProjectDB> _dbOptions;
+        private readonly DbContextOptions<MasalaDbContext> _dbOptions;
 
         public MetricsServiceTests()
         {
             _mockLogger = new Mock<ILogger<MetricsService>>();
             
             // Use in-memory database for testing
-            _dbOptions = new DbContextOptionsBuilder<ITProjectDB>()
-                .UseInMemoryDatabase(databaseName: "TestMetricsDb_" + Guid.NewGuid())
+            _dbOptions = new DbContextOptionsBuilder<MasalaDbContext>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString())
                 .Options;
         }
 
@@ -30,7 +30,7 @@ namespace TicketMasala.Tests.Services;
         public async Task CalculateTeamMetricsAsync_WithNoTickets_ReturnsEmptyMetrics()
         {
             // Arrange
-            using var context = new ITProjectDB(_dbOptions);
+            using var context = new MasalaDbContext(_dbOptions);
             var service = new MetricsService(context, _mockLogger.Object);
 
             // Act
@@ -47,7 +47,7 @@ namespace TicketMasala.Tests.Services;
         public async Task CalculateTeamMetricsAsync_WithTickets_ReturnsCorrectCounts()
         {
             // Arrange
-            using var context = new ITProjectDB(_dbOptions);
+            using var context = new MasalaDbContext(_dbOptions);
             
             var customer = new Customer 
             { 
@@ -114,7 +114,7 @@ namespace TicketMasala.Tests.Services;
         public async Task CalculateTeamMetricsAsync_WithPriorityScores_ReturnsCorrectAverage()
         {
             // Arrange
-            using var context = new ITProjectDB(_dbOptions);
+            using var context = new MasalaDbContext(_dbOptions);
             
             var customer = new Customer 
             { 
@@ -160,7 +160,7 @@ namespace TicketMasala.Tests.Services;
         public async Task CalculateTeamMetricsAsync_WithAgentWorkload_ReturnsCorrectUtilization()
         {
             // Arrange
-            using var context = new ITProjectDB(_dbOptions);
+            using var context = new MasalaDbContext(_dbOptions);
             
             var customer = new Customer 
             { 
@@ -225,7 +225,7 @@ namespace TicketMasala.Tests.Services;
         public async Task CalculateTeamMetricsAsync_WithSlaTargets_CalculatesComplianceRate()
         {
             // Arrange
-            using var context = new ITProjectDB(_dbOptions);
+            using var context = new MasalaDbContext(_dbOptions);
             
             var customer = new Customer 
             { 

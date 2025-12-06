@@ -13,14 +13,14 @@ namespace TicketMasala.Web.Controllers;
         private readonly ILogger<SeedController> _logger;
         private readonly IWebHostEnvironment _env;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly ITProjectDB _context;
+        private readonly MasalaDbContext _context;
 
         public SeedController(
             DbSeeder seeder, 
             ILogger<SeedController> logger, 
             IWebHostEnvironment env,
             UserManager<ApplicationUser> userManager,
-            ITProjectDB context)
+            MasalaDbContext context)
         {
             _seeder = seeder;
             _logger = logger;

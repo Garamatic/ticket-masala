@@ -2,6 +2,7 @@ using TicketMasala.Web.Models;
 using TicketMasala.Web.Engine.GERDA.Models;
 using TicketMasala.Web.Engine.GERDA.Features;
 using TicketMasala.Web.Services.Configuration;
+using TicketMasala.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.ML;
 using Microsoft.ML.Data;
@@ -12,7 +13,7 @@ namespace TicketMasala.Web.Engine.GERDA.Dispatching;
     {
         public string Name => "MatrixFactorization";
 
-        private readonly ITProjectDB _context;
+        private readonly MasalaDbContext _context;
         private readonly GerdaConfig _config;
         private readonly ILogger<MatrixFactorizationDispatchingStrategy> _logger;
         private readonly MLContext _mlContext;
@@ -22,7 +23,7 @@ namespace TicketMasala.Web.Engine.GERDA.Dispatching;
         private readonly string _modelPath;
 
         public MatrixFactorizationDispatchingStrategy(
-            ITProjectDB context,
+            MasalaDbContext context,
             GerdaConfig config,
             ILogger<MatrixFactorizationDispatchingStrategy> logger,
             IFeatureExtractor featureExtractor,
@@ -100,10 +101,11 @@ namespace TicketMasala.Web.Engine.GERDA.Dispatching;
                     }
 
                     // Predict affinity score using ML model (Factor 1: Past Interaction)
+                    var customer = await _context.Users.FindAsync(ticket.CreatorGuid.ToString());
                     var input = new AgentCustomerRating
                     {
                         AgentId = employee.Id,
-                        CustomerId = ticket.CustomerId!
+                        CustomerId = ticket.CreatorGuid.ToString()
                     };
 
                     var prediction = predictionEngine.Predict(input);
@@ -113,7 +115,7 @@ namespace TicketMasala.Web.Engine.GERDA.Dispatching;
                         prediction.Score,
                         ticket,
                         employee,
-                        ticket.Customer);
+                        customer);
                     
                     // Adjust score based on current workload (penalize busy agents)
                     var workloadPenalty = currentWorkload / (double)_config.GerdaAI.Dispatching.MaxAssignedTicketsPerAgent;
@@ -156,13 +158,13 @@ namespace TicketMasala.Web.Engine.GERDA.Dispatching;
 
             // Get historical ticket assignments with completion data
             var rawTickets = await _context.Tickets
-                .Where(t => t.ResponsibleId != null && t.CustomerId != null)
-                .Where(t => t.TicketStatus == Status.Completed || t.TicketStatus == Status.Failed)
+                .Where(t => t.ResponsibleId != null)
+                .Where(t => t.Status == "Completed" || t.Status == "Failed")
                 .Select(t => new 
                 {
                     t.ResponsibleId,
-                    t.CustomerId,
-                    t.TicketStatus,
+                    CustomerId = t.CreatorGuid.ToString(),
+                    t.Status,
                     t.CompletionDate,
                     t.CreationDate
                 })
@@ -171,8 +173,8 @@ namespace TicketMasala.Web.Engine.GERDA.Dispatching;
             var trainingData = rawTickets.Select(t => new AgentCustomerRating
             {
                 AgentId = t.ResponsibleId!,
-                CustomerId = t.CustomerId!,
-                Rating = CalculateImplicitRating(t.TicketStatus, t.CompletionDate, t.CreationDate)
+                CustomerId = t.CreatorGuid.ToString(),
+                Rating = CalculateImplicitRating(t.Status, t.CompletionDate, t.CreationDate)
             }).ToList();
 
             if (trainingData.Count < _config.GerdaAI.Dispatching.MinHistoryForAffinityMatch)

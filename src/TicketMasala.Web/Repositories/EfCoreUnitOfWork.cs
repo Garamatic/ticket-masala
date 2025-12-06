@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using TicketMasala.Web.Data;
 
 namespace TicketMasala.Web.Repositories;
 
@@ -9,7 +10,7 @@ namespace TicketMasala.Web.Repositories;
 /// </summary>
 public class EfCoreUnitOfWork : IUnitOfWork
 {
-    private readonly ITProjectDB _context;
+    private readonly MasalaDbContext _context;
     private readonly ITicketRepository _ticketRepository;
     private readonly IProjectRepository _projectRepository;
     private readonly IUserRepository _userRepository;
@@ -17,7 +18,7 @@ public class EfCoreUnitOfWork : IUnitOfWork
     private bool _disposed;
 
     public EfCoreUnitOfWork(
-        ITProjectDB context,
+        MasalaDbContext context,
         ITicketRepository ticketRepository,
         IProjectRepository projectRepository,
         IUserRepository userRepository)

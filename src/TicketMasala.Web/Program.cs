@@ -36,7 +36,7 @@ var builder = WebApplication.CreateBuilder(args);
 var dbProvider = builder.Configuration["DatabaseProvider"];
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-builder.Services.AddDbContext<ITProjectDB>(options =>
+builder.Services.AddDbContext<MasalaDbContext>(options =>
 {
     if (string.Equals(dbProvider, "Sqlite", StringComparison.OrdinalIgnoreCase))
     {
@@ -90,7 +90,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     // SignIn settings
     options.SignIn.RequireConfirmedEmail = false;
 })
-    .AddEntityFrameworkStores<ITProjectDB>()
+    .AddEntityFrameworkStores<MasalaDbContext>()
     .AddDefaultTokenProviders()
     .AddDefaultUI(); //for identity pages
 
@@ -343,7 +343,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | 
                                Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
     // Trust all proxies (Fly.io internal network)
-    options.KnownNetworks.Clear();
+    options.KnownIPNetworks.Clear();
     options.KnownProxies.Clear();
 });
 

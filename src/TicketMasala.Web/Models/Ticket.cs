@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Identity;
@@ -7,7 +8,7 @@ using TicketMasala.Web.Utilities;
 namespace TicketMasala.Web.Models;
     public class Ticket : BaseModel
     {
-        public required Status TicketStatus { get; set; } = Status.Pending;
+        public required Status TicketStatus { get; set; } = Models.Status.Pending;
         public TicketType? TicketType { get; set; }
         
         [Required(ErrorMessage = "Description is required")]
@@ -52,7 +53,7 @@ namespace TicketMasala.Web.Models;
 
         // --- FLEXIBLE STORAGE (The "Masala" Model) ---
         [Column(TypeName = "TEXT")]
-        public string CustomFieldsJson { get; set; } = "{}";
+        public required string CustomFieldsJson { get; set; } = "{}";
 
         // --- GENERATED COLUMNS (Read-Only Performance Optimizations) ---
         [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
@@ -77,16 +78,28 @@ namespace TicketMasala.Web.Models;
         /// Schema is validated against the domain configuration.
         /// </summary>
         [Column(TypeName = "TEXT")] // For SQLite compatibility; use nvarchar(max) for SQL Server
-        public required string CustomFieldsJson { get; set; } = "{}";
+        public string? DomainCustomFieldsJson { get; set; }
 
         public Ticket? ParentTicket { get; set; }
         public Guid? ParentTicketGuid { get; set; }
-        public List<Ticket> SubTickets { get; set; } = [];
+        public List<Ticket> SubTickets { get; set; } = new List<Ticket>();
+        // Backwards-compatible customer nav/id (previously present in the model)
+        // Use `ApplicationUser` here so callers that supply `ApplicationUser` instances
+        // (e.g., from `_context.Users`) can assign directly without conversion errors.
+        public ApplicationUser? Customer { get; set; }
+        public string? CustomerId { get; set; }
+
+        // Backwards-compatible project linkage
+        public Guid? ProjectGuid { get; set; }
+        public Project? Project { get; set; }
+
+        // Quality reviews were removed earlier; reintroduce an empty collection for compatibility
+        public List<QualityReview> QualityReviews { get; set; } = new List<QualityReview>();
         public ApplicationUser? Responsible { get; set; }
         public string? ResponsibleId { get; set; }
-        public List<ApplicationUser> Watchers { get; set; } = [];
-        public List<TicketComment> Comments { get; set; } = new();
-        public List<Document> Attachments { get; set; } = [];
+        public List<ApplicationUser> Watchers { get; set; } = new List<ApplicationUser>();
+        public List<TicketComment> Comments { get; set; } = new List<TicketComment>();
+        public List<Document> Attachments { get; set; } = new List<Document>();
 
         public Guid? SolvedByArticleId { get; set; }
         [ForeignKey("SolvedByArticleId")]
@@ -94,4 +107,16 @@ namespace TicketMasala.Web.Models;
 
         public ReviewStatus ReviewStatus { get; set; } = ReviewStatus.None;
         // QualityReviews deleted
+
+        // Backwards-compatibility: ensure required members have safe defaults so
+        // object initializers used across the codebase don't fail (CS9035).
+        [SetsRequiredMembers]
+        public Ticket()
+        {
+            Description = string.Empty;
+            Title = string.Empty;
+            DomainId = "IT";
+            CustomFieldsJson = "{}";
+            TicketStatus = Models.Status.Pending;
+        }
 }

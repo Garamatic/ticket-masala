@@ -20,7 +20,7 @@ public class LoggingTicketObserver : ITicketObserver
         _logger.LogInformation(
             "Ticket Created - ID: {TicketGuid}, Customer: {CustomerId}, Description: {Description}",
             ticket.Guid,
-            ticket.CustomerId,
+            ticket.CreatorGuid.ToString(),
             ticket.Description.Length > 50 ? ticket.Description.Substring(0, 50) + "..." : ticket.Description);
         
         await Task.CompletedTask;

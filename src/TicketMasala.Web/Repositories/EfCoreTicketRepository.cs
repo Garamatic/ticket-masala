@@ -1,5 +1,6 @@
 using TicketMasala.Web.Models;
 using TicketMasala.Web.ViewModels.Tickets;
+using TicketMasala.Web.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace TicketMasala.Web.Repositories;
@@ -10,10 +11,10 @@ namespace TicketMasala.Web.Repositories;
 /// </summary>
 public class EfCoreTicketRepository : ITicketRepository
 {
-    private readonly ITProjectDB _context;
+    private readonly MasalaDbContext _context;
     private readonly ILogger<EfCoreTicketRepository> _logger;
 
-    public EfCoreTicketRepository(ITProjectDB context, ILogger<EfCoreTicketRepository> logger)
+    public EfCoreTicketRepository(MasalaDbContext context, ILogger<EfCoreTicketRepository> logger)
     {
         _context = context;
         _logger = logger;

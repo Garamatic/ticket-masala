@@ -1,3 +1,4 @@
+using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.GERDA.Models;
 using TicketMasala.Web.Models;
 using Microsoft.EntityFrameworkCore;
@@ -18,14 +19,14 @@ using Microsoft.EntityFrameworkCore;
 /// </summary>
 public class DispatchingService : IDispatchingService
 {
-    private readonly ITProjectDB _context;
+    private readonly MasalaDbContext _context;
     private readonly GerdaConfig _config;
     private readonly IStrategyFactory _strategyFactory;
     private readonly IDomainConfigurationService _domainConfigService;
     private readonly ILogger<DispatchingService> _logger;
 
     public DispatchingService(
-        ITProjectDB context,
+        MasalaDbContext context,
         GerdaConfig config,
         IStrategyFactory strategyFactory,
         IDomainConfigurationService domainConfigService,
@@ -49,10 +50,9 @@ public class DispatchingService : IDispatchingService
         }
 
         var ticket = await _context.Tickets
-            .Include(t => t.Customer)
             .FirstOrDefaultAsync(t => t.Guid == ticketGuid);
 
-        if (ticket == null || ticket.Customer == null)
+        if (ticket == null)
         {
             return null;
         }
@@ -83,10 +83,9 @@ public class DispatchingService : IDispatchingService
         }
 
         var ticket = await _context.Tickets
-            .Include(t => t.Customer)
             .FirstOrDefaultAsync(t => t.Guid == ticketGuid);
 
-        if (ticket?.Customer == null)
+        if (ticket == null)
         {
             return new List<(string, double)>();
         }
@@ -180,7 +179,6 @@ public class DispatchingService : IDispatchingService
         }
 
         var ticket = await _context.Tickets
-            .Include(t => t.Customer)
             .FirstOrDefaultAsync(t => t.Guid == ticketGuid);
 
         if (ticket == null)

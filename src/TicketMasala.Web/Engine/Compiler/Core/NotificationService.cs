@@ -1,13 +1,14 @@
 using TicketMasala.Web.Models;
+using TicketMasala.Web.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace TicketMasala.Web.Services.Core;
     public class NotificationService : INotificationService
     {
-        private readonly ITProjectDB _context;
+        private readonly MasalaDbContext _context;
         private readonly ILogger<NotificationService> _logger;
 
-        public NotificationService(ITProjectDB context, ILogger<NotificationService> logger)
+        public NotificationService(MasalaDbContext context, ILogger<NotificationService> logger)
         {
             _context = context;
             _logger = logger;

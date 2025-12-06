@@ -4,6 +4,7 @@ using MailKit;
 using MimeKit;
 using TicketMasala.Web.Models;
 using TicketMasala.Web.Services.Tickets;
+using TicketMasala.Web.Data;
 
 namespace TicketMasala.Web.Engine.Ingestion;
     public class EmailIngestionService : BackgroundService
@@ -68,19 +69,19 @@ namespace TicketMasala.Web.Engine.Ingestion;
                 
                 using (var scope = _serviceProvider.CreateScope())
                 {
-                    var context = scope.ServiceProvider.GetRequiredService<ITProjectDB>();
+                    var context = scope.ServiceProvider.GetRequiredService<MasalaDbContext>();
                     var ticketService = scope.ServiceProvider.GetRequiredService<ITicketService>();
 
                     // Check if sender exists as customer
                     var senderEmail = message.From.Mailboxes.FirstOrDefault()?.Address;
                     if (string.IsNullOrEmpty(senderEmail)) continue;
 
-                    var customer = context.Customers.FirstOrDefault(u => u.Email == senderEmail);
+                    var customer = context.Users.FirstOrDefault(u => u.Email == senderEmail);
                     
                     if (customer == null)
                     {
                         // Create new customer
-                        customer = new Customer
+                        customer = new ApplicationUser
                         {
                             UserName = senderEmail,
                             Email = senderEmail,
@@ -89,7 +90,7 @@ namespace TicketMasala.Web.Engine.Ingestion;
                             Code = "EMAIL-" + Guid.NewGuid().ToString().Substring(0, 8).ToUpper(),
                             Phone = "N/A"
                         };
-                        context.Customers.Add(customer);
+                        context.Users.Add(customer);
                         await context.SaveChangesAsync();
                     }
                     
@@ -97,12 +98,11 @@ namespace TicketMasala.Web.Engine.Ingestion;
                     var ticket = new Ticket
                     {
                         Guid = Guid.NewGuid(),
-                        // Ticket has no Title, so we put Subject in Description
-                        Description = $"Subject: {message.Subject}\n\n{message.TextBody ?? message.HtmlBody ?? "No content"}",
-                        TicketStatus = Status.Pending,
-                        TicketType = TicketType.Incident,
-                        Customer = customer,
-                        CustomerId = customer.Id
+                        Title = message.Subject ?? "Email Ticket",
+                        Description = message.TextBody ?? message.HtmlBody ?? "No content",
+                        DomainId = "IT",
+                        Status = "New",
+                        CreatorGuid = Guid.Parse(customer.Id)
                     };
 
                     context.Tickets.Add(ticket);

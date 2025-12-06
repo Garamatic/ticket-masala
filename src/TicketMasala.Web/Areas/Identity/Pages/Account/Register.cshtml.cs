@@ -131,7 +131,7 @@ namespace TicketMasala.Web.Areas.Identity.Pages.Account;
             if (ModelState.IsValid)
             {
                 //standard registration makes a Customer, Employees need to be set by an admin
-                ApplicationUser user = new Customer
+                ApplicationUser user = new ApplicationUser
                 {
                     UserName = Input.Email,
                     Email = Input.Email,

@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using TicketMasala.Web.Data;
 
 namespace TicketMasala.Web.Controllers;
     [Authorize] // All authenticated users can access tickets
@@ -26,7 +27,7 @@ namespace TicketMasala.Web.Controllers;
         private readonly IAuditService _auditService;
         private readonly INotificationService _notificationService;
         private readonly IDomainConfigurationService _domainConfig;
-        private readonly ITProjectDB _context;
+        private readonly MasalaDbContext _context;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IRuleEngineService _ruleEngine;
         private readonly ILogger<TicketController> _logger;
@@ -38,7 +39,7 @@ namespace TicketMasala.Web.Controllers;
             IAuditService auditService,
             INotificationService notificationService,
             IDomainConfigurationService domainConfig,
-            ITProjectDB context,
+            MasalaDbContext context,
             IHttpContextAccessor httpContextAccessor,
             IRuleEngineService ruleEngine,
             ILogger<TicketController> logger)

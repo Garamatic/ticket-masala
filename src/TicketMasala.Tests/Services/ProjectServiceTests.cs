@@ -19,39 +19,25 @@ namespace TicketMasala.Tests.Services;
     public class ProjectServiceTests
     {
         private readonly Mock<ILogger<ProjectService>> _mockLogger;
-        private readonly DbContextOptions<ITProjectDB> _dbOptions;
+        private readonly DbContextOptions<MasalaDbContext> _dbOptions;
 
         public ProjectServiceTests()
         {
             _mockLogger = new Mock<ILogger<ProjectService>>();
             
-            _dbOptions = new DbContextOptionsBuilder<ITProjectDB>()
+            _dbOptions = new DbContextOptionsBuilder<MasalaDbContext>()
                 .UseInMemoryDatabase(databaseName: "TestProjectDb_" + Guid.NewGuid())
                 .Options;
         }
 
-        private ProjectService CreateService(ITProjectDB context)
+        private ProjectService CreateService(MasalaDbContext context)
         {
-            var projectRepo = new EfCoreProjectRepository(context, new Mock<ILogger<EfCoreProjectRepository>>().Object);
-            
-            var mockUserManager = new Mock<UserManager<ApplicationUser>>(
-                Mock.Of<IUserStore<ApplicationUser>>(),
-                null!, null!, null!, null!, null!, null!, null!, null!);
-            
-            var observers = new List<IProjectObserver>();
-
-            return new ProjectService(
-                context,
-                projectRepo,
-                mockUserManager.Object,
-                observers,
-                _mockLogger.Object
-            );
+            return new ProjectService(context);
         }
 
-        private Customer CreateTestCustomer(string suffix = "")
+        private ApplicationUser CreateTestCustomer(string suffix = "")
         {
-            return new Customer
+            return new ApplicationUser
             {
                 Id = Guid.NewGuid().ToString(),
                 UserName = $"customer{suffix}@example.com",
@@ -66,7 +52,7 @@ namespace TicketMasala.Tests.Services;
         public async Task GetAllProjectsAsync_ReturnsAllProjects()
         {
             // Arrange
-            using var context = new ITProjectDB(_dbOptions);
+            using var context = new MasalaDbContext(_dbOptions);
             var service = CreateService(context);
 
             var customer = CreateTestCustomer();
@@ -107,7 +93,7 @@ namespace TicketMasala.Tests.Services;
         public async Task GetAllProjectsAsync_ForCustomer_FiltersCorrectly()
         {
             // Arrange
-            using var context = new ITProjectDB(_dbOptions);
+            using var context = new MasalaDbContext(_dbOptions);
             var service = CreateService(context);
 
             var customer1 = CreateTestCustomer("1");
@@ -148,7 +134,7 @@ namespace TicketMasala.Tests.Services;
         public async Task GetProjectDetailsAsync_WithValidGuid_ReturnsProject()
         {
             // Arrange
-            using var context = new ITProjectDB(_dbOptions);
+            using var context = new MasalaDbContext(_dbOptions);
             var service = CreateService(context);
 
             var customer = CreateTestCustomer();
@@ -179,7 +165,7 @@ namespace TicketMasala.Tests.Services;
         public async Task GetProjectDetailsAsync_WithInvalidGuid_ReturnsNull()
         {
             // Arrange
-            using var context = new ITProjectDB(_dbOptions);
+            using var context = new MasalaDbContext(_dbOptions);
             var service = CreateService(context);
 
             // Act
@@ -193,7 +179,7 @@ namespace TicketMasala.Tests.Services;
         public async Task GetProjectForEditAsync_WithValidGuid_ReturnsViewModel()
         {
             // Arrange
-            using var context = new ITProjectDB(_dbOptions);
+            using var context = new MasalaDbContext(_dbOptions);
             var service = CreateService(context);
 
             var customer = CreateTestCustomer();
@@ -226,7 +212,7 @@ namespace TicketMasala.Tests.Services;
         public async Task GetProjectForEditAsync_WithInvalidGuid_ReturnsNull()
         {
             // Arrange
-            using var context = new ITProjectDB(_dbOptions);
+            using var context = new MasalaDbContext(_dbOptions);
             var service = CreateService(context);
 
             // Act
@@ -240,7 +226,7 @@ namespace TicketMasala.Tests.Services;
         public async Task UpdateProjectAsync_WithValidData_UpdatesProject()
         {
             // Arrange
-            using var context = new ITProjectDB(_dbOptions);
+            using var context = new MasalaDbContext(_dbOptions);
             var service = CreateService(context);
 
             var customer = CreateTestCustomer();
@@ -282,7 +268,7 @@ namespace TicketMasala.Tests.Services;
         public async Task UpdateProjectAsync_WithInvalidGuid_ReturnsFalse()
         {
             // Arrange
-            using var context = new ITProjectDB(_dbOptions);
+            using var context = new MasalaDbContext(_dbOptions);
             var service = CreateService(context);
 
             var updateViewModel = new NewProject
@@ -303,7 +289,7 @@ namespace TicketMasala.Tests.Services;
         public async Task GetCustomerSelectListAsync_ReturnsAllCustomers()
         {
             // Arrange
-            using var context = new ITProjectDB(_dbOptions);
+            using var context = new MasalaDbContext(_dbOptions);
             var service = CreateService(context);
 
             var customer1 = CreateTestCustomer("1");
@@ -322,7 +308,7 @@ namespace TicketMasala.Tests.Services;
         public async Task GetTemplateSelectListAsync_ReturnsAllTemplates()
         {
             // Arrange
-            using var context = new ITProjectDB(_dbOptions);
+            using var context = new MasalaDbContext(_dbOptions);
             var service = CreateService(context);
 
             context.ProjectTemplates.AddRange(
@@ -344,7 +330,7 @@ namespace TicketMasala.Tests.Services;
         public async Task GetProjectDetailsAsync_WithSoftDeletedProject_ReturnsNull()
         {
             // Arrange
-            using var context = new ITProjectDB(_dbOptions);
+            using var context = new MasalaDbContext(_dbOptions);
             var service = CreateService(context);
 
             var customer = CreateTestCustomer();

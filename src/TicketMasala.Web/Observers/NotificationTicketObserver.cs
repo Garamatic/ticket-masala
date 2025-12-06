@@ -37,10 +37,11 @@ public class NotificationTicketObserver : ITicketObserver
     public async Task OnTicketCompletedAsync(Ticket ticket)
     {
         // Notify customer
-        if (ticket.CustomerId != null)
+        var customerId = ticket.CreatorGuid.ToString();
+        if (customerId != null)
         {
             await _notificationService.NotifyUserAsync(
-                ticket.CustomerId,
+                customerId,
                 $"Ticket #{ticket.Guid.ToString().Substring(0, 8)} completed",
                 $"/Ticket/Detail/{ticket.Guid}",
                 "Success"
@@ -89,10 +90,11 @@ public class NotificationTicketObserver : ITicketObserver
                 // If author is customer -> notify responsible agent
                 // If author is employee -> notify customer
                 
-                if (ticket.CustomerId != null && ticket.CustomerId != comment.AuthorId)
+                var customerId = ticket.CreatorGuid.ToString();
+                if (customerId != null && customerId != comment.AuthorId)
                 {
                     await _notificationService.NotifyUserAsync(
-                        ticket.CustomerId,
+                        customerId,
                         $"New reply on ticket #{ticket.Guid.ToString().Substring(0, 8)}",
                         $"/Ticket/Detail/{ticket.Guid}",
                         "Reply"

@@ -1,5 +1,6 @@
 using TicketMasala.Web.Engine.GERDA.Models;
 using TicketMasala.Web.Models;
+using TicketMasala.Web.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace TicketMasala.Web.Engine.GERDA.Estimating;
@@ -15,14 +16,14 @@ using Microsoft.EntityFrameworkCore;
 /// </summary>
 public class EstimatingService : IEstimatingService
 {
-    private readonly ITProjectDB _context;
+    private readonly MasalaDbContext _context;
     private readonly GerdaConfig _config;
     private readonly IStrategyFactory _strategyFactory;
     private readonly IDomainConfigurationService _domainConfigService;
     private readonly ILogger<EstimatingService> _logger;
 
     public EstimatingService(
-        ITProjectDB context,
+        MasalaDbContext context,
         GerdaConfig config,
         IStrategyFactory strategyFactory,
         IDomainConfigurationService domainConfigService,

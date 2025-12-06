@@ -2,6 +2,7 @@ using TicketMasala.Web.Models;
 using TicketMasala.Web.ViewModels.Tickets;
 using TicketMasala.Web.ViewModels.GERDA;
 using TicketMasala.Web.Repositories;
+using TicketMasala.Web.Engine.GERDA.Dispatching;
 using Microsoft.EntityFrameworkCore;
 
 namespace TicketMasala.Web.Services.Tickets;

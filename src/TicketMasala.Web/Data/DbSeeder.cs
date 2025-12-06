@@ -6,13 +6,13 @@ using Microsoft.EntityFrameworkCore;
 namespace TicketMasala.Web.Data;
     public class DbSeeder
     {
-        private readonly ITProjectDB _context;
+        private readonly MasalaDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly ILogger<DbSeeder> _logger;
         private readonly IWebHostEnvironment _environment;
 
-        public DbSeeder(ITProjectDB context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, ILogger<DbSeeder> logger, IWebHostEnvironment environment)
+        public DbSeeder(MasalaDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, ILogger<DbSeeder> logger, IWebHostEnvironment environment)
         {
             _context = context;
             _userManager = userManager;
@@ -413,9 +413,9 @@ namespace TicketMasala.Web.Data;
 
         private async Task CreateSampleProjects()
         {
-            var customer1 = await _context.Customers.FirstAsync(c => c.Email == "alice.customer@example.com");
-            var customer2 = await _context.Customers.FirstAsync(c => c.Email == "carol.white@techcorp.com");
-            var customer3 = await _context.Customers.FirstAsync(c => c.Email == "daniel.brown@startup.io");
+            var customer1 = await _context.Users.FirstAsync(c => c.Email == "alice.customer@example.com");
+            var customer2 = await _context.Users.FirstAsync(c => c.Email == "carol.white@techcorp.com");
+            var customer3 = await _context.Users.FirstAsync(c => c.Email == "daniel.brown@startup.io");
 
             var pm1 = await _context.Employees.FirstAsync(e => e.Email == "mike.pm@ticketmasala.com");
             var pm2 = await _context.Employees.FirstAsync(e => e.Email == "lisa.pm@ticketmasala.com");
@@ -475,8 +475,8 @@ namespace TicketMasala.Web.Data;
             var project1 = await _context.Projects.FirstAsync(p => p.Name == "Website Redesign");
             var project2 = await _context.Projects.FirstAsync(p => p.Name == "Mobile App Development");
             
-            var customer1 = await _context.Customers.FirstAsync(c => c.Email == "alice.customer@example.com");
-            var customer2 = await _context.Customers.FirstAsync(c => c.Email == "carol.white@techcorp.com");
+            var customer1 = await _context.Users.FirstAsync(c => c.Email == "alice.customer@example.com");
+            var customer2 = await _context.Users.FirstAsync(c => c.Email == "carol.white@techcorp.com");
 
             var support1 = await _context.Employees.FirstAsync(e => e.Email == "david.support@ticketmasala.com");
             var support2 = await _context.Employees.FirstAsync(e => e.Email == "emma.support@ticketmasala.com");

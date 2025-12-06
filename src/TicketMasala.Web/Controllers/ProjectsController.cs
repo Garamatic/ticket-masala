@@ -47,9 +47,9 @@ namespace TicketMasala.Web.Controllers;
 
                 var viewModel = new NewProject
                 {
-                    CustomerList = await _projectService.GetCustomerSelectListAsync(),
-                    StakeholderList = await _projectService.GetStakeholderSelectListAsync(),
-                    TemplateList = await _projectService.GetTemplateSelectListAsync(),
+                    CustomerList = (await _projectService.GetCustomerSelectListAsync()).ToList(),
+                    StakeholderList = (await _projectService.GetStakeholderSelectListAsync()).ToList(),
+                    TemplateList = (await _projectService.GetTemplateSelectListAsync()).ToList(),
                     IsNewCustomer = false
                 };
 
@@ -87,9 +87,9 @@ namespace TicketMasala.Web.Controllers;
                     }
                 }
 
-                viewModel.CustomerList = await _projectService.GetCustomerSelectListAsync();
-                viewModel.StakeholderList = await _projectService.GetStakeholderSelectListAsync();
-                viewModel.TemplateList = await _projectService.GetTemplateSelectListAsync();
+                viewModel.CustomerList = (await _projectService.GetCustomerSelectListAsync()).ToList();
+                viewModel.StakeholderList = (await _projectService.GetStakeholderSelectListAsync()).ToList();
+                viewModel.TemplateList = (await _projectService.GetTemplateSelectListAsync()).ToList();
                 return View(viewModel);
             }
             catch (Exception ex)
@@ -100,9 +100,9 @@ namespace TicketMasala.Web.Controllers;
 
                 ModelState.AddModelError(string.Empty, "An error occurred while creating the project. Please try again.");
 
-                viewModel.CustomerList = await _projectService.GetCustomerSelectListAsync();
-                viewModel.StakeholderList = await _projectService.GetStakeholderSelectListAsync();
-                viewModel.TemplateList = await _projectService.GetTemplateSelectListAsync();
+                viewModel.CustomerList = (await _projectService.GetCustomerSelectListAsync()).ToList();
+                viewModel.StakeholderList = (await _projectService.GetStakeholderSelectListAsync()).ToList();
+                viewModel.TemplateList = (await _projectService.GetTemplateSelectListAsync()).ToList();
                 return View(viewModel);
             }
         }
@@ -169,7 +169,7 @@ namespace TicketMasala.Web.Controllers;
 
                 if (!ModelState.IsValid)
                 {
-                    viewModel.CustomerList = await _projectService.GetCustomerSelectListAsync();
+                    viewModel.CustomerList = (await _projectService.GetCustomerSelectListAsync()).ToList();
                     return View(viewModel);
                 }
 

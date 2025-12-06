@@ -1,6 +1,7 @@
 using TicketMasala.Web.Models;
 using TicketMasala.Web.Services.Tickets;
 using TicketMasala.Web.Utilities;
+using TicketMasala.Web.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web;
@@ -11,13 +12,13 @@ public class TicketGenerator : ITicketGenerator
 {
     private readonly ITicketService _ticketService;
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly ITProjectDB _context;
+    private readonly MasalaDbContext _context;
     private readonly ILogger<TicketGenerator> _logger;
 
     public TicketGenerator(
         ITicketService ticketService,
         UserManager<ApplicationUser> userManager,
-        ITProjectDB context,
+        MasalaDbContext context,
         ILogger<TicketGenerator> logger)
     {
         _ticketService = ticketService;

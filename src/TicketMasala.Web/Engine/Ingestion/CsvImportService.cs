@@ -4,6 +4,7 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using ExcelDataReader;
 using TicketMasala.Web.Models;
+using TicketMasala.Web.Data;
 
 namespace TicketMasala.Web.Engine.Ingestion;
     public interface ITicketImportService
@@ -14,10 +15,10 @@ namespace TicketMasala.Web.Engine.Ingestion;
 
     public class TicketImportService : ITicketImportService
     {
-        private readonly ITProjectDB _context;
+        private readonly MasalaDbContext _context;
         private readonly ILogger<TicketImportService> _logger;
 
-        public TicketImportService(ITProjectDB context, ILogger<TicketImportService> logger)
+        public TicketImportService(MasalaDbContext context, ILogger<TicketImportService> logger)
         {
             _context = context;
             _logger = logger;
@@ -99,17 +100,17 @@ namespace TicketMasala.Web.Engine.Ingestion;
                     }
 
                     // 2. Resolve Customer
-                    Customer? customer = null;
+                    ApplicationUser? customer = null;
                     if (mapping.ContainsKey("CustomerEmail") && rowDict.ContainsKey(mapping["CustomerEmail"]))
                     {
                         var email = rowDict[mapping["CustomerEmail"]]?.ToString();
                         if (!string.IsNullOrEmpty(email))
                         {
-                            customer = _context.Customers.FirstOrDefault(u => u.Email == email);
+                            customer = _context.Users.FirstOrDefault(u => u.Email == email);
                             if (customer == null)
                             {
                                 // Create new customer
-                                customer = new Customer
+                                customer = new ApplicationUser
                                 {
                                     UserName = email,
                                     Email = email,
@@ -118,7 +119,7 @@ namespace TicketMasala.Web.Engine.Ingestion;
                                     Code = "IMP-" + Guid.NewGuid().ToString().Substring(0, 8).ToUpper(),
                                     Phone = "N/A"
                                 };
-                                _context.Customers.Add(customer);
+                                _context.Users.Add(customer);
                                 await _context.SaveChangesAsync();
                             }
                         }
@@ -134,10 +135,11 @@ namespace TicketMasala.Web.Engine.Ingestion;
                     var ticket = new Ticket
                     {
                         Guid = Guid.NewGuid(),
+                        Title = title,
                         Description = description,
-                        Customer = customer,
-                        CustomerId = customer.Id,
-                        TicketStatus = Status.Pending,
+                        DomainId = "IT",
+                        Status = "New",
+                        CreatorGuid = Guid.Parse(customer.Id),
                         ResponsibleId = null
                     };
 

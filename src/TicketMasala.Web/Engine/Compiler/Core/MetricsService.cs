@@ -1,3 +1,4 @@
+using TicketMasala.Web.Data;
 using TicketMasala.Web.Models;
 using TicketMasala.Web.ViewModels.Projects;
 using TicketMasala.Web.ViewModels.Tickets;
@@ -19,10 +20,10 @@ namespace TicketMasala.Web.Services.Core;
 
     public class MetricsService : IMetricsService
     {
-        private readonly ITProjectDB _context;
+        private readonly MasalaDbContext _context;
         private readonly ILogger<MetricsService> _logger;
 
-        public MetricsService(ITProjectDB context, ILogger<MetricsService> logger)
+        public MetricsService(MasalaDbContext context, ILogger<MetricsService> logger)
         {
             _context = context;
             _logger = logger;
@@ -40,7 +41,6 @@ namespace TicketMasala.Web.Services.Core;
             // Get all active tickets with related data
             var allTickets = await _context.Tickets
                 .Include(t => t.Responsible)
-                .Include(t => t.Customer)
                 .Where(t => t.ValidUntil == null)
                 .ToListAsync();
 

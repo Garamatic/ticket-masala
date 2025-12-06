@@ -9,6 +9,7 @@ using TicketMasala.Web.Services.Core;
 using TicketMasala.Web.Engine.Compiler;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using TicketMasala.Web.Data;
 
 namespace TicketMasala.Web.Services.Tickets;
     /// <summary>
@@ -41,7 +42,7 @@ namespace TicketMasala.Web.Services.Tickets;
 
     public class TicketService : ITicketService, ITicketQueryService, ITicketCommandService
     {
-        private readonly ITProjectDB _context;
+        private readonly MasalaDbContext _context;
         private readonly ITicketRepository _ticketRepository;
         private readonly IUserRepository _userRepository;
         private readonly IProjectRepository _projectRepository;
@@ -54,7 +55,7 @@ namespace TicketMasala.Web.Services.Tickets;
         private readonly ILogger<TicketService> _logger;
 
         public TicketService(
-            ITProjectDB context, 
+            MasalaDbContext context, 
             ITicketRepository ticketRepository,
             IUserRepository userRepository,
             IProjectRepository projectRepository,
@@ -183,10 +184,11 @@ namespace TicketMasala.Web.Services.Tickets;
             var ticket = new Ticket
             {
                 Description = description,
-                Customer = customer,
                 Responsible = responsible,
-                TicketStatus = responsible != null ? Status.Assigned : Status.Pending,
-                TicketType = TicketType.ProjectRequest,
+                Status = responsible != null ? "Assigned" : "New",
+                Title = "New Ticket", // Required property
+                DomainId = "IT", // Required property
+                TicketStatus = responsible != null ? Models.Status.Assigned : Models.Status.Pending,
                 CompletionTarget = completionTarget ?? DateTime.UtcNow.AddDays(14),
                 CreatorGuid = Guid.Parse(customer.Id),
                 Comments = new List<TicketComment>()

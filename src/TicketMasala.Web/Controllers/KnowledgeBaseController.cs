@@ -2,15 +2,16 @@ using TicketMasala.Web.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using TicketMasala.Web.Data;
 
 namespace TicketMasala.Web.Controllers;
     [Authorize]
     public class KnowledgeBaseController : Controller
     {
-        private readonly ITProjectDB _context;
+        private readonly MasalaDbContext _context;
         private readonly ILogger<KnowledgeBaseController> _logger;
 
-        public KnowledgeBaseController(ITProjectDB context, ILogger<KnowledgeBaseController> logger)
+        public KnowledgeBaseController(MasalaDbContext context, ILogger<KnowledgeBaseController> logger)
         {
             _context = context;
             _logger = logger;

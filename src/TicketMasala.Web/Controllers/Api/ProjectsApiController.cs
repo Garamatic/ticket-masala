@@ -6,6 +6,7 @@ using TicketMasala.Web.ViewModels.Projects;
 using TicketMasala.Web.ViewModels.Tickets;
 using TicketMasala.Web.Utilities;
 using TicketMasala.Web.Models;
+using TicketMasala.Web.Data;
 using System.Security.Claims;
 
 namespace TicketMasala.Web.Controllers.Api;
@@ -18,12 +19,12 @@ namespace TicketMasala.Web.Controllers.Api;
     [Produces("application/json")]
     public class ProjectsApiController : ControllerBase
     {
-        private readonly ITProjectDB _context;
+        private readonly MasalaDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<ProjectsApiController> _logger;
 
         public ProjectsApiController(
-            ITProjectDB context,
+            MasalaDbContext context,
             UserManager<ApplicationUser> userManager,
             ILogger<ProjectsApiController> logger)
         {
@@ -53,8 +54,6 @@ namespace TicketMasala.Web.Controllers.Api;
                     .AsNoTracking()
                     .Include(p => p.Tasks)
                         .ThenInclude(t => t.Responsible)
-                    .Include(p => p.Tasks)
-                        .ThenInclude(t => t.Customer)
                     .Include(p => p.Customer)
                     .Include(p => p.ProjectManager)
                     .Where(p => p.ValidUntil == null)
@@ -118,8 +117,6 @@ namespace TicketMasala.Web.Controllers.Api;
                     .AsNoTracking()
                     .Include(p => p.Tasks.Where(t => t.ValidUntil == null))
                         .ThenInclude(t => t.Responsible)
-                    .Include(p => p.Tasks.Where(t => t.ValidUntil == null))
-                        .ThenInclude(t => t.Customer)
                     .Include(p => p.Customer)
                     .Include(p => p.ProjectManager)
                     .Where(p => p.Guid == id && p.ValidUntil == null)
@@ -153,9 +150,7 @@ namespace TicketMasala.Web.Controllers.Api;
                         ResponsibleName = t.Responsible != null 
                             ? $"{t.Responsible.FirstName} {t.Responsible.LastName}" 
                             : "Not Assigned",
-                        CustomerName = t.Customer != null
-                            ? $"{t.Customer.FirstName} {t.Customer.LastName}"
-                            : "Unknown",
+                        CustomerName = "Customer", // TODO: Get from CreatorGuid
                         CompletionTarget = t.CompletionTarget,
                         CreationDate = DateTime.UtcNow
                     }).ToList()
@@ -378,7 +373,7 @@ namespace TicketMasala.Web.Controllers.Api;
                 }
                 else
                 {
-                    customer = await _context.Customers.FirstOrDefaultAsync(c => c.Id == model.SelectedCustomerId);
+                    customer = await _context.Users.FirstOrDefaultAsync(c => c.Id == model.SelectedCustomerId);
                     if (customer == null)
                     {
                         return BadRequest(ApiResponse<Guid>.ErrorResponse("Selected customer not found"));

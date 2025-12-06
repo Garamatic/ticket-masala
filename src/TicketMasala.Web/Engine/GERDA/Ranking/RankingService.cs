@@ -1,9 +1,11 @@
+using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.GERDA.Models;
 using TicketMasala.Web.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace TicketMasala.Web.Engine.GERDA.Ranking;
 
+using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.GERDA.Models;
 using TicketMasala.Web.Engine.GERDA.Strategies;
 using TicketMasala.Web.Services.Configuration;
@@ -16,14 +18,19 @@ using Microsoft.EntityFrameworkCore;
 /// </summary>
 public class RankingService : IRankingService
 {
-    private readonly ITProjectDB _context;
+    private readonly MasalaDbContext _context;
     private readonly GerdaConfig _config;
     private readonly IStrategyFactory _strategyFactory;
     private readonly IDomainConfigurationService _domainConfigService;
     private readonly ILogger<RankingService> _logger;
 
+    public RankingService(MasalaDbContext context)
+    {
+        _context = context;
+    }
+
     public RankingService(
-        ITProjectDB context,
+        MasalaDbContext context,
         GerdaConfig config,
         IStrategyFactory strategyFactory,
         IDomainConfigurationService domainConfigService,

@@ -1,3 +1,4 @@
+using TicketMasala.Web.Data;
 using TicketMasala.Web.Models;
 using TicketMasala.Web.ViewModels.Projects;
 using TicketMasala.Web.ViewModels.Tickets;
@@ -17,14 +18,14 @@ namespace TicketMasala.Web.Services.Projects;
 /// </summary>
 public class ProjectService : IProjectService
 {
-    private readonly ITProjectDB _context;
+    private readonly MasalaDbContext _context;
     private readonly IProjectRepository _projectRepository;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IEnumerable<IProjectObserver> _observers;
     private readonly ILogger<ProjectService> _logger;
 
     public ProjectService(
-        ITProjectDB context,
+        MasalaDbContext context,
         IProjectRepository projectRepository,
         UserManager<ApplicationUser> userManager,
         IEnumerable<IProjectObserver> observers,

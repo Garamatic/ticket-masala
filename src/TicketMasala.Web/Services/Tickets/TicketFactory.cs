@@ -39,7 +39,8 @@ public class TicketFactory : ITicketFactory
             EstimatedEffortPoints = 0,
             Comments = new List<TicketComment>(),
             SubTickets = new List<Ticket>(),
-            QualityReviews = new List<QualityReview>()
+            SubTickets = new List<Ticket>()
+            // QualityReviews removed
         };
     }
 
@@ -70,7 +71,8 @@ public class TicketFactory : ITicketFactory
             EstimatedEffortPoints = 0,
             Comments = new List<TicketComment>(),
             SubTickets = new List<Ticket>(),
-            QualityReviews = new List<QualityReview>()
+            SubTickets = new List<Ticket>()
+            // QualityReviews removed
         };
         
         if (responsible != null)
@@ -98,7 +100,7 @@ public class TicketFactory : ITicketFactory
         string senderEmail)
     {
         // Try to find customer by email
-        var customer = await _userRepository.GetUserByEmailAsync(senderEmail) as Customer;
+        var customer = await _userRepository.GetUserByEmailAsync(senderEmail);
         
         // Build description from email
         var description = $"[Email] {subject}\n\n{body}";
@@ -117,7 +119,8 @@ public class TicketFactory : ITicketFactory
             EstimatedEffortPoints = 0,
             Comments = new List<TicketComment>(),
             SubTickets = new List<Ticket>(),
-            QualityReviews = new List<QualityReview>()
+            SubTickets = new List<Ticket>()
+            // QualityReviews removed
         };
         
         if (customer != null)

@@ -1,7 +1,7 @@
 using IT_Project2526.Models;
 using IT_Project2526.ViewModels;
 
-namespace IT_Project2526.Services;
+namespace IT_Project2526.Services.Tickets;;
 
 /// <summary>
 /// Command service for ticket write operations.

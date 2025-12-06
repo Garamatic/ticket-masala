@@ -1,7 +1,7 @@
 using IT_Project2526.Models;
 using IT_Project2526.Repositories;
 
-namespace IT_Project2526.Services;
+namespace IT_Project2526.Services.Tickets;;
 
 /// <summary>
 /// Factory for creating Ticket objects with consistent defaults.

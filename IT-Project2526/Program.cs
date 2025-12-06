@@ -181,6 +181,8 @@ if (File.Exists(gerdaConfigPath))
         // Strategy Factory & Strategies
         builder.Services.AddScoped<IT_Project2526.Services.GERDA.Strategies.IStrategyFactory, IT_Project2526.Services.GERDA.Strategies.StrategyFactory>();
         builder.Services.AddScoped<IJobRankingStrategy, WeightedShortestJobFirstStrategy>();
+        // Register the seasonal priority strategy so domains that reference it can be validated
+        builder.Services.AddScoped<IJobRankingStrategy, SeasonalPriorityStrategy>();
         builder.Services.AddScoped<IEstimatingStrategy, CategoryBasedEstimatingStrategy>();
         builder.Services.AddScoped<IDispatchingStrategy, MatrixFactorizationDispatchingStrategy>();
 

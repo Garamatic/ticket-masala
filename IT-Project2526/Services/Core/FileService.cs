@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.StaticFiles;
 
-namespace IT_Project2526.Services
+namespace IT_Project2526.Services.Core;
 {
     public class FileService : IFileService
     {

@@ -2,7 +2,7 @@ using IT_Project2526.Models;
 using IT_Project2526.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
-namespace IT_Project2526.Services
+namespace IT_Project2526.Services.Core
 {
     /// <summary>
     /// Service responsible for calculating team metrics and dashboard data.

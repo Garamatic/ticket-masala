@@ -4,7 +4,7 @@ using MailKit;
 using MimeKit;
 using IT_Project2526.Models;
 
-namespace IT_Project2526.Services
+namespace IT_Project2526.Services.Ingestion;
 {
     public class EmailIngestionService : BackgroundService
     {

@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using IT_Project2526;
 
-namespace IT_Project2526.Services;
+namespace IT_Project2526.Services.Ingestion;;
 
 public class TicketGenerator : ITicketGenerator
 {

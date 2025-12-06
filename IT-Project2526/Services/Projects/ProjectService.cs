@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
-namespace IT_Project2526.Services;
+namespace IT_Project2526.Services.Projects;;
 
 /// <summary>
 /// Service responsible for project business logic.

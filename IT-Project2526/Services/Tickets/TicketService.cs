@@ -6,7 +6,7 @@ using IT_Project2526.Services.Rules;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
-namespace IT_Project2526.Services
+namespace IT_Project2526.Services.Tickets;
 {
     /// <summary>
     /// Service responsible for ticket business logic.

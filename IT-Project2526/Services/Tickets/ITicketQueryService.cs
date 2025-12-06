@@ -2,7 +2,7 @@ using IT_Project2526.Models;
 using IT_Project2526.ViewModels;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace IT_Project2526.Services;
+namespace IT_Project2526.Services.Tickets;;
 
 /// <summary>
 /// Query service for ticket read operations.

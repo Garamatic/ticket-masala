@@ -4,7 +4,7 @@ using IT_Project2526.Repositories;
 using IT_Project2526.Services.GERDA.Dispatching;
 using Microsoft.EntityFrameworkCore;
 
-namespace IT_Project2526.Services;
+namespace IT_Project2526.Services.Tickets;;
 
 /// <summary>
 /// Service responsible for building the dispatch backlog view.

@@ -1,7 +1,7 @@
 using IT_Project2526.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace IT_Project2526.Services
+namespace IT_Project2526.Services.Core;
 {
     public class NotificationService : INotificationService
     {

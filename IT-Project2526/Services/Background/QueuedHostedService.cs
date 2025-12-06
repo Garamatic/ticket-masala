@@ -1,4 +1,4 @@
-namespace IT_Project2526.Services;
+namespace IT_Project2526.Services.Background;;
 
 public class QueuedHostedService : BackgroundService
 {

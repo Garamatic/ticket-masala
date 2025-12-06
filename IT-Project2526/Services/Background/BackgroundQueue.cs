@@ -1,6 +1,6 @@
 using System.Threading.Channels;
 
-namespace IT_Project2526.Services;
+namespace IT_Project2526.Services.Background;;
 
 public interface IBackgroundTaskQueue
 {

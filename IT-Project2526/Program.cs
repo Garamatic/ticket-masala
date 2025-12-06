@@ -113,9 +113,15 @@ builder.Services.AddScoped<IProjectObserver, NotificationProjectObserver>();
 builder.Services.AddScoped<ICommentObserver, LoggingCommentObserver>();
 builder.Services.AddScoped<ICommentObserver, NotificationCommentObserver>();
 
+
 // ============================================
 // Register Services (CQRS + Factory Pattern)
 // ============================================
+
+// Domain Configuration Service (loads masala_domains.yaml)
+builder.Services.AddSingleton<IT_Project2526.Services.Configuration.IDomainConfigurationService, 
+    IT_Project2526.Services.Configuration.DomainConfigurationService>();
+
 builder.Services.AddScoped<IMetricsService, MetricsService>();
 
 // TicketService implements all three interfaces (for backward compatibility)

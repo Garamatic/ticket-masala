@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TicketMasala.Web.Data;
 
@@ -10,9 +11,11 @@ using TicketMasala.Web.Data;
 namespace TicketMasala.Web.Migrations
 {
     [DbContext(typeof(MasalaDbContext))]
-    partial class ITProjectDBModelSnapshot : ModelSnapshot
+    [Migration("20251206224020_FixPendingModelChanges")]
+    partial class FixPendingModelChanges
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");

@@ -5,12 +5,12 @@ using TicketMasala.Web.ViewModels.Projects;
 using TicketMasala.Web.ViewModels.GERDA;
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.Observers;
-using TicketMasala.Web.Services.Core;
+using TicketMasala.Web.Engine.Core;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web.Data;
 
-namespace TicketMasala.Web.Services.Tickets;
+namespace TicketMasala.Web.Engine.GERDA.Tickets;
     /// <summary>
     /// Service responsible for ticket business logic.
     /// Follows Information Expert and Single Responsibility principles.
@@ -37,6 +37,7 @@ namespace TicketMasala.Web.Services.Tickets;
         Task BatchAssignToAgentAsync(List<Guid> ticketIds, string agentId);
         Task BatchUpdateStatusAsync(List<Guid> ticketIds, Status status);
         Task<TicketComment> AddCommentAsync(Guid ticketId, string body, bool isInternal, string authorId);
+        string ParseCustomFields(string domainId, Dictionary<string, string> formValues);
     }
 
     public class TicketService : ITicketService, ITicketQueryService, ITicketCommandService
@@ -51,6 +52,7 @@ namespace TicketMasala.Web.Services.Tickets;
         private readonly IAuditService _auditService;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IRuleEngineService _ruleEngine;
+        private readonly Engine.GERDA.Configuration.IDomainConfigurationService _domainConfig;
         private readonly ILogger<TicketService> _logger;
 
         public TicketService(
@@ -64,6 +66,7 @@ namespace TicketMasala.Web.Services.Tickets;
             IAuditService auditService,
             IHttpContextAccessor httpContextAccessor,
             IRuleEngineService ruleEngine,
+            Engine.GERDA.Configuration.IDomainConfigurationService domainConfig,
             ILogger<TicketService> logger)
         {
             _context = context;
@@ -76,6 +79,7 @@ namespace TicketMasala.Web.Services.Tickets;
             _auditService = auditService;
             _httpContextAccessor = httpContextAccessor;
             _ruleEngine = ruleEngine;
+            _domainConfig = domainConfig;
             _logger = logger;
         }
 
@@ -192,7 +196,7 @@ namespace TicketMasala.Web.Services.Tickets;
                 Status = responsible != null ? "Assigned" : "New",
                 Title = "New Ticket", // Required property
                 DomainId = "IT", // Required property
-                TicketStatus = responsible != null ? Models.Status.Assigned : Models.Status.Pending,
+                TicketStatus = responsible != null ? TicketMasala.Web.Models.Status.Assigned : TicketMasala.Web.Models.Status.Pending,
                 CompletionTarget = completionTarget ?? DateTime.UtcNow.AddDays(14),
                 CreatorGuid = Guid.Parse(customer.Id),
                 Comments = new List<TicketComment>()
@@ -797,5 +801,26 @@ namespace TicketMasala.Web.Services.Tickets;
                     _logger.LogError(ex, "CommentObserver {ObserverType} failed on comment added", observer.GetType().Name);
                 }
             }
+        }
+        public string ParseCustomFields(string domainId, Dictionary<string, string> formValues)
+        {
+            var customFieldValues = new Dictionary<string, object?>();
+            var customFieldDefs = _domainConfig.GetCustomFields(domainId);
+
+            foreach (var field in customFieldDefs)
+            {
+                var formKey = $"customFields[{field.Name}]";
+                if (formValues.TryGetValue(formKey, out var value) && !string.IsNullOrEmpty(value))
+                {
+                    customFieldValues[field.Name] = field.Type.ToLowerInvariant() switch
+                    {
+                        "number" or "currency" => decimal.TryParse(value, out var num) ? num : value,
+                        "boolean" => value.Equals("true", StringComparison.OrdinalIgnoreCase),
+                        _ => value
+                    };
+                }
+            }
+
+            return System.Text.Json.JsonSerializer.Serialize(customFieldValues);
         }
     }

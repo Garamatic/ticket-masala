@@ -1,4 +1,4 @@
-namespace TicketMasala.Web.Services.Background;
+namespace TicketMasala.Web.Engine.Ingestion.Background;
 
 public class QueuedHostedService : BackgroundService
 {

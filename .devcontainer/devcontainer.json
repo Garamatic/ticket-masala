@@ -1,0 +1,39 @@
+{
+    "name": "Ticket Masala Dev",
+    "image": "mcr.microsoft.com/dotnet/sdk:8.0",
+    "features": {
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-dotnettools.csharp",
+                "ms-dotnettools.csdevkit",
+                "humao.rest-client",
+                "redhat.vscode-yaml",
+                "ms-azuretools.vscode-docker",
+                "streetsidesoftware.code-spell-checker"
+            ],
+            "settings": {
+                "dotnet.defaultSolution": "src/TicketMasala.Web/TicketMasala.Web.csproj",
+                "editor.formatOnSave": true
+            }
+        }
+    },
+    "postCreateCommand": "dotnet restore && dotnet tool restore",
+    "forwardPorts": [
+        5054,
+        5055
+    ],
+    "portsAttributes": {
+        "5054": {
+            "label": "HTTP",
+            "onAutoForward": "notify"
+        },
+        "5055": {
+            "label": "HTTPS",
+            "onAutoForward": "notify"
+        }
+    },
+    "remoteUser": "vscode"
+}

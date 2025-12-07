@@ -19,13 +19,30 @@ public static class AffinityScoring
         double mlPrediction,
         Ticket ticket,
         Employee agent,
-        ApplicationUser? customer = null)
+        ApplicationUser? customer = null,
+        double ftsMatchScore = 0)
     {
         // Factor 1: ML.NET past interaction score (40% weight)
         var pastInteractionScore = mlPrediction * 0.4;
 
         // Factor 2: Category expertise match (30% weight)
-        var expertiseScore = CalculateExpertiseScore(ticket, agent) * 0.3;
+        // If FTS5 score provided (V2), use Sigmoid normalization
+        double expertiseScore;
+        if (ftsMatchScore > 0)
+        {
+             // Normalize unbounded BM25 score to 0-5 range
+             // Using Sigmoid centered at 5.0 with slope 1.0
+             // fts=0 -> 0.03 (approx 0)
+             // fts=5 -> 2.5 (mid)
+             // fts=10 -> 4.9 (max)
+             var normalized = 5.0 / (1.0 + Math.Exp(-(ftsMatchScore - 5.0)));
+             expertiseScore = normalized * 0.3;
+        }
+        else 
+        {
+             // Fallback to V1 Legacy Regex
+             expertiseScore = CalculateExpertiseScore(ticket, agent) * 0.3;
+        }
 
         // Factor 3: Language match (20% weight)
         var languageScore = CalculateLanguageScore(agent, customer) * 0.2;
@@ -36,12 +53,9 @@ public static class AffinityScoring
         return pastInteractionScore + expertiseScore + languageScore + geographyScore;
     }
 
-    /// <summary>
-    /// Calculate expertise match score (0-5 scale)
-    /// Checks if ticket category matches agent's specializations
-    /// </summary>
     private static double CalculateExpertiseScore(Ticket ticket, Employee agent)
     {
+        // ... Legacy Logic kept for fallback ...
         if (string.IsNullOrWhiteSpace(agent.Specializations))
             return 2.5; // Neutral score if no specializations defined
 

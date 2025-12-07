@@ -1,9 +1,9 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using TicketMasala.Web.Services.Core;
-using TicketMasala.Web.Services.Tickets;
-using TicketMasala.Web.Services.Projects;
+using TicketMasala.Web.Engine.Core;
+using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.Engine.Ingestion;
-using TicketMasala.Web.Services.Background;
+using TicketMasala.Web.Engine.Ingestion.Background;
 using TicketMasala.Web.Engine.GERDA.Models;
 
 namespace TicketMasala.Web.Health;

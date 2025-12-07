@@ -47,13 +47,13 @@
             </div>
             <div class="col-md-2">
                 <label asp-for="ResponsibleId" class="form-label">@Localizer["Assigned To"]</label>
-                <select asp-for="ResponsibleId" asp-items="ViewBag.Employees" class="form-select">
+                <select asp-for="ResponsibleId" asp-items="Model.Employees" class="form-select">
                     <option value="">@Localizer["All Agents"]</option>
                 </select>
             </div>
             <div class="col-md-2">
                 <label asp-for="CustomerId" class="form-label">@Localizer["Customer"]</label>
-                <select asp-for="CustomerId" asp-items="ViewBag.Customers" class="form-select">
+                <select asp-for="CustomerId" asp-items="Model.Customers" class="form-select">
                     <option value="">@Localizer["All Customers"]</option>
                 </select>
             </div>
@@ -290,7 +290,7 @@ else
                         <label class="form-label">@Localizer["Agent"]</label>
                         <select name="agentId" class="form-select" required>
                             <option value="">@Localizer["Select Agent..."]</option>
-                            @foreach (var item in ViewBag.Employees as List<SelectListItem> ?? new List<SelectListItem>())
+                            @foreach (var item in Model.Employees)
                             {
                                 <option value="@item.Value">@item.Text</option>
                             }

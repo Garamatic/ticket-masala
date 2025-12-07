@@ -2,7 +2,7 @@ using TicketMasala.Web.Models;
 using TicketMasala.Web.ViewModels.Tickets;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace TicketMasala.Web.Services.Tickets;
+namespace TicketMasala.Web.Engine.GERDA.Tickets;
 
 /// <summary>
 /// Query service for ticket read operations.

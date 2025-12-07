@@ -4,11 +4,11 @@ using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web;
 using TicketMasala.Web.Data;
-using TicketMasala.Web.Services.Core;
-using TicketMasala.Web.Services.Tickets;
-using TicketMasala.Web.Services.Projects;
+using TicketMasala.Web.Engine.Core;
+using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.Engine.Ingestion;
-using TicketMasala.Web.Services.Background;
+using TicketMasala.Web.Engine.Ingestion.Background;
 using TicketMasala.Web.Models;
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.Observers;
@@ -374,4 +374,63 @@ namespace TicketMasala.Tests.Services;
             // Assert
             Assert.Null(result);
         }
+    [Fact]
+    public async Task SearchProjectsAsync_ReturnsMatchingProjects()
+    {
+        // Arrange
+        using var context = new MasalaDbContext(_dbOptions);
+        var service = CreateService(context);
+
+        var customer = CreateTestCustomer();
+        context.Users.Add(customer);
+
+        context.Projects.AddRange(
+            new Project { Name = "Alpha Project", Description = "Desc 1", Status = Status.Pending, Customer = customer },
+            new Project { Name = "Beta Project", Description = "Project Alpha related", Status = Status.Pending, Customer = customer },
+            new Project { Name = "Gamma Project", Description = "Desc 2", Status = Status.Pending, Customer = customer }
+        );
+        await context.SaveChangesAsync();
+
+        // Act
+        var results = await service.SearchProjectsAsync("Alpha");
+
+        // Assert
+        var list = results.ToList();
+        Assert.Equal(2, list.Count);
+        Assert.Contains(list, p => p.ProjectDetails.Name == "Alpha Project");
+        Assert.Contains(list, p => p.ProjectDetails.Name == "Beta Project"); // Matched by description
+    }
+
+    [Fact]
+    public async Task GetProjectStatisticsAsync_ReturnsCorrectStats()
+    {
+        // Arrange
+        using var context = new MasalaDbContext(_dbOptions);
+        var service = CreateService(context);
+
+        var customer = CreateTestCustomer();
+        context.Users.Add(customer);
+
+        var p1 = new Project { Name = "P1", Description = "Desc 1", Status = Status.InProgress, Customer = customer };
+        p1.Tasks.Add(new Ticket { TicketStatus = Status.Completed });
+        p1.Tasks.Add(new Ticket { TicketStatus = Status.InProgress });
+
+        var p2 = new Project { Name = "P2", Description = "Desc 2", Status = Status.Completed, Customer = customer };
+
+        var p3 = new Project { Name = "P3", Description = "Desc 3", Status = Status.Pending, Customer = customer };
+        
+        context.Projects.AddRange(p1, p2, p3);
+        await context.SaveChangesAsync();
+
+        // Act
+        var stats = await service.GetProjectStatisticsAsync(customer.Id);
+
+        // Assert
+        Assert.Equal(3, stats.TotalProjects);
+        Assert.Equal(1, stats.ActiveProjects);
+        Assert.Equal(1, stats.CompletedProjects);
+        Assert.Equal(1, stats.PendingProjects);
+        Assert.Equal(2, stats.TotalTasks);
+        Assert.Equal(1, stats.CompletedTasks);
+    }
 }

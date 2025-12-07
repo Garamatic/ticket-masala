@@ -1,7 +1,8 @@
 using TicketMasala.Web.Models;
 using TicketMasala.Web.Repositories;
+using TicketMasala.Web.Utilities;
 
-namespace TicketMasala.Web.Services.Tickets;
+namespace TicketMasala.Web.Engine.GERDA.Tickets;
 
 /// <summary>
 /// Factory for creating Ticket objects with consistent defaults.
@@ -33,7 +34,7 @@ public class TicketFactory : ITicketFactory
             Title = string.Empty, // Required, must be set by caller
             DomainId = "IT", // Required, can be overridden by caller
             Status = "New", // Required
-            TicketStatus = Models.Status.Pending,
+            TicketStatus = TicketMasala.Web.Models.Status.Pending,
             CustomFieldsJson = "{}",
             CreationDate = DateTime.UtcNow,
             CompletionTarget = DateTime.UtcNow.AddDays(14),
@@ -64,7 +65,7 @@ public class TicketFactory : ITicketFactory
             Description = description,
             DomainId = "IT",
             Status = responsible != null ? "Assigned" : "New",
-            TicketStatus = responsible != null ? Models.Status.Assigned : Models.Status.Pending,
+            TicketStatus = responsible != null ? TicketMasala.Web.Models.Status.Assigned : TicketMasala.Web.Models.Status.Pending,
             CustomFieldsJson = "{}",
             CreatorGuid = Guid.Parse(customer.Id),
             CreationDate = DateTime.UtcNow,
@@ -73,7 +74,8 @@ public class TicketFactory : ITicketFactory
             EstimatedEffortPoints = 0,
             Comments = new List<TicketComment>(),
             SubTickets = new List<Ticket>(),
-            // QualityReviews removed
+            // V2 Grouping: Compute Hash
+            ContentHash = TicketHasher.ComputeContentHash(description, customer.Id)
         };
         
         if (responsible != null)
@@ -87,7 +89,9 @@ public class TicketFactory : ITicketFactory
             ticket.ProjectGuid = projectGuid.Value;
         }
         
-        _logger.LogDebug("Created ticket from form: {Description}", description?.Substring(0, Math.Min(50, description?.Length ?? 0)));
+        _logger.LogDebug("Created ticket from form: {Description} (Hash: {Hash})", 
+            description?.Substring(0, Math.Min(50, description?.Length ?? 0)),
+            ticket.ContentHash);
         
         return ticket;
     }
@@ -120,7 +124,9 @@ public class TicketFactory : ITicketFactory
             EstimatedEffortPoints = 0,
             Comments = new List<TicketComment>(),
             SubTickets = new List<Ticket>(),
-            // QualityReviews removed
+            // V2 Grouping: Compute Hash
+            // If customer is null, use senderEmail as identifier for hash to ensure consistency
+            ContentHash = TicketHasher.ComputeContentHash(description, customer?.Id ?? senderEmail)
         };
         
         if (customer != null)
@@ -128,7 +134,8 @@ public class TicketFactory : ITicketFactory
             ticket.CreatorGuid = Guid.Parse(customer.Id);
         }
         
-        _logger.LogInformation("Created ticket from email: {Subject} from {Sender}", subject, senderEmail);
+        _logger.LogInformation("Created ticket from email: {Subject} from {Sender} (Hash: {Hash})", 
+            subject, senderEmail, ticket.ContentHash);
         
         return ticket;
     }

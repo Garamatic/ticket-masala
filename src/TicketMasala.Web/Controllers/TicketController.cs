@@ -3,13 +3,13 @@ using TicketMasala.Web.Models;
 using TicketMasala.Web.ViewModels.Tickets;
 using TicketMasala.Web.ViewModels.Projects;
 using TicketMasala.Web.ViewModels.Customers;
-using TicketMasala.Web.Services.Core;
-using TicketMasala.Web.Services.Tickets;
-using TicketMasala.Web.Services.Projects;
+using TicketMasala.Web.Engine.Core;
+using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.Engine.Ingestion;
-using TicketMasala.Web.Services.Background;
+using TicketMasala.Web.Engine.Ingestion.Background;
 using TicketMasala.Web.Engine.GERDA;
-using TicketMasala.Web.Services.Configuration;
+using TicketMasala.Web.Engine.GERDA.Configuration;
 using TicketMasala.Web.Engine.Compiler;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
@@ -23,7 +23,6 @@ namespace TicketMasala.Web.Controllers;
     {
         private readonly IGerdaService _gerdaService;
         private readonly ITicketService _ticketService;
-        private readonly IFileService _fileService;
         private readonly IAuditService _auditService;
         private readonly INotificationService _notificationService;
         private readonly IDomainConfigurationService _domainConfig;
@@ -35,7 +34,6 @@ namespace TicketMasala.Web.Controllers;
         public TicketController(
             IGerdaService gerdaService,
             ITicketService ticketService,
-            IFileService fileService,
             IAuditService auditService,
             INotificationService notificationService,
             IDomainConfigurationService domainConfig,
@@ -46,7 +44,6 @@ namespace TicketMasala.Web.Controllers;
         {
             _gerdaService = gerdaService;
             _ticketService = ticketService;
-            _fileService = fileService;
             _auditService = auditService;
             _notificationService = notificationService;
             _domainConfig = domainConfig;
@@ -66,9 +63,10 @@ namespace TicketMasala.Web.Controllers;
                 var result = await _ticketService.SearchTicketsAsync(searchModel);
                 
                 // Populate dropdowns for filter UI
-                ViewBag.Customers = await _ticketService.GetCustomerSelectListAsync();
-                ViewBag.Employees = await _ticketService.GetEmployeeSelectListAsync();
-                ViewBag.Projects = await _ticketService.GetProjectSelectListAsync();
+                // Populate dropdowns for filter UI
+                result.Customers = await _ticketService.GetCustomerSelectListAsync();
+                result.Employees = await _ticketService.GetEmployeeSelectListAsync();
+                result.Projects = await _ticketService.GetProjectSelectListAsync();
                 
                 // Load saved filters for the current user
                 var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -226,38 +224,14 @@ namespace TicketMasala.Web.Controllers;
                 ticket.WorkItemTypeCode = workItemTypeCode;
                 
                 // Extract custom fields from form and serialize to JSON
-                var customFieldValues = new Dictionary<string, object?>();
-                var customFieldDefs = _domainConfig.GetCustomFields(ticket.DomainId);
-                
-                foreach (var field in customFieldDefs)
-                {
-                    var formKey = $"customFields[{field.Name}]";
-                    if (Request.Form.TryGetValue(formKey, out var values))
-                    {
-                        var value = values.FirstOrDefault();
-                        if (!string.IsNullOrEmpty(value))
-                        {
-                            // Convert to appropriate type
-                            customFieldValues[field.Name] = field.Type.ToLowerInvariant() switch
-                            {
-                                "number" or "currency" => decimal.TryParse(value, out var num) ? num : value,
-                                "boolean" => value.Equals("true", StringComparison.OrdinalIgnoreCase),
-                                _ => value
-                            };
-                        }
-                    }
-                }
-                
-                if (customFieldValues.Count > 0)
-                {
-                    ticket.CustomFieldsJson = System.Text.Json.JsonSerializer.Serialize(customFieldValues);
-                }
+                var formDictionary = Request.Form.ToDictionary(x => x.Key, x => x.Value.ToString());
+                ticket.CustomFieldsJson = _ticketService.ParseCustomFields(ticket.DomainId, formDictionary);
                 
                 await _ticketService.UpdateTicketAsync(ticket);
 
                 // Process with GERDA AI
-                _logger.LogInformation("Processing ticket {TicketGuid} with GERDA AI (Domain: {DomainId}, Type: {WorkItemTypeCode}, CustomFields: {CustomFieldCount})", 
-                    ticket.Guid, ticket.DomainId, ticket.WorkItemTypeCode, customFieldValues.Count);
+                _logger.LogInformation("Processing ticket {TicketGuid} with GERDA AI (Domain: {DomainId}, Type: {WorkItemTypeCode})", 
+                    ticket.Guid, ticket.DomainId, ticket.WorkItemTypeCode);
                 await _gerdaService.ProcessTicketAsync(ticket.Guid);
                 
                 var entityLabel = _domainConfig.GetEntityLabels(ticket.DomainId).WorkItem;
@@ -375,25 +349,7 @@ namespace TicketMasala.Web.Controllers;
             return View(viewModel);
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddComment(Guid id, string commentBody, bool isInternal)
-        {
-            if (!string.IsNullOrWhiteSpace(commentBody))
-            {
-                var currentUserId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                try 
-                {
-                    await _ticketService.AddCommentAsync(id, commentBody, isInternal, currentUserId);
-                }
-                catch (ArgumentException)
-                {
-                    return NotFound();
-                }
-            }
 
-            return RedirectToAction(nameof(Detail), new { id = id });
-        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -488,31 +444,8 @@ namespace TicketMasala.Web.Controllers;
                 
                 // Extract custom fields from form and serialize to JSON
                 var domainId = ticketToUpdate.DomainId ?? _domainConfig.GetDefaultDomainId();
-                var customFieldValues = new Dictionary<string, object?>();
-                var customFieldDefs = _domainConfig.GetCustomFields(domainId);
-                
-                foreach (var field in customFieldDefs)
-                {
-                    var formKey = $"customFields[{field.Name}]";
-                    if (Request.Form.TryGetValue(formKey, out var values))
-                    {
-                        var value = values.FirstOrDefault();
-                        if (!string.IsNullOrEmpty(value))
-                        {
-                            customFieldValues[field.Name] = field.Type.ToLowerInvariant() switch
-                            {
-                                "number" or "currency" => decimal.TryParse(value, out var num) ? num : value,
-                                "boolean" => value.Equals("true", StringComparison.OrdinalIgnoreCase),
-                                _ => value
-                            };
-                        }
-                    }
-                }
-                
-                if (customFieldValues.Count > 0)
-                {
-                    ticketToUpdate.CustomFieldsJson = System.Text.Json.JsonSerializer.Serialize(customFieldValues);
-                }
+                var formDictionary = Request.Form.ToDictionary(x => x.Key, x => x.Value.ToString());
+                ticketToUpdate.CustomFieldsJson = _ticketService.ParseCustomFields(domainId, formDictionary);
 
                 try
                 {
@@ -557,72 +490,7 @@ namespace TicketMasala.Web.Controllers;
             return View(viewModel);
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UploadAttachment(Guid ticketId, IFormFile file, bool isPublic)
-        {
-            if (file == null || file.Length == 0)
-            {
-                TempData["Error"] = "Please select a file to upload.";
-                return RedirectToAction(nameof(Detail), new { id = ticketId });
-            }
 
-            try
-            {
-                var storedFileName = await _fileService.SaveFileAsync(file, "tickets");
-                
-                var document = new Document
-                {
-                    Id = Guid.NewGuid(),
-                    TicketId = ticketId,
-                    FileName = file.FileName,
-                    StoredFileName = storedFileName,
-                    ContentType = file.ContentType,
-                    FileSize = file.Length,
-                    UploadDate = DateTime.UtcNow,
-                    UploaderId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value,
-                    IsPublic = isPublic
-                };
-
-                _context.Documents.Add(document);
-                await _context.SaveChangesAsync();
-
-                TempData["Success"] = "File uploaded successfully.";
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error uploading file for ticket {TicketId}", ticketId);
-                TempData["Error"] = "An error occurred while uploading the file.";
-            }
-
-            return RedirectToAction(nameof(Detail), new { id = ticketId });
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> DownloadAttachment(Guid id)
-        {
-            var doc = await _context.Documents.FindAsync(id);
-            if (doc == null) return NotFound();
-
-            var stream = await _fileService.GetFileStreamAsync(doc.StoredFileName, "tickets");
-            if (stream == null) return NotFound();
-
-            return File(stream, doc.ContentType, doc.FileName);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> PreviewAttachment(Guid id)
-        {
-            var doc = await _context.Documents.FindAsync(id);
-            if (doc == null) return NotFound();
-
-            var stream = await _fileService.GetFileStreamAsync(doc.StoredFileName, "tickets");
-            if (stream == null) return NotFound();
-
-            // Return inline for preview
-            Response.Headers.Append("Content-Disposition", $"inline; filename=\"{doc.FileName}\"");
-            return File(stream, doc.ContentType);
-        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]

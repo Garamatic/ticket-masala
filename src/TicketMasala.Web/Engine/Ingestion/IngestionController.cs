@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.Mvc;
+using TicketMasala.Web.ViewModels.Ingestion;
 using System.Threading.Channels;
-using TicketMasala.Web.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace TicketMasala.Web.Engine.Ingestion;
 
@@ -8,19 +8,20 @@ namespace TicketMasala.Web.Engine.Ingestion;
 [Route("api/[controller]")]
 public class IngestionController : ControllerBase
 {
-    private readonly Channel<WorkItem> _channel;
+    private readonly Channel<IngestionWorkItem> _channel;
 
-    public IngestionController(Channel<WorkItem> channel)
+    public IngestionController(Channel<IngestionWorkItem> channel)
     {
         _channel = channel;
     }
 
     [HttpPost]
-    public IActionResult Post([FromBody] WorkItem workItem)
+    public IActionResult Post([FromBody] IngestionWorkItem workItem)
     {
         if (!_channel.Writer.TryWrite(workItem))
         {
-            return StatusCode(429, "Too Many Requests");
+            // Requirement from 09-scalability.md: "For Ticket Masala, we block (or return 503) to protect the worker."
+            return StatusCode(503, "Service Unavailable - Ingestion Queue Full");
         }
 
         return Accepted();

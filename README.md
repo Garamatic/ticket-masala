@@ -2,105 +2,87 @@
 
 ![Logo](IT-Project2526/docs/visual/logo-green.png)
 
-## 📌 Info
+## 📌 Info (Current State)
 
 - **Team**: Charlotte Schröer, Maarten Görtz, Wito De Schrijver, Juan Benjumea
+- **Branch**: `main` (active development branch in this workspace)
 - **Concept**: Ticketing, Case, and Project Management with AI support
-- **Tech Stack**: Fullstack .NET 8 (MVC), EF Core, Python (AI Microservice)
+- **Tech Stack**: .NET 8 (MVC), EF Core, SQLite (local) ---
+
+## 🚀 Quick Start (Updated)
+
+1. Build the solution:
+
+```bash
+dotnet build
+```
+
+2. Run the Web project (this will apply migrations and attempt to seed the database):
+
+```bash
+dotnet run --project src/TicketMasala.Web/
+```
+
+Notes:
+- The app uses a local SQLite file `app.db` by default. If you have schema issues, you can remove `app.db` and re-run to recreate the database from migrations.
+- If seeding fails with an Identity-related error (see Known Issues below), ensure roles are configured or run a one-off DB seed after fixing Identity configuration.
 
 ---
 
-## 🚀 Quick Start Guide
+## 🔑 Test Accounts (seeded by `DbSeeder` when possible)
 
-### 1. Run the Application
-
-```bash
-cd IT-Project2526
-dotnet run
-```
-
-The database will be automatically created and seeded on the first run.
-
-### 2. Login
-
-Navigate to `https://localhost:[YOUR_PORT]` (usually 5001 or 5054).
-
-### 🔑 Test Accounts
-
-**Default Passwords:**
+**Default Passwords (if seeds run successfully):**
 
 - **Admins**: `Admin123!`
 - **Employees**: `Employee123!`
 - **Customers**: `Customer123!`
 
-| Role | Email | Name | Password |
-|------|-------|------|----------|
-| **Admin** | `admin@ticketmasala.com` | John Administrator | `Admin123!` |
-| **Project Manager** | `mike.pm@ticketmasala.com` | Mike Johnson | `Employee123!` |
-| **Support** | `david.support@ticketmasala.com` | David Martinez | `Employee123!` |
-| **Customer** | `alice.customer@example.com` | Alice Smith | `Customer123!` |
-
-*(See `Data/DbSeeder.cs` for full seed data details)*
+Example seeded users (see `src/TicketMasala.Web/Data/DbSeeder.cs` for details).
 
 ---
 
-## 🏗️ Project Structure
+## 🏗️ Project Structure (high-level)
 
-Ticket Masala is a lightweight management system with 4 integrated layers:
-
-1. **Ticketing**: Entry point for issues and requests.
-2. **Case Management**: Groups tickets into cases for tracking.
-3. **Project Management**: Bundles cases into projects (e.g., per customer).
-4. **AI Helper (GERDA)**: Cross-cutting layer providing context, suggestions, and automation.
-
-![ERD-model](IT-Project2526/docs/architecture/erd-dark.drawio.png)
+- `src/TicketMasala.Web/` — ASP.NET Core MVC app, EF Core `MasalaDbContext`, Identity, controllers, views, services.
+- `src/TicketMasala.Tests/` — unit/integration tests.
+- `src/` — other engines and services (GERDA AI, ingestion, background jobs).
 
 ---
 
-## 🛠️ Tech Stack & Requirements
+## 🛠️ Tech Notes & Known Issues
 
-- **Frontend**: ASP.NET Core MVC (Razor Views), Bootstrap
-- **Backend**: .NET 8, C#
-- **Database**: SQL Server / SQLite (EF Core + Migrations)
-- **Auth**: ASP.NET Identity (Role-based: Admin, Employee, Customer)
-- **AI**: ML.NET + Python Microservice capabilities
-- **Hosting**: Docker support ready (`fly.toml`)
+- Identity and Roles: Recent refactors require `IdentityRole` to be present in the EF model. If seeding fails with "Cannot create a DbSet for 'IdentityRole'" then the app's Identity configuration or `MasalaDbContext` needs to include roles (for example by inheriting from `IdentityDbContext<ApplicationUser, IdentityRole, string>` or registering roles via `AddIdentity<,>().AddRoles<IdentityRole>()`).
+- GERDA Strategy Validation: Domain configuration may reference strategies (e.g., `ZoneBased`) that aren't registered yet. If you see "Strategy 'ZoneBased' ... not found" register/implement the strategy or update domain config.
+- SQLite / Migrations: SQLite cannot add STORED computed columns via simple ALTER statements; scaffolded migrations were edited to avoid unsupported DDL. If you run into migration errors, consider deleting `app.db` and re-applying migrations after review.
+- Port conflicts: Default dev port may be `5054`. If you see "address already in use", free the port or change the listen port in `Properties/launchSettings.json` or `appsettings.Development.json`.
 
 ---
 
-## 🗺️ Roadmap
+## Troubleshooting & Recovery Commands
 
-- [x] **Core**: Role-based Auth, Multi-tenancy
-- [x] **Ticketing**: Create, Edit, Detail, Index, Batch Operations
-- [x] **Projects**: Overview, Create, Detail
-- [x] **AI**: GERDA Dispatching, Forecasting, Spam Detection
-- [x] **Collaboration**: Rich-text Chat, Notifications, Document Management
-- [ ] **Advanced**: Mobile App, Outlook Integration, 2FA
+Delete local SQLite DB and re-apply migrations:
+
+```fish
+rm -f app.db
+dotnet ef database update --project src/TicketMasala.Web/
+dotnet run --project src/TicketMasala.Web/
+```
+
+Rebuild and run tests:
+
+```bash
+dotnet build
+dotnet test
+```
 
 ---
 
-## ❓ Troubleshooting
+## Roadmap & Next Steps (developer-facing)
 
-### 🔧 Build Errors?
+- Compatibility shims are in place to reduce churn after a large model rename — these are temporary and will be removed in a follow-up refactor.
 
-See **[ERRORS_QUICK_FIX.md](ERRORS_QUICK_FIX.md)** for priority fixes to resolve compilation errors.
-
-For comprehensive error documentation, see **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)**.
-
-### Login Failed?
-
-1. **Check Logs**: Look for "Database already contains users" in the console.
-2. **Reset Database**: If passwords don't work, drop the database and restart:
-
-    ```bash
-    dotnet ef database drop
-    dotnet run
-    ```
-
-3. **Manual Seed**: Navigate to `/Seed/TestAccounts` in the browser to trigger seeding manually.
-
-### App Won't Start?
-
-- Check `appsettings.json` connection string.
-- Ensure SQL Server is running (if not using SQLite).
-- Review build logs: `build_log.txt` and `run_log.txt`
+- High-priority tasks:
+    - Add or confirm role support in Identity / `MasalaDbContext` (seed blocker).
+    - Register missing GERDA strategies referenced by domain configuration.
+    - Run and fix failing unit/integration tests.
+    - Create an ADR documenting the shim cleanup plan.

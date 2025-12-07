@@ -1,6 +1,6 @@
 using TicketMasala.Web.Models.Configuration;
 
-namespace TicketMasala.Web.Services.Configuration;
+namespace TicketMasala.Web.Engine.GERDA.Configuration;
 
 /// <summary>
 /// Service interface for accessing domain configuration.

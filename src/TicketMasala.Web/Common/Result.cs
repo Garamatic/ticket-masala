@@ -52,6 +52,23 @@ public class Result<T> : Result
     }
 
     /// <summary>
+    /// Bind/FlatMap: Chain operations that also return Results.
+    /// Useful for composing multiple Result-returning operations.
+    /// </summary>
+    public Result<TNew> Bind<TNew>(Func<T, Result<TNew>> binder)
+    {
+        return IsSuccess ? binder(Value!) : Result.Failure<TNew>(Error!);
+    }
+
+    /// <summary>
+    /// Pattern match on the result, forcing handling of both success and failure cases.
+    /// </summary>
+    public TResult Match<TResult>(Func<T, TResult> onSuccess, Func<string, TResult> onFailure)
+    {
+        return IsSuccess ? onSuccess(Value!) : onFailure(Error!);
+    }
+
+    /// <summary>
     /// Get the value or a default if the result is a failure.
     /// </summary>
     public T GetValueOrDefault(T defaultValue = default!)
@@ -101,4 +118,73 @@ public static class ResultExtensions
         return result;
     }
 
+    /// <summary>
+    /// Async version of Map for async mapper functions.
+    /// </summary>
+    public static async Task<Result<TNew>> MapAsync<T, TNew>(
+        this Result<T> result,
+        Func<T, Task<TNew>> mapper)
+    {
+        return result.IsSuccess
+            ? Result.Success(await mapper(result.Value!))
+            : Result.Failure<TNew>(result.Error!);
+    }
+
+    /// <summary>
+    /// Async version of Bind for async binder functions.
+    /// </summary>
+    public static async Task<Result<TNew>> BindAsync<T, TNew>(
+        this Result<T> result,
+        Func<T, Task<Result<TNew>>> binder)
+    {
+        return result.IsSuccess
+            ? await binder(result.Value!)
+            : Result.Failure<TNew>(result.Error!);
+    }
+
+    /// <summary>
+    /// Async version of OnSuccess for async actions.
+    /// </summary>
+    public static async Task<Result<T>> OnSuccessAsync<T>(
+        this Result<T> result,
+        Func<T, Task> action)
+    {
+        if (result.IsSuccess)
+            await action(result.Value!);
+        return result;
+    }
+
+    /// <summary>
+    /// Async version of OnFailure for async actions.
+    /// </summary>
+    public static async Task<Result<T>> OnFailureAsync<T>(
+        this Result<T> result,
+        Func<string, Task> action)
+    {
+        if (result.IsFailure)
+            await action(result.Error!);
+        return result;
+    }
+
+    /// <summary>
+    /// Await a Task of Result and then map.
+    /// </summary>
+    public static async Task<Result<TNew>> MapAsync<T, TNew>(
+        this Task<Result<T>> resultTask,
+        Func<T, TNew> mapper)
+    {
+        var result = await resultTask;
+        return result.Map(mapper);
+    }
+
+    /// <summary>
+    /// Await a Task of Result and then bind.
+    /// </summary>
+    public static async Task<Result<TNew>> BindAsync<T, TNew>(
+        this Task<Result<T>> resultTask,
+        Func<T, Result<TNew>> binder)
+    {
+        var result = await resultTask;
+        return result.Bind(binder);
+    }
 }

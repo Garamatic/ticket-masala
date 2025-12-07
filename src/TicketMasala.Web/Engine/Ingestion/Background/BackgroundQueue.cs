@@ -1,6 +1,6 @@
 using System.Threading.Channels;
 
-namespace TicketMasala.Web.Services.Background;
+namespace TicketMasala.Web.Engine.Ingestion.Background;
 
 public interface IBackgroundTaskQueue
 {

@@ -1,7 +1,7 @@
 using TicketMasala.Web.Models;
 using TicketMasala.Web.Engine.GERDA.Models;
 using TicketMasala.Web.Engine.GERDA.Features;
-using TicketMasala.Web.Services.Configuration;
+using TicketMasala.Web.Engine.GERDA.Configuration;
 using TicketMasala.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.ML;
@@ -9,6 +9,9 @@ using Microsoft.ML.Data;
 using Microsoft.ML.Trainers;
 
 namespace TicketMasala.Web.Engine.GERDA.Dispatching;
+using Microsoft.Extensions.ML;
+
+// ...
     public class MatrixFactorizationDispatchingStrategy : IDispatchingStrategy
     {
         public string Name => "MatrixFactorization";
@@ -16,10 +19,13 @@ namespace TicketMasala.Web.Engine.GERDA.Dispatching;
         private readonly MasalaDbContext _context;
         private readonly GerdaConfig _config;
         private readonly ILogger<MatrixFactorizationDispatchingStrategy> _logger;
-        private readonly MLContext _mlContext;
+        // private readonly MLContext _mlContext; // REMOVED: Using Pool
+        private readonly PredictionEnginePool<AgentCustomerRating, RatingPrediction> _predictionEnginePool;
         private readonly IFeatureExtractor _featureExtractor;
         private readonly IDomainConfigurationService _domainConfig;
-        private ITransformer? _model;
+        
+        // Needed for retraining only
+        private readonly MLContext _trainingContext;
         private readonly string _modelPath;
 
         public MatrixFactorizationDispatchingStrategy(
@@ -27,14 +33,17 @@ namespace TicketMasala.Web.Engine.GERDA.Dispatching;
             GerdaConfig config,
             ILogger<MatrixFactorizationDispatchingStrategy> logger,
             IFeatureExtractor featureExtractor,
-            IDomainConfigurationService domainConfig)
+            IDomainConfigurationService domainConfig,
+            PredictionEnginePool<AgentCustomerRating, RatingPrediction> predictionEnginePool)
         {
             _context = context;
             _config = config;
             _logger = logger;
             _featureExtractor = featureExtractor;
             _domainConfig = domainConfig;
-            _mlContext = new MLContext(seed: 0);
+            _predictionEnginePool = predictionEnginePool;
+            
+            _trainingContext = new MLContext(seed: 0);
             _modelPath = Path.Combine(AppContext.BaseDirectory, "gerda_dispatch_model.zip");
         }
 
@@ -64,20 +73,23 @@ namespace TicketMasala.Web.Engine.GERDA.Dispatching;
                 // For now, we fall through to the Matrix Factorization / Workload logic.
             }
 
-            // Load or train model if needed
+            // Load or train model if needed (for fallback/training purposes, though Pool handles prediction loading)
+            // But we need to ensure the FILE exists for the pool to pick it up.
             await EnsureModelIsLoadedAsync();
 
-            if (_model == null)
+            // We don't check _model here anymore, we check if file exists or trust the pool.
+            if (!File.Exists(_modelPath))
             {
-                _logger.LogWarning("GERDA-D: Model not available, using workload-based fallback");
+                _logger.LogWarning("GERDA-D: Model file not ready, using workload-based fallback");
                 return await GetWorkloadBasedRecommendationsAsync(employees, count);
             }
 
-            // Create prediction engine
+            // Ensure model is available (via Pool/File)
+            // Note: The pool handles loading. If file is missing, it might throw or return default.
+            
+            // Create prediction using the Pool
             try 
             {
-                var predictionEngine = _mlContext.Model.CreatePredictionEngine<AgentCustomerRating, RatingPrediction>(_model);
-
                 // Get current workload for each agent
                 var now = DateTime.UtcNow;
                 var agentWorkloads = await _context.Tickets
@@ -89,6 +101,24 @@ namespace TicketMasala.Web.Engine.GERDA.Dispatching;
 
                 // Score each agent
                 var scoredAgents = new List<(string AgentId, double Score)>();
+                
+                // Fetch customer for context (Affinity Scoring)
+                var customer = await _context.Users.FindAsync(ticket.CreatorGuid.ToString());
+
+                // Optimization: Get internal RowId of the ticket for efficient FTS lookup (avoid scanning Tickets_Search)
+                // SQLite RowId is hidden for tables with non-integer PKs
+                long ticketRowId = 0;
+                try 
+                {
+                    var rowIds = await _context.Database.SqlQueryRaw<long>(
+                        "SELECT rowid FROM Tickets WHERE Id = {0}", ticket.Guid)
+                        .ToListAsync();
+                    ticketRowId = rowIds.FirstOrDefault();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "GERDA-D: Failed to get RowId for FTS lookup");
+                }
 
                 foreach (var employee in employees)
                 {
@@ -101,32 +131,64 @@ namespace TicketMasala.Web.Engine.GERDA.Dispatching;
                     }
 
                     // Predict affinity score using ML model (Factor 1: Past Interaction)
-                    var customer = await _context.Users.FindAsync(ticket.CreatorGuid.ToString());
                     var input = new AgentCustomerRating
                     {
                         AgentId = employee.Id,
                         CustomerId = ticket.CreatorGuid.ToString()
                     };
 
-                    var prediction = predictionEngine.Predict(input);
+                    // SCALABILITY: Use the pool. No creation overhead.
+                    var prediction = _predictionEnginePool.Predict("GerdaDispatchModel", input);
+
+                    // Compute FTS5 Match Score (Factor 2 Support)
+                    double ftsScore = 0;
+                    if (ticketRowId > 0 && !string.IsNullOrWhiteSpace(employee.Specializations))
+                    {
+                        try 
+                        {
+                            var specs = System.Text.Json.JsonSerializer.Deserialize<List<string>>(employee.Specializations);
+                            if (specs != null && specs.Any())
+                            {
+                                // Build OR query: "spec1" OR "spec2"
+                                var matchQuery = string.Join(" OR ", specs.Select(s => $"\"{s.Replace("\"", "\"\"")}\""));
+                                
+                                // Query rank from FTS5 table targeting specific ticket row
+                                // Note: Using string interpolation for table name in SqlQueryRaw is risky if table name dynamic, but here it's constant.
+                                // Parameterizing matchQuery is tricky with MATCH syntax in some providers, but usually safe as param.
+                                // SQLite FTS MATCH expects simple string.
+                                var ranks = await _context.Database.SqlQueryRaw<double>(
+                                    "SELECT rank FROM Tickets_Search WHERE rowid = {0} AND Tickets_Search MATCH {1}", 
+                                    ticketRowId, matchQuery)
+                                    .ToListAsync();
+                                
+                                ftsScore = ranks.FirstOrDefault();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                             // Log rare parsing/FTS errors but don't crash dispatch
+                             _logger.LogWarning("GERDA-D: FTS scoring failed for agent {Agent}: {Message}", employee.Id, ex.Message);
+                        }
+                    }
                     
                     // Calculate multi-factor affinity score (4 factors: ML prediction, expertise, language, geography)
                     var multiFactorScore = AffinityScoring.CalculateMultiFactorScore(
                         prediction.Score,
                         ticket,
                         employee,
-                        customer);
+                        customer,
+                        ftsScore); // Pass FTS score
                     
                     // Adjust score based on current workload (penalize busy agents)
                     var workloadPenalty = currentWorkload / (double)_config.GerdaAI.Dispatching.MaxAssignedTicketsPerAgent;
                     var adjustedScore = multiFactorScore * (1.0 - (workloadPenalty * 0.5)); // Up to 50% penalty for full workload
 
                     _logger.LogDebug(
-                        "GERDA-D: Agent {AgentName} scored {Score:F2} for ticket {TicketGuid} - {Explanation}",
+                        "GERDA-D: Agent {AgentName} scored {Score:F2} for ticket {TicketGuid} (FTS: {Fts:F2})",
                         $"{employee.FirstName} {employee.LastName}",
                         adjustedScore,
                         ticket.Guid,
-                        AffinityScoring.GetScoreExplanation(prediction.Score, ticket, employee, ticket.Customer));
+                        ftsScore);
 
                     scoredAgents.Add((employee.Id, adjustedScore));
                 }
@@ -185,7 +247,7 @@ namespace TicketMasala.Web.Engine.GERDA.Dispatching;
                 return;
             }
 
-            var dataView = _mlContext.Data.LoadFromEnumerable(trainingData);
+            var dataView = _trainingContext.Data.LoadFromEnumerable(trainingData);
 
             // Matrix Factorization training pipeline
             var options = new MatrixFactorizationTrainer.Options
@@ -199,39 +261,26 @@ namespace TicketMasala.Web.Engine.GERDA.Dispatching;
                 Quiet = true
             };
 
-            var pipeline = _mlContext.Transforms.Conversion
+            var pipeline = _trainingContext.Transforms.Conversion
                 .MapValueToKey("AgentIdEncoded", "AgentId")
-                .Append(_mlContext.Transforms.Conversion.MapValueToKey("CustomerIdEncoded", "CustomerId"))
-                .Append(_mlContext.Recommendation().Trainers.MatrixFactorization(options));
+                .Append(_trainingContext.Transforms.Conversion.MapValueToKey("CustomerIdEncoded", "CustomerId"))
+                .Append(_trainingContext.Recommendation().Trainers.MatrixFactorization(options));
 
             // Train the model
-            _model = pipeline.Fit(dataView);
+            var trainedModel = pipeline.Fit(dataView);
 
             // Save the model
-            _mlContext.Model.Save(_model, dataView.Schema, _modelPath);
+            _trainingContext.Model.Save(trainedModel, dataView.Schema, _modelPath);
 
+            // Note: PredictionEnginePool detects file changes via watchForChanges: true, so it will reload automatically!
             _logger.LogInformation("GERDA-D: Model retrained successfully with {Count} records", trainingData.Count);
         }
 
         private async Task EnsureModelIsLoadedAsync()
         {
-            if (_model != null)
-            {
-                return; // Already loaded
-            }
-
             if (File.Exists(_modelPath))
             {
-                try
-                {
-                    _model = _mlContext.Model.Load(_modelPath, out _);
-                    _logger.LogInformation("GERDA-D: Model loaded from {Path}", _modelPath);
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "GERDA-D: Failed to load model, will retrain");
-                }
+                return;
             }
 
             // No model exists, train a new one

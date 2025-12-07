@@ -5,13 +5,14 @@ using TicketMasala.Web.Models;
 using System.Data.Common;
 
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 
 namespace TicketMasala.Web.Data;
 
-public class MasalaDbContext : IdentityDbContext<ApplicationUser>
+public class MasalaDbContext : IdentityDbContext<ApplicationUser, IdentityRole, string>
 {
     public DbSet<Ticket> Tickets { get; set; }
-    public DbSet<WorkItem> WorkItems { get; set; }
+
     public DbSet<Project> Projects { get; set; }
     // Users DbSet is provided by IdentityDbContext
     // public DbSet<ApplicationUser> Users { get; set; }
@@ -46,6 +47,22 @@ public class MasalaDbContext : IdentityDbContext<ApplicationUser>
             entity.HasIndex(e => e.ContentHash); // Fast duplicate check
 
 
+            // 3. The JSON Strategy
+            // We map the C# property 'ComputedPriority' to a SQLite Generated Column.
+            // 'stored: true' means SQLite calculates it on INSERT/UPDATE and saves the result to disk.
+            // This costs disk space but makes SELECT instantaneous.
+            entity.Property(e => e.ComputedPriority)
+                  .HasComputedColumnSql("json_extract(CustomFieldsJson, '$.priority_score')", stored: true);
+
+            entity.Property(e => e.ComputedCategory)
+                  .HasComputedColumnSql("json_extract(CustomFieldsJson, '$.category')", stored: true);
+
+            // 4. The Index
+            // NOW we can create a standard SQL index on a JSON field.
+            // Query: SELECT * FROM Tickets WHERE ComputedPriority > 10
+            // Plan: SEARCH TABLE Tickets USING INDEX IX_Tickets_ComputedPriority
+            entity.HasIndex(e => e.ComputedPriority);
+            entity.HasIndex(e => e.ComputedCategory);
         });
 
         // 2. Config Versioning
@@ -54,19 +71,7 @@ public class MasalaDbContext : IdentityDbContext<ApplicationUser>
             entity.HasIndex(e => e.Hash).IsUnique();
         });
 
-        // 3. WorkItem Configuration
-        modelBuilder.Entity<WorkItem>(entity =>
-        {
-            // The JSON Blob
-            entity.Property(e => e.Payload).HasColumnType("TEXT");
 
-            // VITAL: The Virtual Column for Indexing
-            entity.Property(e => e.Status)
-                  .HasComputedColumnSql("json_extract(Payload, '$.Status')", stored: false);
-
-            // The Index that saves us from Table Scans
-            entity.HasIndex(e => e.Status);
-        });
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

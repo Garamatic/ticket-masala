@@ -1,6 +1,6 @@
 using TicketMasala.Web.Models.Configuration;
 
-namespace TicketMasala.Web.Services.Validation;
+namespace TicketMasala.Web.Engine.Ingestion.Validation;
 
 /// <summary>
 /// Validates custom field JSON data against domain configuration schema.

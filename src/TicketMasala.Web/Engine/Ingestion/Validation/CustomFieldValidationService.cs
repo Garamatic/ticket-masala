@@ -1,8 +1,8 @@
 using System.Text.Json;
 using TicketMasala.Web.Models.Configuration;
-using TicketMasala.Web.Services.Configuration;
+using TicketMasala.Web.Engine.GERDA.Configuration;
 
-namespace TicketMasala.Web.Services.Validation;
+namespace TicketMasala.Web.Engine.Ingestion.Validation;
 
 /// <summary>
 /// Validates custom field data against domain configuration schema.

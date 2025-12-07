@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using TicketMasala.Web.Controllers;
 using TicketMasala.Web.Engine.Ingestion;
-using TicketMasala.Web.Services.Tickets;
+using TicketMasala.Web.Engine.GERDA.Tickets;
 using Xunit;
 
 namespace TicketMasala.Tests.Controllers;
@@ -72,5 +72,29 @@ public class ImportControllerTests
         Assert.Equal("MapFields", viewResult.ViewName);
         var model = Assert.IsAssignableFrom<List<string>>(viewResult.Model);
         Assert.Contains("Header1", model);
+    }
+
+    [Fact]
+    public async Task ExecuteImport_ReturnsRedirect_WhenMappingIsNull()
+    {
+        // Act
+        var result = await _controller.ExecuteImport(null!);
+
+        // Assert
+        var redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal("Index", redirect.ActionName);
+        Assert.Equal("No field mapping provided.", _controller.TempData["Error"]);
+    }
+
+    [Fact]
+    public async Task ExecuteImport_ReturnsRedirect_WhenMappingIsEmpty()
+    {
+        // Act
+        var result = await _controller.ExecuteImport(new Dictionary<string, string>());
+
+        // Assert
+        var redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal("Index", redirect.ActionName);
+        Assert.Equal("No field mapping provided.", _controller.TempData["Error"]);
     }
 }

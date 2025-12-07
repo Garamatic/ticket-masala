@@ -34,6 +34,12 @@ namespace TicketMasala.Web.Models;
         [NotMapped]
         public string Name => $"{FirstName} {LastName}".Trim();
 
+        /// <summary>
+        /// Alias for Name property - returns FirstName + LastName
+        /// </summary>
+        [NotMapped]
+        public string FullName => Name;
+
         // Backwards-compatible code used in ingestion and seeding
         [SafeStringLength(50)]
         public string? Code { get; set; }

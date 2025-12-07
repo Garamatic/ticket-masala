@@ -2,7 +2,7 @@ using TicketMasala.Web.Models;
 using TicketMasala.Web.ViewModels.Tickets;
 using TicketMasala.Web.ViewModels.GERDA;
 
-namespace TicketMasala.Web.Services.Tickets;
+namespace TicketMasala.Web.Engine.GERDA.Tickets;
 
 /// <summary>
 /// Command service for ticket write operations.

@@ -1,16 +1,16 @@
 using TicketMasala.Web;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Models;
-using TicketMasala.Web.Services;
+
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.Observers;
 using TicketMasala.Web.Health;
 using TicketMasala.Web.Middleware;
-using TicketMasala.Web.Services.Core;
-using TicketMasala.Web.Services.Tickets;
-using TicketMasala.Web.Services.Projects;
+using TicketMasala.Web.Engine.Core;
+using TicketMasala.Web.Engine.GERDA.Tickets; // Updated
+using TicketMasala.Web.Engine.Projects;     // Updated
 using TicketMasala.Web.Engine.Ingestion;
-using TicketMasala.Web.Services.Background;
+using TicketMasala.Web.Engine.Ingestion.Background;
 using TicketMasala.Web.Engine.Compiler;
 using TicketMasala.Web.Engine.GERDA;
 using TicketMasala.Web.Engine.GERDA.Models;
@@ -29,6 +29,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Localization;
 using WebOptimizer;
+using Microsoft.Extensions.ML; // PredictionEnginePool
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -130,12 +131,12 @@ builder.Services.AddScoped<ICommentObserver, NotificationCommentObserver>();
 
 
 // Domain Configuration Service (loads masala_domains.yaml)
-builder.Services.AddSingleton<TicketMasala.Web.Services.Configuration.IDomainConfigurationService, 
-    TicketMasala.Web.Services.Configuration.DomainConfigurationService>();
+builder.Services.AddSingleton<TicketMasala.Web.Engine.GERDA.Configuration.IDomainConfigurationService, 
+    TicketMasala.Web.Engine.GERDA.Configuration.DomainConfigurationService>();
 
 // Custom Field Validation Service
-builder.Services.AddScoped<TicketMasala.Web.Services.Validation.ICustomFieldValidationService,
-    TicketMasala.Web.Services.Validation.CustomFieldValidationService>();
+builder.Services.AddScoped<TicketMasala.Web.Engine.Ingestion.Validation.ICustomFieldValidationService,
+    TicketMasala.Web.Engine.Ingestion.Validation.CustomFieldValidationService>();
 
 // Rule Engine Service
 builder.Services.AddScoped<TicketMasala.Web.Engine.Compiler.IRuleEngineService,
@@ -165,6 +166,7 @@ builder.Services.AddSingleton<IBackgroundTaskQueue>(ctx =>
 {
     return new BackgroundQueue(100); // Capacity of 100 items
 });
+builder.Services.AddSingleton(System.Threading.Channels.Channel.CreateUnbounded<TicketMasala.Web.ViewModels.Ingestion.IngestionWorkItem>());
 builder.Services.AddHostedService<QueuedHostedService>();
 builder.Services.AddHostedService<TicketGeneratorService>();
 builder.Services.AddScoped<ITicketGenerator, TicketGenerator>();
@@ -196,12 +198,16 @@ if (File.Exists(gerdaConfigPath))
         builder.Services.AddScoped<IEstimatingStrategy, CategoryBasedEstimatingStrategy>();
         builder.Services.AddScoped<IDispatchingStrategy, MatrixFactorizationDispatchingStrategy>();
         builder.Services.AddScoped<IDispatchingStrategy, ZoneBasedDispatchingStrategy>();
-
-        // Rule Engine
         builder.Services.AddSingleton<TicketMasala.Web.Engine.Compiler.RuleCompilerService>();
         
         // AI Features
         builder.Services.AddScoped<TicketMasala.Web.Engine.GERDA.Features.IFeatureExtractor, TicketMasala.Web.Engine.GERDA.Features.DynamicFeatureExtractor>();
+
+        // Register PredictionEnginePool for Scalability (09-scalability.md)
+        // This is strictly In-Process (as per critique), avoiding model reload overhead per request.
+        var modelPath = Path.Combine(builder.Environment.ContentRootPath, "gerda_dispatch_model.zip");
+        builder.Services.AddPredictionEnginePool<TicketMasala.Web.Engine.GERDA.Models.AgentCustomerRating, TicketMasala.Web.Engine.GERDA.Models.RatingPrediction>()
+            .FromFile(modelName: "GerdaDispatchModel", filePath: modelPath, watchForChanges: true);
 
         builder.Services.AddScoped<IRankingService, RankingService>();
         builder.Services.AddScoped<IDispatchingService, DispatchingService>();
@@ -346,6 +352,28 @@ builder.Services.AddControllersWithViews()
 builder.Services.AddRazorPages(); // keep Razor Pages for Identity UI
 builder.Services.AddHealthChecks();
 
+// ============================================
+// OpenAPI/Swagger Documentation (v3.0 MVP)
+// ============================================
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new()
+    {
+        Title = "Ticket Masala API",
+        Version = "v1",
+        Description = "Configuration-driven work management API. Valid DomainId values are sourced from masala_domains.yaml configuration."
+    });
+    
+    // Include XML comments if available
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        c.IncludeXmlComments(xmlPath);
+    }
+});
+
 // Configure Forwarded Headers for Fly.io (Proxy)
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
@@ -405,7 +433,7 @@ using (var scope = app.Services.CreateScope())
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    var domainService = services.GetRequiredService<TicketMasala.Web.Services.Configuration.IDomainConfigurationService>();
+    var domainService = services.GetRequiredService<TicketMasala.Web.Engine.GERDA.Configuration.IDomainConfigurationService>();
     var strategyFactory = services.GetRequiredService<TicketMasala.Web.Engine.GERDA.Strategies.IStrategyFactory>();
     var logger = services.GetRequiredService<ILogger<Program>>();
 
@@ -418,7 +446,7 @@ using (var scope = app.Services.CreateScope())
     {
         try
         {
-            var rankingName = domain.AiStrategies?.Ranking ?? "WSJF";
+            var rankingName = domain.AiStrategies?.Ranking?.StrategyName ?? "WSJF";
             strategyFactory.GetStrategy<TicketMasala.Web.Engine.GERDA.Ranking.IJobRankingStrategy, double>(rankingName);
 
             var estimatingName = domain.AiStrategies?.Estimating ?? "CategoryLookup";
@@ -444,6 +472,14 @@ using (var scope = app.Services.CreateScope())
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
+    
+    // Swagger UI (v3.0 MVP)
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Ticket Masala API v1");
+        c.RoutePrefix = "swagger";
+    });
 }
 else
 {
@@ -482,7 +518,42 @@ app.MapControllerRoute(
 
 app.MapRazorPages(); 
 
-app.MapHealthChecks("/health").AllowAnonymous();
+// Health Check with JSON response (v3.1)
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        var result = new
+        {
+            status = report.Status.ToString(),
+            duration = report.TotalDuration.TotalMilliseconds,
+            checks = report.Entries.Select(e => new
+            {
+                name = e.Key,
+                status = e.Value.Status.ToString(),
+                duration = e.Value.Duration.TotalMilliseconds,
+                description = e.Value.Description
+            })
+        };
+        await context.Response.WriteAsJsonAsync(result);
+    }
+}).AllowAnonymous();
+
+// Simple metrics endpoint (v3.1) - KISS: uses built-in counters
+app.MapGet("/metrics", async (IServiceProvider sp) =>
+{
+    var metrics = new
+    {
+        timestamp = DateTime.UtcNow,
+        uptime = (DateTime.UtcNow - System.Diagnostics.Process.GetCurrentProcess().StartTime.ToUniversalTime()).TotalSeconds,
+        memory_mb = System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / 1024 / 1024,
+        gc_gen0 = GC.CollectionCount(0),
+        gc_gen1 = GC.CollectionCount(1),
+        gc_gen2 = GC.CollectionCount(2)
+    };
+    return Results.Json(metrics);
+}).AllowAnonymous();
 
 app.Run();
 

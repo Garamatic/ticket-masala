@@ -1,8 +1,4 @@
-using TicketMasala.Web.Models;
-using TicketMasala.Web.Utilities;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using TicketMasala.Web;
+using TicketMasala.Web.ViewModels.Ingestion;
 using System.Threading.Channels;
 
 namespace TicketMasala.Web.Engine.Ingestion;
@@ -14,21 +10,22 @@ public class TicketGeneratorService : BackgroundService
     private readonly IConfiguration _configuration;
     private readonly TimeSpan _interval;
     private readonly bool _enabled;
-    private readonly Channel<WorkItem> _channel;
+    private readonly Channel<IngestionWorkItem> _channel;
 
     public TicketGeneratorService(
         IServiceProvider serviceProvider,
         ILogger<TicketGeneratorService> logger,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        Channel<IngestionWorkItem> channel)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
         _configuration = configuration;
+        _channel = channel;
         
         _enabled = _configuration.GetValue<bool>("TicketGenerator:Enabled");
         var intervalSeconds = _configuration.GetValue<int>("TicketGenerator:IntervalSeconds", 60);
         _interval = TimeSpan.FromSeconds(intervalSeconds);
-        _channel = Channel.CreateUnbounded<WorkItem>();
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -54,7 +51,7 @@ public class TicketGeneratorService : BackgroundService
         }
     }
 
-    private async Task GenerateRandomTicketAsync(WorkItem workItem, CancellationToken stoppingToken)
+    private async Task GenerateRandomTicketAsync(IngestionWorkItem workItem, CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
         var ticketGenerator = scope.ServiceProvider.GetRequiredService<ITicketGenerator>();

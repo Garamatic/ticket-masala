@@ -2,9 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
-using System;
 using System.ComponentModel.DataAnnotations;
-using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using TicketMasala.Web.Models;
 using Microsoft.AspNetCore.Identity;
@@ -52,6 +50,20 @@ namespace TicketMasala.Web.Areas.Identity.Pages.Account.Manage;
         public class InputModel
         {
             /// <summary>
+            ///     First name of the user.
+            /// </summary>
+            [Display(Name = "First Name")]
+            [StringLength(100, ErrorMessage = "The {0} must be at max {1} characters long.")]
+            public string FirstName { get; set; }
+
+            /// <summary>
+            ///     Last name of the user.
+            /// </summary>
+            [Display(Name = "Last Name")]
+            [StringLength(100, ErrorMessage = "The {0} must be at max {1} characters long.")]
+            public string LastName { get; set; }
+
+            /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
@@ -69,6 +81,8 @@ namespace TicketMasala.Web.Areas.Identity.Pages.Account.Manage;
 
             Input = new InputModel
             {
+                FirstName = user.FirstName,
+                LastName = user.LastName,
                 PhoneNumber = phoneNumber
             };
         }
@@ -99,6 +113,19 @@ namespace TicketMasala.Web.Areas.Identity.Pages.Account.Manage;
                 return Page();
             }
 
+            // Update first name if changed
+            if (Input.FirstName != user.FirstName)
+            {
+                user.FirstName = Input.FirstName;
+            }
+
+            // Update last name if changed
+            if (Input.LastName != user.LastName)
+            {
+                user.LastName = Input.LastName;
+            }
+
+            // Update phone number if changed
             var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
             if (Input.PhoneNumber != phoneNumber)
             {
@@ -108,6 +135,14 @@ namespace TicketMasala.Web.Areas.Identity.Pages.Account.Manage;
                     StatusMessage = "Unexpected error when trying to set phone number.";
                     return RedirectToPage();
                 }
+            }
+
+            // Save user changes (for FirstName/LastName)
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+            {
+                StatusMessage = "Unexpected error when trying to update profile.";
+                return RedirectToPage();
             }
 
             await _signInManager.RefreshSignInAsync(user);

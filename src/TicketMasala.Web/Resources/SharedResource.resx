@@ -119,6 +119,78 @@
   <data name="Register as a new user" xml:space="preserve">
     <value>Register as a new user</value>
   </data>
+  <data name="Create Account" xml:space="preserve">
+    <value>Create Account</value>
+  </data>
+  <data name="Sign up to get started with Ticket Masala" xml:space="preserve">
+    <value>Sign up to get started with Ticket Masala</value>
+  </data>
+  <data name="Already have an account? Sign in" xml:space="preserve">
+    <value>Already have an account? Sign in</value>
+  </data>
+  <data name="or continue with" xml:space="preserve">
+    <value>or continue with</value>
+  </data>
+  <data name="Confirm Password" xml:space="preserve">
+    <value>Confirm Password</value>
+  </data>
+  <data name="Create your Ticket Masala account" xml:space="preserve">
+    <value>Create your Ticket Masala account</value>
+  </data>
+  <data name="Reset Password" xml:space="preserve">
+    <value>Reset Password</value>
+  </data>
+  <data name="Reset your Ticket Masala password" xml:space="preserve">
+    <value>Reset your Ticket Masala password</value>
+  </data>
+  <data name="Don't worry, we'll help you get back into your account" xml:space="preserve">
+    <value>Don't worry, we'll help you get back into your account</value>
+  </data>
+  <data name="Enter your email address and we'll send you a link to reset your password" xml:space="preserve">
+    <value>Enter your email address and we'll send you a link to reset your password</value>
+  </data>
+  <data name="Send Reset Link" xml:space="preserve">
+    <value>Send Reset Link</value>
+  </data>
+  <data name="Back to Sign In" xml:space="preserve">
+    <value>Back to Sign In</value>
+  </data>
+  <data name="Profile" xml:space="preserve">
+    <value>Profile</value>
+  </data>
+  <data name="Manage your account" xml:space="preserve">
+    <value>Manage your account</value>
+  </data>
+  <data name="Change your account settings" xml:space="preserve">
+    <value>Change your account settings</value>
+  </data>
+  <data name="Phone Number" xml:space="preserve">
+    <value>Phone Number</value>
+  </data>
+  <data name="Your profile has been updated" xml:space="preserve">
+    <value>Your profile has been updated</value>
+  </data>
+  <data name="AI-Powered Ticket Dispatch" xml:space="preserve">
+    <value>AI-Powered Ticket Dispatch</value>
+  </data>
+  <data name="Real-time Analytics Dashboard" xml:space="preserve">
+    <value>Real-time Analytics Dashboard</value>
+  </data>
+  <data name="Smart Team Management" xml:space="preserve">
+    <value>Smart Team Management</value>
+  </data>
+  <data name="Email-to-Ticket Automation" xml:space="preserve">
+    <value>Email-to-Ticket Automation</value>
+  </data>
+  <data name="Welcome Back" xml:space="preserve">
+    <value>Welcome Back</value>
+  </data>
+  <data name="Sign in to your account to continue" xml:space="preserve">
+    <value>Sign in to your account to continue</value>
+  </data>
+  <data name="Sign in to Ticket Masala - Project and Ticket Management System" xml:space="preserve">
+    <value>Sign in to Ticket Masala - Project and Ticket Management System</value>
+  </data>
   
   <!-- Common UI -->
   <data name="Search..." xml:space="preserve">

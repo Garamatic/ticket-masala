@@ -125,14 +125,32 @@ public class TransitionCondition
     public string? Role { get; set; } // Required role to perform transition
 }
 
+
 /// <summary>
 /// AI strategy configuration per domain
 /// </summary>
 public class AiStrategiesConfig
 {
-    public string Ranking { get; set; } = "WSJF";
+    public RankingStrategyConfig Ranking { get; set; } = new();
     public string Dispatching { get; set; } = "MatrixFactorization";
     public string Estimating { get; set; } = "CategoryLookup";
+}
+
+public class RankingStrategyConfig
+{
+    [YamlDotNet.Serialization.YamlMember(Alias = "strategy_name", ApplyNamingConventions = false)]
+    public string StrategyName { get; set; } = "WSJF";
+
+    [YamlDotNet.Serialization.YamlMember(Alias = "base_formula", ApplyNamingConventions = false)]
+    public string BaseFormula { get; set; } = "cost_of_delay / job_size";
+
+    public List<RankingMultiplier> Multipliers { get; set; } = new();
+}
+
+public class RankingMultiplier
+{
+    public List<TransitionCondition> Conditions { get; set; } = new();
+    public double Value { get; set; }
 }
 
 /// <summary>

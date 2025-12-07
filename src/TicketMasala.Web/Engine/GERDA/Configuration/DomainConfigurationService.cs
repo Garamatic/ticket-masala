@@ -1,32 +1,72 @@
 using TicketMasala.Web.Models.Configuration;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+using TicketMasala.Web.Engine.Compiler;
 
-namespace TicketMasala.Web.Services.Configuration;
+namespace TicketMasala.Web.Engine.GERDA.Configuration;
 
 /// <summary>
 /// Implementation of IDomainConfigurationService that reads from masala_domains.yaml.
-/// Supports caching and optional hot-reload on file change.
+/// Supports caching and automatic hot-reload on file change.
 /// </summary>
-public class DomainConfigurationService : IDomainConfigurationService
+public class DomainConfigurationService : IDomainConfigurationService, IDisposable
 {
     private readonly ILogger<DomainConfigurationService> _logger;
     private readonly IWebHostEnvironment _environment;
+    private readonly RuleCompilerService _ruleCompiler;
     private MasalaDomainsConfig _config;
     private readonly object _configLock = new();
     private readonly string _configFilePath;
     private DateTime _lastLoadTime;
+    private FileSystemWatcher? _fileWatcher;
 
     public DomainConfigurationService(
         ILogger<DomainConfigurationService> logger,
-        IWebHostEnvironment environment)
+        IWebHostEnvironment environment,
+        RuleCompilerService ruleCompiler)
     {
         _logger = logger;
         _environment = environment;
+        _ruleCompiler = ruleCompiler;
         _configFilePath = Path.Combine(_environment.ContentRootPath, "masala_domains.yaml");
         _config = new MasalaDomainsConfig();
         
         LoadConfiguration();
+        SetupFileWatcher();
+    }
+
+    private void SetupFileWatcher()
+    {
+        try
+        {
+            var directory = Path.GetDirectoryName(_configFilePath);
+            var fileName = Path.GetFileName(_configFilePath);
+            
+            if (directory == null) return;
+            
+            _fileWatcher = new FileSystemWatcher(directory, fileName)
+            {
+                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size,
+                EnableRaisingEvents = true
+            };
+            
+            // Debounce: only reload if file hasn't changed in 500ms
+            _fileWatcher.Changed += (_, _) =>
+            {
+                Task.Delay(500).ContinueWith(_ => ReloadConfiguration());
+            };
+            
+            _logger.LogInformation("File watcher enabled for {Path}", _configFilePath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not setup file watcher for hot reload");
+        }
+    }
+
+    public void Dispose()
+    {
+        _fileWatcher?.Dispose();
     }
 
     private void LoadConfiguration()
@@ -39,6 +79,7 @@ public class DomainConfigurationService : IDomainConfigurationService
                 {
                     _logger.LogWarning("Domain configuration file not found at {Path}. Using defaults.", _configFilePath);
                     _config = CreateDefaultConfig();
+                    _ruleCompiler.ReplaceRuleCache(_config);
                     return;
                 }
 
@@ -49,8 +90,15 @@ public class DomainConfigurationService : IDomainConfigurationService
                     .IgnoreUnmatchedProperties()
                     .Build();
                 
-                _config = deserializer.Deserialize<MasalaDomainsConfig>(yaml) ?? CreateDefaultConfig();
+                var newConfig = deserializer.Deserialize<MasalaDomainsConfig>(yaml) ?? CreateDefaultConfig();
+                
+                // HOT RELOAD LOGIC:
+                // 1. Update local config object
+                _config = newConfig;
                 _lastLoadTime = DateTime.UtcNow;
+                
+                // 2. Push new config to Rule Compiler for atomic swap
+                _ruleCompiler.ReplaceRuleCache(_config);
                 
                 _logger.LogInformation(
                     "Loaded domain configuration with {Count} domains: {Domains}", 
@@ -60,7 +108,7 @@ public class DomainConfigurationService : IDomainConfigurationService
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to load domain configuration from {Path}", _configFilePath);
-                _config = CreateDefaultConfig();
+                // Keep existing config on error
             }
         }
     }

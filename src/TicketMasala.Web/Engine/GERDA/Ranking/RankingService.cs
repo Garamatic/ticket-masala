@@ -8,7 +8,7 @@ namespace TicketMasala.Web.Engine.GERDA.Ranking;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.GERDA.Models;
 using TicketMasala.Web.Engine.GERDA.Strategies;
-using TicketMasala.Web.Services.Configuration;
+using TicketMasala.Web.Engine.GERDA.Configuration;
 using TicketMasala.Web.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -63,7 +63,7 @@ public class RankingService : IRankingService
         // Determine Domain and Strategy
         var domainId = ticket.DomainId ?? _domainConfigService.GetDefaultDomainId();
         var domainConfig = _domainConfigService.GetDomain(domainId);
-        var strategyName = domainConfig?.AiStrategies.Ranking ?? "WSJF";
+        var strategyName = domainConfig?.AiStrategies.Ranking?.StrategyName ?? "WSJF";
 
         double priorityScore = 0.0;
 

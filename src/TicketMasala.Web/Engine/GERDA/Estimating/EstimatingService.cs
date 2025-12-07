@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace TicketMasala.Web.Engine.GERDA.Estimating;
 
 using TicketMasala.Web.Engine.GERDA.Strategies;
-using TicketMasala.Web.Services.Configuration;
+using TicketMasala.Web.Engine.GERDA.Configuration;
 using TicketMasala.Web.Models;
 using Microsoft.EntityFrameworkCore;
 

@@ -44,6 +44,25 @@ A comprehensive design system for building consistent, professional, and on-bran
 
 ---
 
+## Typography (Continued)
+
+| Usage | Font | Fallback Stack |
+|-------|------|----------------|
+| Headings | Rajdhani | 'Rajdhani', sans-serif |
+| Body Text | Inter | 'Inter', sans-serif |
+
+---
+
+## Spacing Guidelines
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--spacing-small` | `4px` | Compact spacing |
+| `--spacing-medium` | `8px` | Default spacing |
+| `--spacing-large` | `16px` | Generous spacing |
+
+---
+
 ## 🌑 Dark Mode
 
 | Element | Hex | Notes |

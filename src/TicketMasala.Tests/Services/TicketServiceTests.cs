@@ -2,11 +2,11 @@ using Xunit;
 using Moq;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
-using TicketMasala.Web.Services.Core;
-using TicketMasala.Web.Services.Tickets;
-using TicketMasala.Web.Services.Projects;
+using TicketMasala.Web.Engine.Core;
+using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.Engine.Ingestion;
-using TicketMasala.Web.Services.Background;
+using TicketMasala.Web.Engine.Ingestion.Background;
 using TicketMasala.Web.Models;
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.Observers;
@@ -15,6 +15,8 @@ using TicketMasala.Web;
 using System.Security.Claims;
 using TicketMasala.Web.Engine.Compiler;
 using TicketMasala.Web.Data;
+using TicketMasala.Web.Engine.GERDA.Configuration;
+using TicketMasala.Web.Models.Configuration;
 
 namespace TicketMasala.Tests.Services;
     public class TicketServiceTests
@@ -43,6 +45,7 @@ namespace TicketMasala.Tests.Services;
             var auditService = new Mock<IAuditService>();
             var httpContextAccessor = new Mock<IHttpContextAccessor>();
             var ruleEngine = new Mock<IRuleEngineService>();
+            var domainConfig = new Mock<IDomainConfigurationService>();
             var logger = new Mock<ILogger<TicketService>>();
 
             // Wire up Repository Mocks to use the InMemory Context
@@ -100,6 +103,7 @@ namespace TicketMasala.Tests.Services;
                 auditService.Object,
                 httpContextAccessor.Object,
                 ruleEngine.Object,
+                domainConfig.Object,
                 logger.Object);
         }
 
@@ -458,4 +462,62 @@ namespace TicketMasala.Tests.Services;
             Assert.Contains(result, item => item.Text == "Alice Johnson");
             Assert.Contains(result, item => item.Text == "Bob Williams");
         }
-}
+        [Fact]
+        public void ParseCustomFields_ReturnsCorrectJson()
+        {
+            // Arrange
+            using var context = new MasalaDbContext(_dbOptions);
+            
+            // Re-create service with mock access since generic CreateService hides mocks
+            // But we can just use CreateService and rely on the fact we can't easily access the inner mock 
+            // UNLESS we refactor CreateService to take mocks or return them.
+            // OR we just Instantiate TicketService manually here for this specific test to have full control over the Mock.
+            
+            var domainConfig = new Mock<IDomainConfigurationService>();
+            var ticketRepo = new Mock<ITicketRepository>();
+            var userRepo = new Mock<IUserRepository>();
+            var projRepo = new Mock<IProjectRepository>();
+            var logger = new Mock<ILogger<TicketService>>();
+            var ruleEngine = new Mock<IRuleEngineService>();
+            
+            var service = new TicketService(
+                context,
+                ticketRepo.Object,
+                userRepo.Object,
+                projRepo.Object,
+                new List<ITicketObserver>(),
+                new List<ICommentObserver>(),
+                new Mock<INotificationService>().Object,
+                new Mock<IAuditService>().Object,
+                new Mock<IHttpContextAccessor>().Object,
+                ruleEngine.Object,
+                domainConfig.Object,
+                logger.Object
+            );
+
+            // Mock Domain Config
+            var fields = new List<CustomFieldDefinition>
+            {
+                new CustomFieldDefinition { Name = "Budget", Type = "Currency", Label = "Budget" },
+                new CustomFieldDefinition { Name = "IsUrgent", Type = "Boolean", Label = "Urgent?" },
+                new CustomFieldDefinition { Name = "Notes", Type = "String", Label = "Notes" }
+            };
+            domainConfig.Setup(d => d.GetCustomFields("IT")).Returns(fields);
+
+            var formValues = new Dictionary<string, string>
+            {
+                { "customFields[Budget]", "500.50" },
+                { "customFields[IsUrgent]", "true" },
+                { "customFields[Notes]", "Some notes" },
+                { "otherField", "ignore" }
+            };
+
+            // Act
+            var json = service.ParseCustomFields("IT", formValues);
+
+            // Assert
+            Assert.Contains("\"Budget\":500.50", json); // Check numeric parsing
+            Assert.Contains("\"IsUrgent\":true", json); // Check boolean parsing
+            Assert.Contains("\"Notes\":\"Some notes\"", json);
+        }
+    }

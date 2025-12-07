@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web.Engine.GERDA.Dispatching;
 using TicketMasala.Web.Engine.GERDA.Models;
 using TicketMasala.Web.Engine.GERDA.Strategies;
-using TicketMasala.Web.Services.Configuration;
+using TicketMasala.Web.Engine.GERDA.Configuration;
 using TicketMasala.Web.Models;
 using TicketMasala.Web;
 using TicketMasala.Web.Data;

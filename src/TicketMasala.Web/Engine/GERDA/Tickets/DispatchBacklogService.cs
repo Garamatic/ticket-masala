@@ -5,7 +5,7 @@ using TicketMasala.Web.Repositories;
 using TicketMasala.Web.Engine.GERDA.Dispatching;
 using Microsoft.EntityFrameworkCore;
 
-namespace TicketMasala.Web.Services.Tickets;
+namespace TicketMasala.Web.Engine.GERDA.Tickets;
 
 /// <summary>
 /// Service responsible for building the dispatch backlog view.

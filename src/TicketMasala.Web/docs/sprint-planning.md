@@ -2,7 +2,7 @@
 
 > **Sprint Length:** 1 week  
 > **Project End Date:** December 21, 2025  
-> **Last Updated:** December 6, 2025
+> **Last Updated:** December 7, 2025
 
 ---
 
@@ -50,10 +50,10 @@
 |---------|--------|
 | Comments System | ✅ Done |
 | Batch Operations | ✅ Done |
-| GERDA-G: Spam Detection | ✅ Done |
+| GERDA-G: Spam Detection (v2 Grouping) | ✅ Done |
 | GERDA-E: Effort Estimation | ✅ Done |
-| GERDA-R: Priority Ranking | ✅ Done |
-| GERDA-D: Agent Dispatching | ✅ Done |
+| GERDA-R: Priority Ranking (Rule Engine) | ✅ Done |
+| GERDA-D: Agent Dispatching (FTS5) | ✅ Done |
 | GERDA-A: Forecasting | ✅ Done |
 | Manager Dashboard | ✅ Done |
 | Notification System | ✅ Done |

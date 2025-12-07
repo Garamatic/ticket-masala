@@ -8,6 +8,7 @@ using TicketMasala.Web.Utilities;
 using TicketMasala.Web.Models;
 using TicketMasala.Web.Data;
 using System.Security.Claims;
+using TicketMasala.Web.Engine.Projects;
 
 namespace TicketMasala.Web.Controllers.Api;
     /// <summary>
@@ -19,16 +20,16 @@ namespace TicketMasala.Web.Controllers.Api;
     [Produces("application/json")]
     public class ProjectsApiController : ControllerBase
     {
-        private readonly MasalaDbContext _context;
+        private readonly IProjectService _projectService;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<ProjectsApiController> _logger;
 
         public ProjectsApiController(
-            MasalaDbContext context,
+            IProjectService projectService,
             UserManager<ApplicationUser> userManager,
             ILogger<ProjectsApiController> logger)
         {
-            _context = context;
+            _projectService = projectService;
             _userManager = userManager;
             _logger = logger;
         }
@@ -50,42 +51,7 @@ namespace TicketMasala.Web.Controllers.Api;
             {
                 _logger.LogInformation("API: Getting all projects");
                 
-                var projects = await _context.Projects
-                    .AsNoTracking()
-                    .Include(p => p.Tasks)
-                        .ThenInclude(t => t.Responsible)
-                    .Include(p => p.Customer)
-                    .Include(p => p.ProjectManager)
-                    .Where(p => p.ValidUntil == null)
-                    .Select(p => new ProjectTicketViewModel
-                    {
-                        ProjectDetails = new ProjectViewModel
-                        {
-                            Guid = p.Guid,
-                            Name = p.Name,
-                            Description = p.Description,
-                            Status = p.Status,
-                            ProjectManagerName = p.ProjectManager != null 
-                                ? $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}" 
-                                : "Not Assigned",
-                            TicketCount = p.Tasks.Count
-                        },
-                        Tasks = p.Tasks.Select(t => new TicketViewModel
-                        {
-                            Guid = t.Guid,
-                            Description = t.Description,
-                            TicketStatus = t.TicketStatus,
-                            ResponsibleName = t.Responsible != null 
-                                ? $"{t.Responsible.FirstName} {t.Responsible.LastName}" 
-                                : "Not Assigned",
-                            CustomerName = t.Customer != null
-                                ? $"{t.Customer.FirstName} {t.Customer.LastName}"
-                                : "Unknown",
-                            CompletionTarget = t.CompletionTarget,
-                            CreationDate = DateTime.UtcNow
-                        }).ToList()
-                    })
-                    .ToListAsync();
+                var projects = await _projectService.GetAllProjectsAsync(null, false);
 
                 return Ok(ApiResponse<IEnumerable<ProjectTicketViewModel>>.SuccessResponse(
                     projects, 
@@ -113,48 +79,14 @@ namespace TicketMasala.Web.Controllers.Api;
         {
             try
             {
-                var project = await _context.Projects
-                    .AsNoTracking()
-                    .Include(p => p.Tasks.Where(t => t.ValidUntil == null))
-                        .ThenInclude(t => t.Responsible)
-                    .Include(p => p.Customer)
-                    .Include(p => p.ProjectManager)
-                    .Where(p => p.Guid == id && p.ValidUntil == null)
-                    .FirstOrDefaultAsync();
+                var viewModel = await _projectService.GetProjectDetailsAsync(id);
                 
-                if (project == null)
+                if (viewModel == null)
                 {
                     _logger.LogWarning("API: Project {ProjectId} not found", id);
                     return NotFound(ApiResponse<ProjectTicketViewModel>.ErrorResponse(
                         $"Project with ID {id} not found"));
                 }
-
-                var viewModel = new ProjectTicketViewModel
-                {
-                    ProjectDetails = new ProjectViewModel
-                    {
-                        Guid = project.Guid,
-                        Name = project.Name,
-                        Description = project.Description,
-                        Status = project.Status,
-                        ProjectManagerName = project.ProjectManager != null 
-                            ? $"{project.ProjectManager.FirstName} {project.ProjectManager.LastName}" 
-                            : "Not Assigned",
-                        TicketCount = project.Tasks.Count
-                    },
-                    Tasks = project.Tasks.Select(t => new TicketViewModel
-                    {
-                        Guid = t.Guid,
-                        Description = t.Description,
-                        TicketStatus = t.TicketStatus,
-                        ResponsibleName = t.Responsible != null 
-                            ? $"{t.Responsible.FirstName} {t.Responsible.LastName}" 
-                            : "Not Assigned",
-                        CustomerName = "Customer", // TODO: Get from CreatorGuid
-                        CompletionTarget = t.CompletionTarget,
-                        CreationDate = DateTime.UtcNow
-                    }).ToList()
-                };
 
                 return Ok(ApiResponse<ProjectTicketViewModel>.SuccessResponse(viewModel));
             }
@@ -177,44 +109,7 @@ namespace TicketMasala.Web.Controllers.Api;
         {
             try
             {
-                var projects = await _context.Projects
-                    .AsNoTracking()
-                    .Include(p => p.Tasks.Where(t => t.ValidUntil == null))
-                        .ThenInclude(t => t.Responsible)
-                    .Include(p => p.Tasks.Where(t => t.ValidUntil == null))
-                        .ThenInclude(t => t.Customer)
-                    .Include(p => p.Customer)
-                    .Include(p => p.ProjectManager)
-                    .Where(p => p.CustomerId == customerId && p.ValidUntil == null)
-                    .Select(p => new ProjectTicketViewModel
-                    {
-                        ProjectDetails = new ProjectViewModel
-                        {
-                            Guid = p.Guid,
-                            Name = p.Name,
-                            Description = p.Description,
-                            Status = p.Status,
-                            ProjectManagerName = p.ProjectManager != null 
-                                ? $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}" 
-                                : "Not Assigned",
-                            TicketCount = p.Tasks.Count
-                        },
-                        Tasks = p.Tasks.Select(t => new TicketViewModel
-                        {
-                            Guid = t.Guid,
-                            Description = t.Description,
-                            TicketStatus = t.TicketStatus,
-                            ResponsibleName = t.Responsible != null 
-                                ? $"{t.Responsible.FirstName} {t.Responsible.LastName}" 
-                                : "Not Assigned",
-                            CustomerName = t.Customer != null
-                                ? $"{t.Customer.FirstName} {t.Customer.LastName}"
-                                : "Unknown",
-                            CompletionTarget = t.CompletionTarget,
-                            CreationDate = DateTime.UtcNow
-                        }).ToList()
-                    })
-                    .ToListAsync();
+                var projects = await _projectService.GetProjectsByCustomerAsync(customerId);
 
                 return Ok(ApiResponse<IEnumerable<ProjectTicketViewModel>>.SuccessResponse(
                     projects,
@@ -239,45 +134,7 @@ namespace TicketMasala.Web.Controllers.Api;
         {
             try
             {
-                var projects = await _context.Projects
-                    .AsNoTracking()
-                    .Include(p => p.Tasks.Where(t => t.ValidUntil == null))
-                        .ThenInclude(t => t.Responsible)
-                    .Include(p => p.Tasks.Where(t => t.ValidUntil == null))
-                        .ThenInclude(t => t.Customer)
-                    .Include(p => p.Customer)
-                    .Include(p => p.ProjectManager)
-                    .Where(p => p.ValidUntil == null && 
-                        (p.Name.Contains(query) || p.Description.Contains(query)))
-                    .Select(p => new ProjectTicketViewModel
-                    {
-                        ProjectDetails = new ProjectViewModel
-                        {
-                            Guid = p.Guid,
-                            Name = p.Name,
-                            Description = p.Description,
-                            Status = p.Status,
-                            ProjectManagerName = p.ProjectManager != null 
-                                ? $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}" 
-                                : "Not Assigned",
-                            TicketCount = p.Tasks.Count
-                        },
-                        Tasks = p.Tasks.Select(t => new TicketViewModel
-                        {
-                            Guid = t.Guid,
-                            Description = t.Description,
-                            TicketStatus = t.TicketStatus,
-                            ResponsibleName = t.Responsible != null 
-                                ? $"{t.Responsible.FirstName} {t.Responsible.LastName}" 
-                                : "Not Assigned",
-                            CustomerName = t.Customer != null
-                                ? $"{t.Customer.FirstName} {t.Customer.LastName}"
-                                : "Unknown",
-                            CompletionTarget = t.CompletionTarget,
-                            CreationDate = DateTime.UtcNow
-                        }).ToList()
-                    })
-                    .ToListAsync();
+                var projects = await _projectService.SearchProjectsAsync(query);
 
                 return Ok(ApiResponse<IEnumerable<ProjectTicketViewModel>>.SuccessResponse(
                     projects,
@@ -297,33 +154,19 @@ namespace TicketMasala.Web.Controllers.Api;
         /// <param name="customerId">The customer ID</param>
         /// <returns>Project statistics for the customer</returns>
         [HttpGet("statistics/{customerId}")]
-        [ProducesResponseType(typeof(ApiResponse<ProjectStatistics>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<ApiResponse<ProjectStatistics>>> GetStatistics(string customerId)
+        [ProducesResponseType(typeof(ApiResponse<ProjectStatisticsViewModel>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<ProjectStatisticsViewModel>>> GetStatistics(string customerId)
         {
             try
             {
-                var projects = await _context.Projects
-                    .AsNoTracking()
-                    .Include(p => p.Tasks)
-                    .Where(p => p.CustomerId == customerId && p.ValidUntil == null)
-                    .ToListAsync();
+                var stats = await _projectService.GetProjectStatisticsAsync(customerId);
 
-                var stats = new ProjectStatistics
-                {
-                    TotalProjects = projects.Count,
-                    ActiveProjects = projects.Count(p => p.Status == Status.InProgress),
-                    CompletedProjects = projects.Count(p => p.Status == Status.Completed),
-                    PendingProjects = projects.Count(p => p.Status == Status.Pending),
-                    TotalTasks = projects.Sum(p => p.Tasks.Count),
-                    CompletedTasks = projects.Sum(p => p.Tasks.Count(t => t.TicketStatus == Status.Completed))
-                };
-
-                return Ok(ApiResponse<ProjectStatistics>.SuccessResponse(stats));
+                return Ok(ApiResponse<ProjectStatisticsViewModel>.SuccessResponse(stats));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "API: Error getting statistics for customer {CustomerId}", customerId);
-                return StatusCode(500, ApiResponse<ProjectStatistics>.ErrorResponse(
+                return StatusCode(500, ApiResponse<ProjectStatisticsViewModel>.ErrorResponse(
                     "An error occurred while retrieving statistics"));
             }
         }
@@ -355,50 +198,16 @@ namespace TicketMasala.Web.Controllers.Api;
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
                     ?? throw new UnauthorizedAccessException("User ID not found");
 
-                ApplicationUser? customer;
-
-                if (model.IsNewCustomer)
-                {
-                    customer = new ApplicationUser
-                    {
-                        FirstName = model.NewCustomerFirstName ?? string.Empty,
-                        LastName = model.NewCustomerLastName ?? string.Empty,
-                        Email = model.NewCustomerEmail,
-                        Phone = model.NewCustomerPhone,
-                        UserName = model.NewCustomerEmail
-                    };
-                    
-                    await _userManager.CreateAsync(customer);
-                    await _userManager.AddToRoleAsync(customer, Constants.RoleCustomer);
-                }
-                else
-                {
-                    customer = await _context.Users.FirstOrDefaultAsync(c => c.Id == model.SelectedCustomerId);
-                    if (customer == null)
-                    {
-                        return BadRequest(ApiResponse<Guid>.ErrorResponse("Selected customer not found"));
-                    }
-                }
-
-                var project = new Project
-                {
-                    Name = model.Name,
-                    Description = model.Description,
-                    Status = Status.Pending,
-                    Customer = customer,
-                    CompletionTarget = model.CreationDate,
-                    CreatorGuid = Guid.Parse(userId)
-                };
-
-                _context.Projects.Add(project);
-                await _context.SaveChangesAsync();
-
-                _logger.LogInformation("API: Project created {ProjectId}", project.Guid);
+                var project = await _projectService.CreateProjectAsync(model, userId);
 
                 return CreatedAtAction(
                     nameof(GetById),
                     new { id = project.Guid },
                     ApiResponse<Guid>.SuccessResponse(project.Guid, "Project created successfully"));
+            }
+            catch (InvalidOperationException ex)
+            {
+                 return BadRequest(ApiResponse<Guid>.ErrorResponse(ex.Message));
             }
             catch (Exception ex)
             {
@@ -421,20 +230,12 @@ namespace TicketMasala.Web.Controllers.Api;
         {
             try
             {
-                var project = await _context.Projects.FirstOrDefaultAsync(p => p.Guid == id && p.ValidUntil == null);
+                var success = await _projectService.UpdateProjectStatusAsync(id, status);
                 
-                if (project == null)
+                if (!success)
                 {
                     return NotFound(ApiResponse<string>.ErrorResponse($"Project {id} not found"));
                 }
-
-                project.Status = status;
-                if (status == Status.Completed)
-                {
-                    project.CompletionDate = DateTime.UtcNow;
-                }
-
-                await _context.SaveChangesAsync();
 
                 return Ok(ApiResponse<string>.SuccessResponse(
                     status.ToString(),
@@ -461,20 +262,12 @@ namespace TicketMasala.Web.Controllers.Api;
         {
             try
             {
-                var project = await _context.Projects.FirstOrDefaultAsync(p => p.Guid == id && p.ValidUntil == null);
-                if (project == null)
+                var success = await _projectService.AssignProjectManagerAsync(id, managerId);
+                
+                if (!success)
                 {
-                    return NotFound(ApiResponse<string>.ErrorResponse($"Project {id} not found"));
+                     return NotFound(ApiResponse<string>.ErrorResponse($"Project {id} or Manager {managerId} not found"));
                 }
-
-                var manager = await _userManager.FindByIdAsync(managerId) as Employee;
-                if (manager == null)
-                {
-                    return NotFound(ApiResponse<string>.ErrorResponse($"Manager {managerId} not found"));
-                }
-
-                project.ProjectManager = manager;
-                await _context.SaveChangesAsync();
 
                 return Ok(ApiResponse<string>.SuccessResponse(
                     managerId,
@@ -500,16 +293,26 @@ namespace TicketMasala.Web.Controllers.Api;
         {
             try
             {
-                var project = await _context.Projects.FirstOrDefaultAsync(p => p.Guid == id);
-                if (project != null)
+                var success = await _projectService.DeleteProjectAsync(id);
+                
+                if (success)
                 {
-                    project.ValidUntil = DateTime.UtcNow;
-                    await _context.SaveChangesAsync();
+                    return Ok(ApiResponse<string>.SuccessResponse(
+                        id.ToString(),
+                        "Project deleted successfully"));
                 }
-
-                return Ok(ApiResponse<string>.SuccessResponse(
-                    id.ToString(),
-                    "Project deleted successfully"));
+                else
+                {
+                     // Return success even if not found? Or NotFound? 
+                     // Usually idempotency says OK, but here assuming explicit delete intention.
+                     // But since its soft delete and we return "deleted successfully" even if already deleted?
+                     // I'll stick to logic: if not found/not deleted, maybe return NotFound?
+                     // Original logic: "if project != null ... await SaveChanges ... if project == null do nothing"
+                     // The original impl always returned OK.
+                     return Ok(ApiResponse<string>.SuccessResponse(
+                        id.ToString(),
+                        "Project deleted successfully"));
+                }
             }
             catch (Exception ex)
             {

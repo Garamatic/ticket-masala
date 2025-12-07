@@ -2,6 +2,7 @@ using TicketMasala.Web.Models;
 using TicketMasala.Web.Utilities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace TicketMasala.Web.Data;
     public class DbSeeder
@@ -117,40 +118,31 @@ namespace TicketMasala.Web.Data;
                     return;
                 }
 
-                _logger.LogInformation("Database is empty. Starting to create test accounts...");
+                _logger.LogInformation("Database is empty. Loading seed data from configuration...");
 
-                // Create Admin Users
-                _logger.LogInformation("Creating admin users...");
-                await CreateAdminUsers();
+                var seedConfig = await LoadSeedConfigurationAsync();
+                if (seedConfig == null)
+                {
+                    _logger.LogError("Failed to load seed configuration. Aborting seed.");
+                    return;
+                }
 
-                // Create Employee Users
-                _logger.LogInformation("Creating employee users...");
-                await CreateEmployeeUsers();
+                // Create Users
+                _logger.LogInformation("Creating users...");
+                await CreateUsersAsync(seedConfig.Admins, Constants.RoleAdmin, "Admin123!");
+                await CreateEmployeesAsync(seedConfig.Employees, "Employee123!");
+                await CreateUsersAsync(seedConfig.Customers, Constants.RoleCustomer, "Customer123!");
 
-                // Create Customer Users
-                _logger.LogInformation("Creating customer users...");
-                await CreateCustomerUsers();
+                // Create Projects (WorkContainers)
+                _logger.LogInformation("Creating projects (WorkContainers)...");
+                await CreateProjectsAsync(seedConfig.WorkContainers);
 
-                // Create Sample Projects
-                _logger.LogInformation("Creating sample projects...");
-                await CreateSampleProjects();
-
-                // Create Sample Tickets
-                _logger.LogInformation("Creating sample tickets...");
-                await CreateSampleTickets();
-
-                // Create Unassigned Tickets for GERDA Dispatch Testing
-                _logger.LogInformation("Creating unassigned tickets for GERDA testing...");
-                await CreateUnassignedTicketsForGerdaTesting();
-
-
+                // Create Unassigned Tickets (WorkItems) for GERDA
+                _logger.LogInformation("Creating unassigned tickets (WorkItems) for GERDA testing...");
+                await CreateUnassignedTicketsAsync(seedConfig.UnassignedWorkItems);
 
                 _logger.LogInformation("========== DATABASE SEEDING COMPLETED SUCCESSFULLY! ==========");
                 _logger.LogInformation("You can now login with any of the test accounts");
-                _logger.LogInformation("Admin: admin@ticketmasala.com / Admin123!");
-                _logger.LogInformation("Employee: mike.pm@ticketmasala.com / Employee123!");
-                _logger.LogInformation("Customer: alice.customer@example.com / Customer123!");
-                _logger.LogInformation("Created {Count} unassigned tickets for GERDA Dispatch testing", 15);
             }
             catch (Exception ex)
             {
@@ -161,171 +153,100 @@ namespace TicketMasala.Web.Data;
             }
         }
 
-        private async Task CreateAdminUsers()
+        private async Task<SeedConfig?> LoadSeedConfigurationAsync()
         {
-            var admins = new[]
+            // Search paths in order of preference
+            var searchPaths = new[]
             {
-                new Employee
-                {
-                    UserName = "admin@ticketmasala.com",
-                    Email = "admin@ticketmasala.com",
-                    EmailConfirmed = true,
-                    FirstName = "John",
-                    LastName = "Administrator",
-                    Phone = "+1-555-0100",
-                    Team = "Management",
-                    Level = EmployeeType.Admin
-                },
-                new Employee
-                {
-                    UserName = "sarah.admin@ticketmasala.com",
-                    Email = "sarah.admin@ticketmasala.com",
-                    EmailConfirmed = true,
-                    FirstName = "Sarah",
-                    LastName = "Wilson",
-                    Phone = "+1-555-0101",
-                    Team = "Management",
-                    Level = EmployeeType.CEO
-                }
+                // 1. Production/Runtime root (if copied via Docker/Deploy)
+                Path.Combine(_environment.ContentRootPath, "seed_data.json"),
+                // 2. Config folder in development (relative to src/TicketMasala.Web)
+                Path.Combine(_environment.ContentRootPath, "../../config/seed_data.json"),
+                // 3. Fallback to Data folder if someone put it there
+                Path.Combine(_environment.ContentRootPath, "Data", "seed_data.json")
             };
 
-            foreach (var admin in admins)
+            string? seedFilePath = null;
+            foreach (var path in searchPaths)
             {
-                var result = await _userManager.CreateAsync(admin, "Admin123!");
+                if (File.Exists(path))
+                {
+                    seedFilePath = path;
+                    _logger.LogInformation("Found seed data configuration at: {Path}", path);
+                    break;
+                }
+            }
+
+            if (seedFilePath == null)
+            {
+                _logger.LogError("Seed data file (seed_data.json) not found in any of the search paths.");
+                return null;
+            }
+
+            try
+            {
+                var json = await File.ReadAllTextAsync(seedFilePath);
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                return JsonSerializer.Deserialize<SeedConfig>(json, options);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error parsing seed data JSON from {Path}", seedFilePath);
+                return null;
+            }
+        }
+
+        private async Task CreateUsersAsync(List<SeedUser> users, string role, string defaultPassword)
+        {
+            foreach (var userDto in users)
+            {
+                var user = new ApplicationUser
+                {
+                    UserName = userDto.UserName,
+                    Email = userDto.Email,
+                    EmailConfirmed = true,
+                    FirstName = userDto.FirstName,
+                    LastName = userDto.LastName,
+                    Phone = userDto.Phone,
+                    Code = userDto.Code
+                };
+
+                var result = await _userManager.CreateAsync(user, defaultPassword);
                 if (result.Succeeded)
                 {
-                    await _userManager.AddToRoleAsync(admin, Constants.RoleAdmin);
-                    _logger.LogInformation("Created admin user: {Email}", admin.Email);
+                    await _userManager.AddToRoleAsync(user, role);
+                    _logger.LogInformation("Created {Role} user: {Email}", role, user.Email);
                 }
                 else
                 {
-                    _logger.LogError("Failed to create admin user {Email}: {Errors}", 
-                        admin.Email, string.Join(", ", result.Errors.Select(e => e.Description)));
+                    _logger.LogError("Failed to create {Role} user {Email}: {Errors}", 
+                        role, user.Email, string.Join(", ", result.Errors.Select(e => e.Description)));
                 }
             }
         }
 
-        private async Task CreateEmployeeUsers()
+        private async Task CreateEmployeesAsync(List<SeedUser> employees, string defaultPassword)
         {
-            var employees = new[]
+            foreach (var empDto in employees)
             {
-                new Employee
+                var employee = new Employee
                 {
-                    UserName = "mike.pm@ticketmasala.com",
-                    Email = "mike.pm@ticketmasala.com",
+                    UserName = empDto.UserName,
+                    Email = empDto.Email,
                     EmailConfirmed = true,
-                    FirstName = "Mike",
-                    LastName = "Johnson",
-                    Phone = "+1-555-0200",
-                    Team = "Project Management",
-                    Level = EmployeeType.ProjectManager,
-                    // GERDA AI Fields
-                    Language = "EN",
-                    Specializations = "[\"Project Management\",\"Agile\",\"Risk Management\"]",
-                    MaxCapacityPoints = 50,
-                    Region = "North America"
-                },
-                new Employee
-                {
-                    UserName = "lisa.pm@ticketmasala.com",
-                    Email = "lisa.pm@ticketmasala.com",
-                    EmailConfirmed = true,
-                    FirstName = "Lisa",
-                    LastName = "Chen",
-                    Phone = "+1-555-0201",
-                    Team = "Project Management",
-                    Level = EmployeeType.ProjectManager,
-                    // GERDA AI Fields
-                    Language = "EN,ZH",
-                    Specializations = "[\"Project Management\",\"DevOps\",\"Infrastructure\"]",
-                    MaxCapacityPoints = 45,
-                    Region = "Asia-Pacific"
-                },
-                new Employee
-                {
-                    UserName = "david.support@ticketmasala.com",
-                    Email = "david.support@ticketmasala.com",
-                    EmailConfirmed = true,
-                    FirstName = "David",
-                    LastName = "Martinez",
-                    Phone = "+1-555-0300",
-                    Team = "Technical Support",
-                    Level = EmployeeType.Support,
-                    // GERDA AI Fields
-                    Language = "EN,ES",
-                    Specializations = "[\"Hardware Support\",\"Network Troubleshooting\",\"System Outage\"]",
-                    MaxCapacityPoints = 40,
-                    Region = "North America"
-                },
-                new Employee
-                {
-                    UserName = "claude.support@ticketmasala.com",
-                    Email = "claude.support@ticketmasala.com",
-                    EmailConfirmed = true,
-                    FirstName = "Claude",
-                    LastName = "Dubois",
-                    Phone = "+32-555-0400",
-                    Team = "European Support",
-                    Level = EmployeeType.Support,
-                    // GERDA AI Fields
-                    Language = "FR,EN",
-                    Specializations = "[\"Software Troubleshooting\",\"Refund Request\",\"Tax Processing\"]",
-                    MaxCapacityPoints = 45,
-                    Region = "Europe"
-                },
-                new Employee
-                {
-                    UserName = "pieter.support@ticketmasala.com",
-                    Email = "pieter.support@ticketmasala.com",
-                    EmailConfirmed = true,
-                    FirstName = "Pieter",
-                    LastName = "Vandenberg",
-                    Phone = "+31-555-0500",
-                    Team = "Benelux Support",
-                    Level = EmployeeType.Support,
-                    // GERDA AI Fields
-                    Language = "NL,EN,FR",
-                    Specializations = "[\"Project Management\",\"Agile\",\"Infrastructure\"]",
-                    MaxCapacityPoints = 42,
-                    Region = "Europe"
-                },
-                new Employee
-                {
-                    UserName = "emma.support@ticketmasala.com",
-                    Email = "emma.support@ticketmasala.com",
-                    EmailConfirmed = true,
-                    FirstName = "Emma",
-                    LastName = "Taylor",
-                    Phone = "+1-555-0301",
-                    Team = "Technical Support",
-                    Level = EmployeeType.Support,
-                    // GERDA AI Fields
-                    Language = "EN,FR",
-                    Specializations = "[\"Software Troubleshooting\",\"Bug Triage\",\"System Outage\"]",
-                    MaxCapacityPoints = 35,
-                    Region = "Europe"
-                },
-                new Employee
-                {
-                    UserName = "robert.finance@ticketmasala.com",
-                    Email = "robert.finance@ticketmasala.com",
-                    EmailConfirmed = true,
-                    FirstName = "Robert",
-                    LastName = "Anderson",
-                    Phone = "+1-555-0400",
-                    Team = "Finance",
-                    Level = EmployeeType.Finance,
-                    // GERDA AI Fields
-                    Language = "EN",
-                    Specializations = "[\"Payroll\",\"Tax Processing\",\"Refund Request\"]",
-                    MaxCapacityPoints = 30,
-                    Region = "North America"
-                }
-            };
+                    FirstName = empDto.FirstName,
+                    LastName = empDto.LastName,
+                    Phone = empDto.Phone,
+                    Team = empDto.Team,
+                    Level = empDto.Level ?? EmployeeType.Support,
+                    // GERDA Fields
+                    Language = empDto.Language,
+                    Specializations = empDto.Specializations,
+                    MaxCapacityPoints = empDto.MaxCapacityPoints ?? 0,
+                    Region = empDto.Region
+                };
 
-            foreach (var employee in employees)
-            {
-                var result = await _userManager.CreateAsync(employee, "Employee123!");
+                var result = await _userManager.CreateAsync(employee, defaultPassword);
                 if (result.Succeeded)
                 {
                     await _userManager.AddToRoleAsync(employee, Constants.RoleEmployee);
@@ -339,499 +260,136 @@ namespace TicketMasala.Web.Data;
             }
         }
 
-        private async Task CreateCustomerUsers()
+        private async Task CreateProjectsAsync(List<SeedWorkContainer> workContainers)
         {
-            var customers = new[]
-            {
-                new ApplicationUser
-                {
-                    UserName = "alice.customer@example.com",
-                    Email = "alice.customer@example.com",
-                    EmailConfirmed = true,
-                    FirstName = "Alice",
-                    LastName = "Smith",
-                    Phone = "+1-555-1000",
-                    Code = "CUST001"
-                },
-                new ApplicationUser
-                {
-                    UserName = "bob.jones@example.com",
-                    Email = "bob.jones@example.com",
-                    EmailConfirmed = true,
-                    FirstName = "Bob",
-                    LastName = "Jones",
-                    Phone = "+1-555-1001",
-                    Code = "CUST002"
-                },
-                new ApplicationUser
-                {
-                    UserName = "carol.white@techcorp.com",
-                    Email = "carol.white@techcorp.com",
-                    EmailConfirmed = true,
-                    FirstName = "Carol",
-                    LastName = "White",
-                    Phone = "+1-555-1002",
-                    Code = "CUST003"
-                },
-                new ApplicationUser
-                {
-                    UserName = "daniel.brown@startup.io",
-                    Email = "daniel.brown@startup.io",
-                    EmailConfirmed = true,
-                    FirstName = "Daniel",
-                    LastName = "Brown",
-                    Phone = "+1-555-1003",
-                    Code = "CUST004"
-                },
-                new ApplicationUser
-                {
-                    UserName = "emily.davis@enterprise.net",
-                    Email = "emily.davis@enterprise.net",
-                    EmailConfirmed = true,
-                    FirstName = "Emily",
-                    LastName = "Davis",
-                    Phone = "+1-555-1004",
-                    Code = "CUST005"
-                }
-            };
+            var adminUser = await _userManager.FindByEmailAsync("admin@ticketmasala.com");
+            var adminGuid = adminUser != null ? Guid.Parse(adminUser.Id) : Guid.NewGuid();
 
-            foreach (var customer in customers)
+            foreach (var wc in workContainers)
             {
-                var result = await _userManager.CreateAsync(customer, "Customer123!");
-                if (result.Succeeded)
+                var customer = await _context.Users.FirstOrDefaultAsync(u => u.Email == wc.CustomerEmail);
+                var pm = !string.IsNullOrEmpty(wc.ProjectManagerEmail) 
+                    ? await _context.Employees.FirstOrDefaultAsync(e => e.Email == wc.ProjectManagerEmail) 
+                    : null;
+
+                if (customer == null)
                 {
-                    await _userManager.AddToRoleAsync(customer, Constants.RoleCustomer);
-                    _logger.LogInformation("Created customer user: {Email}", customer.Email);
+                    _logger.LogWarning("Skipping project {Name}: Customer {Email} not found", wc.Name, wc.CustomerEmail);
+                    continue;
                 }
-                else
+
+                var project = new Project
                 {
-                    _logger.LogError("Failed to create customer user {Email}: {Errors}", 
-                        customer.Email, string.Join(", ", result.Errors.Select(e => e.Description)));
+                    Name = wc.Name,
+                    Description = wc.Description,
+                    Status = wc.Status,
+                    Customer = customer,
+                    ProjectManager = pm,
+                    CompletionTarget = DateTime.UtcNow.AddMonths(wc.CompletionTargetMonths),
+                    CompletionDate = wc.CompletedDaysAgo.HasValue ? DateTime.UtcNow.AddDays(-wc.CompletedDaysAgo.Value) : null,
+                    CreatorGuid = adminGuid
+                };
+
+                _context.Projects.Add(project);
+                await _context.SaveChangesAsync(); // Save to get Project Guid
+
+                // Add Tickets (WorkItems)
+                if (wc.WorkItems.Any())
+                {
+                    foreach (var wi in wc.WorkItems)
+                    {
+                        var responsible = !string.IsNullOrEmpty(wi.ResponsibleEmail)
+                             ? await _context.Employees.FirstOrDefaultAsync(e => e.Email == wi.ResponsibleEmail)
+                             : null;
+                        
+                        // Default creator to customer if not specified
+                        var creatorGuid = Guid.Parse(customer.Id);
+
+                        var ticket = new Ticket
+                        {
+                            Description = wi.Description,
+                            TicketStatus = wi.Status,
+                            TicketType = wi.Type,
+                            Customer = customer,
+                            Responsible = responsible,
+                            CompletionTarget = DateTime.UtcNow.AddDays(wi.CompletionTargetDays),
+                            CompletionDate = wi.CompletionDaysAgo.HasValue ? DateTime.UtcNow.AddDays(-wi.CompletionDaysAgo.Value) : null,
+                            CreatorGuid = creatorGuid,
+                            ProjectGuid = project.Guid,
+                            EstimatedEffortPoints = (int)(wi.EstimatedEffortPoints ?? 0),
+                            PriorityScore = wi.PriorityScore ?? 0,
+                            GerdaTags = wi.GerdaTags
+                        };
+
+                        // Add Comments
+                        if (wi.Comments.Any())
+                        {
+                            ticket.Comments = new List<TicketComment>();
+                            foreach (var cm in wi.Comments)
+                            {
+                                var author = await _context.Users.FirstOrDefaultAsync(u => u.Email == cm.AuthorEmail);
+                                if (author != null)
+                                {
+                                    ticket.Comments.Add(new TicketComment
+                                    {
+                                        Body = cm.Body,
+                                        AuthorId = author.Id,
+                                        CreatedAt = DateTime.UtcNow.AddDays(-cm.CreatedDaysAgo)
+                                    });
+                                }
+                            }
+                        }
+
+                        _context.Tickets.Add(ticket);
+                    }
+                    await _context.SaveChangesAsync();
                 }
             }
         }
 
-        private async Task CreateSampleProjects()
+        private async Task CreateUnassignedTicketsAsync(List<SeedWorkItem> workItems)
         {
-            var customer1 = await _context.Users.FirstAsync(c => c.Email == "alice.customer@example.com");
-            var customer2 = await _context.Users.FirstAsync(c => c.Email == "carol.white@techcorp.com");
-            var customer3 = await _context.Users.FirstAsync(c => c.Email == "daniel.brown@startup.io");
-
-            var pm1 = await _context.Employees.FirstAsync(e => e.Email == "mike.pm@ticketmasala.com");
-            var pm2 = await _context.Employees.FirstAsync(e => e.Email == "lisa.pm@ticketmasala.com");
-
-            var projects = new[]
+            foreach (var wi in workItems)
             {
-                new Project
-                {
-                    Name = "Website Redesign",
-                    Description = "Complete redesign of the company website with modern UI/UX",
-                    Status = Status.InProgress,
-                    Customer = customer1,
-                    ProjectManager = pm1,
-                    CompletionTarget = DateTime.UtcNow.AddMonths(2),
-                    CreatorGuid = Guid.Parse((await _userManager.FindByEmailAsync("admin@ticketmasala.com"))!.Id)
-                },
-                new Project
-                {
-                    Name = "Mobile App Development",
-                    Description = "Develop iOS and Android mobile applications for customer portal",
-                    Status = Status.InProgress,
-                    Customer = customer2,
-                    ProjectManager = pm2,
-                    CompletionTarget = DateTime.UtcNow.AddMonths(4),
-                    CreatorGuid = Guid.Parse((await _userManager.FindByEmailAsync("admin@ticketmasala.com"))!.Id)
-                },
-                new Project
-                {
-                    Name = "Cloud Migration",
-                    Description = "Migrate on-premise infrastructure to AWS cloud",
-                    Status = Status.Pending,
-                    Customer = customer3,
-                    ProjectManager = pm1,
-                    CompletionTarget = DateTime.UtcNow.AddMonths(6),
-                    CreatorGuid = Guid.Parse((await _userManager.FindByEmailAsync("admin@ticketmasala.com"))!.Id)
-                },
-                new Project
-                {
-                    Name = "CRM Integration",
-                    Description = "Integrate Salesforce CRM with internal systems",
-                    Status = Status.Completed,
-                    Customer = customer1,
-                    ProjectManager = pm2,
-                    CompletionTarget = DateTime.UtcNow.AddMonths(-1),
-                    CompletionDate = DateTime.UtcNow.AddDays(-5),
-                    CreatorGuid = Guid.Parse((await _userManager.FindByEmailAsync("admin@ticketmasala.com"))!.Id)
-                }
-            };
+                var customer = await _context.Users.FirstOrDefaultAsync(u => u.Email == wi.CustomerEmail);
+                if (customer == null) continue;
 
-            _context.Projects.AddRange(projects);
+                var ticket = new Ticket
+                {
+                    Description = wi.Description,
+                    TicketStatus = wi.Status,
+                    TicketType = wi.Type,
+                    Customer = customer,
+                    CompletionTarget = DateTime.UtcNow.AddDays(wi.CompletionTargetDays),
+                    CreatorGuid = Guid.Parse(customer.Id),
+                    EstimatedEffortPoints = (int)(wi.EstimatedEffortPoints ?? 0),
+                    PriorityScore = wi.PriorityScore ?? 0,
+                    GerdaTags = wi.GerdaTags
+                };
+
+                if (wi.Comments.Any())
+                {
+                    ticket.Comments = new List<TicketComment>();
+                    foreach (var cm in wi.Comments)
+                    {
+                        var author = await _context.Users.FirstOrDefaultAsync(u => u.Email == cm.AuthorEmail);
+                        if (author != null)
+                        {
+                            ticket.Comments.Add(new TicketComment
+                            {
+                                Body = cm.Body,
+                                AuthorId = author.Id,
+                                CreatedAt = DateTime.UtcNow.AddDays(-cm.CreatedDaysAgo)
+                            });
+                        }
+                    }
+                }
+
+                _context.Tickets.Add(ticket);
+            }
             await _context.SaveChangesAsync();
-            _logger.LogInformation("Created {Count} sample projects", projects.Length);
         }
 
-        private async Task CreateSampleTickets()
-        {
-            var project1 = await _context.Projects.FirstAsync(p => p.Name == "Website Redesign");
-            var project2 = await _context.Projects.FirstAsync(p => p.Name == "Mobile App Development");
-            
-            var customer1 = await _context.Users.FirstAsync(c => c.Email == "alice.customer@example.com");
-            var customer2 = await _context.Users.FirstAsync(c => c.Email == "carol.white@techcorp.com");
-
-            var support1 = await _context.Employees.FirstAsync(e => e.Email == "david.support@ticketmasala.com");
-            var support2 = await _context.Employees.FirstAsync(e => e.Email == "emma.support@ticketmasala.com");
-
-            var tickets = new[]
-            {
-                new Ticket
-                {
-                    Description = "Design homepage mockup",
-                    TicketStatus = Status.Completed,
-                    TicketType = TicketType.Subtask,
-                    Customer = customer1,
-                    Responsible = support1,
-                    CompletionTarget = DateTime.UtcNow.AddDays(7),
-                    CompletionDate = DateTime.UtcNow.AddDays(-2),
-                    Comments = new List<TicketComment> 
-                    { 
-                        new TicketComment { Body = "Initial design completed", AuthorId = support1.Id, CreatedAt = DateTime.UtcNow.AddDays(-3) },
-                        new TicketComment { Body = "Client approved the mockup", AuthorId = customer1.Id, CreatedAt = DateTime.UtcNow.AddDays(-2) }
-                    },
-                    CreatorGuid = Guid.Parse(customer1.Id),
-                    ProjectGuid = project1.Guid
-                },
-                new Ticket
-                {
-                    Description = "Implement responsive navigation menu",
-                    TicketStatus = Status.InProgress,
-                    TicketType = TicketType.Subtask,
-                    Customer = customer1,
-                    Responsible = support2,
-                    CompletionTarget = DateTime.UtcNow.AddDays(14),
-                    Comments = new List<TicketComment> 
-                    { 
-                        new TicketComment { Body = "Started implementation", AuthorId = support2.Id, CreatedAt = DateTime.UtcNow.AddDays(-1) },
-                        new TicketComment { Body = "Mobile view needs adjustment", AuthorId = support2.Id, CreatedAt = DateTime.UtcNow }
-                    },
-                    CreatorGuid = Guid.Parse(customer1.Id),
-                    ProjectGuid = project1.Guid
-                },
-                new Ticket
-                {
-                    Description = "Setup authentication system",
-                    TicketStatus = Status.Assigned,
-                    TicketType = TicketType.Subtask,
-                    Customer = customer2,
-                    Responsible = support1,
-                    CompletionTarget = DateTime.UtcNow.AddDays(21),
-                    Comments = new List<TicketComment> 
-                    { 
-                        new TicketComment { Body = "Analyzing requirements", AuthorId = support1.Id, CreatedAt = DateTime.UtcNow }
-                    },
-                    CreatorGuid = Guid.Parse(customer2.Id),
-                    ProjectGuid = project2.Guid
-                },
-                new Ticket
-                {
-                    Description = "Performance optimization needed",
-                    TicketStatus = Status.Pending,
-                    TicketType = TicketType.ProjectRequest,
-                    Customer = customer1,
-                    CompletionTarget = DateTime.UtcNow.AddDays(30),
-                    Comments = new List<TicketComment>(),
-                    CreatorGuid = Guid.Parse(customer1.Id),
-                    ProjectGuid = project1.Guid
-                },
-                new Ticket
-                {
-                    Description = "Bug: Payment gateway integration fails",
-                    TicketStatus = Status.InProgress,
-                    TicketType = TicketType.Subtask,
-                    Customer = customer2,
-                    Responsible = support2,
-                    CompletionTarget = DateTime.UtcNow.AddDays(3),
-                    Comments = new List<TicketComment> 
-                    { 
-                        new TicketComment { Body = "Issue reproduced", AuthorId = support2.Id, CreatedAt = DateTime.UtcNow.AddHours(-2) },
-                        new TicketComment { Body = "Working on fix", AuthorId = support2.Id, CreatedAt = DateTime.UtcNow }
-                    },
-                    CreatorGuid = Guid.Parse(customer2.Id),
-                    ProjectGuid = project2.Guid
-                }
-            };
-
-            // Assign tickets to projects
-            project1.Tasks.Add(tickets[0]);
-            project1.Tasks.Add(tickets[1]);
-            project1.Tasks.Add(tickets[3]);
-            
-            project2.Tasks.Add(tickets[2]);
-            project2.Tasks.Add(tickets[4]);
-
-            _context.Tickets.AddRange(tickets);
-            await _context.SaveChangesAsync();
-            _logger.LogInformation("Created {Count} sample tickets", tickets.Length);
-        }
-
-        private async Task CreateUnassignedTicketsForGerdaTesting()
-        {
-            var customers = await _context.Customers.ToListAsync();
-            var projects = await _context.Projects.Where(p => p.ValidUntil == null && p.Status != Status.Completed).ToListAsync();
-
-            var unassignedTickets = new List<Ticket>
-            {
-                // Hardware Support tickets
-                new Ticket
-                {
-                    Description = "Laptop screen is flickering intermittently",
-                    TicketStatus = Status.Pending,
-                    TicketType = TicketType.ProjectRequest,
-                    Customer = customers[0],
-                    CompletionTarget = DateTime.UtcNow.AddDays(2),
-                    Comments = new List<TicketComment> 
-                    { 
-                        new TicketComment { Body = "Issue started yesterday", AuthorId = customers[0].Id }
-                    },
-                    CreatorGuid = Guid.Parse(customers[0].Id),
-                    EstimatedEffortPoints = 3,
-                    PriorityScore = 45.0,
-                    GerdaTags = "Hardware"
-                },
-                new Ticket
-                {
-                    Description = "Printer not responding to print jobs",
-                    TicketStatus = Status.Pending,
-                    TicketType = TicketType.ProjectRequest,
-                    Customer = customers[1],
-                    CompletionTarget = DateTime.UtcNow.AddDays(1),
-                    Comments = new List<TicketComment> 
-                    { 
-                        new TicketComment { Body = "Urgent - affects entire department", AuthorId = customers[1].Id }
-                    },
-                    CreatorGuid = Guid.Parse(customers[1].Id),
-                    EstimatedEffortPoints = 2,
-                    PriorityScore = 65.0,
-                    GerdaTags = "Hardware,Urgent"
-                },
-                new Ticket
-                {
-                    Description = "Need replacement keyboard - keys are stuck",
-                    TicketStatus = Status.Pending,
-                    TicketType = TicketType.ProjectRequest,
-                    Customer = customers[2],
-                    CompletionTarget = DateTime.UtcNow.AddDays(3),
-                    Comments = new List<TicketComment>(),
-                    CreatorGuid = Guid.Parse(customers[2].Id),
-                    EstimatedEffortPoints = 1,
-                    PriorityScore = 25.0,
-                    GerdaTags = "Hardware"
-                },
-
-                // Network Troubleshooting tickets
-                new Ticket
-                {
-                    Description = "Cannot connect to VPN from home office",
-                    TicketStatus = Status.Pending,
-                    TicketType = TicketType.ProjectRequest,
-                    Customer = customers[3],
-                    CompletionTarget = DateTime.UtcNow.AddDays(1),
-                    Comments = new List<TicketComment> 
-                    { 
-                        new TicketComment { Body = "Error message: Connection timeout", AuthorId = customers[3].Id }
-                    },
-                    CreatorGuid = Guid.Parse(customers[3].Id),
-                    EstimatedEffortPoints = 5,
-                    PriorityScore = 55.0,
-                    GerdaTags = "Network"
-                },
-                new Ticket
-                {
-                    Description = "Slow internet connection in conference room B",
-                    TicketStatus = Status.Pending,
-                    TicketType = TicketType.ProjectRequest,
-                    Customer = customers[4],
-                    CompletionTarget = DateTime.UtcNow.AddDays(2),
-                    Comments = new List<TicketComment> 
-                    { 
-                        new TicketComment { Body = "Speed test shows 1 Mbps instead of 100 Mbps", AuthorId = customers[4].Id }
-                    },
-                    CreatorGuid = Guid.Parse(customers[4].Id),
-                    EstimatedEffortPoints = 3,
-                    PriorityScore = 40.0,
-                    GerdaTags = "Network"
-                },
-
-                // Software Troubleshooting tickets
-                new Ticket
-                {
-                    Description = "Application crashes when opening large files",
-                    TicketStatus = Status.Pending,
-                    TicketType = TicketType.ProjectRequest,
-                    Customer = customers[0],
-                    CompletionTarget = DateTime.UtcNow.AddDays(3),
-                    Comments = new List<TicketComment> 
-                    { 
-                        new TicketComment { Body = "Happens with files over 50MB", AuthorId = customers[0].Id }
-                    },
-                    CreatorGuid = Guid.Parse(customers[0].Id),
-                    EstimatedEffortPoints = 8,
-                    PriorityScore = 50.0,
-                    GerdaTags = "Software,Bug"
-                },
-                new Ticket
-                {
-                    Description = "Email client not syncing with server",
-                    TicketStatus = Status.Pending,
-                    TicketType = TicketType.ProjectRequest,
-                    Customer = customers[1],
-                    CompletionTarget = DateTime.UtcNow.AddHours(12),
-                    Comments = new List<TicketComment> 
-                    { 
-                        new TicketComment { Body = "Critical - missing important emails", AuthorId = customers[1].Id }
-                    },
-                    CreatorGuid = Guid.Parse(customers[1].Id),
-                    EstimatedEffortPoints = 5,
-                    PriorityScore = 75.0,
-                    GerdaTags = "Software,Critical"
-                },
-                new Ticket
-                {
-                    Description = "Software update fails with error 0x80070005",
-                    TicketStatus = Status.Pending,
-                    TicketType = TicketType.ProjectRequest,
-                    Customer = customers[2],
-                    CompletionTarget = DateTime.UtcNow.AddDays(2),
-                    Comments = new List<TicketComment> 
-                    { 
-                        new TicketComment { Body = "Tried restarting multiple times", AuthorId = customers[2].Id }
-                    },
-                    CreatorGuid = Guid.Parse(customers[2].Id),
-                    EstimatedEffortPoints = 3,
-                    PriorityScore = 35.0,
-                    GerdaTags = "Software"
-                },
-
-                // Password Reset tickets
-                new Ticket
-                {
-                    Description = "Forgot password for HR portal - need urgent reset",
-                    TicketStatus = Status.Pending,
-                    TicketType = TicketType.ProjectRequest,
-                    Customer = customers[3],
-                    CompletionTarget = DateTime.UtcNow.AddHours(6),
-                    Comments = new List<TicketComment> 
-                    { 
-                        new TicketComment { Body = "Need to submit timesheet today", AuthorId = customers[3].Id }
-                    },
-                    CreatorGuid = Guid.Parse(customers[3].Id),
-                    EstimatedEffortPoints = 1,
-                    PriorityScore = 60.0,
-                    GerdaTags = "Password"
-                },
-                new Ticket
-                {
-                    Description = "Account locked after multiple failed login attempts",
-                    TicketStatus = Status.Pending,
-                    TicketType = TicketType.ProjectRequest,
-                    Customer = customers[4],
-                    CompletionTarget = DateTime.UtcNow.AddHours(4),
-                    Comments = new List<TicketComment>(),
-                    CreatorGuid = Guid.Parse(customers[4].Id),
-                    EstimatedEffortPoints = 1,
-                    PriorityScore = 70.0,
-                    GerdaTags = "Password,Locked"
-                },
-
-                // Payroll tickets
-                new Ticket
-                {
-                    Description = "Incorrect tax deduction on last paycheck",
-                    TicketStatus = Status.Pending,
-                    TicketType = TicketType.ProjectRequest,
-                    Customer = customers[0],
-                    CompletionTarget = DateTime.UtcNow.AddDays(5),
-                    Comments = new List<TicketComment> 
-                    { 
-                        new TicketComment { Body = "Deducted 30% instead of 25%", AuthorId = customers[0].Id }
-                    },
-                    CreatorGuid = Guid.Parse(customers[0].Id),
-                    EstimatedEffortPoints = 5,
-                    PriorityScore = 55.0,
-                    GerdaTags = "Payroll,Tax"
-                },
-                new Ticket
-                {
-                    Description = "Need copy of W2 form from 2023",
-                    TicketStatus = Status.Pending,
-                    TicketType = TicketType.ProjectRequest,
-                    Customer = customers[1],
-                    CompletionTarget = DateTime.UtcNow.AddDays(7),
-                    Comments = new List<TicketComment>(),
-                    CreatorGuid = Guid.Parse(customers[1].Id),
-                    EstimatedEffortPoints = 2,
-                    PriorityScore = 30.0,
-                    GerdaTags = "Payroll,Tax"
-                },
-
-                // Refund Request tickets
-                new Ticket
-                {
-                    Description = "Request refund for cancelled subscription",
-                    TicketStatus = Status.Pending,
-                    TicketType = TicketType.ProjectRequest,
-                    Customer = customers[2],
-                    CompletionTarget = DateTime.UtcNow.AddDays(10),
-                    Comments = new List<TicketComment> 
-                    { 
-                        new TicketComment { Body = "Cancelled on Nov 15 but charged on Dec 1", AuthorId = customers[2].Id }
-                    },
-                    CreatorGuid = Guid.Parse(customers[2].Id),
-                    EstimatedEffortPoints = 3,
-                    PriorityScore = 40.0,
-                    GerdaTags = "Refund"
-                },
-
-                // DevOps/Infrastructure tickets
-                new Ticket
-                {
-                    Description = "Setup continuous deployment pipeline for new project",
-                    TicketStatus = Status.Pending,
-                    TicketType = TicketType.ProjectRequest,
-                    Customer = customers[3],
-                    CompletionTarget = DateTime.UtcNow.AddDays(14),
-                    Comments = new List<TicketComment> 
-                    { 
-                        new TicketComment { Body = "Need Jenkins integration with GitHub", AuthorId = customers[3].Id }
-                    },
-                    CreatorGuid = Guid.Parse(customers[3].Id),
-                    ProjectGuid = projects.Count > 0 ? projects[0].Guid : null,
-                    EstimatedEffortPoints = 13,
-                    PriorityScore = 45.0,
-                    GerdaTags = "DevOps,Infrastructure"
-                },
-                new Ticket
-                {
-                    Description = "Database backup taking too long - optimization needed",
-                    TicketStatus = Status.Pending,
-                    TicketType = TicketType.ProjectRequest,
-                    Customer = customers[4],
-                    CompletionTarget = DateTime.UtcNow.AddDays(7),
-                    Comments = new List<TicketComment> 
-                    { 
-                        new TicketComment { Body = "Currently takes 6 hours, should be under 2", AuthorId = customers[4].Id }
-                    },
-                    CreatorGuid = Guid.Parse(customers[4].Id),
-                    ProjectGuid = projects.Count > 1 ? projects[1].Guid : null,
-                    EstimatedEffortPoints = 8,
-                    PriorityScore = 50.0,
-                    GerdaTags = "Infrastructure,Database"
-                }
-            };
-
-            _context.Tickets.AddRange(unassignedTickets);
-            await _context.SaveChangesAsync();
-            _logger.LogInformation("Created {Count} unassigned tickets for GERDA Dispatch testing", unassignedTickets.Count);
-        }
         private async Task CreateProjectTemplates()
         {
             // Define all templates

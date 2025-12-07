@@ -3,7 +3,7 @@ using MailKit.Search;
 using MailKit;
 using MimeKit;
 using TicketMasala.Web.Models;
-using TicketMasala.Web.Services.Tickets;
+using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Data;
 
 namespace TicketMasala.Web.Engine.Ingestion;

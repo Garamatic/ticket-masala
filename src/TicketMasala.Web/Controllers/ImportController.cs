@@ -1,9 +1,9 @@
 using TicketMasala.Web.Models;
-using TicketMasala.Web.Services.Core;
-using TicketMasala.Web.Services.Tickets;
-using TicketMasala.Web.Services.Projects;
+using TicketMasala.Web.Engine.Core;
+using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.Engine.Ingestion;
-using TicketMasala.Web.Services.Background;
+using TicketMasala.Web.Engine.Ingestion.Background;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -30,6 +30,7 @@ namespace TicketMasala.Web.Controllers;
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Upload(IFormFile file)
         {
             if (file == null || file.Length == 0)
@@ -89,6 +90,12 @@ namespace TicketMasala.Web.Controllers;
         {
             var tempPath = TempData["TempFilePath"]?.ToString();
             var originalFileName = TempData["OriginalFileName"]?.ToString() ?? "temp.csv"; // Default to csv if missing
+            
+            if (mapping == null || !mapping.Any())
+            {
+                TempData["Error"] = "No field mapping provided.";
+                return RedirectToAction(nameof(Index));
+            }
 
             if (string.IsNullOrEmpty(tempPath) || !System.IO.File.Exists(tempPath))
             {

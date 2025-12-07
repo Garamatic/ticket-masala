@@ -483,6 +483,23 @@ domains:
 
 ---
 
+## 2.1 Configuration Philosophy
+
+The system prioritizes configuration over hardcoding. YAML files define rules, weights, and behaviors, ensuring flexibility and domain independence.
+
+### Example: Dispatch Weights
+
+```yaml
+weights:
+  skill: 0.4
+  availability: 0.3
+  urgency: 0.3
+```
+
+---
+
+For a detailed critique of the configuration approach, see [Challenges](input/03-technical-critique.md).
+
 ## 5. Implementation Phases
 
 ### Phase 1: Configuration Infrastructure (Current)

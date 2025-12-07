@@ -55,6 +55,12 @@ namespace TicketMasala.Web.Models;
         [Column(TypeName = "TEXT")]
         public required string CustomFieldsJson { get; set; } = "{}";
 
+        // --- GENERATED COLUMNS (The Performance Secret) ---
+        // These properties do not exist in C# memory as settable values.
+        // They are projected by SQLite from the JSON blob.
+        public double? ComputedPriority { get; private set; } // Indexable Priority
+        public string? ComputedCategory { get; private set; } // Indexable Category
+
 
 
         // ═══════════════════════════════════════════

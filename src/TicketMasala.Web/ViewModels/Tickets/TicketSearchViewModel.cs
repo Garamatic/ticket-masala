@@ -29,6 +29,11 @@ namespace TicketMasala.Web.ViewModels.Tickets;
         public int TotalItems { get; set; }
         public int TotalPages => (int)Math.Ceiling((double)TotalItems / PageSize);
 
+        // Dropdowns
+        public List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> Customers { get; set; } = new();
+        public List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> Employees { get; set; } = new();
+        public List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> Projects { get; set; } = new();
+
         // Results
         public List<Ticket> Results { get; set; } = new();
 }

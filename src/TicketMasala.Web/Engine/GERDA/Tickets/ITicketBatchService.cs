@@ -1,6 +1,6 @@
 using TicketMasala.Web.Models;
 
-namespace TicketMasala.Web.Services.Tickets;
+namespace TicketMasala.Web.Engine.GERDA.Tickets;
 
 /// <summary>
 /// Batch service for bulk ticket operations.

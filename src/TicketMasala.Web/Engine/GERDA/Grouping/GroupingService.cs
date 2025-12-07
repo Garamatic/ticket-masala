@@ -3,6 +3,7 @@ using TicketMasala.Web.Models;
 using TicketMasala.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using TicketMasala.Web.Utilities;
 
 namespace TicketMasala.Web.Engine.GERDA.Grouping;
 
@@ -45,29 +46,41 @@ public class GroupingService : IGroupingService
             return null;
         }
 
-        // Get recent tickets from the same customer
-        var recentTicketGuids = await GetGroupableTicketsAsync(
-            ticket.CustomerId ?? string.Empty,
-            _config.GerdaAI.SpamDetection.TimeWindowMinutes);
-
-        // Remove the current ticket from the list
-        recentTicketGuids.Remove(ticketGuid);
-
-        // Check if we exceed the threshold
-        if (recentTicketGuids.Count < _config.GerdaAI.SpamDetection.MaxTicketsPerUser)
+        // V2: Use ContentHash for instant duplicate detection
+        // Fallback: If ContentHash is null (legacy data), compute/save it now
+        if (string.IsNullOrEmpty(ticket.ContentHash))
         {
-            _logger.LogDebug("Ticket {TicketGuid} does not meet grouping threshold", ticketGuid);
+             ticket.ContentHash = TicketHasher.ComputeContentHash(ticket.Description, ticket.CustomerId ?? "");
+             await _context.SaveChangesAsync();
+        }
+
+        // Find GROUPABLE tickets with SAME HASH within WINDOW
+        // We look for existing tickets that are NOT the current one
+        var timeWindowMinutes = _config.GerdaAI.SpamDetection.TimeWindowMinutes;
+        var cutoffTime = DateTime.UtcNow.AddMinutes(-timeWindowMinutes);
+
+        var duplicateCandidates = await _context.Tickets
+            .Where(t => t.ContentHash == ticket.ContentHash)
+            .Where(t => t.CreationDate >= cutoffTime)
+            .Where(t => t.Guid != ticketGuid) // Exclude self
+            .Where(t => t.TicketStatus != Status.Completed && t.TicketStatus != Status.Failed)
+            .OrderByDescending(t => t.CreationDate)
+            .Select(t => t.Guid)
+            .ToListAsync();
+
+        if (duplicateCandidates.Count == 0)
+        {
             return null;
         }
 
         _logger.LogInformation(
-            "GERDA-G: Detected {Count} tickets from same customer in {Window} minutes - grouping ticket {TicketGuid}",
-            recentTicketGuids.Count + 1,
-            _config.GerdaAI.SpamDetection.TimeWindowMinutes,
+            "GERDA-G: Detected {Count} duplicate tickets (Hash: {Hash}) - grouping ticket {TicketGuid}",
+            duplicateCandidates.Count,
+            ticket.ContentHash,
             ticketGuid);
 
-        // Find or create parent ticket
-        var parentTicketGuid = await FindOrCreateParentTicketAsync(ticket, recentTicketGuids);
+        // Find or create parent ticket from these candidates
+        var parentTicketGuid = await FindOrCreateParentTicketAsync(ticket, duplicateCandidates);
         
         if (parentTicketGuid.HasValue && _config.GerdaAI.SpamDetection.Action == "AutoMerge")
         {
@@ -89,6 +102,7 @@ public class GroupingService : IGroupingService
         return parentTicketGuid;
     }
 
+    // Maintained for interface compatibility but refactored to check Hash if simpler listing needed
     public async Task<List<Guid>> GetGroupableTicketsAsync(string customerId, int timeWindowMinutes)
     {
         if (string.IsNullOrEmpty(customerId))
@@ -96,10 +110,15 @@ public class GroupingService : IGroupingService
 
         var cutoffTime = DateTime.UtcNow.AddMinutes(-timeWindowMinutes);
 
+        // This method was "Get by customer", but v2 prefers Hash match.
+        // We will keep it as "Get by customer" for legacy calls, or update callers?
+        // Callers: Only CheckAndGroupTicketAsync calls it internally in previous version.
+        // If interface requires it, we leave it as customer lookup, but CheckAndGroup uses Hash logic above.
+        
         var ticketGuids = await _context.Tickets
             .Where(t => t.CustomerId == customerId)
             .Where(t => t.CreationDate >= cutoffTime)
-            .Where(t => t.ParentTicketGuid == null) // Not already grouped
+            .Where(t => t.ParentTicketGuid == null) 
             .Where(t => t.TicketStatus != Status.Completed && t.TicketStatus != Status.Failed)
             .OrderByDescending(t => t.CreationDate)
             .Select(t => t.Guid)
@@ -134,28 +153,29 @@ public class GroupingService : IGroupingService
             return ticketAsParent;
         }
 
-        // For now, use the first ticket as the parent instead of creating new
-        // This avoids issues with required Customer field
-        var firstTicketGuid = relatedTicketGuids.FirstOrDefault();
-        if (firstTicketGuid != Guid.Empty)
+        // Promote the OLDEST ticket in the group (or the first found) as parent
+        var bestParentGuid = relatedTicketGuids.LastOrDefault(); // Oldest typically
+        if (bestParentGuid != Guid.Empty)
         {
-            var firstTicket = await _context.Tickets.FirstOrDefaultAsync(t => t.Guid == firstTicketGuid);
-            if (firstTicket != null)
+            var parentTicket = await _context.Tickets.FirstOrDefaultAsync(t => t.Guid == bestParentGuid);
+            if (parentTicket != null)
             {
                 var prefix = _config.GerdaAI.SpamDetection.GroupedTicketPrefix;
-                firstTicket.Description = $"{prefix}{firstTicket.Description}";
-                firstTicket.GerdaTags = "Parent-Cluster";
+                if (!parentTicket.Description.StartsWith(prefix))
+                {
+                    parentTicket.Description = $"{prefix}{parentTicket.Description}";
+                    parentTicket.GerdaTags = "Parent-Cluster";
+                }
                 await _context.SaveChangesAsync();
                 
                 _logger.LogInformation(
-                    "GERDA-G: Promoted ticket {TicketGuid} as parent for {Count} grouped tickets",
-                    firstTicketGuid, relatedTicketGuids.Count);
+                    "GERDA-G: Promoted ticket {TicketGuid} as parent for group",
+                    bestParentGuid);
                     
-                return firstTicketGuid;
+                return bestParentGuid;
             }
         }
 
         return null;
     }
-
 }

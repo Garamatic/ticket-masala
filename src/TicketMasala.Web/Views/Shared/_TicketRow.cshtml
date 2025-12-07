@@ -1,0 +1,11 @@
+@model TicketMasala.Web.ViewModels.Tickets.TicketViewModel
+<tr>
+    <td>@Model.Guid</td>
+    <td>@Model.Description</td>
+    <td>@Model.Status</td>
+    <td>@Model.ResponsibleName</td>
+    <td>@Model.Comments.Count</td>
+    <td>
+        <a class="btn btn-sm btn-primary" asp-controller="Ticket" asp-action="Edit" asp-route-id="@Model.Guid">Edit</a>
+    </td>
+</tr>

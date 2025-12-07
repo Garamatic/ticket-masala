@@ -1,0 +1,249 @@
+# Ticket Masala Domain Configuration
+# This file defines domain-specific configurations for the platform.
+# Each domain represents a different use case (IT, Landscaping, Government, etc.)
+
+domains:
+  # ════════════════════════════════════════════════════════════
+  # IT SUPPORT DOMAIN (Default/Legacy)
+  # ════════════════════════════════════════════════════════════
+  IT:
+    display_name: "IT Support"
+    description: "Internal IT helpdesk and support ticketing"
+    
+    entity_labels:
+      work_item: "Ticket"
+      work_container: "Project"
+      work_handler: "Agent"
+    
+    work_item_types:
+      - code: INCIDENT
+        name: "Incident"
+        icon: "fa-fire"
+        color: "#dc3545"
+        default_sla_days: 1
+      - code: SERVICE_REQUEST
+        name: "Service Request"
+        icon: "fa-cogs"
+        color: "#17a2b8"
+        default_sla_days: 5
+      - code: PROBLEM
+        name: "Problem"
+        icon: "fa-exclamation-triangle"
+        color: "#ffc107"
+        default_sla_days: 14
+      - code: CHANGE
+        name: "Change Request"
+        icon: "fa-exchange-alt"
+        color: "#6f42c1"
+        default_sla_days: 21
+    
+    custom_fields:
+      - name: affected_systems
+        label: "Affected Systems"
+        type: multi_select
+        options: ["Email", "VPN", "ERP", "CRM", "Network", "Other"]
+        required: false
+      - name: os_version
+        label: "Operating System"
+        type: text
+        required: false
+      - name: urgency
+        label: "Business Urgency"
+        type: select
+        options: ["Low", "Medium", "High", "Critical"]
+        required: true
+    
+    workflow:
+      states:
+        - code: NEW
+          name: "New"
+          color: "#6c757d"
+        - code: IN_PROGRESS
+          name: "In Progress"
+          color: "#007bff"
+        - code: ON_HOLD
+          name: "On Hold"
+          color: "#ffc107"
+        - code: RESOLVED
+          name: "Resolved"
+          color: "#28a745"
+        - code: CLOSED
+          name: "Closed"
+          color: "#343a40"
+      
+      transitions:
+        NEW: [IN_PROGRESS, CLOSED]
+        IN_PROGRESS: [ON_HOLD, RESOLVED]
+        ON_HOLD: [IN_PROGRESS]
+        RESOLVED: [CLOSED, IN_PROGRESS]
+        CLOSED: []
+    
+    ai_strategies:
+      ranking: 
+        strategy_name: "WSJF"
+        base_formula: "cost_of_delay / job_size"
+        multipliers:
+          - conditions: 
+              - field: "days_until_breach"
+                operator: "<="
+                value: 0
+            value: 10.0
+          - conditions:
+              - field: "days_until_breach"
+                operator: "<="
+                value: 1
+            value: 5.0
+          - conditions:
+              - field: "customer_tier"
+                operator: "=="
+                value: "VIP"
+            value: 2.0
+      dispatching: MatrixFactorization
+      estimating: CategoryLookup
+    
+    ai_prompts:
+      summarize: "Summarize this IT support ticket and suggest troubleshooting steps based on the description and affected systems."
+    
+    integrations:
+      ingestion:
+        - type: email
+          enabled: true
+          config:
+            mailbox: "support@company.com"
+            protocol: IMAP
+            polling_interval_minutes: 5
+        - type: api
+          enabled: true
+          config:
+            endpoint: "/api/v1/tickets/external"
+            auth: api_key
+      
+      outbound:
+        - type: webhook
+          trigger: on_status_change
+          url: ""
+        - type: email
+          trigger: on_resolved
+          template: "ticket_resolved"
+
+  # ════════════════════════════════════════════════════════════
+  # LANDSCAPING / GARDENING DOMAIN
+  # ════════════════════════════════════════════════════════════
+  Gardening:
+    display_name: "Landscaping Services"
+    description: "Garden maintenance and landscaping quote management"
+    
+    entity_labels:
+      work_item: "Service Visit"
+      work_container: "Garden Zone"
+      work_handler: "Horticulturist"
+    
+    work_item_types:
+      - code: QUOTE_REQUEST
+        name: "Quote Request"
+        icon: "fa-leaf"
+        color: "#28a745"
+        default_sla_days: 3
+      - code: SCHEDULED_MAINTENANCE
+        name: "Scheduled Maintenance"
+        icon: "fa-calendar"
+        color: "#17a2b8"
+        default_sla_days: 7
+      - code: PEST_CONTROL
+        name: "Pest Control"
+        icon: "fa-bug"
+        color: "#dc3545"
+        default_sla_days: 2
+      - code: IRRIGATION
+        name: "Irrigation Service"
+        icon: "fa-tint"
+        color: "#007bff"
+        default_sla_days: 5
+    
+    custom_fields:
+      - name: soil_ph
+        label: "Soil pH Level"
+        type: number
+        min: 0
+        max: 14
+        required: false
+      - name: sunlight_exposure
+        label: "Sunlight Exposure"
+        type: select
+        options: ["Full Sun", "Partial Shade", "Full Shade"]
+        required: true
+      - name: plant_species
+        label: "Plant Species"
+        type: text
+        required: false
+      - name: garden_size_sqm
+        label: "Garden Size (sqm)"
+        type: number
+        required: false
+      - name: pest_type
+        label: "Pest Type"
+        type: text
+        required_for_types: [PEST_CONTROL]
+    
+    workflow:
+      states:
+        - code: REQUESTED
+          name: "Requested"
+          color: "#6c757d"
+        - code: QUOTED
+          name: "Quoted"
+          color: "#ffc107"
+        - code: SCHEDULED
+          name: "Scheduled"
+          color: "#17a2b8"
+        - code: IN_PROGRESS
+          name: "In Progress"
+          color: "#007bff"
+        - code: COMPLETED
+          name: "Completed"
+          color: "#28a745"
+        - code: CANCELLED
+          name: "Cancelled"
+          color: "#dc3545"
+      
+      transitions:
+        REQUESTED: [QUOTED, CANCELLED]
+        QUOTED: [SCHEDULED, CANCELLED]
+        SCHEDULED: [IN_PROGRESS, CANCELLED]
+        IN_PROGRESS: [COMPLETED]
+        COMPLETED: []
+        CANCELLED: []
+    
+    ai_strategies:
+      ranking: 
+        strategy_name: "SeasonalPriority"
+        base_formula: "urgency * season_factor"
+        multipliers: []
+      dispatching: ZoneBased
+      estimating: GardenComplexity
+    
+    ai_prompts:
+      summarize: "Summarize this landscaping service request. Note any plant health concerns or seasonal considerations."
+    
+    integrations:
+      ingestion:
+        - type: api
+          enabled: true
+          config:
+            endpoint: "/api/v1/tickets/external"
+            source_filter: "greenscape-landscaping"
+            auth: api_key
+      
+      outbound:
+        - type: webhook
+          trigger: on_status_change
+          url: "https://greenscape.com/api/job-status"
+        - type: email
+          trigger: on_quoted
+          template: "quote_ready"
+
+# Global configuration (applies to all domains)
+global:
+  default_domain: "IT"
+  allow_domain_switching: false
+  config_reload_enabled: true

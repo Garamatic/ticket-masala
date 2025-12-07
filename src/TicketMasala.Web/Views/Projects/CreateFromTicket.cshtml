@@ -1,0 +1,136 @@
+@model TicketMasala.Web.ViewModels.Projects.CreateProjectFromTicketViewModel
+@using Microsoft.AspNetCore.Mvc.Localization
+@inject IViewLocalizer Localizer
+
+@{
+    ViewData["Title"] = "Create Project from Ticket";
+}
+
+<div class="container-fluid px-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h2 fw-bold text-dark">
+                <i class="bi bi-folder-plus me-2"></i>Create Project from Ticket
+            </h1>
+            <p class="text-muted mb-0">Convert this ticket into a managed project with predefined tasks</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Source Ticket Info -->
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-ticket-detailed me-2"></i>Source Ticket</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="text-muted small">Customer</label>
+                        <p class="mb-2 fw-medium">@(Model.CustomerName ?? "Unknown")</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="text-muted small">Description</label>
+                        <div class="p-3 bg-light rounded" style="max-height: 200px; overflow-y: auto;">
+                            @Html.Raw(Model.TicketDescription.Replace("\n", "<br/>"))
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.RecommendedPMName))
+            {
+                <div class="card shadow-sm border-success">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-robot me-2"></i>GERDA Recommendation</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-1 small text-muted">Recommended Project Manager</p>
+                        <p class="h5 text-success mb-0">
+                            <i class="bi bi-person-check me-2"></i>@Model.RecommendedPMName
+                        </p>
+                        <small class="text-muted">Based on workload and historical success</small>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Project Creation Form -->
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-folder2-open me-2"></i>New Project Details</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="CreateFromTicket" method="post">
+                        <input type="hidden" asp-for="TicketId" />
+                        <input type="hidden" asp-for="CustomerId" />
+                        <input type="hidden" asp-for="TicketDescription" />
+                        <input type="hidden" asp-for="RecommendedPMId" />
+
+                        <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="ProjectName" class="form-label fw-medium">Project Name *</label>
+                            <input asp-for="ProjectName" class="form-control" />
+                            <span asp-validation-for="ProjectName" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ProjectDescription" class="form-label fw-medium">Description</label>
+                            <textarea asp-for="ProjectDescription" class="form-control" rows="4"></textarea>
+                            <span asp-validation-for="ProjectDescription" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="SelectedTemplateId" class="form-label fw-medium">
+                                    <i class="bi bi-file-earmark-text me-1"></i>Project Template
+                                </label>
+                                <select asp-for="SelectedTemplateId" asp-items="Model.TemplateList" class="form-select">
+                                    <option value="">-- No Template --</option>
+                                </select>
+                                <small class="text-muted">Template will pre-populate project tasks</small>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="TargetCompletionDate" class="form-label fw-medium">
+                                    <i class="bi bi-calendar-check me-1"></i>Target Completion
+                                </label>
+                                <input asp-for="TargetCompletionDate" type="date" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="SelectedPMId" class="form-label fw-medium">
+                                <i class="bi bi-person-badge me-1"></i>Project Manager
+                                @if (!string.IsNullOrEmpty(Model.RecommendedPMName))
+                                {
+                                    <span class="badge bg-success ms-2">
+                                        <i class="bi bi-robot"></i> AI Recommended
+                                    </span>
+                                }
+                            </label>
+                            <select asp-for="SelectedPMId" asp-items="Model.ProjectManagerList" class="form-select">
+                                <option value="">-- Select Project Manager --</option>
+                            </select>
+                            <span asp-validation-for="SelectedPMId" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-controller="Ticket" asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-plus-circle me-2"></i>Create Project
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

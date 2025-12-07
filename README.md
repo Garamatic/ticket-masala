@@ -3,84 +3,103 @@
 ![Logo](IT-Project2526/docs/visual/logo-green.png)
 
 ## 📌 Info
+
 - **Team**: Charlotte Schröer, Maarten Görtz, Wito De Schrijver, Juan Benjumea
-- **Concept**: Ticketing, Case, and Project Management with AI support
-- **Tech Stack**: Fullstack .NET 8 (MVC), EF Core, Python (AI Microservice)
+- **Branch**: `main`
+- **Concept**: Ticketing, Case, and Project Management with AI support (GERDA)
+- **Tech Stack**: .NET 10, ASP.NET Core MVC, EF Core, SQLite
 
 ---
 
-## 🚀 Quick Start Guide
+## 🚀 Quick Start
 
-### 1. Run the Application
 ```bash
-cd IT-Project2526
-dotnet run
+# Build
+dotnet build
+
+# Run (creates database and seeds on first run)
+dotnet run --project src/TicketMasala.Web/
+
+# Run tests
+dotnet test
 ```
-The database will be automatically created and seeded on the first run.
 
-### 2. Login
-Navigate to `https://localhost:[YOUR_PORT]` (usually 5001 or 5054).
+The app runs at `http://localhost:5054` by default.
 
-### 🔑 Test Accounts
-**Default Passwords:**
-- **Admins**: `Admin123!`
-- **Employees**: `Employee123!`
-- **Customers**: `Customer123!`
+---
 
-| Role | Email | Name | Password |
-|------|-------|------|----------|
-| **Admin** | `admin@ticketmasala.com` | John Administrator | `Admin123!` |
-| **Project Manager** | `mike.pm@ticketmasala.com` | Mike Johnson | `Employee123!` |
-| **Support** | `david.support@ticketmasala.com` | David Martinez | `Employee123!` |
-| **Customer** | `alice.customer@example.com` | Alice Smith | `Customer123!` |
+## 🔑 Test Accounts
 
-*(See `Data/DbSeeder.cs` for full seed data details)*
+The database is seeded automatically on first run.
+
+| Role | Email | Password |
+|------|-------|----------|
+| **Admins** | | `Admin123!` |
+| Admin | `admin@ticketmasala.com` | `Admin123!` |
+| CEO | `sarah.admin@ticketmasala.com` | `Admin123!` |
+| **Employees** | | `Employee123!` |
+| Project Manager | `mike.pm@ticketmasala.com` | `Employee123!` |
+| Project Manager | `lisa.pm@ticketmasala.com` | `Employee123!` |
+| Support | `david.support@ticketmasala.com` | `Employee123!` |
+| Support (EU) | `claude.support@ticketmasala.com` | `Employee123!` |
+| Support (Benelux) | `pieter.support@ticketmasala.com` | `Employee123!` |
+| Support | `emma.support@ticketmasala.com` | `Employee123!` |
+| Finance | `robert.finance@ticketmasala.com` | `Employee123!` |
+| **Customers** | | `Customer123!` |
+| Customer | `alice.customer@example.com` | `Customer123!` |
+| Customer | `bob.jones@example.com` | `Customer123!` |
+| Customer | `carol.white@techcorp.com` | `Customer123!` |
+| Customer | `daniel.brown@startup.io` | `Customer123!` |
+| Customer | `emily.davis@enterprise.net` | `Customer123!` |
+
+> Seed data is defined in `config/seed_data.json`.
 
 ---
 
 ## 🏗️ Project Structure
-Ticket Masala is a lightweight management system with 4 integrated layers:
 
-1.  **Ticketing**: Entry point for issues and requests.
-2.  **Case Management**: Groups tickets into cases for tracking.
-3.  **Project Management**: Bundles cases into projects (e.g., per customer).
-4.  **AI Helper (GERDA)**: Cross-cutting layer providing context, suggestions, and automation.
-
-![ERD-model](IT-Project2526/docs/architecture/erd-dark.drawio.png)
-
----
-
-## 🛠️ Tech Stack & Requirements
--   **Frontend**: ASP.NET Core MVC (Razor Views), Bootstrap
--   **Backend**: .NET 8, C#
--   **Database**: SQL Server / SQLite (EF Core + Migrations)
--   **Auth**: ASP.NET Identity (Role-based: Admin, Employee, Customer)
--   **AI**: ML.NET + Python Microservice capabilities
--   **Hosting**: Docker support ready (`fly.toml`)
-
----
-
-## 🗺️ Roadmap
-- [x] **Core**: Role-based Auth, Multi-tenancy
-- [x] **Ticketing**: Create, Edit, Detail, Index, Batch Operations
-- [x] **Projects**: Overview, Create, Detail
-- [x] **AI**: GERDA Dispatching, Forecasting, Spam Detection
-- [x] **Collaboration**: Rich-text Chat, Notifications, Document Management
-- [ ] **Advanced**: Mobile App, Outlook Integration, 2FA
+```
+ticket-masala/
+├── src/
+│   ├── TicketMasala.Web/          # Main ASP.NET Core MVC app
+│   │   ├── Controllers/           # MVC controllers + API
+│   │   ├── Engine/                # Business logic services
+│   │   │   ├── Core/              # Tickets, Projects, Notifications
+│   │   │   ├── GERDA/             # AI dispatch & estimation
+│   │   │   ├── Compiler/          # Rule engine
+│   │   │   └── Ingestion/         # CSV/Email import
+│   │   ├── Data/                  # EF Core DbContext, Seeder
+│   │   ├── Models/                # Domain entities
+│   │   └── Views/                 # Razor views
+│   └── TicketMasala.Tests/        # Unit & integration tests
+├── config/                        # App configuration
+│   ├── masala_config.json         # Feature flags
+│   ├── masala_domains.yaml        # GERDA domain strategies
+│   └── seed_data.json             # Database seed data
+├── deploy/                        # Deployment scripts & docs
+├── Dockerfile                     # Docker build
+├── docker-compose.yml             # Docker Compose
+└── fly.toml                       # Fly.io config
+```
 
 ---
 
-## ❓ Troubleshooting
+## 🛠️ Troubleshooting
 
-### Login Failed?
-1.  **Check Logs**: Look for "Database already contains users" in the console.
-2.  **Reset Database**: If passwords don't work, drop the database and restart:
-    ```bash
-    dotnet ef database drop
-    dotnet run
-    ```
-3.  **Manual Seed**: Navigate to `/Seed/TestAccounts` in the browser to trigger seeding manually.
+**Database issues?** Delete and recreate:
+```bash
+rm -f src/TicketMasala.Web/app.db*
+dotnet run --project src/TicketMasala.Web/
+```
 
-### App Won't Start?
-- Check `appsettings.json` connection string.
-- Ensure SQL Server is running (if not using SQLite).
+**Port conflict?** Default is `5054`. Change in `Properties/launchSettings.json`.
+
+**Tests:** 142 tests, all passing.
+
+---
+
+## 📚 Documentation
+
+- Deployment guides: `deploy/`
+- Domain configuration: `config/masala_domains.yaml`
+- API: Swagger UI at `/swagger` when running

@@ -1,31 +1,39 @@
 services:
-  app:
-    image: ticket-masala
+  ticket-masala:
+    image: ticket-masala:latest
     build:
       context: .
-      dockerfile: IT-Project2526/Dockerfile
-    ports:
-      - "5054:8080"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=db;Database=TicketMasalaDb;User Id=sa;Password=${DB_PASSWORD:-YourStrong(!)Password};TrustServerCertificate=True;
-    env_file:
-      - .env
-    depends_on:
-      - db
-    restart: on-failure
+      dockerfile: Dockerfile
+    container_name: ticket_masala_engine
+    restart: unless-stopped
 
-  db:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    environment:
-      - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=${DB_PASSWORD:-YourStrong(!)Password}
-    env_file:
-      - .env
+    # LIMITS: We are "Lite", so we prove it.
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+
     ports:
-      - "1433:1433"
+      - "8080:8080"
+
     volumes:
-      - mssql_data:/var/opt/mssql
+      # THE BRAIN: Injecting the rules (Read Only)
+      - ./config:/app/config:ro
 
-volumes:
-  mssql_data:
+      # THE MEMORY: Persisting the DB (Read Write)
+      - ./data:/app/data:rw
+
+    environment:
+      # SQLite connection string
+      - ConnectionStrings__DefaultConnection=Data Source=/app/data/masala.db;Cache=Shared;Mode=ReadWriteCreate
+
+      # Config path for YAML files
+      - MasalaConfig__ConfigPath=/app/config
+
+      # Environment
+      - ASPNETCORE_ENVIRONMENT=Production
+
+      # Override default paths if needed
+      - MASALA_CONFIG_PATH=/app/config
+      - MASALA_DB_PATH=/app/data/masala.db

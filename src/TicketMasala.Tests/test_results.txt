@@ -1,0 +1,47 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  IT-Project2526 -> /Users/juanbenjumea/coding/projects/ticket-masala/IT-Project2526/bin/Debug/net10.0/IT-Project2526.dll
+  IT-Project2526.Tests -> /Users/juanbenjumea/coding/projects/ticket-masala/IT-Project2526.Tests/bin/Debug/net10.0/IT-Project2526.Tests.dll
+Test run for /Users/juanbenjumea/coding/projects/ticket-masala/IT-Project2526.Tests/bin/Debug/net10.0/IT-Project2526.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.1 (arm64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:02.46]     IT_Project2526.Tests.IntegrationTests.LocalizationTests.Homepage_WithAcceptLanguageHeader_ReturnsLocalizedContent(culture: "nl", expectedText: "Projecten") [FAIL]
+[xUnit.net 00:00:02.49]     IT_Project2526.Tests.IntegrationTests.LocalizationTests.Homepage_WithAcceptLanguageHeader_ReturnsLocalizedContent(culture: "fr", expectedText: "Projets") [FAIL]
+[xUnit.net 00:00:02.50]     IT_Project2526.Tests.IntegrationTests.LocalizationTests.Homepage_WithQueryString_ReturnsLocalizedContent(culture: "fr", expectedText: "Projets") [FAIL]
+[xUnit.net 00:00:02.50]     IT_Project2526.Tests.IntegrationTests.LocalizationTests.Homepage_WithQueryString_ReturnsLocalizedContent(culture: "nl", expectedText: "Projecten") [FAIL]
+  Failed IT_Project2526.Tests.IntegrationTests.LocalizationTests.Homepage_WithAcceptLanguageHeader_ReturnsLocalizedContent(culture: "nl", expectedText: "Projecten") [2 s]
+  Error Message:
+   Assert.Contains() Failure: Sub-string not found
+String:    "\n<!DOCTYPE html>\n<html lang="nl">\n<head>\n"···
+Not found: "Projecten"
+  Stack Trace:
+     at IT_Project2526.Tests.IntegrationTests.LocalizationTests.Homepage_WithAcceptLanguageHeader_ReturnsLocalizedContent(String culture, String expectedText) in /Users/juanbenjumea/coding/projects/ticket-masala/IT-Project2526.Tests/IntegrationTests/LocalizationTests.cs:line 55
+--- End of stack trace from previous location ---
+  Failed IT_Project2526.Tests.IntegrationTests.LocalizationTests.Homepage_WithAcceptLanguageHeader_ReturnsLocalizedContent(culture: "fr", expectedText: "Projets") [25 ms]
+  Error Message:
+   Assert.Contains() Failure: Sub-string not found
+String:    "\n<!DOCTYPE html>\n<html lang="fr">\n<head>\n"···
+Not found: "Projets"
+  Stack Trace:
+     at IT_Project2526.Tests.IntegrationTests.LocalizationTests.Homepage_WithAcceptLanguageHeader_ReturnsLocalizedContent(String culture, String expectedText) in /Users/juanbenjumea/coding/projects/ticket-masala/IT-Project2526.Tests/IntegrationTests/LocalizationTests.cs:line 55
+--- End of stack trace from previous location ---
+  Failed IT_Project2526.Tests.IntegrationTests.LocalizationTests.Homepage_WithQueryString_ReturnsLocalizedContent(culture: "fr", expectedText: "Projets") [8 ms]
+  Error Message:
+   Assert.Contains() Failure: Sub-string not found
+String:    "\n<!DOCTYPE html>\n<html lang="fr">\n<head>\n"···
+Not found: "Projets"
+  Stack Trace:
+     at IT_Project2526.Tests.IntegrationTests.LocalizationTests.Homepage_WithQueryString_ReturnsLocalizedContent(String culture, String expectedText) in /Users/juanbenjumea/coding/projects/ticket-masala/IT-Project2526.Tests/IntegrationTests/LocalizationTests.cs:line 35
+--- End of stack trace from previous location ---
+  Failed IT_Project2526.Tests.IntegrationTests.LocalizationTests.Homepage_WithQueryString_ReturnsLocalizedContent(culture: "nl", expectedText: "Projecten") [3 ms]
+  Error Message:
+   Assert.Contains() Failure: Sub-string not found
+String:    "\n<!DOCTYPE html>\n<html lang="nl">\n<head>\n"···
+Not found: "Projecten"
+  Stack Trace:
+     at IT_Project2526.Tests.IntegrationTests.LocalizationTests.Homepage_WithQueryString_ReturnsLocalizedContent(String culture, String expectedText) in /Users/juanbenjumea/coding/projects/ticket-masala/IT-Project2526.Tests/IntegrationTests/LocalizationTests.cs:line 35
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:     4, Passed:    41, Skipped:     0, Total:    45, Duration: 2 s - IT-Project2526.Tests.dll (net10.0)

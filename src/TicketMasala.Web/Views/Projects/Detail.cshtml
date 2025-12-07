@@ -1,0 +1,69 @@
+﻿@model TicketMasala.Web.ViewModels.Projects.ProjectTicketViewModel
+@using System.Linq
+@using TicketMasala.Web.Models
+@using TicketMasala.Web.ViewModels
+
+@{
+    ViewData["Title"] = "Project Detail: " + Model.ProjectDetails.Name;
+}
+
+<h1>Project Details</h1>
+
+<div class="detail-container">
+    <h4>@Model.ProjectDetails.Name</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-3">Description</dt>
+        <dd class="col-sm-9">@Model.ProjectDetails.Description</dd>
+
+        <dt class="col-sm-3">Status</dt>
+        <dd class="col-sm-9">
+            <status-badge status="@Model.ProjectDetails.Status"></status-badge>
+        </dd>
+
+        <dt class="col-sm-3">Project Manager</dt>
+        <dd class="col-sm-9">@Model.ProjectDetails.ProjectManagerName</dd>
+
+        <dt class="col-sm-3">Completion Target</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.ProjectDetails)</dd>
+    </dl>
+</div>
+
+<h3>Taken (@Model.Tasks.Count)</h3>
+
+@if (Model.Tasks != null && Model.Tasks.Any())
+{
+    <table class="project-table">
+        <thead>
+            <tr>
+                <th>Number Ticket</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var ticket in Model.Tasks)
+            {
+                <tr>
+                    <td>
+                        @ticket.Guid
+                    </td>
+                    <td>
+                        <status-badge status="@ticket.TicketStatus"></status-badge>
+                    </td>
+                    <td>
+                        <a asp-controller="Ticket" asp-action="Detail" asp-route-id="@ticket.Guid" class="btn btn-info btn-sm">View Detail</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No Tickets for this Project</p>
+}
+
+<div>
+    <a asp-action="Index" class="btn btn-secondary">Return to Overview</a>
+</div>

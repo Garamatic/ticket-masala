@@ -58,5 +58,11 @@
         Finance,
         CEO
     }
-
+    public enum OpenAIPrompts
+    {
+        Normal,
+        Steps,
+        Quick,
+        //can have more....
+    }
 }

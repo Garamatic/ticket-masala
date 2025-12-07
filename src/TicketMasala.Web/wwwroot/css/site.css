@@ -800,24 +800,207 @@
         width: 100%;
     }
 
-    .page-actions .btn {
-        flex: 1;
+    /* ==========================================
+   GERDA DISPATCH COMPONENTS
+   ========================================== */
+
+    .dispatch-header {
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 0.75rem;
+        margin-bottom: 2rem;
     }
 
-    .filters-bar {
-        flex-direction: column;
+    .ticket-card {
+        background: var(--bg-primary);
+        border-left: 4px solid var(--color-primary);
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 0.5rem;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.3s ease;
+        border: 1px solid var(--border-color);
+        border-left-width: 4px;
     }
 
-    .search-box {
-        max-width: none;
-        width: 100%;
+    .ticket-card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
     }
 
-    .stat-card-value {
-        font-size: 2rem;
+    .ticket-card.selected {
+        border-left-color: #28a745;
+        background: rgba(40, 167, 69, 0.05);
     }
 
-    .dashboard-title {
-        font-size: 1.5rem;
+    .agent-recommendation {
+        background: var(--bg-secondary);
+        border-radius: 0.375rem;
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        border: 2px solid transparent;
+        transition: all 0.2s;
+        cursor: pointer;
     }
+
+    .agent-recommendation:hover {
+        border-color: var(--color-primary);
+        background: var(--bg-primary);
+    }
+
+    .agent-recommendation.top-pick {
+        border-color: #28a745;
+        background: rgba(40, 167, 69, 0.05);
+    }
+
+    .score-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    .score-high {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .score-medium {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .score-low {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .workload-bar {
+        height: 8px;
+        background: var(--border-color);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 0.5rem;
+    }
+
+    .workload-fill {
+        height: 100%;
+        transition: width 0.3s;
+    }
+
+    .workload-low {
+        background: #28a745;
+    }
+
+    .workload-medium {
+        background: #ffc107;
+    }
+
+    .workload-high {
+        background: #dc3545;
+    }
+
+    .priority-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .priority-high {
+        background: #dc3545;
+        color: white;
+    }
+
+    .priority-medium {
+        background: #ffc107;
+        color: #212529;
+    }
+
+    .priority-low {
+        background: #6c757d;
+        color: white;
+    }
+
+    .gerda-tag {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        background: var(--color-primary);
+        color: white;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        margin-right: 0.25rem;
+    }
+
+    .batch-controls {
+        position: sticky;
+        top: var(--header-height);
+        background: var(--bg-primary);
+        padding: 1rem;
+        border-radius: 0.5rem;
+        box-shadow: var(--shadow-md);
+        margin-bottom: 1rem;
+        z-index: 100;
+        border: 1px solid var(--border-color);
+    }
+
+    .badge-dispatching {
+        background-color: #6f42c1;
+        color: white;
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        border-radius: 50px;
+        animation: pulse 1.5s infinite;
+    }
+
+    .badge-anticipation {
+        border: 1px solid #6f42c1;
+        color: #6f42c1;
+        background: transparent;
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        border-radius: 50px;
+    }
+
+    @keyframes pulse {
+        0% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.7;
+        }
+
+        100% {
+            opacity: 1;
+        }
+    }
+}
+
+.page-actions .btn {
+    flex: 1;
+}
+
+.filters-bar {
+    flex-direction: column;
+}
+
+.search-box {
+    max-width: none;
+    width: 100%;
+}
+
+.stat-card-value {
+    font-size: 2rem;
+}
+
+.dashboard-title {
+    font-size: 1.5rem;
 }

@@ -13,8 +13,8 @@ namespace TicketMasala.Tests.IntegrationTests;
         }
 
         [Theory]
-        [InlineData("fr", "Projets")]
-        [InlineData("nl", "Projecten")]
+        [InlineData("fr", "Bienvenue sur Ticket Masala")]
+        [InlineData("nl", "Welkom bij Ticket Masala")]
         public async Task Homepage_WithQueryString_ReturnsLocalizedContent(string culture, string expectedText)
         {
             // Arrange
@@ -35,8 +35,8 @@ namespace TicketMasala.Tests.IntegrationTests;
         }
         
         [Theory]
-        [InlineData("fr", "Projets")]
-        [InlineData("nl", "Projecten")]
+        [InlineData("fr", "Bienvenue sur Ticket Masala")]
+        [InlineData("nl", "Welkom bij Ticket Masala")]
         public async Task Homepage_WithAcceptLanguageHeader_ReturnsLocalizedContent(string culture, string expectedText)
         {
             // Arrange

@@ -87,25 +87,40 @@ namespace TicketMasala.Web.Controllers;
         {
             var forecast = await _anticipationService.CheckCapacityRiskAsync();
             
-            // In a real implementation, we would return structured data for the chart
-            // For now, we'll mock some data points for the view to render
-            var today = DateTime.Today;
-            var dates = Enumerable.Range(0, 30).Select(i => today.AddDays(i).ToString("MMM dd")).ToList();
+            // Get real forecast data (30 days)
+            var forecastData = await _anticipationService.ForecastInflowAsync(30);
+            var capacity = await _anticipationService.GetTeamCapacityAsync();
             
-            // Mock data based on the risk assessment or random for demo
+            var dates = new List<string>();
             var inflow = new List<int>();
-            var capacity = new List<int>();
-            var rnd = new Random();
+            var capacityList = new List<int>();
             
-            for(int i=0; i<30; i++)
+            var today = DateTime.Today;
+
+            // If no data, provide empty structure but don't mock random numbers to avoid misleading users
+            if (forecastData.Count == 0)
             {
-                inflow.Add(rnd.Next(20, 50)); // Daily inflow 20-50 tickets
-                capacity.Add(35); // Constant capacity for now
+               // Fallback for empty state - show next 30 days with 0
+               for(int i=0; i<30; i++)
+               {
+                   dates.Add(today.AddDays(i).ToString("MMM dd"));
+                   inflow.Add(0);
+                   capacityList.Add((int)capacity);
+               }
+            }
+            else
+            {
+                foreach(var item in forecastData)
+                {
+                    dates.Add(item.Date.ToString("MMM dd"));
+                    inflow.Add(item.PredictedCount);
+                    capacityList.Add((int)capacity);
+                }
             }
 
             ViewBag.Dates = JsonConvert.SerializeObject(dates);
             ViewBag.Inflow = JsonConvert.SerializeObject(inflow);
-            ViewBag.Capacity = JsonConvert.SerializeObject(capacity);
+            ViewBag.Capacity = JsonConvert.SerializeObject(capacityList);
             ViewBag.RiskAnalysis = forecast;
 
             return View();

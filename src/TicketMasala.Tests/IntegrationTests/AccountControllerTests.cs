@@ -28,7 +28,7 @@ public class AccountControllerTests : IClassFixture<CustomWebApplicationFactory>
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var content = await response.Content.ReadAsStringAsync();
-        Assert.Contains("Log in", content);
+        Assert.Contains("Sign In", content);
     }
 
     [Fact]

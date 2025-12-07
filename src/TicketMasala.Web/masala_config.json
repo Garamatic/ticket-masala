@@ -3,19 +3,19 @@
     "GerdaAI": {
         "IsEnabled": true,
         "SpamDetection": {
-            "IsEnabled": false
+            "IsEnabled": true
         },
         "ComplexityEstimation": {
-            "IsEnabled": false
+            "IsEnabled": true
         },
         "Ranking": {
-            "IsEnabled": false
+            "IsEnabled": true
         },
         "Dispatching": {
-            "IsEnabled": false
+            "IsEnabled": true
         },
         "Anticipation": {
-            "IsEnabled": false
+            "IsEnabled": true
         }
     }
 }

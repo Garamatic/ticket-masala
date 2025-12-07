@@ -6,141 +6,97 @@
 
 ## 1. Executive Summary
 
-**Datum:** 5 december 2025  
+**Datum:** 7 december 2025  
 **Reviewer:** Marc Dubois, Director Project & IT  
-**Organisatie:** Brussel Fiscaliteit - 382 FTE, €1.2B revenue managed, 85k cases/year  
-**Context:** €350k pilot budget (63 FTE Tax dept), zoekt intelligent dispatch layer BOVENOP SAP/Qlik  
-**Overall Score:** **9.0 / 10** - **Ready for Pilot**
+**Context:** Audit van "Ticket Masala" (Project Dispatch) v3.1 Codebase.  
+**Focus:** Is dit "Vaporware" of een echte oplossing?  
+**Overall Score:** **8.5 / 10** - **Ready for Pilot (with 1 critical fix)**
 
 ### Kernbevindingen
 
 **Strengths (Top 3):**
-1.  **GERDA AI Intelligence (9.5/10):** De 4-factor affinity scoring en WSJF prioritization zijn precies wat we missen in SAP. Het systeem 'begrijpt' wie welk dossier moet krijgen. De forecasting module (ML.NET) is technisch indrukwekkend.
-2.  **Modern Collaboration (9/10):** De implementatie van document management (preview/upload), rich-text chat en @mentions is solide. Dit elimineert de noodzaak voor schaduw-IT tools zoals WhatsApp.
-3.  **Architecture & Maintainability (9/10):** Clean code, Repository pattern, D.I., en configuratie-driven opzet. Dit is geen "spaghetti code" prototype, maar een professioneel fundament dat wij intern kunnen beheren.
+1.  **De AI Engine (GERDA) is ÉCHT:** Ik heb de code in `Engine/GERDA` gecontroleerd. Dit zijn geen hardcoded if-statements. `MatrixFactorizationDispatchingStrategy` gebruikt daadwerkelijk **ML.NET** om agents te ranken op basis van historie en expertise. Dit is precies wat we nodig hebben.
+2.  **Pilot-First Design:** De `ImportController` is geen afterthought. Hij is robuust genoeg voor onze dagelijkse CSV-workflow vanuit SAP. De batch-verwerking is aanwezig.
+3.  **Architecturele Flexibiliteit:** De hele applicatie wordt aangestuurd door `masala_config.json`. We kunnen dit uitrollen voor "Hotel Tax" en volgende maand voor "Invordering" zonder een regel code te herschrijven.
 
 **Dealbreakers (Risico's):**
-1.  **Forecasting UI:** De AI backend voor forecasting is briljant, maar de frontend visualisatie (grafieken, alerts) voor managers is nog minimaal.
-2.  **Enterprise Integrations:** Voor de pilot is de CSV import tool voldoende (en werkt goed), maar voor een organisatiebrede uitrol (382 FTE) is de ontbrekende directe API-koppeling met SCASEPS/Exchange een blocker.
-3.  **Schaalbaarheid:** Onbewezen met 50k+ tickets. Load testing is vereist voor fase 2.
+1.  **The "Demo" Gap in Forecasting:** De backend (`AnticipationService.cs`) bevat briljante ML.NET SSA forecasting logica, maar de **Frontend Controller** (`ManagerController.cs`, line 100) gebruikt nog **RANDOM MOCK DATA** voor de grafieken! Dit moet gefixt worden voordat ik dit aan de CFO laat zien.
+2.  **Configuratie Veiligheid:** Standaard staan alle AI-modules op `false` in `masala_config.json`. Dit is veilig voor deploy, maar we moeten zeker weten dat dit AAN staat voor de pilot start.
 
 **Aanbeveling:**
-**GO voor Pilot (Tax Dept, 63 FTE).** De applicatie is matuur genoeg voor de pilot in Q1 2026. De "must-haves" (docs, chat, search, CSV import) zijn aanwezig en werken. De ROI potentie (vooral door overtime reductie) rechtvaardigt de investering volledig.
+**GO voor Pilot (Tax Dept, 63 FTE).** De basis is solide. De AI is geavanceerd. Als de visualisatie van de forecasting gekoppeld wordt aan de *echte* backend data (die er al is), hebben we een winnaar.
 
 ---
 
-## 2. Functional Review
+## 2. Functional Review (G.E.R.D.A. Scan)
 
-### 2.1 Intelligent Dispatching (Must-Have)
-**Score: 9.5/10**
-De GERDA implementatie is de "killer feature" van dit platform.
--   **Affinity Scoring:** Werkt uitstekend. Het systeem kijkt naar historie en expertise, niet alleen naar "wie heeft tijd".
--   **Batch Operations:** De `ImportController` en batch actions in de UI maken het mogelijk om grote volumes te verwerken, wat essentieel is voor onze "Monday morning" pieken.
--   **Spam Detection:** Clustering werkt en voorkomt vervuiling van de backlog.
+Ik heb de codebase gescand op de 5 beloofde pijlers.
 
-### 2.2 Workload Visibility & Forecasting (Must-Have)
-**Score: 7.5/10**
--   **Backend:** `AnticipationService.cs` met ML.NET Time Series SSA is state-of-the-art. Het kan capaciteitsrisico's detecteren.
--   **Frontend:** Hier laat het steken vallen. Ik zie nog geen interactieve grafieken of "scenario planners" in het dashboard. De data is er, maar de manager kan er niet mee "spelen".
--   **Dashboard:** Het `TeamDashboard` is wel nuttig en toont real-time metrics, wat een enorme verbetering is t.o.v. SAP rapportage.
+### **G - Grouping** (Noise Filter)
+*   **Status:** ✅ **Aanwezig**
+*   **Implementation:** Geregeld via `ImportController` en background services.
+*   **Verdict:** Goed. De batch import workflow dekt onze behoefte om "spam" (dubbele tickets) direct bij de bron aan te pakken.
 
-### 2.3 Collaboration & Context (Must-Have)
-**Score: 9/10**
--   **Chat:** Rich text en internal/external notes toggle werken perfect.
--   **Document Management:** `TicketController` ondersteunt nu upload en preview. Dit was een kritieke eis en is goed opgelost.
--   **Context:** Alles zit in één dossier. Geen e-mails meer die los zweven van het SAP dossier.
+### **E - Estimating** (The Sizer)
+*   **Status:** ✅ **Aanwezig**
+*   **Implementation:** `EstimatingService` met `RandomForest` strategieën.
+*   **Verdict:** De structuur staat er om complexiteit te voorspellen. Voor de pilot moeten we wel zorgen dat we genoeg trainingsdata hebben, anders valt hij terug op defaults.
 
-### 2.4 Quality & Compliance (Must-Have)
-**Score: 8.5/10**
--   **Review Workflow:** Aanwezig en functioneel. Juniors kunnen review aanvragen, seniors kunnen scoren.
--   **Audit Trail:** Basic logging is aanwezig via `AuditService`. Voor volledige GDPR compliance (wie bekeek wat) is mogelijk nog meer detail nodig in de logs, maar de basis staat.
+### **R - Ranking** (The Prioritizer)
+*   **Status:** ✅ **Aanwezig**
+*   **Implementation:** WSJF (Weighted Shortest Job First) logica gevonden in `Ranking` folder.
+*   **Verdict:** Cruciaal. Dit gaat onze SLA-boetes verminderen doordat urgente tickets eindelijk voorrang krijgen op "makkelijke" tickets.
 
-### 2.5 Search & Filter (Must-Have)
-**Score: 9/10**
--   Functioneel compleet. Saved filters, text search, en dynamische dropdowns voor status/agent werken snel en intuïtief.
+### **D - Dispatching** (The Matchmaker)
+*   **Status:** ⭐ **Uitstekend**
+*   **Implementation:** `MatrixFactorizationDispatchingStrategy.cs`.
+*   **Code Bewijs:** Ik zie: `_mlContext.Recommendation().Trainers.MatrixFactorization`.
+*   **Verdict:** Dit is geen sales-praatje. De code traint daadwerkelijk een model op basis van wie in het verleden succesvol tickets heeft gesloten. Chapeau.
+
+### **A - Anticipation** (The Weather Report)
+*   **Status:** ⚠️ **Mixed**
+*   **Backend:** ✅ `ForecastBySsa` (Singular Spectrum Analysis) is geïmplementeerd. Zeer geavanceerd.
+*   **Frontend:** ❌ `ManagerController` negeert de output en toont `rnd.Next(20, 50)` (willekeurige data).
+*   **Verdict:** **FIX THIS.** De backend werkt, maar de manager ziet neppe data. Koppel de View aan de Service output.
 
 ---
 
 ## 3. Technical Review
 
-### 3.1 Architectuur Kwaliteit
-**Oordeel:** Uitstekend.
-De codebase gebruikt moderne patterns (Repository, Observer voor GERDA). Dit betekent dat we componenten kunnen vervangen zonder alles te breken. De keuze voor **ML.NET** is slim: data blijft lokaal (GDPR!) en geen dure cloud API calls. Configuratie via `masala_config.json` geeft ons de flexibiliteit die we zochten zonder telkens developers te bellen.
+### 3.1 Architectuur
+Code kwaliteit is hoog. Dependency Injection wordt correct gebruikt. De scheiding tussen `Engine`, `Data`, en `Web` is helder. Dit is maintainable door ons eigen IT-team.
 
-### 3.2 Scalability & Security
-**Oordeel:** Voldoende voor Pilot, aandachtspunt voor Rollout.
--   **Security:** Role-based access (RBAC) is goed geïmplementeerd. Input validation is overal aanwezig.
--   **Scalability:** De database structuur is degelijk, maar met 85k cases/jaar zal de database groeien. Er is nog geen caching stick (Redis) of geavanceerde indexing strategie zichtbaar voor archief data.
+### 3.2 Configuratie
+Alles wordt beheerd via `masala_config.json`.
+*   **Risico:** In de huidige repo staat `GerdaAI.IsEnabled: true` maar alle sub-modules (Dispatching, Anticipation, etc.) staan op `false`.
+*   **Actie:** Voor Pilot Go-Live moet de config worden aangepast.
 
-### 3.3 Data Import (Pilot Focus)
-**Oordeel:** Goed.
-De `ImportController` bevat logica om CSV files te parsen, mappen en valideren. Dit is cruciaal voor onze pilot waar we afhankelijk zijn van SCASEPS exports. De error handling bij import is aanwezig.
+### 3.3 Data Privacy (AVG/GDPR)
+De ML-modellen draaien **Lokaal** (in-process via ML.NET). Er gaat **geen data naar de cloud** (geen OpenAI/Azure calls voor de kernlogica). Dit is een enorm pluspunt voor de juridische goedkeuring.
 
 ---
 
-## 4. User Experience Review
+## 4. Gap Analysis & Next Steps
 
-### 4.1 Agent Perspectief
-Een verademing vergeleken met SAP.
--   **Snelheid:** Navigatie is direct. Geen wachttijden of complexe menu structuren.
--   **Duidelijkheid:** Status bars, color coding voor prioriteit, en duidelijke actieknoppen.
--   **Mobile:** De interface is responsive (Bootstrap), wat betekent dat agents op tablets kunnen werken (groot pluspunt voor thuiswerk).
+### Critical Fixes (Week 1)
+1.  **Connect Forecasting UI:** Verwijder de mock data in `ManagerController.CapacityForecast`. Laat de grafiek de echte `AnticipationService` data tonen.
+2.  **Enable Modules:** Update `masala_config.json` om G.E.R.D.A. modules te activeren.
 
-### 4.2 Manager Perspectief
-Eindelijk grip op de zaak.
--   Het dashboard geeft direct inzicht in SLA status en workload.
--   Batch assign functionaliteit bespaart uren dispatch werk per dag.
--   Kwaliteitsreviews zijn geïntegreerd, niet meer via mail/Excel.
+### Pilot (Q1 2026)
+*   CSV Import flow is klaar.
+*   Training sessies plannen voor de 63 agenten.
+*   Configuratie instellen op "Hotel Tax" parameters.
 
 ---
 
-## 5. Gap Analysis
-
-### Missing Must-Haves (0-3 months)
-*Geen kritieke functionele gaten meer gevonden voor de PILOT fase.*
-De document management en import tools die eerder ontbraken zijn nu aanwezig.
-
-### Missing Nice-to-Haves (3-12 months)
-1.  **Visuele Forecasting:** Grafieken voor de voorspellingen.
-2.  **API Integraties:** Directe koppeling SCASEPS/Qlik (nodig voor na de pilot).
-3.  **Advanced Audit UI:** Een interface om logs te doorzoeken (nu alleen database/backend).
-
----
-
-## 6. Pilot Feasibility
-
-**Conclusie:** **JA, we kunnen starten.**
-De applicatie voldoet aan de eisen voor de Tax Department pilot (63 FTE).
--   **Data:** We kunnen historische data inladen via CSV.
--   **Proces:** De dagelijkse CSV export/import workflow is werkbaar voor de duur van de pilot.
--   **Risico:** Laag. We draaien in "shadow mode" naast SAP, maar de productiviteitswinst zal snel duidelijk zijn.
-
----
-
-## 7. Cost-Benefit Analysis
-
-**Kosten:**
--   **Implementatie (Pilot):** €350k (Reeds gebudgetteerd).
--   **Licenties/Cloud:** Minimaal (draait op eigen infra of goedkope cloud containers).
-
-**Baten (Geschat):**
--   **Overtime Reductie:** €220k/jaar (door efficiëntere dispatch en minder crisis management).
--   **SLA Boetes:** €340k/jaar (vermeden door betere prioritering).
--   **Consultant Saving:** €600k/jaar (minder afhankelijkheid van SAP wijzigingen).
-
-**ROI:**
-Zelfs in het meest conservatieve scenario is de terugverdientijd minder dan 6 maanden na volledige uitrol.
-
----
-
-## 8. Final Recommendation
+## 5. Final Recommendation
 
 **TIER 1: BUY NOW / START PILOT**
 
-Ticket Masala heeft bewezen geen "vaporware" te zijn. De code is solide, de AI functionaliteit is oprecht innovatief en nuttig (geen gimmick), en de kritieke features voor overheidswerk (documenten, audit, security) zijn aanwezig.
+Ondanks de (slordige) mock-up data in het dashboard, is de technische fundering van dit project indrukwekkend. Het is zeldzaam om "echte" embedded AI te zien in een .NET applicatie in plaats van dure API-wrappers.
 
 **Advies aan Directie:**
-Keur de start van de pilot per **1 januari 2026** goed. Dit is de beste kans die we hebben om onze operationele efficiëntie te moderniseren en de "brain drain" van pensionering op te vangen met GERDA's knowledge capture.
+Start de pilot. De ROI op dispatch-efficiëntie (automatisering van 3 uur werk/dag naar 15 min) is direct zichtbaar. De investering van €350k is veilig omdat de code van ons blijft en lokaal draait.
 
 **Signed,**
 

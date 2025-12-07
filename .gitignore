@@ -398,6 +398,12 @@ FodyWeavers.xsd
 *.msi
 *.msix
 *.msm
+
+# Ignore local publish output and runtime artifacts
+out/
+
+# Ignore in-repo deploy artifacts generated for Linux pilot builds
+deploy/linux-pilot/
 *.msp
 
 # JetBrains Rider
@@ -491,4 +497,14 @@ $RECYCLE.BIN/
 # Docker data directory
 data/*
 !data/.keep
-deploy/
+
+# Generated log files
+*_error.log
+*_log.txt
+
+# Roocode/Cursor IDE database
+roocode.sqlite
+*.sqlite
+
+# Server logs in project directories
+server.log

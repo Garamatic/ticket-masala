@@ -79,7 +79,25 @@ domains:
         CLOSED: []
     
     ai_strategies:
-      ranking: WSJF
+      ranking: 
+        strategy_name: "WSJF"
+        base_formula: "cost_of_delay / job_size"
+        multipliers:
+          - conditions: 
+              - field: "days_until_breach"
+                operator: "<="
+                value: 0
+            value: 10.0
+          - conditions:
+              - field: "days_until_breach"
+                operator: "<="
+                value: 1
+            value: 5.0
+          - conditions:
+              - field: "customer_tier"
+                operator: "=="
+                value: "VIP"
+            value: 2.0
       dispatching: MatrixFactorization
       estimating: CategoryLookup
     
@@ -197,7 +215,10 @@ domains:
         CANCELLED: []
     
     ai_strategies:
-      ranking: SeasonalPriority
+      ranking: 
+        strategy_name: "SeasonalPriority"
+        base_formula: "urgency * season_factor"
+        multipliers: []
       dispatching: ZoneBased
       estimating: GardenComplexity
     

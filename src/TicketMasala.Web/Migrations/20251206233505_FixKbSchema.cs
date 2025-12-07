@@ -10,7 +10,7 @@ namespace TicketMasala.Web.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.Sql("ALTER TABLE AspNetUsers ADD COLUMN ProjectGuid TEXT;");
+            // migrationBuilder.Sql("ALTER TABLE AspNetUsers ADD COLUMN ProjectGuid TEXT;");
         }
 
         /// <inheritdoc />

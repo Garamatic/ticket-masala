@@ -1,16 +1,12 @@
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.GERDA.Models;
+using TicketMasala.Web.Engine.GERDA.Strategies;
+using TicketMasala.Web.Engine.GERDA.Configuration;
 using TicketMasala.Web.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace TicketMasala.Web.Engine.GERDA.Ranking;
 
-using TicketMasala.Web.Data;
-using TicketMasala.Web.Engine.GERDA.Models;
-using TicketMasala.Web.Engine.GERDA.Strategies;
-using TicketMasala.Web.Engine.GERDA.Configuration;
-using TicketMasala.Web.Models;
-using Microsoft.EntityFrameworkCore;
 
 /// <summary>
 /// R - Ranking: WSJF (Weighted Shortest Job First) priority calculation
@@ -23,11 +19,6 @@ public class RankingService : IRankingService
     private readonly IStrategyFactory _strategyFactory;
     private readonly IDomainConfigurationService _domainConfigService;
     private readonly ILogger<RankingService> _logger;
-
-    public RankingService(MasalaDbContext context)
-    {
-        _context = context;
-    }
 
     public RankingService(
         MasalaDbContext context,

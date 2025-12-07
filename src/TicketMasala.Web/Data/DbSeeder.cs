@@ -72,34 +72,25 @@ namespace TicketMasala.Web.Data;
                 // Ensure database is created
                 _logger.LogInformation("Ensuring database exists...");
                 
-                // Use EnsureCreated for SQLite in production (Fly), Migrate for SQL Server in dev
-                if (_environment.IsProduction())
+                // Use EnsureCreated for SQLite (migrations have pending model changes issues)
+                _logger.LogInformation("Using SQLite with EnsureCreated");
+                
+                // First, always try EnsureCreated - it's idempotent (does nothing if DB exists)
+                var created = await _context.Database.EnsureCreatedAsync();
+                _logger.LogInformation("EnsureCreatedAsync result: {Created}", created);
+                
+                // Verify tables exist
+                var tablesExist = await CheckTablesExistAsync();
+                if (!tablesExist)
                 {
-                    _logger.LogInformation("Production mode: Using SQLite with EnsureCreated");
-                    
-                    // First, always try EnsureCreated - it's idempotent (does nothing if DB exists)
-                    var created = await _context.Database.EnsureCreatedAsync();
-                    _logger.LogInformation("EnsureCreatedAsync result: {Created}", created);
-                    
-                    // Verify tables exist
-                    var tablesExist = await CheckTablesExistAsync();
-                    if (!tablesExist)
-                    {
-                        _logger.LogError("CRITICAL: Tables still don't exist after EnsureCreatedAsync!");
-                        throw new Exception("Failed to create database tables");
-                    }
-                    
-                    _logger.LogInformation("SQLite database tables verified");
-                    
-                    // EnsureCreated doesn't run HasData(), so we need to create roles manually
-                    await EnsureRolesExistAsync();
+                    _logger.LogError("CRITICAL: Tables still don't exist after EnsureCreatedAsync!");
+                    throw new Exception("Failed to create database tables");
                 }
-                else
-                {
-                    // Apply migrations for SQL Server in development
-                    await _context.Database.MigrateAsync();
-                    _logger.LogInformation("Database migrations applied successfully");
-                }
+                
+                _logger.LogInformation("SQLite database tables verified");
+                
+                // EnsureCreated doesn't run HasData(), so we need to create roles manually
+                await EnsureRolesExistAsync();
 
                 // Check if we already have users
                 var userCount = await _context.Users.CountAsync();
@@ -155,16 +146,29 @@ namespace TicketMasala.Web.Data;
 
         private async Task<SeedConfig?> LoadSeedConfigurationAsync()
         {
+            // Check for env var override (Docker/Production)
+            var configPath = Environment.GetEnvironmentVariable("MASALA_CONFIG_PATH");
+            
             // Search paths in order of preference
-            var searchPaths = new[]
+            var searchPaths = new List<string>();
+            
+            // 1. Env var path (Docker: /app/config)
+            if (!string.IsNullOrEmpty(configPath))
             {
-                // 1. Production/Runtime root (if copied via Docker/Deploy)
-                Path.Combine(_environment.ContentRootPath, "seed_data.json"),
-                // 2. Config folder in development (relative to src/TicketMasala.Web)
-                Path.Combine(_environment.ContentRootPath, "../../config/seed_data.json"),
-                // 3. Fallback to Data folder if someone put it there
-                Path.Combine(_environment.ContentRootPath, "Data", "seed_data.json")
-            };
+                searchPaths.Add(Path.Combine(configPath, "seed_data.json"));
+            }
+            
+            // 2. Production/Runtime root (if copied via Docker/Deploy)
+            searchPaths.Add(Path.Combine(_environment.ContentRootPath, "seed_data.json"));
+            
+            // 3. Docker standard path
+            searchPaths.Add("/app/config/seed_data.json");
+            
+            // 4. Config folder in development (relative to src/TicketMasala.Web)
+            searchPaths.Add(Path.Combine(_environment.ContentRootPath, "../../config/seed_data.json"));
+            
+            // 5. Fallback to Data folder if someone put it there
+            searchPaths.Add(Path.Combine(_environment.ContentRootPath, "Data", "seed_data.json"));
 
             string? seedFilePath = null;
             foreach (var path in searchPaths)
@@ -186,7 +190,11 @@ namespace TicketMasala.Web.Data;
             try
             {
                 var json = await File.ReadAllTextAsync(seedFilePath);
-                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var options = new JsonSerializerOptions 
+                { 
+                    PropertyNameCaseInsensitive = true,
+                    Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
+                };
                 return JsonSerializer.Deserialize<SeedConfig>(json, options);
             }
             catch (Exception ex)

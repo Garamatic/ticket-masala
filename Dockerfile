@@ -17,7 +17,7 @@ WORKDIR /app
 
 # Create standard mount points
 # We create them here so permissions can be set correctly
-RUN mkdir -p /app/config /app/data
+RUN mkdir -p /app/config /app/data /app/keys
 
 # Create a non-root user for security
 RUN groupadd --system --gid 1001 masala && \
@@ -26,12 +26,16 @@ RUN groupadd --system --gid 1001 masala && \
 # Chown the directories so the app can write to Data but only Read config
 # (Config is technically read-only, but the user needs access to list files)
 RUN chown -R masala:masala /app/data && \
-    chown -R masala:masala /app/config
+    chown -R masala:masala /app/config && \
+    chown -R masala:masala /app/keys
+
+# Copy the binary from build stage (do this as root, then chown)
+COPY --from=build /app/publish .
+
+# Ensure the app files are owned by the non-root user, then switch user
+RUN chown -R masala:masala /app
 
 USER masala
-
-# Copy the binary from build stage
-COPY --from=build --chown=masala:masala /app/publish .
 
 # ENVIRONMENT DEFAULTS
 ENV MASALA_CONFIG_PATH="/app/config"

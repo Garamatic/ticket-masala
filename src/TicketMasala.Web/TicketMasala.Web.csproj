@@ -24,14 +24,8 @@
     <None Include="Controllers\ApplicationUserController.cs" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="masala_config.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="masala_domains.yaml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+  <!-- Config files are now at repo root /config/ -->
+
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="12.0.1" />

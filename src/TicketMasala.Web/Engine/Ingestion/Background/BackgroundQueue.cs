@@ -6,6 +6,7 @@ public interface IBackgroundTaskQueue
 {
     ValueTask QueueBackgroundWorkItemAsync(Func<CancellationToken, ValueTask> workItem);
     ValueTask<Func<CancellationToken, ValueTask>> DequeueAsync(CancellationToken cancellationToken);
+    int QueuedCount { get; }
 }
 
 public class BackgroundQueue : IBackgroundTaskQueue
@@ -21,6 +22,8 @@ public class BackgroundQueue : IBackgroundTaskQueue
         };
         _queue = Channel.CreateBounded<Func<CancellationToken, ValueTask>>(options);
     }
+
+    public int QueuedCount => _queue.Reader.Count;
 
     public async ValueTask QueueBackgroundWorkItemAsync(Func<CancellationToken, ValueTask> workItem)
     {

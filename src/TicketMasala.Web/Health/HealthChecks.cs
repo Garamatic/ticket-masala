@@ -102,8 +102,19 @@ public class BackgroundQueueHealthCheck : IHealthCheck
         HealthCheckContext context,
         CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(HealthCheckResult.Healthy(
-            "Background task queue operational"));
-    }
+        var count = _queue.QueuedCount;
+        var data = new Dictionary<string, object>
+        {
+            { "QueuedCount", count }
+        };
 
+        if (count > 500)
+        {
+            return Task.FromResult(HealthCheckResult.Degraded(
+                $"Background queue backlog high ({count} items)", null, data));
+        }
+
+        return Task.FromResult(HealthCheckResult.Healthy(
+            "Background task queue operational", data));
+    }
 }

@@ -44,19 +44,28 @@ if (!builder.Environment.IsEnvironment("Testing"))
     {
         if (string.Equals(dbProvider, "Sqlite", StringComparison.OrdinalIgnoreCase))
         {
-            // Ensure /data directory exists for SQLite in production/docker
-            if (connectionString != null && connectionString.Contains("/data/"))
+            // Ensure data directory exists for SQLite in containerized environments
+            if (connectionString != null)
             {
-                var dataDir = "/data";
-                if (!Directory.Exists(dataDir))
+                // Extract the Data Source path from connection string
+                var match = System.Text.RegularExpressions.Regex.Match(
+                    connectionString, @"Data Source=([^;]+)");
+                if (match.Success)
                 {
-                    Console.WriteLine($"Creating database directory: {dataDir}");
-                    Directory.CreateDirectory(dataDir);
+                    var dbPath = match.Groups[1].Value;
+                    var dataDir = Path.GetDirectoryName(dbPath);
+                    if (!string.IsNullOrEmpty(dataDir) && !Directory.Exists(dataDir))
+                    {
+                        Console.WriteLine($"Creating database directory: {dataDir}");
+                        Directory.CreateDirectory(dataDir);
+                    }
                 }
             }
             
             Console.WriteLine($"Using SQLite Provider with connection: {connectionString}");
             options.UseSqlite(connectionString);
+            // Suppress pending model changes warning to allow EnsureCreated to work
+            options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
         }
         else
         {
@@ -131,7 +140,14 @@ builder.Services.AddScoped<ICommentObserver, NotificationCommentObserver>();
 
 
 // Domain Configuration Service (loads masala_domains.yaml)
-builder.Services.AddSingleton<TicketMasala.Web.Engine.GERDA.Configuration.IDomainConfigurationService, 
+// NOTE: DomainConfigurationService depends on GERDA rule/compiler services.
+// Register it only when GERDA config is present to avoid DI validation failures
+// when GERDA is intentionally disabled in the runtime image.
+// Register a lightweight RuleCompilerService and DomainConfigurationService by default
+// so other parts of the app that depend on domain config can function even when
+// GERDA config is not provided in the runtime image.
+builder.Services.AddSingleton<TicketMasala.Web.Engine.Compiler.RuleCompilerService>();
+builder.Services.AddSingleton<TicketMasala.Web.Engine.GERDA.Configuration.IDomainConfigurationService,
     TicketMasala.Web.Engine.GERDA.Configuration.DomainConfigurationService>();
 
 // Custom Field Validation Service
@@ -177,7 +193,22 @@ builder.Services.AddScoped<DbSeeder>();
 // ============================================
 // GERDA AI Services Configuration
 // ============================================
-var gerdaConfigPath = Path.Combine(builder.Environment.ContentRootPath, "masala_config.json");
+// Check for env var override (Docker/Production)
+var gerdaConfigEnvPath = Environment.GetEnvironmentVariable("MASALA_CONFIG_PATH");
+string gerdaConfigPath;
+if (!string.IsNullOrEmpty(gerdaConfigEnvPath))
+{
+    gerdaConfigPath = Path.Combine(gerdaConfigEnvPath, "masala_config.json");
+}
+else if (File.Exists("/app/config/masala_config.json"))
+{
+    gerdaConfigPath = "/app/config/masala_config.json";
+}
+else
+{
+    gerdaConfigPath = Path.Combine(builder.Environment.ContentRootPath, "..", "..", "config", "masala_config.json");
+}
+
 if (File.Exists(gerdaConfigPath))
 {
     var gerdaConfigJson = File.ReadAllText(gerdaConfigPath);
@@ -187,6 +218,9 @@ if (File.Exists(gerdaConfigPath))
     if (gerdaConfig != null)
     {
         builder.Services.AddSingleton(gerdaConfig);
+        // Domain Configuration Service (loads masala_domains.yaml)
+        builder.Services.AddSingleton<TicketMasala.Web.Engine.GERDA.Configuration.IDomainConfigurationService,
+            TicketMasala.Web.Engine.GERDA.Configuration.DomainConfigurationService>();
         builder.Services.AddScoped<IGroupingService, GroupingService>();
         builder.Services.AddScoped<IEstimatingService, EstimatingService>();
         
@@ -198,7 +232,7 @@ if (File.Exists(gerdaConfigPath))
         builder.Services.AddScoped<IEstimatingStrategy, CategoryBasedEstimatingStrategy>();
         builder.Services.AddScoped<IDispatchingStrategy, MatrixFactorizationDispatchingStrategy>();
         builder.Services.AddScoped<IDispatchingStrategy, ZoneBasedDispatchingStrategy>();
-        builder.Services.AddSingleton<TicketMasala.Web.Engine.Compiler.RuleCompilerService>();
+        // RuleCompilerService registered globally above
         
         // AI Features
         builder.Services.AddScoped<TicketMasala.Web.Engine.GERDA.Features.IFeatureExtractor, TicketMasala.Web.Engine.GERDA.Features.DynamicFeatureExtractor>();
@@ -433,38 +467,54 @@ using (var scope = app.Services.CreateScope())
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    var domainService = services.GetRequiredService<TicketMasala.Web.Engine.GERDA.Configuration.IDomainConfigurationService>();
-    var strategyFactory = services.GetRequiredService<TicketMasala.Web.Engine.GERDA.Strategies.IStrategyFactory>();
     var logger = services.GetRequiredService<ILogger<Program>>();
 
-    logger.LogInformation("==================================================");
-    logger.LogInformation("Validating AI Strategy Implementations...");
-    logger.LogInformation("==================================================");
-
-    var domains = domainService.GetAllDomains();
-    foreach (var domain in domains.Values)
+    // Only validate AI strategies if the DomainConfigurationService was registered
+    var domainService = services.GetService<TicketMasala.Web.Engine.GERDA.Configuration.IDomainConfigurationService>();
+    if (domainService != null)
     {
-        try
-        {
-            var rankingName = domain.AiStrategies?.Ranking?.StrategyName ?? "WSJF";
-            strategyFactory.GetStrategy<TicketMasala.Web.Engine.GERDA.Ranking.IJobRankingStrategy, double>(rankingName);
+        var strategyFactory = services.GetService<TicketMasala.Web.Engine.GERDA.Strategies.IStrategyFactory>();
 
-            var estimatingName = domain.AiStrategies?.Estimating ?? "CategoryLookup";
-            strategyFactory.GetStrategy<TicketMasala.Web.Engine.GERDA.Estimating.IEstimatingStrategy, int>(estimatingName);
-
-            var dispatchingName = domain.AiStrategies?.Dispatching ?? "MatrixFactorization";
-            strategyFactory.GetStrategy<TicketMasala.Web.Engine.GERDA.Dispatching.IDispatchingStrategy, List<(string AgentId, double Score)>>(dispatchingName);
-            
-            logger.LogInformation("Domain '{Domain}' configured strategies validated successfully.", domain.DisplayName);
-        }
-        catch (Exception ex)
+        if (strategyFactory != null)
         {
-            logger.LogError(ex, "CRITICAL: Configuration error for domain '{Domain}'. Validation FAILED.", domain.DisplayName);
-            // Do not throw here to allow test hosts and non-production runs to continue.
-            // In production you may want to fail fast; for tests and CI we prefer to continue and log the issue.
-            // Continue to next domain.
-            continue;
+            logger.LogInformation("==================================================");
+            logger.LogInformation("Validating AI Strategy Implementations...");
+            logger.LogInformation("==================================================");
+
+            var domains = domainService.GetAllDomains();
+            foreach (var domain in domains.Values)
+            {
+                try
+                {
+                    var rankingName = domain.AiStrategies?.Ranking?.StrategyName ?? "WSJF";
+                    strategyFactory.GetStrategy<TicketMasala.Web.Engine.GERDA.Ranking.IJobRankingStrategy, double>(rankingName);
+
+                    var estimatingName = domain.AiStrategies?.Estimating ?? "CategoryLookup";
+                    strategyFactory.GetStrategy<TicketMasala.Web.Engine.GERDA.Estimating.IEstimatingStrategy, int>(estimatingName);
+
+                    var dispatchingName = domain.AiStrategies?.Dispatching ?? "MatrixFactorization";
+                    strategyFactory.GetStrategy<TicketMasala.Web.Engine.GERDA.Dispatching.IDispatchingStrategy, List<(string AgentId, double Score)>>(dispatchingName);
+                    
+                    logger.LogInformation("Domain '{Domain}' configured strategies validated successfully.", domain.DisplayName);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "CRITICAL: Configuration error for domain '{Domain}'. Validation FAILED.", domain.DisplayName);
+                    // Do not throw here to allow test hosts and non-production runs to continue.
+                    // In production you may want to fail fast; for tests and CI we prefer to continue and log the issue.
+                    // Continue to next domain.
+                    continue;
+                }
+            }
         }
+        else
+        {
+            logger.LogInformation("GERDA strategy factory not registered; skipping AI strategies validation.");
+        }
+    }
+    else
+    {
+        logger.LogInformation("GERDA disabled or not configured; skipping AI strategies validation.");
     }
 }
 

@@ -2,10 +2,11 @@ using TicketMasala.Web.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace TicketMasala.Web.Extensions;
-    /// <summary>
-    /// Extension methods for IQueryable to simplify common query patterns
-    /// </summary>
-    public static class QueryableExtensions
+
+/// <summary>
+/// Extension methods for IQueryable to simplify common query patterns
+/// </summary>
+public static class QueryableExtensions
     {
         /// <summary>
         /// Returns only active (not soft-deleted) entities

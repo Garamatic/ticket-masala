@@ -18,6 +18,8 @@ namespace IT_Project2526.Models
         
         public DateTime? CompletionTarget { get; set; }
         public DateTime? CompletionDate { get; set; }
+        //OpenAI, could use gerda too 
+        public string? AiSummary { get; set; }
 
         // GERDA AI fields
         public int EstimatedEffortPoints { get; set; } = 0;

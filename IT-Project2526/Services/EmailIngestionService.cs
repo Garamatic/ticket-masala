@@ -1,8 +1,9 @@
+using IT_Project2526.AI;
+using IT_Project2526.Models;
+using MailKit;
 using MailKit.Net.Imap;
 using MailKit.Search;
-using MailKit;
 using MimeKit;
-using IT_Project2526.Models;
 
 namespace IT_Project2526.Services
 {
@@ -92,17 +93,20 @@ namespace IT_Project2526.Services
                         context.Customers.Add(customer);
                         await context.SaveChangesAsync();
                     }
-                    
+
                     // Create ticket
+                    var description = $"Subject: {message.Subject}\n\n{message.TextBody ?? message.HtmlBody ?? "No content"}";
+                    var summary = await OpenAiAPIHandler.GetOpenAIResponse(OpenAIPrompts.Summary, description);
                     var ticket = new Ticket
                     {
                         Guid = Guid.NewGuid(),
                         // Ticket has no Title, so we put Subject in Description
-                        Description = $"Subject: {message.Subject}\n\n{message.TextBody ?? message.HtmlBody ?? "No content"}",
+                        Description = description,
                         TicketStatus = Status.Pending,
                         TicketType = TicketType.Incident,
                         Customer = customer,
-                        CustomerId = customer.Id
+                        CustomerId = customer.Id,
+                        AiSummary = summary
                     };
 
                     context.Tickets.Add(ticket);

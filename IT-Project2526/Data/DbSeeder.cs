@@ -1,3 +1,4 @@
+using IT_Project2526.AI;
 using IT_Project2526.Models;
 using IT_Project2526.Utilities;
 using Microsoft.AspNetCore.Identity;
@@ -421,48 +422,62 @@ namespace IT_Project2526.Data
             var pm1 = await _context.Employees.FirstAsync(e => e.Email == "mike.pm@ticketmasala.com");
             var pm2 = await _context.Employees.FirstAsync(e => e.Email == "lisa.pm@ticketmasala.com");
 
+            var description1 = "Complete redesign of the company website with modern UI/UX";
+            var description2 = "Develop iOS and Android mobile applications for customer portal";
+            var description3 = "Migrate on-premise infrastructure to AWS cloud";
+            var description4 = "Integrate Salesforce CRM with internal systems";
+
+            var roadmap1 = await OpenAiAPIHandler.GetOpenAIResponse(OpenAIPrompts.Steps, description1);
+            var roadmap2 = await OpenAiAPIHandler.GetOpenAIResponse(OpenAIPrompts.Steps, description2);
+            var roadmap3 = await OpenAiAPIHandler.GetOpenAIResponse(OpenAIPrompts.Steps, description3);
+            var roadmap4 = await OpenAiAPIHandler.GetOpenAIResponse(OpenAIPrompts.Steps, description4);
+
             var projects = new[]
             {
                 new Project
                 {
                     Name = "Website Redesign",
-                    Description = "Complete redesign of the company website with modern UI/UX",
+                    Description = description1,
                     Status = Status.InProgress,
                     Customer = customer1,
                     ProjectManager = pm1,
                     CompletionTarget = DateTime.UtcNow.AddMonths(2),
-                    CreatorGuid = Guid.Parse((await _userManager.FindByEmailAsync("admin@ticketmasala.com"))!.Id)
+                    CreatorGuid = Guid.Parse((await _userManager.FindByEmailAsync("admin@ticketmasala.com"))!.Id),
+                    ProjectAiRoadmap = roadmap1,
                 },
                 new Project
                 {
                     Name = "Mobile App Development",
-                    Description = "Develop iOS and Android mobile applications for customer portal",
+                    Description = description2,
                     Status = Status.InProgress,
                     Customer = customer2,
                     ProjectManager = pm2,
                     CompletionTarget = DateTime.UtcNow.AddMonths(4),
-                    CreatorGuid = Guid.Parse((await _userManager.FindByEmailAsync("admin@ticketmasala.com"))!.Id)
+                    CreatorGuid = Guid.Parse((await _userManager.FindByEmailAsync("admin@ticketmasala.com"))!.Id),
+                    ProjectAiRoadmap = roadmap2,
                 },
                 new Project
                 {
                     Name = "Cloud Migration",
-                    Description = "Migrate on-premise infrastructure to AWS cloud",
+                    Description = description3,
                     Status = Status.Pending,
                     Customer = customer3,
                     ProjectManager = pm1,
                     CompletionTarget = DateTime.UtcNow.AddMonths(6),
-                    CreatorGuid = Guid.Parse((await _userManager.FindByEmailAsync("admin@ticketmasala.com"))!.Id)
+                    CreatorGuid = Guid.Parse((await _userManager.FindByEmailAsync("admin@ticketmasala.com"))!.Id),
+                    ProjectAiRoadmap = roadmap3
                 },
                 new Project
                 {
                     Name = "CRM Integration",
-                    Description = "Integrate Salesforce CRM with internal systems",
+                    Description = description4,
                     Status = Status.Completed,
                     Customer = customer1,
                     ProjectManager = pm2,
                     CompletionTarget = DateTime.UtcNow.AddMonths(-1),
                     CompletionDate = DateTime.UtcNow.AddDays(-5),
-                    CreatorGuid = Guid.Parse((await _userManager.FindByEmailAsync("admin@ticketmasala.com"))!.Id)
+                    CreatorGuid = Guid.Parse((await _userManager.FindByEmailAsync("admin@ticketmasala.com"))!.Id),
+                    ProjectAiRoadmap = roadmap4
                 }
             };
 
@@ -499,7 +514,7 @@ namespace IT_Project2526.Data
                         new TicketComment { Body = "Client approved the mockup", AuthorId = customer1.Id, CreatedAt = DateTime.UtcNow.AddDays(-2) }
                     },
                     CreatorGuid = Guid.Parse(customer1.Id),
-                    ProjectGuid = project1.Guid
+                    ProjectGuid = project1.Guid,
                 },
                 new Ticket
                 {

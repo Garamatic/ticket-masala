@@ -1,3 +1,4 @@
+using IT_Project2526.AI;
 using IT_Project2526.Models;
 using IT_Project2526.Repositories;
 
@@ -26,6 +27,7 @@ public class TicketFactory : ITicketFactory
     /// </summary>
     public Ticket CreateWithDefaults()
     {
+        
         return new Ticket
         {
             Guid = Guid.NewGuid(),

@@ -60,9 +60,12 @@
     }
     public enum OpenAIPrompts
     {
-        Normal,
-        Steps,
-        Quick,
-        //can have more....
+
+        Normal,        // Just the question as-is
+        Steps,         // Step-by-step explanation
+        Quick,         // Concise answer
+        Detailed,      // In-depth explanation
+        ProsCons,      
+        Summary,       
     }
 }

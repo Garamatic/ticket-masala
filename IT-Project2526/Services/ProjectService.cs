@@ -1,7 +1,8 @@
+using IT_Project2526.AI;
 using IT_Project2526.Models;
-using IT_Project2526.ViewModels;
-using IT_Project2526.Repositories;
 using IT_Project2526.Observers;
+using IT_Project2526.Repositories;
+using IT_Project2526.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -175,7 +176,7 @@ public class ProjectService : IProjectService
                 throw new InvalidOperationException("Selected customer not found");
             }
         }
-
+        var roadmap = await OpenAiAPIHandler.GetOpenAIResponse(OpenAIPrompts.Steps, viewModel.Description);
         var project = new Project
         {
             Name = viewModel.Name,
@@ -183,7 +184,8 @@ public class ProjectService : IProjectService
             Status = Status.Pending,
             Customer = customer,
             CompletionTarget = viewModel.CreationDate,
-            CreatorGuid = Guid.Parse(userId)
+            CreatorGuid = Guid.Parse(userId),
+            ProjectAiRoadmap = roadmap,
         };
 
         // Add primary customer to stakeholders
@@ -232,6 +234,8 @@ public class ProjectService : IProjectService
         {
             foreach (var templateTicket in template.Tickets)
             {
+                var summary = await OpenAiAPIHandler.GetOpenAIResponse(OpenAIPrompts.Summary,templateTicket.Description);
+
                 var ticket = new Ticket
                 {
                     Guid = Guid.NewGuid(),
@@ -245,7 +249,8 @@ public class ProjectService : IProjectService
                     Customer = customer,
                     CustomerId = customer.Id,
                     Project = project,
-                    ProjectGuid = project.Guid
+                    ProjectGuid = project.Guid,
+                    AiSummary = summary,
                 };
                 _context.Tickets.Add(ticket);
             }
@@ -445,6 +450,8 @@ public class ProjectService : IProjectService
         }
 
         // Create project
+        var roadmap = await OpenAiAPIHandler.GetOpenAIResponse(OpenAIPrompts.Steps, ticket.Description);
+
         var project = new Project
         {
             Name = viewModel.ProjectName,
@@ -453,7 +460,8 @@ public class ProjectService : IProjectService
             Customer = customer,
             CompletionTarget = viewModel.TargetCompletionDate,
             CreatorGuid = Guid.Parse(userId),
-            ProjectManagerId = viewModel.SelectedPMId
+            ProjectManagerId = viewModel.SelectedPMId,
+            ProjectAiRoadmap = roadmap,
         };
 
         // Add customer as stakeholder

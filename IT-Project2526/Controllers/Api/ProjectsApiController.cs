@@ -6,6 +6,7 @@ using IT_Project2526.ViewModels;
 using IT_Project2526.Utilities;
 using IT_Project2526.Models;
 using System.Security.Claims;
+using IT_Project2526.AI;
 
 namespace IT_Project2526.Controllers.Api
 {
@@ -386,6 +387,7 @@ namespace IT_Project2526.Controllers.Api
                     }
                 }
 
+                var roadmap = await OpenAiAPIHandler.GetOpenAIResponse(OpenAIPrompts.Steps,model.Description);
                 var project = new Project
                 {
                     Name = model.Name,
@@ -393,7 +395,8 @@ namespace IT_Project2526.Controllers.Api
                     Status = Status.Pending,
                     Customer = customer,
                     CompletionTarget = model.CreationDate,
-                    CreatorGuid = Guid.Parse(userId)
+                    CreatorGuid = Guid.Parse(userId),
+                    ProjectAiRoadmap = roadmap,
                 };
 
                 _context.Projects.Add(project);

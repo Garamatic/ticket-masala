@@ -18,7 +18,7 @@ namespace IT_Project2526.Models
         [NoHtml(ErrorMessage = "Project description cannot contain HTML")]
         [SafeStringLength(5000, ErrorMessage = "Project description cannot exceed 5000 characters")]
         public required string Description { get; set; }
-        
+        public required string? ProjectAiRoadmap { get; set;}
         public Employee? ProjectManager { get; set; }
         public string? ProjectManagerId { get; set; }
         

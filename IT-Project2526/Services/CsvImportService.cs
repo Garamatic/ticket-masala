@@ -3,6 +3,7 @@ using System.Globalization;
 using CsvHelper;
 using CsvHelper.Configuration;
 using ExcelDataReader;
+using IT_Project2526.AI;
 using IT_Project2526.Models;
 
 namespace IT_Project2526.Services
@@ -132,6 +133,7 @@ namespace IT_Project2526.Services
                     }
 
                     // 3. Create Ticket with required properties
+                    var summary = await OpenAiAPIHandler.GetOpenAIResponse(OpenAIPrompts.Summary, description);
                     var ticket = new Ticket
                     {
                         Guid = Guid.NewGuid(),
@@ -139,7 +141,8 @@ namespace IT_Project2526.Services
                         Customer = customer,
                         CustomerId = customer.Id,
                         TicketStatus = Status.Pending,
-                        ResponsibleId = null
+                        ResponsibleId = null,
+                        AiSummary = summary,
                     };
 
                     // 4. Set optional properties

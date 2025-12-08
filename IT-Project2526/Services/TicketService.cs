@@ -255,6 +255,7 @@ namespace IT_Project2526.Services
                 CompletionTarget = ticket.CompletionTarget,
                 CompletionDate = ticket.CompletionDate,
                 Comments = ticket.Comments,
+                AiSummary = ticket.AiSummary,
                 
                 // Relationships
                 ResponsibleName = ticket.Responsible != null

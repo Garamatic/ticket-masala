@@ -100,6 +100,10 @@ namespace TicketMasala.Web.Data;
                 _logger.LogInformation("Creating project templates...");
                 await CreateProjectTemplates();
 
+                // Seed Knowledge Base
+                await SeedKnowledgeBaseAsync();
+                await CreateProjectTemplates();
+
                 if (userCount > 0)
                 {
                     _logger.LogWarning("Database already contains {UserCount} users. Skipping user/project seed.", userCount);
@@ -470,4 +474,112 @@ namespace TicketMasala.Web.Data;
                 _logger.LogInformation("All project templates already exist. Skipping.");
             }
         }
-}
+        
+        private async Task SeedKnowledgeBaseAsync()
+        {
+            if (await _context.KnowledgeBaseArticles.AnyAsync())
+            {
+                _logger.LogInformation("Knowledge Base already has articles. Skipping seed.");
+                return;
+            }
+
+            _logger.LogInformation("Seeding Knowledge Base...");
+
+            var adminUser = await _userManager.FindByEmailAsync("admin@ticketmasala.com");
+            var authorId = adminUser?.Id;
+
+            var articles = new List<KnowledgeBaseArticle>
+            {
+                new KnowledgeBaseArticle
+                {
+                    Id = Guid.NewGuid(),
+                    Title = "Getting Started with Ticket Masala",
+                    Content = @"Welcome to Ticket Masala! This guide will help you get up and running quickly.
+                    
+                    **1. Dashboard Overview**
+                    Your dashboard is the central hub for all your activities. Use the sidebar to navigate between Projects, Tickets, and Team views.
+                    
+                    **2. Creating your first Project**
+                    Navigate to the 'Projects' page and click 'New Project'. giving it a name and selecting a template.
+                    
+                    **3. Raising a Ticket**
+                    Need help? Click 'Create Ticket' from the top bar or 'New Ticket' from the Tickets page.
+                    
+                    For more help, contact your administrator.",
+                    Tags = "getting-started,guide,onboarding",
+                    AuthorId = authorId,
+                    CreatedAt = DateTime.UtcNow.AddDays(-30)
+                },
+                new KnowledgeBaseArticle
+                {
+                    Id = Guid.NewGuid(),
+                    Title = "Understanding Ticket Priorities",
+                    Content = @"Ticket Masala uses a 4-level priority system to ensure critical issues are addressed first.
+                    
+                    **LOW**: Cosmetic issues, minor bugs that do not affect functionality.
+                    **MEDIUM**: Standard bugs, functionality issues with workarounds. default for most tickets.
+                    **HIGH**: Major functionality broken, no workaround available.
+                    **CRITICAL**: System down, data loss risk, security vulnerability. Immediate action required.
+                    
+                    GERDA AI automatically analyzes your ticket description to suggest an appropriate priority.",
+                    Tags = "priority,guide,best-practices",
+                    AuthorId = authorId,
+                    CreatedAt = DateTime.UtcNow.AddDays(-20)
+                },
+                new KnowledgeBaseArticle
+                {
+                    Id = Guid.NewGuid(),
+                    Title = "How to Reset Your Password",
+                    Content = @"If you've forgotten your password, follow these steps:
+                    
+                    1. Go to the Login page.
+                    2. Click the 'Forgot your password?' link.
+                    3. Enter your email address and click 'Submit'.
+                    4. Check your email for a reset link.
+                    5. Click the link and enter a new secure password.
+                    
+                    If you don't receive an email within 5 minutes, check your spam folder.",
+                    Tags = "account,security,password",
+                    AuthorId = authorId,
+                    CreatedAt = DateTime.UtcNow.AddDays(-15)
+                },
+                new KnowledgeBaseArticle
+                {
+                    Id = Guid.NewGuid(),
+                    Title = "GERDA AI Features Explained",
+                    Content = @"GERDA (General Intelligent Routing & Dispatch Agent) is the AI brain of Ticket Masala.
+                    
+                    **Key Features:**
+                    * **Smart Routing**: Automatically assigns tickets to the best-suited agent based on skills and workload.
+                    * **Effort Estimation**: Predicts story points for new tickets based on historical data.
+                    * **Sentiment Analysis**: Detects frustrated customers to flag tickets for senior review.
+                    * **Duplicate Detection**: Warns you if a similar ticket already exists.
+                    
+                    GERDA saves your team hours of manual triage every week.",
+                    Tags = "ai,gerda,features",
+                    AuthorId = authorId,
+                    CreatedAt = DateTime.UtcNow.AddDays(-10)
+                },
+                new KnowledgeBaseArticle
+                {
+                    Id = Guid.NewGuid(),
+                    Title = "Advanced Search Tips",
+                    Content = @"Find what you need faster with these search tricks:
+                    
+                    * Use quotes for exact phrases: `""login error""`
+                    * Filter by status: `status:open`
+                    * Filter by assignee: `assigned:jane`
+                    * Combine filters: `status:open assigned:me priority:high`
+                    
+                    Search is available globally from the top navigation bar.",
+                    Tags = "search,tips,productivity",
+                    AuthorId = authorId,
+                    CreatedAt = DateTime.UtcNow.AddDays(-5)
+                }
+            };
+
+            await _context.KnowledgeBaseArticles.AddRangeAsync(articles);
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("Added {Count} articles to Knowledge Base.", articles.Count);
+        }
+    }

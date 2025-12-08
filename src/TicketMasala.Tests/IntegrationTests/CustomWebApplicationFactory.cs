@@ -41,8 +41,13 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
                 options.UseInMemoryDatabase("InMemoryDbForTesting");
             });
 
-            // Build the service provider.
-            var sp = services.BuildServiceProvider();
+            // Build the service provider with validation disabled for tests
+            // This allows tests to run without GERDA config files
+            var sp = services.BuildServiceProvider(new ServiceProviderOptions
+            {
+                ValidateScopes = false,
+                ValidateOnBuild = false
+            });
 
             // Create a scope to obtain a reference to the database context (MasalaDbContext).
             using (var scope = sp.CreateScope())

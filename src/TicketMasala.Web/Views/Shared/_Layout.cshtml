@@ -1,17 +1,15 @@
 @using Microsoft.AspNetCore.Identity
 @using TicketMasala.Web.Models
 @using TicketMasala.Web
-@using TicketMasala.Web.Resources
-@using Microsoft.Extensions.Localization
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
-@inject IStringLocalizer<SharedResource> Localizer
 
 @{
     var title = ViewData["Title"] ?? "Ticket Masala";
     var description = ViewData["Description"] ?? "Project and Ticket Management System";
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var hideSidebar = ViewData["HideSidebar"] as bool? == true;
 }
 <!DOCTYPE html>
 <html lang="@System.Globalization.CultureInfo.CurrentUICulture.Name">
@@ -31,125 +29,137 @@
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
-    <!-- Bundled CSS (Bootstrap + Design System + Site CSS) -->
-    <link rel="stylesheet" href="~/css/bundle.css" asp-append-version="true" />
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="~/css/design-system.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     
     @RenderSection("Styles", required: false)
 </head>
 <body hx-boost="true">
     <div class="app-wrapper">
         <!-- Sidebar Navigation -->
-        <aside class="app-sidebar" id="sidebar">
-            <div class="navbar-brand">
-                <img class="navbar-logo" src="~/images/logo.png" alt="Ticket Masala" />
-            </div>
-            
-            <nav class="sidebar-nav" aria-label="Main navigation">
-                <ul class="list-unstyled">
-                    <li class="sidebar-item">
-                        <a class="sidebar-link @(currentController == "Home" && currentAction == "Index" ? "active" : "")" 
-                           asp-controller="Home" asp-action="Index">
-                            <i class="fas fa-home sidebar-icon"></i>
-                            <span>@Localizer["Dashboard"]</span>
-                        </a>
-                    </li>
-                    
-                    @if (User.Identity?.IsAuthenticated == true)
-                    {
-                        @if (User.IsInRole("Employee") || User.IsInRole("Admin"))
-                        {
-                            <li class="sidebar-item">
-                                <a class="sidebar-link @(currentController == "Projects" ? "active" : "")" 
-                                   asp-controller="Projects" asp-action="Index">
-                                    <i class="fas fa-folder-open sidebar-icon"></i>
-                                    <span>@Localizer["Projects"]</span>
-                                </a>
-                            </li>
-                            
-                            <li class="sidebar-item">
-                                <a class="sidebar-link @(currentController == "Customer" ? "active" : "")" 
-                                   asp-controller="Customer" asp-action="Index">
-                                    <i class="fas fa-users sidebar-icon"></i>
-                                    <span>@Localizer["Customers"]</span>
-                                </a>
-                            </li>
-                        }
-                        
+        @if (!hideSidebar)
+        {
+            <aside class="app-sidebar" id="sidebar">
+                <div class="navbar-brand">
+                    <img class="navbar-logo" src="~/images/logo.png" alt="Ticket Masala" />
+                </div>
+                
+                <nav class="sidebar-nav" aria-label="Main navigation">
+                    <ul class="list-unstyled">
                         <li class="sidebar-item">
-                            <a class="sidebar-link @(currentController == "Ticket" ? "active" : "")" 
-                               asp-controller="Ticket" asp-action="Index">
-                                <i class="fas fa-ticket-alt sidebar-icon"></i>
-                                <span>@Localizer["Tickets"]</span>
+                            <a class="sidebar-link @(currentController == "Home" && currentAction == "Index" ? "active" : "")" 
+                               asp-controller="Home" asp-action="Index">
+                                <i class="fas fa-home sidebar-icon"></i>
+                                <span>@Localizer["Dashboard"]</span>
                             </a>
                         </li>
                         
-                        <li class="sidebar-item">
-                            <a class="sidebar-link @(currentController == "KnowledgeBase" ? "active" : "")" 
-                               asp-controller="KnowledgeBase" asp-action="Index">
-                                <i class="fas fa-book sidebar-icon"></i>
-                                <span>@Localizer["Knowledge Base"]</span>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            @if (User.IsInRole("Employee") || User.IsInRole("Admin"))
+                            {
+                                <li class="sidebar-item">
+                                    <a class="sidebar-link @(currentController == "Projects" ? "active" : "")" 
+                                       asp-controller="Projects" asp-action="Index">
+                                        <i class="fas fa-folder-open sidebar-icon"></i>
+                                        <span>@Localizer["Projects"]</span>
+                                    </a>
+                                </li>
+                                
+                                <li class="sidebar-item">
+                                    <a class="sidebar-link @(currentController == "Customer" ? "active" : "")" 
+                                       asp-controller="Customer" asp-action="Index">
+                                        <i class="fas fa-users sidebar-icon"></i>
+                                        <span>@Localizer["Customers"]</span>
+                                    </a>
+                                </li>
+                            }
+                            
+                            <li class="sidebar-item">
+                                <a class="sidebar-link @(currentController == "Ticket" ? "active" : "")" 
+                                   asp-controller="Ticket" asp-action="Index">
+                                    <i class="fas fa-ticket-alt sidebar-icon"></i>
+                                    <span>@Localizer["Tickets"]</span>
+                                </a>
+                            </li>
+                            
+                            <li class="sidebar-item">
+                                <a class="sidebar-link @(currentController == "KnowledgeBase" ? "active" : "")" 
+                                   asp-controller="KnowledgeBase" asp-action="Index">
+                                    <i class="fas fa-book sidebar-icon"></i>
+                                    <span>@Localizer["Knowledge Base"]</span>
+                                </a>
+                            </li>
+                            
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <li class="sidebar-item">
+                                    <a class="sidebar-link @(currentController == "Manager" && currentAction == "TeamDashboard" ? "active" : "")" 
+                                       asp-controller="Manager" asp-action="TeamDashboard">
+                                        <i class="fas fa-chart-line sidebar-icon"></i>
+                                        <span>@Localizer["Team Dashboard"]</span>
+                                    </a>
+                                </li>
+                                
+                                <li class="sidebar-item">
+                                    <a class="sidebar-link @(currentController == "Manager" && currentAction == "DispatchBacklog" ? "active" : "")" 
+                                       asp-controller="Manager" asp-action="DispatchBacklog">
+                                        <i class="fas fa-robot sidebar-icon"></i>
+                                        <span>@Localizer["GERDA Dispatch"]</span>
+                                    </a>
+                                </li>
+                                
+                                <!-- Redundant Manager Projects link removed -->
+                            }
+                        }
+                        
+                        <li class="sidebar-item mt-4">
+                            <a class="sidebar-link @(currentAction == "Privacy" ? "active" : "")" 
+                               asp-controller="Home" asp-action="Privacy">
+                                <i class="fas fa-shield-alt sidebar-icon"></i>
+                                <span>@Localizer["Privacy"]</span>
                             </a>
                         </li>
-                        
-                        @if (User.IsInRole("Admin"))
-                        {
-                            <li class="sidebar-item">
-                                <a class="sidebar-link @(currentController == "Manager" && currentAction == "TeamDashboard" ? "active" : "")" 
-                                   asp-controller="Manager" asp-action="TeamDashboard">
-                                    <i class="fas fa-chart-line sidebar-icon"></i>
-                                    <span>@Localizer["Team Dashboard"]</span>
-                                </a>
-                            </li>
-                            
-                            <li class="sidebar-item">
-                                <a class="sidebar-link @(currentController == "Manager" && currentAction == "DispatchBacklog" ? "active" : "")" 
-                                   asp-controller="Manager" asp-action="DispatchBacklog">
-                                    <i class="fas fa-robot sidebar-icon"></i>
-                                    <span>@Localizer["GERDA Dispatch"]</span>
-                                </a>
-                            </li>
-                            
-                            <li class="sidebar-item">
-                                <a class="sidebar-link @(currentController == "Manager" && currentAction == "Projects" ? "active" : "")" 
-                                   asp-controller="Manager" asp-action="Projects">
-                                    <i class="fas fa-tasks sidebar-icon"></i>
-                                    <span>@Localizer["All Projects"]</span>
-                                </a>
-                            </li>
-                        }
-                    }
-                    
-                    <li class="sidebar-item mt-4">
-                        <a class="sidebar-link @(currentAction == "Privacy" ? "active" : "")" 
-                           asp-controller="Home" asp-action="Privacy">
-                            <i class="fas fa-shield-alt sidebar-icon"></i>
-                            <span>@Localizer["Privacy"]</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-        </aside>
+                    </ul>
+                </nav>
+            </aside>
+        }
         
         <!-- Mobile Sidebar Overlay -->
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
         <!-- Main Content Area -->
-        <div class="app-main" id="mainContent">
+        <div class="app-main @(hideSidebar ? "ms-0" : "")" id="mainContent">
             <!-- Top Header -->
             <header class="app-header">
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center gap-3">
-                        <button class="btn btn-outline-primary btn-sm" id="sidebarToggle" aria-label="Toggle sidebar">
-                            <i class="fas fa-bars"></i>
-                        </button>
-                        <h1 class="h5 m-0">@title</h1>
+                        @if (!hideSidebar)
+                        {
+                            <button class="btn btn-outline-primary btn-sm" id="sidebarToggle" aria-label="Toggle sidebar">
+                                <i class="fas fa-bars"></i>
+                            </button>
+                            <h1 class="h5 m-0">@title</h1>
+                        }
                     </div>
+
+                    @if (hideSidebar)
+                    {
+                        <a asp-controller="Home" asp-action="Index" class="d-flex align-items-center text-decoration-none position-absolute start-50 translate-middle-x">
+                            <img src="~/images/logo.png" alt="Ticket Masala" height="42" class="me-2" />
+                            <span class="h4 fw-bold text-dark mb-0 tracking-tight" style="font-family: 'Rajdhani', sans-serif;">Ticket Masala</span>
+                        </a>
+                    }
                     
-                    <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-2">
                         <!-- Search (optional) -->
-                        <div class="search-box d-none d-md-block" style="max-width: 300px;">
-                            <i class="fas fa-search search-icon"></i>
-                            <input type="text" class="form-control" placeholder="@Localizer["Search..."]" />
+                        <div class="search-box d-none d-md-block me-2" style="max-width: 250px;">
+                            <i class="fas fa-search search-icon text-muted"></i>
+                            <input type="text" class="form-control border-0 bg-light" placeholder="@Localizer["Search..."]" style="padding-left: 2.5rem;" />
                         </div>
                         
                         <!-- Notifications -->
@@ -161,51 +171,58 @@
                         }
 
                         <!-- Dark Mode Toggle -->
-                        <button id="themeToggle" class="btn btn-outline-primary btn-sm" aria-label="Toggle dark mode" title="@Localizer["Toggle dark/light mode"]">
+                        <button id="themeToggle" class="btn btn-ghost btn-icon rounded-circle" aria-label="Toggle dark mode" data-bs-toggle="tooltip" title="@Localizer["Toggle theme"]">
                             <i class="fas fa-moon" id="themeIcon"></i>
                         </button>
                         
-                        <ul class="navbar-nav">
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-dark" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="@Localizer["Select Language"]">
-                                    <i class="fas fa-globe fa-lg"></i>
-                                </a>
-                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
-                                    <li><a class="dropdown-item" asp-controller="Culture" asp-action="SetCulture" asp-route-culture="en" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString">English</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Culture" asp-action="SetCulture" asp-route-culture="fr" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString">Français</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Culture" asp-action="SetCulture" asp-route-culture="nl" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString">Nederlands</a></li>
-                                </ul>
-                            </li>
-                        </ul>
+                        <!-- Language Selector -->
+                        <div class="dropdown">
+                            <button class="btn btn-ghost btn-icon rounded-circle" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="@Localizer["Select Language"]">
+                                <i class="fas fa-globe"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg" aria-labelledby="languageDropdown">
+                                <li><h6 class="dropdown-header">@Localizer["Language"]</h6></li>
+                                <li><a class="dropdown-item" asp-controller="Culture" asp-action="SetCulture" asp-route-culture="en" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString"><i class="fas fa-check-circle text-primary me-2 opacity-0"></i>English</a></li>
+                                <li><a class="dropdown-item" asp-controller="Culture" asp-action="SetCulture" asp-route-culture="fr" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString"><i class="fas fa-check-circle text-primary me-2 opacity-0"></i>Français</a></li>
+                                <li><a class="dropdown-item" asp-controller="Culture" asp-action="SetCulture" asp-route-culture="nl" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString"><i class="fas fa-check-circle text-primary me-2 opacity-0"></i>Nederlands</a></li>
+                            </ul>
+                        </div>
+
                         <!-- User Menu -->
-                        <ul class="navbar-nav">
-                            @if (SignInManager.IsSignedIn(User))
-                            {
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle text-dark" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="fas fa-user-circle me-1"></i> @Localizer["Hello {0}!", UserManager.GetUserName(User) ?? "User"]
-                                    </a>
-                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                        <li>
-                                            <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-                                                <button type="submit" class="dropdown-item">
-                                                    <i class="fas fa-sign-out-alt me-2"></i> @Localizer["Logout"]
-                                                </button>
-                                            </form>
-                                        </li>
-                                    </ul>
-                                </li>
-                            }
-                            else
-                            {
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Register">@Localizer["Register"]</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login">@Localizer["Login"]</a>
-                                </li>
-                            }
-                        </ul>
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            <div class="dropdown ms-2">
+                                <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 text-dark text-decoration-none" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                        @(UserManager.GetUserName(User)?.Substring(0, 1).ToUpper() ?? "U")
+                                    </div>
+                                    <span class="d-none d-lg-inline fw-medium small">@Localizer["Account"]</span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg mt-2" aria-labelledby="userDropdown">
+                                    <li>
+                                        <div class="px-3 py-2 border-bottom mb-2">
+                                            <div class="fw-bold text-truncate" style="max-width: 200px;">@UserManager.GetUserName(User)</div>
+                                            <div class="small text-muted">@Localizer["Manage Account"]</div>
+                                        </div>
+                                    </li>
+                                    <li><a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index"><i class="fas fa-user-cog me-2 text-muted"></i> @Localizer["Profile"]</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                                            <button type="submit" class="dropdown-item text-danger">                                                <i class="fas fa-sign-out-alt me-2"></i> @Localizer["Logout"]
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="ms-2">
+                                <a class="btn btn-outline-primary btn-sm me-1" asp-area="Identity" asp-page="/Account/Login">@Localizer["Login"]</a>
+                                <a class="btn btn-primary btn-sm" asp-area="Identity" asp-page="/Account/Register">@Localizer["Register"]</a>
+                            </div>
+                        }
                     </div>
                 </div>
             </header>
@@ -231,8 +248,11 @@
         </div>
     </div>
 
-    <!-- Bundled Scripts (jQuery + Bootstrap + Site.js + Toast.js) -->
-    <script src="~/js/bundle.js" asp-append-version="true"></script>
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/toast.js" asp-append-version="true"></script>
 
     <!-- HTMX Library -->
     <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>

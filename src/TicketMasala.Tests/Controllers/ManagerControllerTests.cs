@@ -48,13 +48,13 @@ public class ManagerControllerTests
         _controller = new ManagerController(
             _mockLogger.Object,
             _mockMetricsService.Object,
+            _mockTicketService.Object,
+            _mockProjectRepository.Object,
+            _mockTicketGenerator.Object,
             _mockDispatchingService.Object,
             _mockRankingService.Object,
             _mockDispatchBacklogService.Object,
-            _mockTicketService.Object,
-            _mockProjectRepository.Object,
-            _mockAnticipationService.Object,
-            _mockTicketGenerator.Object
+            _mockAnticipationService.Object
         );
     }
 
@@ -117,10 +117,18 @@ public class ManagerControllerTests
         // Assert
         var jsonResult = Assert.IsType<JsonResult>(result);
         var data = jsonResult.Value;
+        Assert.NotNull(data);
         var successProperty = data.GetType().GetProperty("success");
         var countProperty = data.GetType().GetProperty("successCount");
 
-        Assert.True((bool)successProperty.GetValue(data));
-        Assert.Equal(1, (int)countProperty.GetValue(data));
+        Assert.NotNull(successProperty);
+        Assert.NotNull(countProperty);
+        var successValue = successProperty.GetValue(data);
+        var countValue = countProperty.GetValue(data);
+        
+        Assert.NotNull(successValue);
+        Assert.NotNull(countValue);
+        Assert.True((bool)successValue);
+        Assert.Equal(1, (int)countValue);
     }
 }

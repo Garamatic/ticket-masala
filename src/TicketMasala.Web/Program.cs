@@ -165,7 +165,6 @@ builder.Services.AddScoped<ITicketCommandService>(sp => sp.GetRequiredService<Ti
 // Factory Pattern for Ticket creation
 builder.Services.AddScoped<ITicketFactory, TicketFactory>();
 
-builder.Services.AddScoped<IDispatchBacklogService, DispatchBacklogService>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
@@ -194,6 +193,10 @@ var gerdaConfigPath = Path.Combine(configBasePath, "masala_config.json");
 
 Console.WriteLine($"Loading configuration from: {configBasePath}");
 
+// Domain Configuration Service (always available, uses defaults if no config file)
+builder.Services.AddSingleton<TicketMasala.Web.Engine.GERDA.Configuration.IDomainConfigurationService,
+    TicketMasala.Web.Engine.GERDA.Configuration.DomainConfigurationService>();
+
 if (File.Exists(gerdaConfigPath))
 {
     var gerdaConfigJson = File.ReadAllText(gerdaConfigPath);
@@ -203,9 +206,6 @@ if (File.Exists(gerdaConfigPath))
     if (gerdaConfig != null)
     {
         builder.Services.AddSingleton(gerdaConfig);
-        // Domain Configuration Service (loads masala_domains.yaml)
-        builder.Services.AddSingleton<TicketMasala.Web.Engine.GERDA.Configuration.IDomainConfigurationService,
-            TicketMasala.Web.Engine.GERDA.Configuration.DomainConfigurationService>();
         builder.Services.AddScoped<IGroupingService, GroupingService>();
         builder.Services.AddScoped<IEstimatingService, EstimatingService>();
         
@@ -230,6 +230,7 @@ if (File.Exists(gerdaConfigPath))
 
         builder.Services.AddScoped<IRankingService, RankingService>();
         builder.Services.AddScoped<IDispatchingService, DispatchingService>();
+        builder.Services.AddScoped<IDispatchBacklogService, DispatchBacklogService>();
         builder.Services.AddScoped<IAnticipationService, AnticipationService>();
         builder.Services.AddScoped<IGerdaService, GerdaService>();
         

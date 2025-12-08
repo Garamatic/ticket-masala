@@ -387,4 +387,44 @@
   <data name="Unknown" xml:space="preserve">
     <value>Inconnu</value>
   </data>
+  <!-- Landing Page New -->
+  <data name="Introducing GERDA AI" xml:space="preserve">
+    <value>Découvrez l'IA GERDA</value>
+  </data>
+  <data name="Stop Drowning in" xml:space="preserve">
+    <value>Arrêtez de vous noyer sous les</value>
+  </data>
+  <data name="Ticket Masala unifies your support tickets, projects, and team workflows into one beautiful, AI-powered platform. Ship faster, stress less." xml:space="preserve">
+    <value>Ticket Masala unifie vos tickets de support, projets et flux de travail d'équipe en une plateforme magnifique alimentée par l'IA. Livrez plus vite, stressez moins.</value>
+  </data>
+  <data name="Get Started Free" xml:space="preserve">
+    <value>Commencer gratuitement</value>
+  </data>
+  <data name="Live Demo" xml:space="preserve">
+    <value>Démo en direct</value>
+  </data>
+  <data name="No credit card required" xml:space="preserve">
+    <value>Pas de carte de crédit requise</value>
+  </data>
+  <data name="14-day free trial" xml:space="preserve">
+    <value>Essai gratuit de 14 jours</value>
+  </data>
+  <data name="AI-Powered Triage" xml:space="preserve">
+    <value>Triage par IA</value>
+  </data>
+  <data name="Let GERDA analyze incoming tickets, estimate effort, and route them to the perfect agent instantly." xml:space="preserve">
+    <value>Laissez GERDA analyser les tickets entrants, estimer l'effort et les router instantanément vers l'agent idéal.</value>
+  </data>
+  <data name="Enterprise Secure" xml:space="preserve">
+    <value>Sécurité Entreprise</value>
+  </data>
+  <data name="Built with security first. Role-based access control, audit logs, and encrypted data storage keep your business safe." xml:space="preserve">
+    <value>Conçu avec la sécurité en priorité. Contrôle d'accès basé sur les rôles, journaux d'audit et stockage de données chiffrées.</value>
+  </data>
+  <data name="Lightning Fast" xml:space="preserve">
+    <value>Rapide comme l'éclair</value>
+  </data>
+  <data name="A modern SPA feel with server-side reliability. Pages load instantly so your team never breaks flow." xml:space="preserve">
+    <value>Une sensation SPA moderne avec la fiabilité côté serveur. Les pages chargent instantanément pour ne jamais interrompre le flux de votre équipe.</value>
+  </data>
 </root>

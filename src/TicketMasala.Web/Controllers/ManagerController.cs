@@ -25,24 +25,24 @@ namespace TicketMasala.Web.Controllers;
     {
         private readonly ILogger<ManagerController> _logger;
         private readonly IMetricsService _metricsService;
-        private readonly IDispatchingService _dispatchingService;
-        private readonly IRankingService _rankingService;
-        private readonly IDispatchBacklogService _dispatchBacklogService;
+        private readonly IDispatchingService? _dispatchingService;
+        private readonly IRankingService? _rankingService;
+        private readonly IDispatchBacklogService? _dispatchBacklogService;
         private readonly ITicketService _ticketService;
         private readonly IProjectRepository _projectRepository;
-        private readonly IAnticipationService _anticipationService;
+        private readonly IAnticipationService? _anticipationService;
         private readonly ITicketGenerator _ticketGenerator;
 
         public ManagerController(
             ILogger<ManagerController> logger,
             IMetricsService metricsService,
-            IDispatchingService dispatchingService,
-            IRankingService rankingService,
-            IDispatchBacklogService dispatchBacklogService,
             ITicketService ticketService,
             IProjectRepository projectRepository,
-            IAnticipationService anticipationService,
-            ITicketGenerator ticketGenerator)
+            ITicketGenerator ticketGenerator,
+            IDispatchingService? dispatchingService = null,
+            IRankingService? rankingService = null,
+            IDispatchBacklogService? dispatchBacklogService = null,
+            IAnticipationService? anticipationService = null)
         {
             _logger = logger;
             _metricsService = metricsService;
@@ -85,6 +85,12 @@ namespace TicketMasala.Web.Controllers;
         /// </summary>
         public async Task<IActionResult> CapacityForecast()
         {
+            if (_anticipationService == null)
+            {
+                TempData["ErrorMessage"] = "GERDA Anticipation service is not available.";
+                return RedirectToAction("TeamDashboard");
+            }
+            
             var forecast = await _anticipationService.CheckCapacityRiskAsync();
             
             // Get real forecast data (30 days)
@@ -182,6 +188,12 @@ namespace TicketMasala.Web.Controllers;
         {
             try
             {
+                if (_dispatchBacklogService == null)
+                {
+                    TempData["ErrorMessage"] = "GERDA Dispatch service is not available.";
+                    return RedirectToAction("TeamDashboard");
+                }
+                
                 _logger.LogInformation("Manager viewing GERDA Dispatch Backlog");
 
                 var viewModel = await _dispatchBacklogService.BuildDispatchBacklogViewModelAsync();
@@ -244,7 +256,7 @@ namespace TicketMasala.Web.Controllers;
                     request,
                     async (ticketGuid) =>
                     {
-                        if (_dispatchingService.IsEnabled)
+                        if (_dispatchingService != null && _dispatchingService.IsEnabled)
                         {
                             return await _dispatchingService.GetRecommendedAgentAsync(ticketGuid);
                         }
@@ -280,9 +292,9 @@ namespace TicketMasala.Web.Controllers;
         {
             try
             {
-                if (!_dispatchingService.IsEnabled)
+                if (_dispatchingService == null || !_dispatchingService.IsEnabled)
                 {
-                    return Json(new { success = false, message = "GERDA Dispatching is disabled" });
+                    return Json(new { success = false, message = "GERDA Dispatching is not available or disabled" });
                 }
 
                 var success = await _dispatchingService.AutoDispatchTicketAsync(ticketGuid);

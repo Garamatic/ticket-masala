@@ -103,14 +103,14 @@
     /* 18px */
     --font-size-xl: 1.25rem;
     /* 20px */
-    --font-size-2xl: 1.5rem;
-    /* 24px */
-    --font-size-3xl: 1.875rem;
-    /* 30px */
-    --font-size-4xl: 2.25rem;
-    /* 36px */
-    --font-size-5xl: 3rem;
-    /* 48px */
+    --font-size-2xl: 1.75rem;
+    /* 28px - bumped */
+    --font-size-3xl: 2.25rem;
+    /* 36px - bumped */
+    --font-size-4xl: 3rem;
+    /* 48px - bumped */
+    --font-size-5xl: 3.75rem;
+    /* 60px - bumped */
 
     /* Font Weights */
     --font-weight-normal: 400;
@@ -555,7 +555,7 @@ a:hover {
     background: var(--bg-primary);
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow);
-    padding: var(--spacing-lg);
+    padding: var(--spacing-xl);
     margin-bottom: var(--spacing-md);
     transition: all var(--transition-base);
     border: 1px solid var(--border-color);
@@ -716,6 +716,18 @@ a:hover {
 .badge-failed {
     background-color: var(--color-failed);
     color: white;
+}
+
+/* ✨ GERDA AI Badge */
+.badge-gerda {
+    background: linear-gradient(135deg, #6366F1 0%, #A855F7 100%);
+    color: white;
+    box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    font-weight: 600;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    letter-spacing: 0.5px;
 }
 
 /* Dispatching and Anticipation Badges */

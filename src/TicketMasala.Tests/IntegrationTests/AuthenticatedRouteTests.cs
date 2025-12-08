@@ -19,8 +19,8 @@ namespace TicketMasala.Tests.IntegrationTests;
 public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
 {
     public TestAuthHandler(IOptionsMonitor<AuthenticationSchemeOptions> options,
-        ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock)
-        : base(options, logger, encoder, clock)
+        ILoggerFactory logger, UrlEncoder encoder)
+        : base(options, logger, encoder)
     {
     }
 
@@ -64,7 +64,11 @@ public class AuthenticatedRouteTests : IClassFixture<CustomWebApplicationFactory
                 .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", options => { });
                 
                 // Seed test user
-                var sp = services.BuildServiceProvider();
+                var sp = services.BuildServiceProvider(new ServiceProviderOptions
+                {
+                    ValidateScopes = false,
+                    ValidateOnBuild = false
+                });
                 using (var scope = sp.CreateScope())
                 {
                     var db = scope.ServiceProvider.GetRequiredService<MasalaDbContext>();

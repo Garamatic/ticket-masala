@@ -193,10 +193,11 @@
 }
 
 .page-title {
-    font-size: 1.5rem;
-    font-weight: 600;
+    font-size: 2.25rem;
+    font-weight: 700;
     margin: 0;
     color: var(--text-primary);
+    letter-spacing: -0.025em;
 }
 
 .page-subtitle {
@@ -329,6 +330,28 @@
     background: linear-gradient(135deg, #10B981, #059669);
 }
 
+.stat-card.primary {
+    background: linear-gradient(135deg, #6366F1, #4F46E5);
+}
+
+.stat-card.accent {
+    background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+}
+
+.stat-card.danger {
+    background: linear-gradient(135deg, #EF4444, #DC2626);
+}
+
+.stat-card-icon {
+    position: absolute;
+    right: 1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 3.5rem;
+    opacity: 0.15;
+    color: #fff;
+}
+
 /* ==========================================
    FILTERS BAR
    ========================================== */
@@ -392,7 +415,8 @@
 }
 
 .table tbody tr:hover {
-    background: var(--bg-secondary);
+    background-color: rgba(99, 102, 241, 0.05) !important;
+    transition: background-color 0.15s ease;
 }
 
 /* Table wrapper for responsive */
@@ -670,6 +694,26 @@
     border-color: var(--color-primary-dark);
 }
 
+.btn-ghost {
+    background: transparent;
+    color: var(--text-secondary);
+    border: none;
+}
+
+.btn-ghost:hover {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--color-primary);
+}
+
+.btn-icon {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .btn-outline-primary {
     color: var(--color-primary);
     border-color: var(--color-primary);
@@ -720,8 +764,14 @@
 
 [data-theme="dark"] .form-control {
     background: var(--bg-secondary);
-    border-color: var(--border-color);
+    border-color: #475569;
     color: var(--text-primary);
+}
+
+[data-theme="dark"] .form-control:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+    background: #1e293b;
 }
 
 [data-theme="dark"] .btn-outline-primary {
@@ -1012,4 +1062,110 @@
     100% {
         opacity: 1;
     }
+}
+
+/* ==========================================
+   GERDA AI STYLES
+   ========================================== */
+
+.agent-recommendation {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.agent-recommendation:hover {
+    background-color: var(--bg-secondary);
+    border-color: var(--color-primary);
+    transform: translateX(2px);
+}
+
+.agent-recommendation.top-pick {
+    border: 2px solid var(--color-primary);
+    background-color: rgba(99, 102, 241, 0.05);
+    position: relative;
+    margin-top: 1rem;
+}
+
+.agent-recommendation.top-pick::before {
+    content: 'Top Match';
+    position: absolute;
+    top: -10px;
+    right: 12px;
+    background: var(--color-primary);
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] .agent-recommendation.top-pick {
+    background-color: rgba(99, 102, 241, 0.1);
+}
+
+.gerda-tag {
+    background-color: rgba(99, 102, 241, 0.1);
+    color: var(--color-primary);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    margin-right: 4px;
+    display: inline-block;
+}
+
+/* Utility for clickable cards */
+.transform-hover {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.transform-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
+    cursor: pointer;
+}
+
+.icon-circle {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+/* Landing Page Utilities */
+.blur-3xl {
+    filter: blur(64px);
+}
+
+.grayscale-logos i {
+    filter: grayscale(100%);
+    opacity: 0.5;
+    transition: all 0.3s ease;
+}
+
+.grayscale-logos i:hover {
+    filter: grayscale(0%);
+    opacity: 1;
+    transform: scale(1.1);
+    color: var(--color-primary) !important;
+}
+
+.letter-spacing-2 {
+    letter-spacing: 2px;
+}
+
+.hover-shadow:hover {
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, .175) !important;
+}
+
+.transition-all {
+    transition: all 0.3s ease;
 }

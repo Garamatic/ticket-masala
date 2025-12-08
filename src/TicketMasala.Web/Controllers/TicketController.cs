@@ -21,7 +21,7 @@ namespace TicketMasala.Web.Controllers;
     [Authorize] // All authenticated users can access tickets
     public class TicketController : Controller
     {
-        private readonly IGerdaService _gerdaService;
+        private readonly IGerdaService? _gerdaService;
         private readonly ITicketService _ticketService;
         private readonly IAuditService _auditService;
         private readonly INotificationService _notificationService;
@@ -32,7 +32,6 @@ namespace TicketMasala.Web.Controllers;
         private readonly ILogger<TicketController> _logger;
 
         public TicketController(
-            IGerdaService gerdaService,
             ITicketService ticketService,
             IAuditService auditService,
             INotificationService notificationService,
@@ -40,7 +39,8 @@ namespace TicketMasala.Web.Controllers;
             MasalaDbContext context,
             IHttpContextAccessor httpContextAccessor,
             IRuleEngineService ruleEngine,
-            ILogger<TicketController> logger)
+            ILogger<TicketController> logger,
+            IGerdaService? gerdaService = null)
         {
             _gerdaService = gerdaService;
             _ticketService = ticketService;
@@ -229,14 +229,22 @@ namespace TicketMasala.Web.Controllers;
                 
                 await _ticketService.UpdateTicketAsync(ticket);
 
-                // Process with GERDA AI
-                _logger.LogInformation("Processing ticket {TicketGuid} with GERDA AI (Domain: {DomainId}, Type: {WorkItemTypeCode})", 
-                    ticket.Guid, ticket.DomainId, ticket.WorkItemTypeCode);
-                await _gerdaService.ProcessTicketAsync(ticket.Guid);
-                
-                var entityLabel = _domainConfig.GetEntityLabels(ticket.DomainId).WorkItem;
-                TempData["Success"] = $"{entityLabel} created successfully! GERDA AI has processed the {entityLabel.ToLower()} (estimated effort, priority, and tags assigned).";
-                _logger.LogInformation("GERDA processing completed for ticket {TicketGuid}", ticket.Guid);
+                // Process with GERDA AI (if available)
+                if (_gerdaService != null)
+                {
+                    _logger.LogInformation("Processing ticket {TicketGuid} with GERDA AI (Domain: {DomainId}, Type: {WorkItemTypeCode})", 
+                        ticket.Guid, ticket.DomainId, ticket.WorkItemTypeCode);
+                    await _gerdaService.ProcessTicketAsync(ticket.Guid);
+                    
+                    var entityLabel = _domainConfig.GetEntityLabels(ticket.DomainId).WorkItem;
+                    TempData["Success"] = $"{entityLabel} created successfully! GERDA AI has processed the {entityLabel.ToLower()} (estimated effort, priority, and tags assigned).";
+                    _logger.LogInformation("GERDA processing completed for ticket {TicketGuid}", ticket.Guid);
+                }
+                else
+                {
+                    var entityLabel = _domainConfig.GetEntityLabels(ticket.DomainId).WorkItem;
+                    TempData["Success"] = $"{entityLabel} created successfully!";
+                }
             }
             catch (Exception ex)
             {

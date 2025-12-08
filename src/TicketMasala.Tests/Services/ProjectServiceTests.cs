@@ -15,7 +15,7 @@ using TicketMasala.Web.Observers;
 using TicketMasala.Web.ViewModels.Projects;
 using TicketMasala.Web.ViewModels.Customers;
 using Microsoft.AspNetCore.Identity;
-using TicketMasala.Web.Data;
+
 
 namespace TicketMasala.Tests.Services;
     public class ProjectServiceTests
@@ -51,7 +51,7 @@ namespace TicketMasala.Tests.Services;
         {
             var store = new Mock<IUserStore<ApplicationUser>>();
             var mockUserManager = new Mock<UserManager<ApplicationUser>>(
-                store.Object, null, null, null, null, null, null, null, null);
+                store.Object, null!, null!, null!, null!, null!, null!, null!, null!);
             return mockUserManager;
         }
 

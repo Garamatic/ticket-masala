@@ -253,7 +253,7 @@ public class DatabaseConstraintTests : IDisposable
         try
         {
             await _fixture.Context.SaveChangesAsync();
-            Assert.NotNull(ticket.Guid); // FK not enforced in SQLite in-memory
+            Assert.NotEqual(Guid.Empty, ticket.Guid); // FK not enforced in SQLite in-memory
         }
         catch (DbUpdateException)
         {

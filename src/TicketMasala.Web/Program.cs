@@ -431,7 +431,7 @@ localizationOptions.RequestCultureProviders.Insert(0, new CookieRequestCulturePr
 
 app.UseRequestLocalization(localizationOptions);
 
-// Seed the database
+// Seed the database (skippable via `SKIP_DB_SEED=true` env var)
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -442,9 +442,17 @@ using (var scope = app.Services.CreateScope())
         logger.LogInformation("==================================================");
         logger.LogInformation("Checking if database seeding is needed...");
         logger.LogInformation("==================================================");
-        
-        var seeder = services.GetRequiredService<DbSeeder>();
-        await seeder.SeedAsync();
+
+        var skipSeedEnv = Environment.GetEnvironmentVariable("SKIP_DB_SEED");
+        if (!string.IsNullOrEmpty(skipSeedEnv) && string.Equals(skipSeedEnv, "true", StringComparison.OrdinalIgnoreCase))
+        {
+            logger.LogInformation("SKIP_DB_SEED=true detected — skipping database seeding.");
+        }
+        else
+        {
+            var seeder = services.GetRequiredService<DbSeeder>();
+            await seeder.SeedAsync();
+        }
         
         logger.LogInformation("==================================================");
         logger.LogInformation("Database check completed");

@@ -106,6 +106,10 @@ public class Ticket : BaseModel
     [ForeignKey("SolvedByArticleId")]
     public KnowledgeBaseArticle? SolvedByArticle { get; set; }
 
+    // AI-generated ticket summary
+    [SafeStringLength(2000, ErrorMessage = "AI summary cannot exceed 2000 characters")]
+    public string? AiSummary { get; set; }
+
     public ReviewStatus ReviewStatus { get; set; } = ReviewStatus.None;
     // QualityReviews deleted
 

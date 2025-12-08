@@ -34,4 +34,8 @@ public class Project : BaseModel
 
     // Department reference (optional, for organizational hierarchy)
     public Guid? DepartmentId { get; set; }
+
+    // AI-generated project roadmap
+    [SafeStringLength(10000, ErrorMessage = "AI roadmap cannot exceed 10000 characters")]
+    public string? ProjectAiRoadmap { get; set; }
 }

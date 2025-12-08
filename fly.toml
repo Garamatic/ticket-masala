@@ -1,29 +1,41 @@
-# Fly.io configuration for IT-Project2526
-# Adjust the app name before first deploy (`fly apps list` to check availability)
-app = "ticket-masala"  # CHANGE if already taken
+# Fly.io configuration for Ticket Masala
+# - Mounts the persistent volume `ticket_data` at /app/data (matches app expectation)
+# - Exposes HTTP/HTTPS and performs a /health check
+app = "ticket-masala"
 primary_region = "ord"
 
 [build]
   dockerfile = "Dockerfile"
 
-[http_service]
+[env]
+  # Application should use this SQLite file path inside the container
+  ConnectionStrings__DefaultConnection = "Data Source=/app/data/ticketmasala.db"
+  # Ensure ASP.NET binds to the correct port used by Fly
+  ASPNETCORE_URLS = "http://+:8080"
+  ASPNETCORE_ENVIRONMENT = "Production"
+
+[[services]]
   internal_port = 8080
-  force_https = true
-  # auto_stop_machines removed due to schema validation; default behavior applies
-  # auto_start_machines removed due to schema validation; default behavior applies
-  min_machines_running = 1
+  protocol = "tcp"
   processes = ["app"]
 
-# Optional basic health check hitting the mapped endpoint (we will add /health)
-[[http_service.checks]]
-  type = "http"
-  method = "get"
-  path = "/health"
-  interval = "15s"
-  timeout = "2s"
-  grace_period = "30s"
+  [[services.ports]]
+    # HTTP traffic from the proxy
+    handlers = ["http"]
+    port = 80
 
-# Persistent volume for SQLite database
+  [[services.ports]]
+    # TLS termination is handled by Fly; enable HTTP+TLS handlers on 443
+    handlers = ["tls", "http"]
+    port = 443
+
+  [[services.http_checks]]
+    # Health check hitting the app's /health endpoint
+    path = "/health"
+    interval = "15s"
+    timeout = "2s"
+    grace_period = "30s"
+
 [[mounts]]
   source = "ticket_data"
-  destination = "/data"
+  destination = "/app/data"

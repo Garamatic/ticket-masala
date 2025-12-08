@@ -1,6 +1,6 @@
 # IT-Project-25/26 - Ticket Masala
 
-![Logo](IT-Project2526/docs/visual/logo-green.png)
+![Logo](src/TicketMasala.Web/wwwroot/images/full-logo.png)
 
 ## 📌 Info
 

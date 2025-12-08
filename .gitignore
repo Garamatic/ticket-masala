@@ -508,3 +508,21 @@ roocode.sqlite
 
 # Server logs in project directories
 server.log
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Ticket Masala Configuration Files (Core-Pro Split)
+# ═══════════════════════════════════════════════════════════════════════════
+# Core version: *.example.* files are tracked (they're examples)
+# Pro version: Override these patterns in your Pro repo to track business configs
+
+# Local configuration overrides (never commit these)
+config/masala_config.local.json
+config/**/local_*.yaml
+config/**/local_*.json
+
+# Pro-specific configuration directory (for Pro repo only)
+config-pro/
+
+# Backup configuration files
+config/**/*.bak
+config/**/*~

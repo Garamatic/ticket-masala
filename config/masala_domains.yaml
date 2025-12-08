@@ -1,6 +1,20 @@
+# ═══════════════════════════════════════════════════════════════════════════
 # Ticket Masala Domain Configuration
+# ═══════════════════════════════════════════════════════════════════════════
+#
 # This file defines domain-specific configurations for the platform.
-# Each domain represents a different use case (IT, Landscaping, Government, etc.)
+# Each domain represents a different use case with custom workflows, AI strategies,
+# and integrations.
+#
+# Included domains:
+# - IT Support: Internal helpdesk and support ticketing
+# - Landscaping Services: Garden maintenance and service management
+#
+# To customize for your organization:
+# - Modify existing domains or add new ones
+# - Adjust workflows, SLAs, and AI strategies to match your processes
+# - Use MASALA_CONFIG_PATH environment variable for deployment-specific configs
+# ═══════════════════════════════════════════════════════════════════════════
 
 domains:
   # ════════════════════════════════════════════════════════════
@@ -109,7 +123,7 @@ domains:
         - type: email
           enabled: true
           config:
-            mailbox: "support@company.com"
+            mailbox: "support@example.com"
             protocol: IMAP
             polling_interval_minutes: 5
         - type: api

@@ -1,0 +1,21 @@
+{
+    "AppInstanceName": "Ticket Masala Test",
+    "GerdaAI": {
+        "IsEnabled": true,
+        "SpamDetection": {
+            "IsEnabled": true
+        },
+        "ComplexityEstimation": {
+            "IsEnabled": true
+        },
+        "Ranking": {
+            "IsEnabled": true
+        },
+        "Dispatching": {
+            "IsEnabled": true
+        },
+        "Anticipation": {
+            "IsEnabled": true
+        }
+    }
+}

@@ -29,20 +29,10 @@ public class DomainConfigurationService : IDomainConfigurationService, IDisposab
         _environment = environment;
         _ruleCompiler = ruleCompiler;
         
-        // Check for env var override (Docker/Production)
-        var configPath = Environment.GetEnvironmentVariable("MASALA_CONFIG_PATH");
-        if (!string.IsNullOrEmpty(configPath))
-        {
-            _configFilePath = Path.Combine(configPath, "masala_domains.yaml");
-        }
-        else if (File.Exists("/app/config/masala_domains.yaml"))
-        {
-            _configFilePath = "/app/config/masala_domains.yaml";
-        }
-        else
-        {
-            _configFilePath = Path.Combine(_environment.ContentRootPath, "..", "..", "config", "masala_domains.yaml");
-        }
+        // Use centralized configuration path resolution
+        _configFilePath = TicketMasala.Web.Configuration.ConfigurationPaths.GetConfigFilePath(
+            _environment.ContentRootPath, 
+            "masala_domains.yaml");
         
         _config = new MasalaDomainsConfig();
         

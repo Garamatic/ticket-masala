@@ -146,49 +146,22 @@ namespace TicketMasala.Web.Data;
 
         private async Task<SeedConfig?> LoadSeedConfigurationAsync()
         {
-            // Check for env var override (Docker/Production)
-            var configPath = Environment.GetEnvironmentVariable("MASALA_CONFIG_PATH");
-            
-            // Search paths in order of preference
-            var searchPaths = new List<string>();
-            
-            // 1. Env var path (Docker: /app/config)
-            if (!string.IsNullOrEmpty(configPath))
-            {
-                searchPaths.Add(Path.Combine(configPath, "seed_data.json"));
-            }
-            
-            // 2. Production/Runtime root (if copied via Docker/Deploy)
-            searchPaths.Add(Path.Combine(_environment.ContentRootPath, "seed_data.json"));
-            
-            // 3. Docker standard path
-            searchPaths.Add("/app/config/seed_data.json");
-            
-            // 4. Config folder in development (relative to src/TicketMasala.Web)
-            searchPaths.Add(Path.Combine(_environment.ContentRootPath, "../../config/seed_data.json"));
-            
-            // 5. Fallback to Data folder if someone put it there
-            searchPaths.Add(Path.Combine(_environment.ContentRootPath, "Data", "seed_data.json"));
+            // Use centralized configuration path resolution
+            var seedFilePath = TicketMasala.Web.Configuration.ConfigurationPaths.GetConfigFilePath(
+                _environment.ContentRootPath, 
+                "seed_data.json");
 
-            string? seedFilePath = null;
-            foreach (var path in searchPaths)
+            if (!File.Exists(seedFilePath))
             {
-                if (File.Exists(path))
-                {
-                    seedFilePath = path;
-                    _logger.LogInformation("Found seed data configuration at: {Path}", path);
-                    break;
-                }
-            }
-
-            if (seedFilePath == null)
-            {
-                _logger.LogError("Seed data file (seed_data.json) not found in any of the search paths.");
+                _logger.LogWarning("Seed data file not found at: {Path}", seedFilePath);
+                _logger.LogWarning("Skipping seed data. The database will be empty.");
+                _logger.LogInformation("To add seed data, create a seed_data.json file in your config directory.");
                 return null;
             }
 
             try
             {
+                _logger.LogInformation("Loading seed data from: {Path}", seedFilePath);
                 var json = await File.ReadAllTextAsync(seedFilePath);
                 var options = new JsonSerializerOptions 
                 { 

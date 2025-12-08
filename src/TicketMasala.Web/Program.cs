@@ -189,21 +189,10 @@ builder.Services.AddScoped<DbSeeder>();
 // ============================================
 // GERDA AI Services Configuration
 // ============================================
-// Check for env var override (Docker/Production)
-var gerdaConfigEnvPath = Environment.GetEnvironmentVariable("MASALA_CONFIG_PATH");
-string gerdaConfigPath;
-if (!string.IsNullOrEmpty(gerdaConfigEnvPath))
-{
-    gerdaConfigPath = Path.Combine(gerdaConfigEnvPath, "masala_config.json");
-}
-else if (File.Exists("/app/config/masala_config.json"))
-{
-    gerdaConfigPath = "/app/config/masala_config.json";
-}
-else
-{
-    gerdaConfigPath = Path.Combine(builder.Environment.ContentRootPath, "..", "..", "config", "masala_config.json");
-}
+var configBasePath = TicketMasala.Web.Configuration.ConfigurationPaths.GetConfigBasePath(builder.Environment.ContentRootPath);
+var gerdaConfigPath = Path.Combine(configBasePath, "masala_config.json");
+
+Console.WriteLine($"Loading configuration from: {configBasePath}");
 
 if (File.Exists(gerdaConfigPath))
 {
@@ -247,13 +236,15 @@ if (File.Exists(gerdaConfigPath))
         // Register GERDA Background Service for automated maintenance
         builder.Services.AddHostedService<GerdaBackgroundService>();
         
-        Console.WriteLine("GERDA AI Services registered successfully (G+E+R+D+A + Background Jobs)");
+        Console.WriteLine("GERDA AI services initialized successfully");
     }
 }
 else
 {
-    Console.WriteLine($"Warning: GERDA config not found at {gerdaConfigPath}");
+    Console.WriteLine($"Note: GERDA config not found at {gerdaConfigPath}");
+    Console.WriteLine("Application will run with basic ticketing functionality");
 }
+
 
 // Add Memory Cache
 builder.Services.AddMemoryCache();

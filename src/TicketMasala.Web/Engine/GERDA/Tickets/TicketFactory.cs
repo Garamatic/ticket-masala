@@ -27,6 +27,7 @@ public class TicketFactory : ITicketFactory
     /// </summary>
     public Ticket CreateWithDefaults()
     {
+        
         return new Ticket
         {
             Guid = Guid.NewGuid(),
@@ -42,7 +43,6 @@ public class TicketFactory : ITicketFactory
             EstimatedEffortPoints = 0,
             Comments = new List<TicketComment>(),
             SubTickets = new List<Ticket>(),
-            // QualityReviews removed
         };
     }
 
@@ -125,7 +125,6 @@ public class TicketFactory : ITicketFactory
             Comments = new List<TicketComment>(),
             SubTickets = new List<Ticket>(),
             // V2 Grouping: Compute Hash
-            // If customer is null, use senderEmail as identifier for hash to ensure consistency
             ContentHash = TicketHasher.ComputeContentHash(description, customer?.Id ?? senderEmail)
         };
         
@@ -139,6 +138,4 @@ public class TicketFactory : ITicketFactory
         
         return ticket;
     }
-
-
 }

@@ -10,12 +10,13 @@ public class TicketDetailsViewModel
     // Core Ticket Information
     public Guid Guid { get; set; }
     public string Description { get; set; } = string.Empty;
+    public required string AiSummary {  get; set; }
+    public string? AiRoadMap { get; set; }
     public Status TicketStatus { get; set; }
     public TicketType? TicketType { get; set; }
     public DateTime CreationDate { get; set; }
     public DateTime? CompletionTarget { get; set; }
     public DateTime? CompletionDate { get; set; }
-    
     // Relationships
     public string? CustomerName { get; set; }
     public string? CustomerId { get; set; }

@@ -9,6 +9,7 @@ using TicketMasala.Web.Models;
 using TicketMasala.Web.Data;
 using System.Security.Claims;
 using TicketMasala.Web.Engine.Projects;
+using TicketMasala.Web.AI;
 
 namespace TicketMasala.Web.Controllers.Api;
     /// <summary>
@@ -172,7 +173,7 @@ namespace TicketMasala.Web.Controllers.Api;
         }
 
         /// <summary>
-        /// Create a new project
+        /// Create a new project with optional AI-generated roadmap
         /// </summary>
         /// <param name="model">Project creation data</param>
         /// <returns>Created project ID</returns>
@@ -198,6 +199,7 @@ namespace TicketMasala.Web.Controllers.Api;
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
                     ?? throw new UnauthorizedAccessException("User ID not found");
 
+                // Use ProjectService to create the project (handles customer creation, AI roadmap, etc.)
                 var project = await _projectService.CreateProjectAsync(model, userId);
 
                 return CreatedAtAction(
@@ -214,6 +216,28 @@ namespace TicketMasala.Web.Controllers.Api;
                 _logger.LogError(ex, "API: Error creating project");
                 return StatusCode(500, ApiResponse<Guid>.ErrorResponse(
                     "An error occurred while creating the project"));
+            }
+        }
+
+        /// <summary>
+        /// Generate AI roadmap for project description
+        /// </summary>
+        /// <param name="description">Project description to generate roadmap for</param>
+        /// <returns>AI-generated roadmap steps</returns>
+        [HttpPost("generate-roadmap")]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<string>>> GenerateRoadmap([FromBody] string description)
+        {
+            try
+            {
+                var roadmap = await OpenAiAPIHandler.GetOpenAIResponse(OpenAIPrompts.Steps, description);
+                return Ok(ApiResponse<string>.SuccessResponse(roadmap, "Roadmap generated successfully"));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "API: Error generating AI roadmap");
+                return StatusCode(500, ApiResponse<string>.ErrorResponse(
+                    "An error occurred while generating the roadmap"));
             }
         }
 
@@ -303,12 +327,6 @@ namespace TicketMasala.Web.Controllers.Api;
                 }
                 else
                 {
-                     // Return success even if not found? Or NotFound? 
-                     // Usually idempotency says OK, but here assuming explicit delete intention.
-                     // But since its soft delete and we return "deleted successfully" even if already deleted?
-                     // I'll stick to logic: if not found/not deleted, maybe return NotFound?
-                     // Original logic: "if project != null ... await SaveChanges ... if project == null do nothing"
-                     // The original impl always returned OK.
                      return Ok(ApiResponse<string>.SuccessResponse(
                         id.ToString(),
                         "Project deleted successfully"));

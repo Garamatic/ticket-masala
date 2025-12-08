@@ -5,6 +5,7 @@ using TicketMasala.Web.ViewModels.Tickets;
 using TicketMasala.Web.ViewModels.Customers;
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.Observers;
+using TicketMasala.Web.AI;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -165,7 +166,6 @@ public class ProjectService : IProjectService
             };
 
             await _userManager.CreateAsync(customer);
-            // Assign password or handle defaults as per identity logic
             await _userManager.AddToRoleAsync(customer, Utilities.Constants.RoleCustomer);
         }
         else
@@ -179,6 +179,17 @@ public class ProjectService : IProjectService
             }
         }
 
+        // Generate AI roadmap for the project
+        string? roadmap = null;
+        try
+        {
+            roadmap = await OpenAiAPIHandler.GetOpenAIResponse(OpenAIPrompts.Steps, viewModel.Description);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to generate AI roadmap for project, continuing without it");
+        }
+
         var project = new Project
         {
             Name = viewModel.Name,
@@ -186,7 +197,8 @@ public class ProjectService : IProjectService
             Status = Status.Pending,
             Customer = customer,
             CompletionTarget = viewModel.CreationDate,
-            CreatorGuid = Guid.Parse(userId)
+            CreatorGuid = Guid.Parse(userId),
+            ProjectAiRoadmap = roadmap,
         };
 
         // Add primary customer to stakeholders
@@ -235,19 +247,37 @@ public class ProjectService : IProjectService
         {
             foreach (var templateTicket in template.Tickets)
             {
+                // Generate AI summary for each ticket
+                string? summary = null;
+                try
+                {
+                    summary = await OpenAiAPIHandler.GetOpenAIResponse(OpenAIPrompts.Summary, templateTicket.Description);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to generate AI summary for template ticket");
+                }
+
                 var ticket = new Ticket
                 {
                     Guid = Guid.NewGuid(),
+                    Title = templateTicket.Description.Length > 100 
+                        ? templateTicket.Description.Substring(0, 100) 
+                        : templateTicket.Description,
                     Description = templateTicket.Description,
+                    DomainId = "IT",
+                    Status = "New",
                     EstimatedEffortPoints = templateTicket.EstimatedEffortPoints,
                     PriorityScore = (double)templateTicket.Priority * 25,
                     TicketType = templateTicket.TicketType,
                     TicketStatus = Status.Pending,
                     CreationDate = DateTime.UtcNow,
                     CreatorGuid = Guid.Parse(userId),
-                    DomainId = "DefaultDomain", // Placeholder, replace with actual value
-                    Status = "New", // Default status
-                    Title = "Generated Ticket" // Placeholder, replace with actual title
+                    Customer = customer,
+                    CustomerId = customer.Id,
+                    Project = project,
+                    ProjectGuid = project.Guid,
+                    AiSummary = summary,
                 };
                 _context.Tickets.Add(ticket);
             }
@@ -295,7 +325,7 @@ public class ProjectService : IProjectService
 
     public async Task<IEnumerable<SelectListItem>> GetCustomerSelectListAsync(string? selectedCustomerId = null)
     {
-        var customers = await _context.Users.ToListAsync(); // Filter by role if needed?
+        var customers = await _context.Users.ToListAsync();
         return customers.Select(c => new SelectListItem
         {
             Value = c.Id.ToString(),
@@ -446,7 +476,17 @@ public class ProjectService : IProjectService
             customer = await _context.Users.FirstOrDefaultAsync(c => c.Id == viewModel.CustomerId);
         }
 
-        // Create project
+        // Generate AI roadmap
+        string? roadmap = null;
+        try
+        {
+            roadmap = await OpenAiAPIHandler.GetOpenAIResponse(OpenAIPrompts.Steps, ticket.Description);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to generate AI roadmap for project from ticket");
+        }
+
         var project = new Project
         {
             Name = viewModel.ProjectName,
@@ -455,7 +495,8 @@ public class ProjectService : IProjectService
             Customer = customer,
             CompletionTarget = viewModel.TargetCompletionDate,
             CreatorGuid = Guid.Parse(userId),
-            ProjectManagerId = viewModel.SelectedPMId
+            ProjectManagerId = viewModel.SelectedPMId,
+            ProjectAiRoadmap = roadmap,
         };
 
         // Add customer as stakeholder
@@ -641,7 +682,7 @@ public class ProjectService : IProjectService
         var manager = await _userManager.FindByIdAsync(managerId) as Employee;
         if (manager == null)
         {
-            return false; // Manager not found
+            return false;
         }
 
         project.ProjectManager = manager;
@@ -661,5 +702,4 @@ public class ProjectService : IProjectService
         }
         return false;
     }
-
 }

@@ -272,6 +272,7 @@ namespace TicketMasala.Web.Engine.GERDA.Tickets;
                 CompletionTarget = ticket.CompletionTarget,
                 CompletionDate = ticket.CompletionDate,
                 Comments = ticket.Comments,
+                AiSummary = ticket.AiSummary,
                 
                 // Relationships
                 ResponsibleName = ticket.Responsible != null

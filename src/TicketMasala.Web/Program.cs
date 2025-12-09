@@ -538,6 +538,10 @@ app.UseSecurityHeaders();
 // Rate limiting
 app.UseRateLimiter();
 
+// Request logging middleware (custom)
+app.UseMiddleware<RequestLoggingMiddleware>();
+
+
 // Use WebOptimizer middleware
 app.UseWebOptimizer();
 

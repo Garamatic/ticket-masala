@@ -83,13 +83,16 @@ namespace TicketMasala.Web.Controllers;
         /// <summary>
         /// Capacity Forecast showing anticipated inflow vs. capacity
         /// </summary>
-        public async Task<IActionResult> CapacityForecast()
+        public async Task<IActionResult> CapacityForecast(CancellationToken cancellationToken)
         {
             if (_anticipationService == null)
             {
                 TempData["ErrorMessage"] = "GERDA Anticipation service is not available.";
                 return RedirectToAction("TeamDashboard");
             }
+            
+            // Check for cancellation early
+            cancellationToken.ThrowIfCancellationRequested();
             
             var forecast = await _anticipationService.CheckCapacityRiskAsync();
             
@@ -184,19 +187,24 @@ namespace TicketMasala.Web.Controllers;
         /// Refactored to use DispatchBacklogService (addresses God Object anti-pattern)
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> DispatchBacklog()
+        public async Task<IActionResult> DispatchBacklog(CancellationToken cancellationToken)
         {
             try
             {
                 if (_dispatchBacklogService == null)
                 {
-                    TempData["ErrorMessage"] = "GERDA Dispatch service is not available.";
-                    return RedirectToAction("TeamDashboard");
+                    // Fallback for when GERDA configuration is missing
+                    return View(new GerdaDispatchViewModel 
+                    { 
+                         Statistics = new DispatchStatistics(),
+                         UnassignedTickets = new List<TicketDispatchInfo>(),
+                         AvailableAgents = new List<AgentInfo>()
+                    });
                 }
                 
                 _logger.LogInformation("Manager viewing GERDA Dispatch Backlog");
 
-                var viewModel = await _dispatchBacklogService.BuildDispatchBacklogViewModelAsync();
+                var viewModel = await _dispatchBacklogService.BuildDispatchBacklogViewModelAsync(cancellationToken);
 
                 return View(viewModel);
             }

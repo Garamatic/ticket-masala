@@ -14,7 +14,7 @@ namespace TicketMasala.Web.Engine.GERDA.Tickets;
 /// </summary>
 public interface IDispatchBacklogService
 {
-    Task<GerdaDispatchViewModel> BuildDispatchBacklogViewModelAsync();
+    Task<GerdaDispatchViewModel> BuildDispatchBacklogViewModelAsync(CancellationToken cancellationToken = default);
 }
 
 public class DispatchBacklogService : IDispatchBacklogService
@@ -39,10 +39,21 @@ public class DispatchBacklogService : IDispatchBacklogService
         _logger = logger;
     }
 
-    public async Task<GerdaDispatchViewModel> BuildDispatchBacklogViewModelAsync()
+    public async Task<GerdaDispatchViewModel> BuildDispatchBacklogViewModelAsync(CancellationToken cancellationToken = default)
     {
+        // Check cancellation early
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Get unassigned or pending tickets  
+        // Note: Repository methods might not support cancellation token yet, but we can check token between calls
+        // Optimally repositories should be updated too, but we will start here for 499 prevention in typical slow paths.
+        
+        // Assuming repository methods are not yet updated to accept token, we can't pass it down easily without refactoring repositories.
+        // For this sprint item, we will check cancellation token at critical points.
+        
         var allTickets = (await _ticketRepository.GetAllAsync()).ToList();
+        cancellationToken.ThrowIfCancellationRequested();
+        
         var unassignedTickets = allTickets
             .Where(t => t.TicketStatus == Status.Pending || 
                        (t.TicketStatus == Status.Assigned && t.ResponsibleId == null))
@@ -51,11 +62,15 @@ public class DispatchBacklogService : IDispatchBacklogService
 
         // Get all active employees
         var employees = (await _userRepository.GetAllEmployeesAsync()).ToList();
+        cancellationToken.ThrowIfCancellationRequested();
 
         // Get current workload for each employee
         var agentWorkloads = new Dictionary<string, (int count, int effortPoints)>();
         foreach (var employee in employees)
         {
+            // Frequent check inside loop
+            cancellationToken.ThrowIfCancellationRequested();
+            
             var tickets = await _ticketRepository.GetByResponsibleIdAsync(employee.Id);
             var activeTickets = tickets.Where(t => 
                 t.TicketStatus != Status.Completed && 
@@ -140,5 +155,4 @@ public class DispatchBacklogService : IDispatchBacklogService
             Projects = projectOptions
         };
     }
-
 }

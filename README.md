@@ -32,20 +32,48 @@ Ticket Masala brengt ticketbeheer en projectmanagement samen op één platform v
 
 ---
 
+## 📋 Prerequisites
+
+- **.NET 10 SDK** - [Download here](https://dotnet.microsoft.com/download)
+- **Docker** (optional) - For containerized deployment
+
+> **Note**: No additional dependencies required. SQLite database is created automatically on first run.
+
+---
+
 ## 🚀 Snelstart
 
+### Option 1: Local Development
+
 ```bash
-# Builden
+# Clone the repository
+git clone https://github.com/your-org/ticket-masala.git
+cd ticket-masala
+
+# Build
 dotnet build
 
-# Starten (maakt nieuwe database aan en vult deze bij eerste gebruik)
+# Start (creates and seeds database on first run)
 dotnet run --project src/TicketMasala.Web/
 
-# Tests draaien
+# Run tests
 dotnet test
 ```
 
 De app draait standaard op `http://localhost:5054`.
+
+### Option 2: Docker
+
+```bash
+# Build and run with Docker Compose
+docker-compose up --build
+
+# Or build and run manually
+docker build -t ticket-masala .
+docker run -p 5054:8080 ticket-masala
+```
+
+De app draait op `http://localhost:5054`.
 
 ---
 
@@ -121,9 +149,7 @@ dotnet run --project src/TicketMasala.Web/
 
 ## 📚 Documentatie
 
-- Deploymentgidsen: `deploy/`
-- Domeinconfiguratie: `config/masala_domains.yaml`
-- API: Swagger UI op `/swagger` bij draaiende app
-
-- Domain configuration: `config/masala_domains.yaml`
-- API: Swagger UI at `/swagger` when running
+- **API documentatie**: Swagger UI beschikbaar op `/swagger` bij draaiende app
+- **Deployment gidsen**: `deploy/` directory
+- **Demo script**: `docs/demo/demo_script.md` - Gebruiksscenario's voor demonstraties
+- **GERDA domein configuratie**: `config/masala_domains.yaml`

@@ -119,6 +119,65 @@
     min-height: var(--header-height);
 }
 
+/* Landing Page Header - Three Column Layout */
+.header-landing {
+    padding: 1rem 1.5rem;
+}
+
+.header-landing .header-spacer {
+    flex: 1;
+    min-width: 0;
+}
+
+.header-landing .header-brand {
+    flex-shrink: 0;
+    transition: opacity 0.2s ease;
+}
+
+.header-landing .header-brand:hover {
+    opacity: 0.8;
+}
+
+.header-landing .header-actions {
+    flex: 1;
+    justify-content: flex-end;
+    min-width: 0;
+}
+
+/* Ensure minimum spacing on smaller screens */
+@media (max-width: 991.98px) {
+    .header-landing .header-brand {
+        font-size: 1rem !important;
+    }
+    
+    .header-landing .header-brand img {
+        height: 36px;
+    }
+    
+    .header-landing .header-actions .search-box {
+        display: none !important;
+    }
+}
+
+/* Stack layout on very small screens */
+@media (max-width: 575.98px) {
+    .header-landing {
+        padding: 0.75rem 1rem;
+    }
+    
+    .header-landing .header-brand span {
+        display: none;
+    }
+    
+    .header-landing .header-brand {
+        margin: 0 auto;
+    }
+    
+    .header-landing .header-spacer {
+        display: none;
+    }
+}
+
 /* Page Content */
 .app-content {
     flex: 1;

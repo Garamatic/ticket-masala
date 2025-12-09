@@ -136,32 +136,27 @@
         <!-- Main Content Area -->
         <div class="app-main @(hideSidebar ? "ms-0" : "")" id="mainContent">
             <!-- Top Header -->
-            <header class="app-header">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center gap-3">
-                        @if (!hideSidebar)
-                        {
-                            <button class="btn btn-outline-primary btn-sm" id="sidebarToggle" aria-label="Toggle sidebar">
-                                <i class="fas fa-bars"></i>
-                            </button>
-                            <h1 class="h5 m-0">@title</h1>
-                        }
-                    </div>
-
-                    @if (hideSidebar)
-                    {
-                        <a asp-controller="Home" asp-action="Index" class="d-flex align-items-center text-decoration-none position-absolute start-50 translate-middle-x">
+            <header class="app-header @(hideSidebar ? "header-landing" : "")">
+                @if (hideSidebar)
+                {
+                    <!-- Landing Page Header - Three column layout -->
+                    <div class="d-flex justify-content-between align-items-center w-100">
+                        <!-- Left spacer for symmetry -->
+                        <div class="header-spacer"></div>
+                        
+                        <!-- Center: Logo and Brand -->
+                        <a asp-controller="Home" asp-action="Index" class="d-flex align-items-center text-decoration-none header-brand">
                             <img src="~/images/logo.png" alt="Ticket Masala" height="42" class="me-2" />
                             <span class="h4 fw-bold text-dark mb-0 tracking-tight" style="font-family: 'Rajdhani', sans-serif;">Ticket Masala</span>
                         </a>
-                    }
-                    
-                    <div class="d-flex align-items-center gap-2">
-                        <!-- Search (optional) -->
-                        <div class="search-box d-none d-md-block me-2" style="max-width: 250px;">
-                            <i class="fas fa-search search-icon text-muted"></i>
-                            <input type="text" class="form-control border-0 bg-light" placeholder="@Localizer["Search..."]" style="padding-left: 2.5rem;" />
-                        </div>
+                        
+                        <!-- Right: Actions (Dark mode, Language, Auth buttons) -->
+                        <div class="d-flex align-items-center gap-2 header-actions">
+                            <!-- Search (optional) - Hidden on landing page, shown for authenticated users -->
+                            <div class="search-box d-none d-md-block me-2" style="max-width: 250px;">
+                                <i class="fas fa-search search-icon text-muted"></i>
+                                <input type="text" class="form-control border-0 bg-light" placeholder="@Localizer["Search..."]" style="padding-left: 2.5rem;" />
+                            </div>
                         
                         <!-- Notifications -->
                         @if (User.Identity?.IsAuthenticated == true)
@@ -219,13 +214,89 @@
                         }
                         else
                         {
-                            <div class="ms-2">
-                                <a class="btn btn-outline-primary btn-sm me-1" asp-area="Identity" asp-page="/Account/Login">@Localizer["Login"]</a>
+                            <div class="d-flex gap-2">
+                                <a class="btn btn-outline-primary btn-sm" asp-area="Identity" asp-page="/Account/Login">@Localizer["Login"]</a>
                                 <a class="btn btn-primary btn-sm" asp-area="Identity" asp-page="/Account/Register">@Localizer["Register"]</a>
                             </div>
                         }
+                        </div>
                     </div>
-                </div>
+                }
+                else
+                {
+                    <!-- Authenticated User Header -->
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-3">
+                            <button class="btn btn-outline-primary btn-sm" id="sidebarToggle" aria-label="Toggle sidebar">
+                                <i class="fas fa-bars"></i>
+                            </button>
+                            <h1 class="h5 m-0">@title</h1>
+                        </div>
+                        
+                        <div class="d-flex align-items-center gap-2">
+                            <!-- Search (optional) -->
+                            <div class="search-box d-none d-md-block me-2" style="max-width: 250px;">
+                                <i class="fas fa-search search-icon text-muted"></i>
+                                <input type="text" class="form-control border-0 bg-light" placeholder="@Localizer["Search..."]" style="padding-left: 2.5rem;" />
+                            </div>
+                            
+                            <!-- Notifications -->
+                            @if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <ul class="navbar-nav">
+                                    @await Component.InvokeAsync("Notification")
+                                </ul>
+                            }
+
+                            <!-- Dark Mode Toggle -->
+                            <button id="themeToggle" class="btn btn-ghost btn-icon rounded-circle" aria-label="Toggle dark mode" data-bs-toggle="tooltip" title="@Localizer["Toggle theme"]">
+                                <i class="fas fa-moon" id="themeIcon"></i>
+                            </button>
+                            
+                            <!-- Language Selector -->
+                            <div class="dropdown">
+                                <button class="btn btn-ghost btn-icon rounded-circle" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="@Localizer["Select Language"]">
+                                    <i class="fas fa-globe"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg" aria-labelledby="languageDropdown">
+                                    <li><h6 class="dropdown-header">@Localizer["Language"]</h6></li>
+                                    <li><a class="dropdown-item" asp-controller="Culture" asp-action="SetCulture" asp-route-culture="en" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString"><i class="fas fa-check-circle text-primary me-2 opacity-0"></i>English</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Culture" asp-action="SetCulture" asp-route-culture="fr" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString"><i class="fas fa-check-circle text-primary me-2 opacity-0"></i>Français</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Culture" asp-action="SetCulture" asp-route-culture="nl" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString"><i class="fas fa-check-circle text-primary me-2 opacity-0"></i>Nederlands</a></li>
+                                </ul>
+                            </div>
+
+                            <!-- User Menu -->
+                            @if (SignInManager.IsSignedIn(User))
+                            {
+                                <div class="dropdown ms-2">
+                                    <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 text-dark text-decoration-none" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                            @(UserManager.GetUserName(User)?.Substring(0, 1).ToUpper() ?? "U")
+                                        </div>
+                                        <span class="d-none d-lg-inline fw-medium small">@Localizer["Account"]</span>
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg mt-2" aria-labelledby="userDropdown">
+                                        <li>
+                                            <div class="px-3 py-2 border-bottom mb-2">
+                                                <div class="fw-bold text-truncate" style="max-width: 200px;">@UserManager.GetUserName(User)</div>
+                                                <div class="small text-muted">@Localizer["Manage Account"]</div>
+                                            </div>
+                                        </li>
+                                        <li><a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index"><i class="fas fa-user-cog me-2 text-muted"></i> @Localizer["Profile"]</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                                                <button type="submit" class="dropdown-item text-danger">                                                <i class="fas fa-sign-out-alt me-2"></i> @Localizer["Logout"]
+                                                </button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
             </header>
 
             <!-- Page Content -->

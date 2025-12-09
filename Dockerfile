@@ -32,6 +32,9 @@ RUN chown -R masala:masala /app/data && \
 # Copy the binary from build stage (do this as root, then chown)
 COPY --from=build /app/publish .
 
+# Copy configuration files from repository (includes seed_data.json, masala_domains.yaml, etc.)
+COPY --chown=masala:masala config/ /app/config/
+
 # Ensure the app files are owned by the non-root user, then switch user
 RUN chown -R masala:masala /app
 

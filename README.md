@@ -147,6 +147,40 @@ dotnet run --project src/TicketMasala.Web/
 
 ---
 
+## 🚀 Deployment
+
+### Automatische Deployment naar Fly.io
+
+Push naar `main` branch voor automatische deployment:
+
+```bash
+git push origin main
+```
+
+GitHub Actions draait automatisch tests en deployt naar Fly.io.
+
+**Setup (eenmalig):**
+1. Haal je Fly token op: `fly auth token`
+2. Voeg toe aan GitHub: Settings → Secrets → `FLY_API_TOKEN`
+
+Zie `docs/CI-CD-SETUP.md` voor volledige instructies.
+
+---
+
+## 🛠️ Problemen oplossen
+
+**Databaseproblemen?** Verwijder en herstart:
+```bash
+rm -f src/TicketMasala.Web/app.db*
+dotnet run --project src/TicketMasala.Web/
+```
+
+**Poort in gebruik?** Standaard is `5054`. Aanpassen in `Properties/launchSettings.json`.
+
+**Tests:** 142 tests, alle geslaagd.
+
+---
+
 ## 📚 Documentatie
 
 - **API documentatie**: Swagger UI beschikbaar op `/swagger` bij draaiende app

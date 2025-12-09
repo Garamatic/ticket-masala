@@ -11,6 +11,7 @@ namespace IT_Project2526.ViewModels
        public string Name { get; init; } = string.Empty;
        [StringLength(2000)]
        public string Description { get; init; } = string.Empty;
+        public string? AiRoadmap { get; init; }
        public Status Status { get; init; }
        public Employee ProjectManager {  get; init; }
        public string ProjectManagerName { get; set; } = string.Empty;

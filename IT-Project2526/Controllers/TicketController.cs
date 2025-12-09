@@ -338,7 +338,6 @@ namespace IT_Project2526.Controllers
                 TicketStatus = ticket.TicketStatus,
                 CompletionTarget = ticket.CompletionTarget,
                 ResponsibleUserId = ticket.Responsible?.Id, // ID of current responsible
-
                 // Fill the dropdown list
                 ResponsibleUsers = responsibleUsers
             };

@@ -1,6 +1,7 @@
 ﻿using IT_Project2526;
 using IT_Project2526.Models;
 using System;
+using System.Text;
 
 namespace IT_Project2526.ViewModels
 {
@@ -22,6 +23,7 @@ namespace IT_Project2526.ViewModels
         public Guid? ParentTicketGuid { get; set; }
         public Guid? ProjectGuid { get; set; }
         public List<SubTicketInfo> SubTickets { get; set; } = new List<SubTicketInfo> { };
+        public string? AiSummary { get; set; }
 
         
     }

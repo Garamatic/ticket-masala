@@ -126,7 +126,9 @@ namespace IT_Project2526.Controllers
                             ? $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}"
                             : "Unassigned",
                         ProjectManager = p.ProjectManager,
-                        TicketCount = p.Tasks.Count
+                        TicketCount = p.Tasks.Count,
+                        AiRoadmap = p.ProjectAiRoadmap
+
                     },
                     Tasks = p.Tasks.Select(t => new TicketViewModel
                     {
@@ -139,7 +141,8 @@ namespace IT_Project2526.Controllers
                         CustomerName = string.Empty,
                         Comments = t.Comments?.Select(c => c.Body).ToList() ?? new List<string>(),
                         CompletionTarget = t.CompletionTarget,
-                        CreationDate = DateTime.UtcNow
+                        CreationDate = DateTime.UtcNow,
+                        AiSummary = t.AiSummary
                     }).ToList()
                 }).ToList();
 

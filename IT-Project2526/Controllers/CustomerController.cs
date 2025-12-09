@@ -81,7 +81,8 @@ namespace IT_Project2526.Controllers
                                                                             ? $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}"
                                                                             : "Unassigned",
                                                                         ProjectManager = p.ProjectManager,
-                                                                        TicketCount = p.Tasks.Count
+                                                                        TicketCount = p.Tasks.Count,
+                                                                        AiRoadmap = p.ProjectAiRoadmap
                                                                     })
                                                                     .ToList()
                                               })

@@ -63,7 +63,9 @@ public class ProjectService : IProjectService
                 ProjectManagerName = p.ProjectManager != null
                     ? $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}"
                     : "Not Assigned",
-                TicketCount = p.Tasks.Count
+                TicketCount = p.Tasks.Count,
+                AiRoadmap = p.ProjectAiRoadmap
+
             },
             Tasks = p.Tasks.Select(t => new TicketViewModel
             {
@@ -104,7 +106,8 @@ public class ProjectService : IProjectService
                 ProjectManagerName = project.ProjectManager != null
                     ? $"{project.ProjectManager.FirstName} {project.ProjectManager.LastName}"
                     : "Not Assigned",
-                TicketCount = project.Tasks.Count
+                TicketCount = project.Tasks.Count,
+                AiRoadmap = project.ProjectAiRoadmap
             },
             Tasks = project.Tasks.Select(t => new TicketViewModel
             {

@@ -9,17 +9,25 @@ namespace IT_Project2526.AI
     {
         public static async Task<string> GetOpenAIResponse(OpenAIPrompts promptType, string query, bool fastResponse = true)
         {
-            var client = new OpenAIClient(apiKey: LocalCache.AI_API_KEY);
+            try
+            {
+                var client = new OpenAIClient(apiKey: LocalCache.AI_API_KEY);
 
-            var model = fastResponse ? "gpt-4.1-mini" : "gpt-4.1";
-            var chatClient = client.GetChatClient(model);
+                var model = fastResponse ? "gpt-4.1-mini" : "gpt-4.1";
+                var chatClient = client.GetChatClient(model);
 
-            var response = await chatClient.CompleteChatAsync(CreatePrompt(query, promptType));
-            var chatContent = response.Value.Content;
+                var response = await chatClient.CompleteChatAsync(CreatePrompt(query, promptType));
+                var chatContent = response.Value.Content;
 
-            string answer = string.Join("", chatContent.Where(p => p.Text != null)
-             .Select(p => p.Text));
-            return answer;
+                string answer = string.Join("", chatContent.Where(p => p.Text != null)
+                 .Select(p => p.Text));
+                return answer;
+            }
+            catch (Exception e)
+            {
+                return "";
+            }
+
         }
 
         private static string CreatePrompt(string query, OpenAIPrompts promptType)

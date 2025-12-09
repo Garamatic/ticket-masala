@@ -70,7 +70,8 @@ namespace IT_Project2526.Controllers.Api
                             ProjectManagerName = p.ProjectManager != null 
                                 ? $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}" 
                                 : "Not Assigned",
-                            TicketCount = p.Tasks.Count
+                            TicketCount = p.Tasks.Count,
+                            AiRoadmap = p.ProjectAiRoadmap
                         },
                         Tasks = p.Tasks.Select(t => new TicketViewModel
                         {
@@ -84,7 +85,8 @@ namespace IT_Project2526.Controllers.Api
                                 ? $"{t.Customer.FirstName} {t.Customer.LastName}"
                                 : "Unknown",
                             CompletionTarget = t.CompletionTarget,
-                            CreationDate = DateTime.UtcNow
+                            CreationDate = DateTime.UtcNow,
+                            AiSummary = t.AiSummary,
                         }).ToList()
                     })
                     .ToListAsync();
@@ -144,7 +146,8 @@ namespace IT_Project2526.Controllers.Api
                         ProjectManagerName = project.ProjectManager != null 
                             ? $"{project.ProjectManager.FirstName} {project.ProjectManager.LastName}" 
                             : "Not Assigned",
-                        TicketCount = project.Tasks.Count
+                        TicketCount = project.Tasks.Count,
+                        AiRoadmap = project.ProjectAiRoadmap
                     },
                     Tasks = project.Tasks.Select(t => new TicketViewModel
                     {
@@ -158,7 +161,8 @@ namespace IT_Project2526.Controllers.Api
                             ? $"{t.Customer.FirstName} {t.Customer.LastName}"
                             : "Unknown",
                         CompletionTarget = t.CompletionTarget,
-                        CreationDate = DateTime.UtcNow
+                        CreationDate = DateTime.UtcNow,
+                        AiSummary = t.AiSummary,
                     }).ToList()
                 };
 
@@ -203,7 +207,8 @@ namespace IT_Project2526.Controllers.Api
                             ProjectManagerName = p.ProjectManager != null 
                                 ? $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}" 
                                 : "Not Assigned",
-                            TicketCount = p.Tasks.Count
+                            TicketCount = p.Tasks.Count,
+                            AiRoadmap = p.ProjectAiRoadmap
                         },
                         Tasks = p.Tasks.Select(t => new TicketViewModel
                         {
@@ -217,7 +222,8 @@ namespace IT_Project2526.Controllers.Api
                                 ? $"{t.Customer.FirstName} {t.Customer.LastName}"
                                 : "Unknown",
                             CompletionTarget = t.CompletionTarget,
-                            CreationDate = DateTime.UtcNow
+                            CreationDate = DateTime.UtcNow,
+                            AiSummary = t.AiSummary,
                         }).ToList()
                     })
                     .ToListAsync();
@@ -266,7 +272,8 @@ namespace IT_Project2526.Controllers.Api
                             ProjectManagerName = p.ProjectManager != null 
                                 ? $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}" 
                                 : "Not Assigned",
-                            TicketCount = p.Tasks.Count
+                            TicketCount = p.Tasks.Count,
+                            AiRoadmap = p.ProjectAiRoadmap
                         },
                         Tasks = p.Tasks.Select(t => new TicketViewModel
                         {
@@ -280,7 +287,8 @@ namespace IT_Project2526.Controllers.Api
                                 ? $"{t.Customer.FirstName} {t.Customer.LastName}"
                                 : "Unknown",
                             CompletionTarget = t.CompletionTarget,
-                            CreationDate = DateTime.UtcNow
+                            CreationDate = DateTime.UtcNow,
+                            AiSummary = t.AiSummary,
                         }).ToList()
                     })
                     .ToListAsync();

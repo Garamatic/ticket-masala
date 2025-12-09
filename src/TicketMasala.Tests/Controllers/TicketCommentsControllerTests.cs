@@ -1,46 +1,54 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 using System.Security.Claims;
 using TicketMasala.Web.Controllers;
-using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.Data;
+using TicketMasala.Web.Models;
 using Xunit;
 
 namespace TicketMasala.Tests.Controllers;
 
-public class TicketCommentsControllerTests
+public class TicketCommentsControllerTests : IDisposable
 {
-    private readonly Mock<ITicketService> _mockTicketService;
-    private readonly Mock<IHttpContextAccessor> _mockHttpContextAccessor;
+    private readonly MasalaDbContext _context;
     private readonly TicketCommentsController _controller;
 
     public TicketCommentsControllerTests()
     {
-        _mockTicketService = new Mock<ITicketService>();
-        _mockHttpContextAccessor = new Mock<IHttpContextAccessor>();
+        // Use in-memory database for testing
+        var options = new DbContextOptionsBuilder<MasalaDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
 
-        _controller = new TicketCommentsController(
-            _mockTicketService.Object,
-            _mockHttpContextAccessor.Object
-        );
+        _context = new MasalaDbContext(options);
 
+        // Create a mock logger
+        var mockLogger = new Mock<Microsoft.Extensions.Logging.ILogger<TicketCommentsController>>();
+
+        _controller = new TicketCommentsController(_context, mockLogger.Object);
+
+        // Set up user claims
         var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
         {
             new Claim(ClaimTypes.NameIdentifier, "test-user-id"),
         }, "mock"));
 
         var context = new DefaultHttpContext { User = user };
-        _mockHttpContextAccessor.Setup(h => h.HttpContext).Returns(context);
 
         _controller.ControllerContext = new ControllerContext
         {
             HttpContext = context
         };
+
+        // Set up TempData
+        _controller.TempData = new TempDataDictionary(context, Mock.Of<ITempDataProvider>());
     }
 
     [Fact]
-    public async Task Add_RedirectsToDetail_WithValidComment()
+    public async Task AddComment_RedirectsToDetail_WithValidComment()
     {
         // Arrange
         var ticketId = Guid.NewGuid();
@@ -48,55 +56,71 @@ public class TicketCommentsControllerTests
         var isInternal = false;
 
         // Act
-        var result = await _controller.Add(ticketId, comment, isInternal);
+        var result = await _controller.AddComment(ticketId, comment, isInternal);
 
         // Assert
-        _mockTicketService.Verify(s => s.AddCommentAsync(
-            ticketId, 
-            comment, 
-            isInternal, 
-            "test-user-id"), Times.Once);
-
         var redirect = Assert.IsType<RedirectToActionResult>(result);
         Assert.Equal("Detail", redirect.ActionName);
         Assert.Equal("Ticket", redirect.ControllerName);
         Assert.Equal(ticketId, redirect.RouteValues?["id"]);
+
+        // Verify comment was added
+        var addedComment = await _context.TicketComments.FirstOrDefaultAsync(c => c.TicketId == ticketId);
+        Assert.NotNull(addedComment);
+        Assert.Equal(comment, addedComment.Body);
+        Assert.Equal(isInternal, addedComment.IsInternal);
     }
 
     [Fact]
-    public async Task Add_DoesNothing_WhenCommentIsEmpty()
+    public async Task AddComment_DoesNotAdd_WhenCommentIsEmpty()
     {
         // Arrange
         var ticketId = Guid.NewGuid();
 
         // Act
-        var result = await _controller.Add(ticketId, "", false);
+        var result = await _controller.AddComment(ticketId, "", false);
 
         // Assert
-        _mockTicketService.Verify(s => s.AddCommentAsync(
-            It.IsAny<Guid>(), 
-            It.IsAny<string>(), 
-            It.IsAny<bool>(), 
-            It.IsAny<string>()), Times.Never);
-
         var redirect = Assert.IsType<RedirectToActionResult>(result);
         Assert.Equal("Detail", redirect.ActionName);
+
+        // Verify comment was not added
+        var comment = await _context.TicketComments.FirstOrDefaultAsync(c => c.TicketId == ticketId);
+        Assert.Null(comment);
     }
 
     [Fact]
-    public async Task Add_ReturnsNotFound_WhenTicketServiceThrowsArgumentException()
+    public async Task RequestReview_SetsStatusToPending()
     {
         // Arrange
-        var ticketId = Guid.NewGuid();
-        var comment = "Comment";
-
-        _mockTicketService.Setup(s => s.AddCommentAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<string>()))
-            .ThrowsAsync(new ArgumentException());
+        var ticketGuid = Guid.NewGuid();
+        var ticket = new Ticket
+        {
+            Guid = ticketGuid,
+            Description = "Test ticket",
+            CreationDate = DateTime.UtcNow,
+            TicketStatus = Status.Pending,
+            ReviewStatus = ReviewStatus.None,
+            CustomerId = "test-customer-id"
+        };
+        _context.Tickets.Add(ticket);
+        await _context.SaveChangesAsync();
 
         // Act
-        var result = await _controller.Add(ticketId, comment, false);
+        var result = await _controller.RequestReview(ticketGuid);
 
         // Assert
-        Assert.IsType<NotFoundResult>(result);
+        var redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal("Detail", redirect.ActionName);
+
+        // Verify review status was updated
+        var updatedTicket = await _context.Tickets.FirstOrDefaultAsync(t => t.Guid == ticketGuid);
+        Assert.NotNull(updatedTicket);
+        Assert.Equal(ReviewStatus.Pending, updatedTicket.ReviewStatus);
+    }
+
+    public void Dispose()
+    {
+        _context?.Dispose();
     }
 }

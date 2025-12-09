@@ -28,7 +28,7 @@
     <div class="card-body">
         <form asp-action="Create" method="post">
             @Html.AntiForgeryToken()
-            <input type="hidden" name="domainId" value="@ViewBag.DomainId" />
+            <input type="hidden" name="DomainId" value="@ViewBag.DomainId" />
             
             <!-- Work Item Type Selector (from Domain Config) -->
             @if (workItemTypes.Any())
@@ -41,7 +41,7 @@
                             {
                                 <div class="form-check form-check-inline">
                                     <input class="form-check-input visually-hidden" type="radio" 
-                                           name="workItemTypeCode" id="type_@type.Code" 
+                                           name="WorkItemTypeCode" id="type_@type.Code" 
                                            value="@type.Code" @(type == workItemTypes.First() ? "checked" : "") />
                                     <label class="btn btn-outline-secondary type-selector" for="type_@type.Code" 
                                            style="--type-color: @type.Color;">
@@ -58,33 +58,41 @@
             <div class="row">
                 <div class="col-md-8">
                     <div class="mb-3">
-                        <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
-                        <textarea name="description" id="description" class="form-control" rows="4" placeholder="Describe the @workItemLabel.ToLower()..." required></textarea>
+                        <label for="Description" class="form-label">Description <span class="text-danger">*</span></label>
+                        <textarea name="Description" id="Description" class="form-control" rows="4" placeholder="Describe the @workItemLabel.ToLower()..." required></textarea>
                     </div>
                 </div>
             </div>
 
             <div class="row">
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label for="customerId" class="form-label">Customer <span class="text-danger">*</span></label>
-                        <select name="customerId" id="customerId" class="form-select" required>
-                            <option value="">-- Select Customer --</option>
-                            @if (ViewBag.Customers != null)
-                            {
-                                @foreach (var customer in ViewBag.Customers as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)
+                @if (ViewBag.IsCustomer != true)
+                {
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="CustomerId" class="form-label">Customer <span class="text-danger">*</span></label>
+                            <select name="CustomerId" id="CustomerId" class="form-select" required>
+                                <option value="">-- Select Customer --</option>
+                                @if (ViewBag.Customers != null)
                                 {
-                                    <option value="@customer.Value">@customer.Text</option>
+                                    @foreach (var customer in ViewBag.Customers as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)
+                                    {
+                                        <option value="@customer.Value">@customer.Text</option>
+                                    }
                                 }
-                            }
-                        </select>
+                            </select>
+                        </div>
                     </div>
-                </div>
+                }
+                else
+                {
+                    @* Pre-populate customer ID for customer users *@
+                    <input type="hidden" name="CustomerId" value="@ViewBag.PreselectedCustomerId" />
+                }
 
                 <div class="col-md-4">
                     <div class="mb-3">
-                        <label for="responsibleId" class="form-label">Assign To (Optional)</label>
-                        <select name="responsibleId" id="responsibleId" class="form-select">
+                        <label for="ResponsibleId" class="form-label">Assign To (Optional)</label>
+                        <select name="ResponsibleId" id="ResponsibleId" class="form-select">
                             <option value="">-- Unassigned --</option>
                             @if (ViewBag.Employees != null)
                             {
@@ -99,8 +107,8 @@
 
                 <div class="col-md-4">
                     <div class="mb-3">
-                        <label for="projectGuid" class="form-label">@entityLabels.WorkContainer (Optional)</label>
-                        <select name="projectGuid" id="projectGuid" class="form-select">
+                        <label for="ProjectGuid" class="form-label">@entityLabels.WorkContainer (Optional)</label>
+                        <select name="ProjectGuid" id="ProjectGuid" class="form-select">
                             <option value="">-- No @entityLabels.WorkContainer --</option>
                             @if (ViewBag.Projects != null)
                             {
@@ -117,8 +125,8 @@
             <div class="row">
                 <div class="col-md-4">
                     <div class="mb-3">
-                        <label for="completionTarget" class="form-label">Target Completion Date</label>
-                        <input type="date" name="completionTarget" id="completionTarget" class="form-control" 
+                        <label for="CompletionTarget" class="form-label">Target Completion Date</label>
+                        <input type="date" name="CompletionTarget" id="CompletionTarget" class="form-control" 
                                value="@DateTime.Now.AddDays(14).ToString("yyyy-MM-dd")" />
                     </div>
                 </div>

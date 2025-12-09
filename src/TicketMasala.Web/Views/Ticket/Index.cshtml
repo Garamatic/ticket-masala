@@ -193,9 +193,10 @@
                                     @ticket.TicketStatus
                                 </span>
                             </td>
-                            <td>@(ticket.Customer?.FirstName ?? "—") @(ticket.Customer?.LastName ?? "")</td>
-                            <td>@(ticket.Responsible?.FirstName ?? Localizer["Unassigned"].Value) @(ticket.Responsible?.LastName ?? "")</td>
-                            <td>
+                            <td class="d-none d-lg-table-cell">@ticket.CreationDate.ToString("MMM dd, yyyy")</td>
+                            <td class="d-none d-sm-table-cell">@(ticket.Customer?.FirstName ?? "—") @(ticket.Customer?.LastName ?? "")</td>
+                            <td class="d-none d-lg-table-cell">@(ticket.Responsible?.FirstName ?? Localizer["Unassigned"].Value) @(ticket.Responsible?.LastName ?? "")</td>
+                            <td class="d-none d-md-table-cell">
                             @if (ticket.CompletionTarget.HasValue)
                             {
                                 var timeRemaining = ticket.CompletionTarget.Value - DateTime.UtcNow;

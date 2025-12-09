@@ -61,7 +61,7 @@ if (!builder.Environment.IsEnvironment("Testing"))
                     }
                 }
             }
-            
+
             Console.WriteLine($"Using SQLite Provider with connection: {connectionString}");
             options.UseSqlite(connectionString);
             // Suppress pending model changes warning to allow EnsureCreated to work
@@ -173,7 +173,7 @@ builder.Services.AddScoped<ITicketImportService, TicketImportService>();
 builder.Services.AddHostedService<EmailIngestionService>();
 
 // Register Background Queue
-builder.Services.AddSingleton<IBackgroundTaskQueue>(ctx => 
+builder.Services.AddSingleton<IBackgroundTaskQueue>(ctx =>
 {
     return new BackgroundQueue(100); // Capacity of 100 items
 });
@@ -200,15 +200,15 @@ builder.Services.AddSingleton<TicketMasala.Web.Engine.GERDA.Configuration.IDomai
 if (File.Exists(gerdaConfigPath))
 {
     var gerdaConfigJson = File.ReadAllText(gerdaConfigPath);
-    var gerdaConfig = System.Text.Json.JsonSerializer.Deserialize<GerdaConfig>(gerdaConfigJson, 
+    var gerdaConfig = System.Text.Json.JsonSerializer.Deserialize<GerdaConfig>(gerdaConfigJson,
         new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-    
+
     if (gerdaConfig != null)
     {
         builder.Services.AddSingleton(gerdaConfig);
         builder.Services.AddScoped<IGroupingService, GroupingService>();
         builder.Services.AddScoped<IEstimatingService, EstimatingService>();
-        
+
         // Strategy Factory & Strategies
         builder.Services.AddScoped<TicketMasala.Web.Engine.GERDA.Strategies.IStrategyFactory, TicketMasala.Web.Engine.GERDA.Strategies.StrategyFactory>();
         builder.Services.AddScoped<IJobRankingStrategy, WeightedShortestJobFirstStrategy>();
@@ -218,7 +218,7 @@ if (File.Exists(gerdaConfigPath))
         builder.Services.AddScoped<IDispatchingStrategy, MatrixFactorizationDispatchingStrategy>();
         builder.Services.AddScoped<IDispatchingStrategy, ZoneBasedDispatchingStrategy>();
         // RuleCompilerService registered globally above
-        
+
         // AI Features
         builder.Services.AddScoped<TicketMasala.Web.Engine.GERDA.Features.IFeatureExtractor, TicketMasala.Web.Engine.GERDA.Features.DynamicFeatureExtractor>();
 
@@ -233,10 +233,10 @@ if (File.Exists(gerdaConfigPath))
         builder.Services.AddScoped<IDispatchBacklogService, DispatchBacklogService>();
         builder.Services.AddScoped<IAnticipationService, AnticipationService>();
         builder.Services.AddScoped<IGerdaService, GerdaService>();
-        
+
         // Register GERDA Background Service for automated maintenance
         builder.Services.AddHostedService<GerdaBackgroundService>();
-        
+
         Console.WriteLine("GERDA AI services initialized successfully");
     }
 }
@@ -257,7 +257,7 @@ builder.Services.AddDistributedMemoryCache();
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-    
+
     // Fixed window rate limiter for API endpoints
     options.AddFixedWindowLimiter("api", opt =>
     {
@@ -266,7 +266,7 @@ builder.Services.AddRateLimiter(options =>
         opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
         opt.QueueLimit = 10;
     });
-    
+
     // Sliding window for login attempts (stricter)
     options.AddSlidingWindowLimiter("login", opt =>
     {
@@ -276,7 +276,7 @@ builder.Services.AddRateLimiter(options =>
         opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
         opt.QueueLimit = 0;
     });
-    
+
     // Token bucket for general requests
     options.AddTokenBucketLimiter("general", opt =>
     {
@@ -322,7 +322,7 @@ builder.Services.AddWebOptimizer(pipeline =>
         "css/design-system.css",
         "css/site.css")
         .MinifyCss();
-    
+
     // Bundle and minify JavaScript files
     pipeline.AddJavaScriptBundle("/js/bundle.js",
         "lib/jquery/dist/jquery.min.js",
@@ -347,11 +347,11 @@ builder.Services.ConfigureApplicationCookie(options =>
 {
     // Cookie settings
     options.Cookie.HttpOnly = true;
-    options.ExpireTimeSpan = TimeSpan.FromMinutes(120);
+    options.ExpireTimeSpan = TimeSpan.FromHours(8); // Extended from 2 hours to 8 hours to reduce login prompts
 
     options.LoginPath = "/Identity/Account/Login";
     options.AccessDeniedPath = "/Identity/Account/AccessDenied";
-    options.SlidingExpiration = true;
+    options.SlidingExpiration = true; // Users remain logged in while active
 });
 
 // Add services to the container.
@@ -360,7 +360,7 @@ builder.Services.AddLocalization();
 // Enable CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", 
+    options.AddPolicy("AllowAll",
         builder => builder
             .AllowAnyOrigin()
             .AllowAnyMethod()
@@ -386,7 +386,7 @@ builder.Services.AddSwaggerGen(c =>
         Version = "v1",
         Description = "Configuration-driven work management API. Valid DomainId values are sourced from masala_domains.yaml configuration."
     });
-    
+
     // Include XML comments if available
     var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
@@ -399,7 +399,7 @@ builder.Services.AddSwaggerGen(c =>
 // Configure Forwarded Headers for Fly.io (Proxy)
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
-    options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | 
+    options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor |
                                Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
     // Trust all proxies (Fly.io internal network)
     options.KnownIPNetworks.Clear();
@@ -428,16 +428,16 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var logger = services.GetRequiredService<ILogger<Program>>();
-    
+
     try
     {
         logger.LogInformation("==================================================");
         logger.LogInformation("Checking if database seeding is needed...");
         logger.LogInformation("==================================================");
-        
+
         var seeder = services.GetRequiredService<DbSeeder>();
         await seeder.SeedAsync();
-        
+
         logger.LogInformation("==================================================");
         logger.LogInformation("Database check completed");
         logger.LogInformation("==================================================");
@@ -492,7 +492,7 @@ using (var scope = app.Services.CreateScope())
 
                 var dispatchingName = domain.AiStrategies?.Dispatching ?? "MatrixFactorization";
                 strategyFactory.GetStrategy<TicketMasala.Web.Engine.GERDA.Dispatching.IDispatchingStrategy, List<(string AgentId, double Score)>>(dispatchingName);
-                
+
                 logger.LogInformation("Domain '{Domain}' configured strategies validated successfully.", domain.DisplayName);
             }
             catch (Exception ex)
@@ -517,7 +517,7 @@ _skip_gerda_validation:;
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
-    
+
     // Swagger UI (v3.0 MVP)
     app.UseSwagger();
     app.UseSwaggerUI(c =>
@@ -565,7 +565,7 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-app.MapRazorPages(); 
+app.MapRazorPages();
 
 // Health Check with JSON response (v3.1)
 app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions

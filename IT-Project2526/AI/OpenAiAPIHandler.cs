@@ -11,6 +11,7 @@ namespace IT_Project2526.AI
         {
             try
             {
+                return "TEST PROMPT RESPONSE";
                 var client = new OpenAIClient(apiKey: LocalCache.AI_API_KEY);
 
                 var model = fastResponse ? "gpt-4.1-mini" : "gpt-4.1";

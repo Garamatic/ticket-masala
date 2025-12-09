@@ -4,6 +4,7 @@ using IT_Project2526.Repositories;
 using IT_Project2526.Observers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using IT_Project2526.AI;
 
 namespace IT_Project2526.Services
 {
@@ -182,7 +183,8 @@ namespace IT_Project2526.Services
                 TicketType = TicketType.ProjectRequest,
                 CompletionTarget = completionTarget ?? DateTime.UtcNow.AddDays(14),
                 CreatorGuid = Guid.Parse(customer.Id),
-                Comments = new List<TicketComment>()
+                Comments = new List<TicketComment>(),
+                AiSummary = await OpenAiAPIHandler.GetOpenAIResponse(OpenAIPrompts.Summary, description)
             };
 
             // Add ticket via repository

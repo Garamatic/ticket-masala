@@ -14,23 +14,16 @@ primary_region = "ord"
   ASPNETCORE_URLS = "http://+:8080"
   ASPNETCORE_ENVIRONMENT = "Production"
 
-[[services]]
+[http_service]
   internal_port = 8080
-  protocol = "tcp"
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
   processes = ["app"]
 
-  [[services.ports]]
-    # HTTP traffic from the proxy
-    handlers = ["http"]
-    port = 80
-
-  [[services.ports]]
-    # TLS termination is handled by Fly; enable HTTP+TLS handlers on 443
-    handlers = ["tls", "http"]
-    port = 443
-
-  [[services.http_checks]]
-    # Health check hitting the app's /health endpoint
+  # Health check hitting the app's /health endpoint
+  [[http_service.checks]]
     path = "/health"
     interval = "15s"
     timeout = "2s"

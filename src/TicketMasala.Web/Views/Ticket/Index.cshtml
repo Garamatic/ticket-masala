@@ -109,9 +109,18 @@
                     <button type="submit" asp-action="ExportTickets" class="btn btn-outline-success" title="@Localizer["Export"]">
                         <i class="fas fa-file-csv"></i> @Localizer["Export"]
                     </button>
-                    <a asp-action="Index" class="btn btn-outline-secondary" title="@Localizer["Reset"]">
-                        <i class="fas fa-times"></i> @Localizer["Reset"]
-                    </a>
+                    @if (ViewBag.IsCustomer == true)
+                    {
+                        <a asp-action="Index" asp-route-CustomerId="@Model.CustomerId" class="btn btn-outline-secondary" title="@Localizer["Reset"]">
+                            <i class="fas fa-times"></i> @Localizer["Reset"]
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-action="Index" class="btn btn-outline-secondary" title="@Localizer["Reset"]">
+                            <i class="fas fa-times"></i> @Localizer["Reset"]
+                        </a>
+                    }
                 </div>
             </div>
         </form>

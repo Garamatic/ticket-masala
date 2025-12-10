@@ -25,7 +25,6 @@
         </p>
     </div>
     <!-- Quick Stats for Authenticated Users -->
-    <!-- Quick Stats for Authenticated Users -->
     <div class="stats-grid">
         <a asp-controller="Projects" asp-action="Index" class="stat-card primary text-decoration-none transform-hover">
             <i class="fas fa-folder-open stat-card-icon"></i>
@@ -45,23 +44,51 @@
             </div>
         </a>
         
-        <a asp-controller="Manager" asp-action="TeamDashboard" class="stat-card warning text-decoration-none transform-hover">
-            <i class="fas fa-clock stat-card-icon"></i>
-            <div class="stat-card-title text-white">@Localizer["Pending Tasks"]</div>
-            <div class="stat-card-value text-white">8</div>
-            <div class="stat-card-change text-white-50">
-                <i class="fas fa-exclamation-circle me-1"></i> @Localizer["2 due soon"]
-            </div>
-        </a>
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-controller="Manager" asp-action="TeamDashboard" class="stat-card warning text-decoration-none transform-hover">
+                <i class="fas fa-clock stat-card-icon"></i>
+                <div class="stat-card-title text-white">@Localizer["Pending Tasks"]</div>
+                <div class="stat-card-value text-white">8</div>
+                <div class="stat-card-change text-white-50">
+                    <i class="fas fa-exclamation-circle me-1"></i> @Localizer["2 due soon"]
+                </div>
+            </a>
+        }
+        else
+        {
+            <a asp-controller="Ticket" asp-action="Index" asp-route-Status="Pending" class="stat-card warning text-decoration-none transform-hover">
+                <i class="fas fa-clock stat-card-icon"></i>
+                <div class="stat-card-title text-white">@Localizer["Pending Tasks"]</div>
+                <div class="stat-card-value text-white">8</div>
+                <div class="stat-card-change text-white-50">
+                    <i class="fas fa-exclamation-circle me-1"></i> @Localizer["2 due soon"]
+                </div>
+            </a>
+        }
         
-        <a asp-controller="Manager" asp-action="DispatchBacklog" class="stat-card success text-decoration-none transform-hover">
-            <i class="fas fa-chart-line stat-card-icon"></i>
-            <div class="stat-card-title text-white">@Localizer["Completion Rate"]</div>
-            <div class="stat-card-value text-white">85%</div>
-            <div class="stat-card-change text-white-50">
-                <i class="fas fa-trophy me-1"></i> @Localizer["Great progress!"]
-            </div>
-        </a>
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-controller="Manager" asp-action="DispatchBacklog" class="stat-card success text-decoration-none transform-hover">
+                <i class="fas fa-chart-line stat-card-icon"></i>
+                <div class="stat-card-title text-white">@Localizer["Completion Rate"]</div>
+                <div class="stat-card-value text-white">85%</div>
+                <div class="stat-card-change text-white-50">
+                    <i class="fas fa-trophy me-1"></i> @Localizer["Great progress!"]
+                </div>
+            </a>
+        }
+        else
+        {
+            <a asp-controller="Ticket" asp-action="Index" asp-route-Status="Completed" class="stat-card success text-decoration-none transform-hover">
+                <i class="fas fa-chart-line stat-card-icon"></i>
+                <div class="stat-card-title text-white">@Localizer["Completed Tasks"]</div>
+                <div class="stat-card-value text-white">85%</div>
+                <div class="stat-card-change text-white-50">
+                    <i class="fas fa-trophy me-1"></i> @Localizer["Great progress!"]
+                </div>
+            </a>
+        }
     </div>
 
     <!-- Quick Actions -->

@@ -428,11 +428,23 @@ public class TicketController : Controller
         // Customer authorization: customers can only edit their own tickets
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         var isCustomer = User.IsInRole(Constants.RoleCustomer);
-
-        if (isCustomer && ticket.CustomerId != userId)
+        
+        if (isCustomer)
         {
-            return Forbid();
+            // Check if ticket belongs to customer
+            if (ticket.CustomerId != userId)
+            {
+                return Forbid();
+            }
+            
+            // Customers can only edit tickets in Pending or Assigned status
+            if (ticket.TicketStatus != Status.Pending && ticket.TicketStatus != Status.Assigned)
+            {
+                TempData["ErrorMessage"] = "You can only edit tickets that are in Pending or Assigned status.";
+                return RedirectToAction("Detail", new { id = ticket.Guid });
+            }
         }
+
 
         // Get all users for the dropdown
         var responsibleUsers = await _ticketService.GetAllUsersSelectListAsync();
@@ -493,15 +505,27 @@ public class TicketController : Controller
         {
             var ticketToUpdate = await _ticketService.GetTicketForEditAsync(id);
             if (ticketToUpdate == null) return NotFound();
-
-            // Customer authorization: customers can only edit their own tickets
+            
+            // Customer authorization: customers can only edit their own tickets in Pending or Assigned status
             var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             var isCustomer = User.IsInRole(Constants.RoleCustomer);
-
-            if (isCustomer && ticketToUpdate.CustomerId != userId)
+            
+            if (isCustomer)
             {
-                return Forbid();
+                // Check if ticket belongs to customer
+                if (ticketToUpdate.CustomerId != userId)
+                {
+                    return Forbid();
+                }
+                
+                // Customers can only edit tickets in Pending or Assigned status
+                if (ticketToUpdate.TicketStatus != Status.Pending && ticketToUpdate.TicketStatus != Status.Assigned)
+                {
+                    TempData["ErrorMessage"] = "You can only edit tickets that are in Pending or Assigned status.";
+                    return RedirectToAction("Detail", new { id = ticketToUpdate.Guid });
+                }
             }
+
 
             // Update properties based on the ViewModel
             ticketToUpdate.Description = viewModel.Description;

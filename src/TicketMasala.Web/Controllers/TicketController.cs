@@ -300,6 +300,15 @@ public class TicketController : Controller
             return NotFound();
         }
 
+        // Customer authorization: customers can only view their own tickets
+        var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var isCustomer = User.IsInRole(Constants.RoleCustomer);
+
+        if (isCustomer && viewModel.CustomerId != userId)
+        {
+            return Forbid();
+        }
+
         // Load attachments
         viewModel.Attachments = await _context.Documents
             .Where(d => d.TicketId == id.Value)
@@ -416,6 +425,15 @@ public class TicketController : Controller
 
         if (ticket == null) return NotFound();
 
+        // Customer authorization: customers can only edit their own tickets
+        var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var isCustomer = User.IsInRole(Constants.RoleCustomer);
+
+        if (isCustomer && ticket.CustomerId != userId)
+        {
+            return Forbid();
+        }
+
         // Get all users for the dropdown
         var responsibleUsers = await _ticketService.GetAllUsersSelectListAsync();
 
@@ -475,6 +493,15 @@ public class TicketController : Controller
         {
             var ticketToUpdate = await _ticketService.GetTicketForEditAsync(id);
             if (ticketToUpdate == null) return NotFound();
+
+            // Customer authorization: customers can only edit their own tickets
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var isCustomer = User.IsInRole(Constants.RoleCustomer);
+
+            if (isCustomer && ticketToUpdate.CustomerId != userId)
+            {
+                return Forbid();
+            }
 
             // Update properties based on the ViewModel
             ticketToUpdate.Description = viewModel.Description;

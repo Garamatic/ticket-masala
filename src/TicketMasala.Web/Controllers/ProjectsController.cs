@@ -87,11 +87,20 @@ public class ProjectsController : Controller
         {
             _logger.LogInformation("Attempting to create new project: {ProjectName}", viewModel.Name);
 
+            // Customer authorization: customers can only create projects for themselves
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? throw new InvalidOperationException("User ID not found");
+            var isCustomer = User.IsInRole(Constants.RoleCustomer);
+
+            if (isCustomer)
+            {
+                // Override customer ID for customer users to prevent manipulation
+                viewModel.SelectedCustomerId = userId;
+                viewModel.IsNewCustomer = false;
+            }
+
             if (ModelState.IsValid)
             {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
-                    ?? throw new InvalidOperationException("User ID not found");
-
                 try
                 {
                     await _projectService.CreateProjectAsync(viewModel, userId);
@@ -106,6 +115,7 @@ public class ProjectsController : Controller
             viewModel.CustomerList = (await _projectService.GetCustomerSelectListAsync()).ToList();
             viewModel.StakeholderList = (await _projectService.GetStakeholderSelectListAsync()).ToList();
             viewModel.TemplateList = (await _projectService.GetTemplateSelectListAsync()).ToList();
+            ViewBag.IsCustomer = isCustomer;
             return View(viewModel);
         }
         catch (Exception ex)

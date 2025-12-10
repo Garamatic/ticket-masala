@@ -630,7 +630,9 @@ public class TicketController : Controller
 
             foreach (var ticket in result.Results)
             {
-                csv.AppendLine($"{ticket.Guid},\"{ticket.Description}\",{ticket.TicketStatus},\"{ticket.Customer?.Name}\",\"{ticket.Responsible?.Name}\",{ticket.CreationDate:yyyy-MM-dd},{ticket.CompletionTarget:yyyy-MM-dd}");
+                var customerName = ticket.Customer != null ? $"{ticket.Customer.FirstName} {ticket.Customer.LastName}" : "Unknown";
+                var responsibleName = ticket.Responsible != null ? $"{ticket.Responsible.FirstName} {ticket.Responsible.LastName}" : "Not Assigned";
+                csv.AppendLine($"{ticket.Guid},\"{ticket.Description}\",{ticket.TicketStatus},\"{customerName}\",\"{responsibleName}\",{ticket.CreationDate:yyyy-MM-dd},{ticket.CompletionTarget:yyyy-MM-dd}");
             }
 
             var bytes = System.Text.Encoding.UTF8.GetBytes(csv.ToString());

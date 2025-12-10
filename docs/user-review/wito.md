@@ -43,6 +43,8 @@ Nieuwe user/Customer > projects
 
 Beetje vreemd dat er geen menu link is voor projects maar wel voor tickets 
 
+Mogelijkheid tot nieuwe Feature: Project Request System.
+
 Geen projecten > knop om nieuw project te creeren zou zichtbaar moeten zijn (zoals bij tickets) 
 
  

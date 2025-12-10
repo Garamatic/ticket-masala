@@ -45,13 +45,13 @@ namespace IT_Project2526.AI
                     return $"Provide a concise answer for: {query}";
 
                 case OpenAIPrompts.Detailed:
-                    return $"Provide a detailed and thorough explanation of: {query}";
+                    return $"Provide a detailed and thorough explanation of: {query} Do not give follow up questions!";
 
                 case OpenAIPrompts.ProsCons:
-                    return $"List the pros and cons of: {query}";
+                    return $"List the pros and cons of: {query} Do not give follow up questions!";
 
                 case OpenAIPrompts.Summary:
-                    return $"Summarize the key points about: {query}";
+                    return $"Summarize the key points about: {query}. Do not give follow up questions!";
 
                 default:
                     return query;

@@ -427,10 +427,10 @@ namespace IT_Project2526.Data
             var description3 = "Migrate on-premise infrastructure to AWS cloud";
             var description4 = "Integrate Salesforce CRM with internal systems";
 
-            var roadmap1 = await OpenAiAPIHandler.GetOpenAIResponse(OpenAIPrompts.Steps, description1);
-            var roadmap2 = await OpenAiAPIHandler.GetOpenAIResponse(OpenAIPrompts.Steps, description2);
-            var roadmap3 = await OpenAiAPIHandler.GetOpenAIResponse(OpenAIPrompts.Steps, description3);
-            var roadmap4 = await OpenAiAPIHandler.GetOpenAIResponse(OpenAIPrompts.Steps, description4);
+            //var roadmap1 = await OpenAiAPIHandler.GetOpenAIResponse(OpenAIPrompts.Steps, description1);
+            //var roadmap2 = await OpenAiAPIHandler.GetOpenAIResponse(OpenAIPrompts.Steps, description2);
+            //var roadmap3 = await OpenAiAPIHandler.GetOpenAIResponse(OpenAIPrompts.Steps, description3);
+            //var roadmap4 = await OpenAiAPIHandler.GetOpenAIResponse(OpenAIPrompts.Steps, description4);
 
             var projects = new[]
             {
@@ -443,7 +443,7 @@ namespace IT_Project2526.Data
                     ProjectManager = pm1,
                     CompletionTarget = DateTime.UtcNow.AddMonths(2),
                     CreatorGuid = Guid.Parse((await _userManager.FindByEmailAsync("admin@ticketmasala.com"))!.Id),
-                    ProjectAiRoadmap = roadmap1,
+                    ProjectAiRoadmap = "Seeded, no AI",
                 },
                 new Project
                 {
@@ -454,7 +454,7 @@ namespace IT_Project2526.Data
                     ProjectManager = pm2,
                     CompletionTarget = DateTime.UtcNow.AddMonths(4),
                     CreatorGuid = Guid.Parse((await _userManager.FindByEmailAsync("admin@ticketmasala.com"))!.Id),
-                    ProjectAiRoadmap = roadmap2,
+                    ProjectAiRoadmap = "Seeded, no AI",
                 },
                 new Project
                 {
@@ -465,7 +465,7 @@ namespace IT_Project2526.Data
                     ProjectManager = pm1,
                     CompletionTarget = DateTime.UtcNow.AddMonths(6),
                     CreatorGuid = Guid.Parse((await _userManager.FindByEmailAsync("admin@ticketmasala.com"))!.Id),
-                    ProjectAiRoadmap = roadmap3
+                    ProjectAiRoadmap = "Seeded, no AI"
                 },
                 new Project
                 {
@@ -477,7 +477,7 @@ namespace IT_Project2526.Data
                     CompletionTarget = DateTime.UtcNow.AddMonths(-1),
                     CompletionDate = DateTime.UtcNow.AddDays(-5),
                     CreatorGuid = Guid.Parse((await _userManager.FindByEmailAsync("admin@ticketmasala.com"))!.Id),
-                    ProjectAiRoadmap = roadmap4
+                    ProjectAiRoadmap = "Seeded, no AI"
                 }
             };
 

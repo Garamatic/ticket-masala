@@ -682,11 +682,15 @@
     border-color: var(--color-primary);
     box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.15);
 }
-
+.ai-roadmap {
+    padding: 10px 15px;
+    background: #f8f9fa;
+    border-left: 4px solid #0d6efd;
+    border-radius: 4px;
+}
 /* ==========================================
    DARK MODE SUPPORT
    ========================================== */
-
 [data-theme="dark"] {
     --bg-primary: #1e293b;
     --bg-secondary: #0f172a;

@@ -43,7 +43,7 @@ public class TicketGeneratorService : BackgroundService
         {
             try
             {
-                await GenerateRandomTicketAsync(stoppingToken);
+                //await GenerateRandomTicketAsync(stoppingToken);
             }
             catch (Exception ex)
             {

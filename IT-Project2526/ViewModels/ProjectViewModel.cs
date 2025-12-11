@@ -16,7 +16,7 @@ namespace IT_Project2526.ViewModels
        public Employee ProjectManager {  get; init; }
        public string ProjectManagerName { get; set; } = string.Empty;
        public int TicketCount { get; set; }
-
+       public DateTime? CompletionTarget { get; set; }
         public class ProjectTicketInfo
         {
             public Guid Guid { get; set; }

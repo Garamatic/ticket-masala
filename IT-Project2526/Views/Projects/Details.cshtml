@@ -8,7 +8,6 @@
 }
 
 <h1>Project Details</h1>
-
 <div class="detail-container">
     <h4>@Model.ProjectDetails.Name</h4>
     <hr />
@@ -25,10 +24,13 @@
         <dd class="col-sm-9">@Model.ProjectDetails.ProjectManagerName</dd>
 
         <dt class="col-sm-3">Completion Target</dt>
-        <dd class="col-sm-9">@Html.DisplayFor(model => model.ProjectDetails)</dd>
+        <dd class="col-sm-9">@Model.ProjectDetails.CompletionTarget?.ToString("yyyy-MM-dd") ?? "Not set"</dd>
     </dl>
 </div>
-
+<h3>Proposed AI Roadmap</h3>
+<div class="ai-roadmap">
+    @Html.Raw(Model.ProjectDetails.AiRoadmap!.Replace("\n", "<br />"))
+</div>
 <h3>Taken (@Model.Tasks.Count)</h3>
 
 @if (Model.Tasks != null && Model.Tasks.Any())

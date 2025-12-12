@@ -11,11 +11,11 @@ public interface IUserRepository
     Task<Employee?> GetEmployeeByIdAsync(string id);
     Task<IEnumerable<Employee>> GetAllEmployeesAsync();
     Task<IEnumerable<Employee>> GetEmployeesByTeamAsync(string team);
-    
+
     // Customer operations
     Task<ApplicationUser?> GetCustomerByIdAsync(string id);
     Task<IEnumerable<ApplicationUser>> GetAllCustomersAsync();
-    
+
     // General user operations
     Task<ApplicationUser?> GetUserByIdAsync(string id);
     Task<ApplicationUser?> GetUserByEmailAsync(string email);

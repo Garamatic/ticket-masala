@@ -1,0 +1,139 @@
+{
+    "client_config": {
+        "company": {
+            "name": "WellCare Medical Clinic",
+            "slogan": "Your Health, Our Priority",
+            "description": "Comprehensive healthcare services with a personal touch. Modern medicine, compassionate care.",
+            "logoIcon": "fa-heart-pulse",
+            "foundedYear": 2008
+        },
+        "contact": {
+            "email": "appointments@wellcare.be",
+            "phone": "+32 2 456 7890",
+            "address": "Avenue Louise 250, 1050 Brussels",
+            "social": {
+                "facebook": "https://facebook.com/wellcareclinic",
+                "instagram": "https://instagram.com/wellcare"
+            }
+        },
+        "theme": {
+            "primaryColor": "#00897B",
+            "primaryDark": "#00695C",
+            "primaryLight": "#4DB6AC",
+            "secondaryColor": "#37474F",
+            "accentColor": "#FF5722",
+            "accentLight": "#FF8A65"
+        },
+        "services": [
+            {
+                "id": "appointment",
+                "icon": "fas fa-calendar-check",
+                "title": "Appointments",
+                "description": "Schedule consultations with our general practitioners and specialists."
+            },
+            {
+                "id": "prescription",
+                "icon": "fas fa-prescription-bottle-medical",
+                "title": "Prescription Refills",
+                "description": "Request medication renewals quickly and conveniently online."
+            },
+            {
+                "id": "lab-results",
+                "icon": "fas fa-flask",
+                "title": "Lab Results",
+                "description": "Access your test results and request follow-up consultations."
+            },
+            {
+                "id": "consultation",
+                "icon": "fas fa-stethoscope",
+                "title": "Teleconsultation",
+                "description": "Video consultations from the comfort of your home."
+            }
+        ],
+        "projects": [
+            {
+                "title": "Digital Health Records",
+                "description": "Secure patient portal with complete medical history access.",
+                "location": "All Locations",
+                "image": "assets/digital-health.png"
+            },
+            {
+                "title": "Pediatric Wing",
+                "description": "Child-friendly healthcare environment with specialized care.",
+                "location": "Main Campus",
+                "image": "assets/pediatric.png"
+            },
+            {
+                "title": "Wellness Programs",
+                "description": "Preventive care and lifestyle management programs.",
+                "location": "Community Outreach",
+                "image": "assets/wellness.png"
+            },
+            {
+                "title": "Mental Health Services",
+                "description": "Comprehensive psychological and psychiatric support.",
+                "location": "All Locations",
+                "image": "assets/mental-health.png"
+            }
+        ],
+        "form": {
+            "title": "Request an Appointment",
+            "submitButtonText": "Book Appointment",
+            "projectTypes": [
+                {
+                    "value": "appointment-gp",
+                    "label": "General Practitioner"
+                },
+                {
+                    "value": "appointment-specialist",
+                    "label": "Specialist Consultation"
+                },
+                {
+                    "value": "prescription-refill",
+                    "label": "Prescription Refill"
+                },
+                {
+                    "value": "lab-results",
+                    "label": "Lab Results Inquiry"
+                },
+                {
+                    "value": "teleconsultation",
+                    "label": "Teleconsultation"
+                },
+                {
+                    "value": "other",
+                    "label": "Other Request"
+                }
+            ]
+        }
+    },
+    "masala_config": {
+        "endpoint": "http://localhost:5054/api/v1/tickets/external",
+        "sourceSite": "wellcare-medical-clinic",
+        "auth": {
+            "apiKey": "public-client-key",
+            "method": "Bearer"
+        },
+        "retryPolicy": {
+            "maxRetries": 3,
+            "delayMs": 1000
+        }
+    },
+    "gerda_config": {
+        "domain": "Healthcare",
+        "validationRules": {
+            "customerEmail": {
+                "required": true,
+                "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+            },
+            "description": {
+                "required": true,
+                "minLength": 15
+            }
+        },
+        "workflow": {
+            "defaultPriority": "Normal",
+            "autoAssign": true
+        }
+    }
+}

@@ -11,17 +11,17 @@ public interface IMasalaPlugin
     /// Unique plugin identifier
     /// </summary>
     string Name { get; }
-    
+
     /// <summary>
     /// Plugin version
     /// </summary>
     string Version { get; }
-    
+
     /// <summary>
     /// Plugin description
     /// </summary>
     string Description { get; }
-    
+
     /// <summary>
     /// Register plugin services with the DI container
     /// </summary>
@@ -65,7 +65,7 @@ public class PluginService : IPluginService
     public void LoadPlugins()
     {
         var pluginsPath = Path.Combine(_environment.ContentRootPath, "plugins");
-        
+
         if (!Directory.Exists(pluginsPath))
         {
             _logger.LogInformation("No plugins folder found at {Path}", pluginsPath);

@@ -34,8 +34,8 @@ public class NotificationCommentObserver : ICommentObserver
 
         var ticket = comment.Ticket;
         var ticketShortId = ticket.Guid.ToString()[..8];
-        var commentPreview = comment.Body.Length > 50 
-            ? comment.Body[..50] + "..." 
+        var commentPreview = comment.Body.Length > 50
+            ? comment.Body[..50] + "..."
             : comment.Body;
 
         // Don't notify the author of their own comment
@@ -49,15 +49,15 @@ public class NotificationCommentObserver : ICommentObserver
                 $"New {(comment.IsInternal ? "internal note" : "comment")} on ticket #{ticketShortId}",
                 $"/Ticket/Detail/{ticket.Guid}",
                 comment.IsInternal ? "Warning" : "Info");
-            
-            _logger.LogDebug("Notified responsible {UserId} of comment on ticket {TicketId}", 
+
+            _logger.LogDebug("Notified responsible {UserId} of comment on ticket {TicketId}",
                 ticket.ResponsibleId, ticket.Guid);
         }
 
         // Notify customer (only for non-internal comments)
         var customerId = ticket.CreatorGuid.ToString();
-        if (!comment.IsInternal && 
-            !string.IsNullOrEmpty(customerId) && 
+        if (!comment.IsInternal &&
+            !string.IsNullOrEmpty(customerId) &&
             customerId != authorId)
         {
             await _notificationService.NotifyUserAsync(
@@ -65,8 +65,8 @@ public class NotificationCommentObserver : ICommentObserver
                 $"New reply on your ticket #{ticketShortId}",
                 $"/Ticket/Detail/{ticket.Guid}",
                 "Info");
-            
-            _logger.LogDebug("Notified customer {UserId} of comment on ticket {TicketId}", 
+
+            _logger.LogDebug("Notified customer {UserId} of comment on ticket {TicketId}",
                 customerId, ticket.Guid);
         }
 

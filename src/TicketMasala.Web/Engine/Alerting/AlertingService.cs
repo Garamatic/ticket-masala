@@ -45,7 +45,7 @@ public class AlertingService : IAlertingService
     {
         var webhooks = new List<WebhookConfig>();
         var section = configuration.GetSection("Alerting:Webhooks");
-        
+
         foreach (var child in section.GetChildren())
         {
             var webhook = new WebhookConfig
@@ -54,15 +54,15 @@ public class AlertingService : IAlertingService
                 Enabled = child.GetValue("Enabled", true),
                 AlertTypes = child.GetSection("AlertTypes").Get<string[]>()
             };
-            
+
             if (!string.IsNullOrEmpty(webhook.Url))
             {
                 webhooks.Add(webhook);
-                _logger.LogInformation("Registered webhook for {Types}", 
+                _logger.LogInformation("Registered webhook for {Types}",
                     webhook.AlertTypes != null ? string.Join(",", webhook.AlertTypes) : "all alerts");
             }
         }
-        
+
         return webhooks;
     }
 
@@ -89,7 +89,7 @@ public class AlertingService : IAlertingService
         foreach (var webhook in relevantWebhooks)
         {
             if (string.IsNullOrEmpty(webhook.Url)) continue;
-            
+
             try
             {
                 var response = await client.PostAsync(webhook.Url, content);

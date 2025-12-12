@@ -90,75 +90,7 @@
 
                 <hr />
 
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">Quality Review</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span>Status: 
-                                <span class="badge bg-@(Model.ReviewStatus == TicketMasala.Web.Models.ReviewStatus.Approved ? "success" : (Model.ReviewStatus == TicketMasala.Web.Models.ReviewStatus.Rejected ? "danger" : (Model.ReviewStatus == TicketMasala.Web.Models.ReviewStatus.Pending ? "warning" : "secondary")))">
-                                    @Model.ReviewStatus
-                                </span>
-                            </span>
-                            @if (Model.ReviewStatus == TicketMasala.Web.Models.ReviewStatus.None || Model.ReviewStatus == TicketMasala.Web.Models.ReviewStatus.Rejected)
-                            {
-                                <form asp-action="RequestReview" method="post" class="d-inline">
-                                    <input type="hidden" name="id" value="@Model.Guid" />
-                                    <button type="submit" class="btn btn-sm btn-outline-primary">Request Review</button>
-                                </form>
-                            }
-                        </div>
-
-                        @if (Model.ReviewStatus == TicketMasala.Web.Models.ReviewStatus.Pending && (User.IsInRole("Admin") || User.IsInRole("Employee"))) // Assuming Managers/Seniors review
-                        {
-                            <div class="border p-3 rounded bg-light mb-3">
-                                <h6>Submit Review</h6>
-                                <form asp-action="SubmitReview" method="post">
-                                    <input type="hidden" name="id" value="@Model.Guid" />
-                                    <div class="mb-2">
-                                        <label class="form-label">Score (1-5)</label>
-                                        <select name="score" class="form-select">
-                                            <option value="5">5 - Excellent</option>
-                                            <option value="4">4 - Good</option>
-                                            <option value="3">3 - Average</option>
-                                            <option value="2">2 - Poor</option>
-                                            <option value="1">1 - Unacceptable</option>
-                                        </select>
-                                    </div>
-                                    <div class="mb-2">
-                                        <label class="form-label">Feedback</label>
-                                        <textarea name="feedback" class="form-control" rows="2" required></textarea>
-                                    </div>
-                                    <div class="d-flex gap-2">
-                                        <button type="submit" name="approve" value="true" class="btn btn-success btn-sm">Approve</button>
-                                        <button type="submit" name="approve" value="false" class="btn btn-danger btn-sm">Reject</button>
-                                    </div>
-                                </form>
-                            </div>
-                        }
-
-                        @if (Model.QualityReviews.Any())
-                        {
-                            <h6>History</h6>
-                            <ul class="list-group list-group-flush">
-                                @foreach (var review in Model.QualityReviews)
-                                {
-                                    <li class="list-group-item px-0">
-                                        <div class="d-flex justify-content-between">
-                                            <strong>@(review.Reviewer?.FirstName ?? "Unknown")</strong>
-                                            <small class="text-muted">@review.CreatedAt.ToString("g")</small>
-                                        </div>
-                                        <div>
-                                            @for(int i=0; i<review.Score; i++) { <i class="fas fa-star text-warning"></i> }
-                                            <span class="ms-2">@review.Comments</span>
-                                        </div>
-                                    </li>
-                                }
-                            </ul>
-                        }
-                    </div>
-                </div>
+                @await Html.PartialAsync("_QualityReviewPartial", Model)
 
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
@@ -168,33 +100,15 @@
                         <span class="badge bg-secondary">@Model.Comments.Count comments</span>
                     </div>
                     <div class="card-body">
-                        @if (Model.Comments.Any())
-                        {
-                            <div class="list-group list-group-flush mb-3">
-                                @foreach (var comment in Model.Comments)
-                                {
-                                    <div class="list-group-item @(comment.IsInternal ? "list-group-item-warning" : "")">
-                                        <div class="d-flex w-100 justify-content-between">
-                                            <h6 class="mb-1">
-                                                @if (comment.IsInternal)
-                                                {
-                                                    <span class="badge bg-warning text-dark me-2">Internal Note</span>
-                                                }
-                                                <strong>@(comment.Author?.FirstName ?? "Unknown") @(comment.Author?.LastName ?? "")</strong>
-                                            </h6>
-                                            <small class="text-muted">@comment.CreatedAt.ToString("g")</small>
-                                        </div>
-                                        <div class="mb-1 comment-content" data-content="@comment.Body"></div>
-                                    </div>
-                                }
-                            </div>
-                        }
-                        else
-                        {
-                            <p class="text-muted text-center my-3">No comments yet. Start the discussion!</p>
-                        }
+                        <div id="commentList">
+                            @await Html.PartialAsync("_CommentListPartial", Model.Comments)
+                        </div>
 
-                        <form asp-action="AddComment" method="post">
+                        <form asp-action="AddComment" method="post" 
+                              hx-post="@Url.Action("AddComment", "Ticket")" 
+                              hx-target="#commentList"
+                              hx-swap="innerHTML"
+                              hx-on::after-request="if(event.detail.successful) this.reset()">
                             <input type="hidden" name="id" value="@Model.Guid" />
                             <div class="mb-3">
                                 <label for="commentBody" class="form-label">Add a comment</label>
@@ -354,7 +268,7 @@
                             <span class="fs-4">@Model.EstimatedEffortPoints points</span>
                             <span class="badge bg-secondary">@Model.ComplexityLabel</span>
                         </div>
-                        <div class="progress mt-2" style="height: 8px;">
+                        <div class="progress mt-2 progress-sm">
                             <div class="progress-bar" 
                                  role="progressbar" 
                                  style="width: @((Model.EstimatedEffortPoints / 21.0 * 100))%"
@@ -407,7 +321,7 @@
                         
                         <div class="mb-2">
                             <small class="text-muted">Current Workload</small>
-                            <div class="progress" style="height: 20px;">
+                            <div class="progress progress-md">
                                 <div class="progress-bar @(Model.RecommendedAgent.WorkloadPercentage > 80 ? "bg-warning" : "bg-success")" 
                                      role="progressbar" 
                                      style="width: @Model.RecommendedAgent.WorkloadPercentage%"
@@ -482,46 +396,6 @@
 </div>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Render Markdown for existing comments
-            document.querySelectorAll('.comment-content').forEach(el => {
-                const rawContent = el.getAttribute('data-content');
-                // Simple mention linking: @@Name -> <span class="text-primary">@@Name</span>
-                const withMentions = rawContent.replace(/@@(\w+)/g, '<span class="fw-bold text-primary">@@$1</span>');
-                el.innerHTML = marked.parse(withMentions);
-            });
-
-            // Editor Toolbar
-            const textarea = document.getElementById('commentBody');
-            
-            window.insertFormat = function(format) {
-                const start = textarea.selectionStart;
-                const end = textarea.selectionEnd;
-                const text = textarea.value;
-                const before = text.substring(0, start);
-                const selection = text.substring(start, end);
-                const after = text.substring(end);
-                
-                let newText = '';
-                if (format === 'bold') newText = `**${selection || 'bold'}**`;
-                if (format === 'italic') newText = `*${selection || 'italic'}*`;
-                if (format === 'list') newText = `\n- ${selection || 'item'}`;
-                
-                textarea.value = before + newText + after;
-                textarea.focus();
-            };
-
-            window.insertMention = function(username) {
-                const start = textarea.selectionStart;
-                const text = textarea.value;
-                const before = text.substring(0, start);
-                const after = text.substring(start);
-                
-                textarea.value = before + `@@${username} ` + after;
-                textarea.focus();
-            };
-        });
-    </script>
+    <script src="~/lib/marked/marked.min.js"></script>
+    <script src="~/js/ticket-detail.js" asp-append-version="true"></script>
 }

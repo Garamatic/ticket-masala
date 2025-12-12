@@ -45,7 +45,7 @@ public class EfCoreProjectRepositoryIntegrationTests : IDisposable
         // Assert
         Assert.NotNull(result);
         Assert.NotEqual(Guid.Empty, result.Guid);
-        
+
         var fromDb = await _fixture.Context.Projects.FindAsync(result.Guid);
         Assert.NotNull(fromDb);
         Assert.Equal("New Test Project", fromDb.Name);
@@ -57,7 +57,7 @@ public class EfCoreProjectRepositoryIntegrationTests : IDisposable
         // Arrange
         var customer = await _fixture.SeedTestCustomerAsync();
         var manager = await _fixture.SeedTestEmployeeAsync(level: EmployeeType.ProjectManager);
-        
+
         var project = new Project
         {
             Name = "Managed Project",
@@ -77,7 +77,7 @@ public class EfCoreProjectRepositoryIntegrationTests : IDisposable
         var fromDb = await _fixture.Context.Projects
             .Include(p => p.ProjectManager)
             .FirstAsync(p => p.Guid == project.Guid);
-        
+
         Assert.NotNull(fromDb.ProjectManager);
         Assert.Equal(manager.Id, fromDb.ProjectManagerId);
     }
@@ -188,7 +188,7 @@ public class EfCoreProjectRepositoryIntegrationTests : IDisposable
 
         // Assert
         Assert.Equal(2, activeProjects.Count());
-        Assert.All(activeProjects, p => 
+        Assert.All(activeProjects, p =>
             Assert.True(p.Status == Status.Pending || p.Status == Status.InProgress));
     }
 
@@ -202,7 +202,7 @@ public class EfCoreProjectRepositoryIntegrationTests : IDisposable
         // Arrange
         var customer1 = await _fixture.SeedTestCustomerAsync();
         var customer2 = await _fixture.SeedTestCustomerAsync();
-        
+
         await _fixture.SeedTestProjectAsync(customer: customer1);
         await _fixture.SeedTestProjectAsync(customer: customer1);
         await _fixture.SeedTestProjectAsync(customer: customer2);
@@ -224,7 +224,7 @@ public class EfCoreProjectRepositoryIntegrationTests : IDisposable
     {
         // Arrange
         var customer = await _fixture.SeedTestCustomerAsync();
-        
+
         var oldProject = new Project
         {
             Name = "Old Project",
@@ -235,7 +235,7 @@ public class EfCoreProjectRepositoryIntegrationTests : IDisposable
             CreationDate = DateTime.UtcNow.AddDays(-10)
         };
         _fixture.Context.Projects.Add(oldProject);
-        
+
         var newProject = new Project
         {
             Name = "New Project",

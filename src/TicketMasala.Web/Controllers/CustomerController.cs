@@ -30,7 +30,7 @@ public class CustomerController : Controller
         try
         {
             var customers = await _userRepository.GetAllCustomersAsync();
-            
+
             // Get project counts for each customer
             var customerIds = customers.Select(c => c.Id).ToList();
             var projectCounts = await _context.Projects
@@ -38,7 +38,7 @@ public class CustomerController : Controller
                 .GroupBy(p => p.Customer!.Id)
                 .Select(g => new { CustomerId = g.Key, Count = g.Count() })
                 .ToDictionaryAsync(x => x.CustomerId, x => x.Count);
-            
+
             var viewModels = customers.Select(c => new CustomerListViewModel
             {
                 Id = c.Id,
@@ -88,8 +88,8 @@ public class CustomerController : Controller
                 Description = p.Description,
                 Status = p.Status,
                 ProjectManager = p.ProjectManager!,
-                ProjectManagerName = p.ProjectManager != null 
-                    ? $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}" 
+                ProjectManagerName = p.ProjectManager != null
+                    ? $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}"
                     : "Unassigned"
             }).ToList()
         };

@@ -18,7 +18,7 @@ public class TicketImportService : ITicketImportService
 {
     private const string DefaultTicketTitle = "Imported Ticket";
     private const string DefaultTicketDescription = "No Description";
-    
+
     private readonly MasalaDbContext _context;
     private readonly ILogger<TicketImportService> _logger;
 
@@ -95,7 +95,7 @@ public class TicketImportService : ITicketImportService
             try
             {
                 var rowDict = (IDictionary<string, object>)row;
-                
+
                 // 1. Resolve Description
                 string description = DefaultTicketDescription;
                 if (mapping.ContainsKey("Description") && rowDict.ContainsKey(mapping["Description"]))

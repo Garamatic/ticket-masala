@@ -1,6 +1,7 @@
 using TicketMasala.Web.Models;
 
 namespace TicketMasala.Web.ViewModels.Tickets;
+
 public class TicketSearchViewModel
 {
     public string? SearchTerm { get; set; }
@@ -8,18 +9,18 @@ public class TicketSearchViewModel
     public TicketType? TicketType { get; set; }
     public string? ResponsibleId { get; set; }
     // Alias for ResponsibleId to match Controller usage
-    public string? AssignedToId 
-    { 
-        get => ResponsibleId; 
-        set => ResponsibleId = value; 
+    public string? AssignedToId
+    {
+        get => ResponsibleId;
+        set => ResponsibleId = value;
     }
-    
+
     public Guid? ProjectId { get; set; }
     public string? CustomerId { get; set; }
     public DateTime? DateFrom { get; set; }
     public DateTime? DateTo { get; set; }
     public bool ShowOnlyMyTickets { get; set; }
-    
+
     public bool IsOverdue { get; set; }
     public bool IsDueSoon { get; set; }
 

@@ -12,17 +12,17 @@ public interface IModelPersistenceService
     /// Saves a trained model to disk with metadata
     /// </summary>
     Task SaveModelAsync(ITransformer model, string modelName, string domainId, string? configVersion = null);
-    
+
     /// <summary>
     /// Loads a model from disk, returns null if not found
     /// </summary>
     ITransformer? LoadModel(string modelName, string domainId);
-    
+
     /// <summary>
     /// Gets metadata for a persisted model
     /// </summary>
     ModelInfo? GetModelInfo(string modelName, string domainId);
-    
+
     /// <summary>
     /// Lists all available models for a domain
     /// </summary>
@@ -59,7 +59,7 @@ public class ModelPersistenceService : IModelPersistenceService
         _mlContext = mlContext;
         _logger = logger;
         _modelsPath = Path.Combine(environment.ContentRootPath, "models");
-        
+
         // Ensure models directory exists
         if (!Directory.Exists(_modelsPath))
         {
@@ -81,7 +81,7 @@ public class ModelPersistenceService : IModelPersistenceService
 
         // Save the model
         _mlContext.Model.Save(model, null, modelPath);
-        
+
         // Save metadata
         var metadata = new ModelInfo
         {
@@ -93,20 +93,20 @@ public class ModelPersistenceService : IModelPersistenceService
             FileSizeBytes = new FileInfo(modelPath).Length
         };
 
-        var json = System.Text.Json.JsonSerializer.Serialize(metadata, new System.Text.Json.JsonSerializerOptions 
-        { 
-            WriteIndented = true 
+        var json = System.Text.Json.JsonSerializer.Serialize(metadata, new System.Text.Json.JsonSerializerOptions
+        {
+            WriteIndented = true
         });
         await File.WriteAllTextAsync(metadataPath, json);
 
-        _logger.LogInformation("Saved model {ModelName} for domain {DomainId} (config: {ConfigVersion})", 
+        _logger.LogInformation("Saved model {ModelName} for domain {DomainId} (config: {ConfigVersion})",
             modelName, domainId, configVersion ?? "latest");
     }
 
     public ITransformer? LoadModel(string modelName, string domainId)
     {
         var modelPath = Path.Combine(_modelsPath, domainId, $"{modelName}.zip");
-        
+
         if (!File.Exists(modelPath))
         {
             _logger.LogDebug("Model {ModelName} not found for domain {DomainId}", modelName, domainId);
@@ -129,7 +129,7 @@ public class ModelPersistenceService : IModelPersistenceService
     public ModelInfo? GetModelInfo(string modelName, string domainId)
     {
         var metadataPath = Path.Combine(_modelsPath, domainId, $"{modelName}.meta.json");
-        
+
         if (!File.Exists(metadataPath))
         {
             return null;
@@ -149,7 +149,7 @@ public class ModelPersistenceService : IModelPersistenceService
     public IEnumerable<ModelInfo> ListModels(string domainId)
     {
         var domainPath = Path.Combine(_modelsPath, domainId);
-        
+
         if (!Directory.Exists(domainPath))
         {
             yield break;

@@ -1,6 +1,6 @@
 # Ticket Masala - Architecture Summary
 
-**Quick Reference Guide** | See [ARCHITECTURE_DETAILED.md](ARCHITECTURE_DETAILED.md) for full documentation.
+**Quick Reference Guide** | See [Detailed Architecture](DETAILED.md) for full documentation.
 
 ---
 
@@ -31,7 +31,7 @@ The system uses a **layered terminology strategy** to balance external API consi
 >
 > **Views:** Labels are domain-configurable via `masala_domains.yaml` → `entity_labels`.
 
-See [ADR-001](./architecture/ADR-001-uem-terminology.md) for full rationale.
+See [ADR-001](ADR-001-uem-terminology.md) for full rationale.
 
 ---
 
@@ -105,4 +105,4 @@ The system is designed as a modular monolith, balancing simplicity and scalabili
 
 ---
 
-*Full details: [ARCHITECTURE_DETAILED.md](ARCHITECTURE_DETAILED.md)*
+*Full details: [Detailed Architecture](DETAILED.md)*

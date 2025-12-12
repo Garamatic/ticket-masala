@@ -6,23 +6,24 @@ using Microsoft.AspNetCore.Identity;
 using TicketMasala.Web.Utilities;
 
 namespace TicketMasala.Web.Models;
+
 public class Ticket : BaseModel
 {
     public required Status TicketStatus { get; set; } = Models.Status.Pending;
     public TicketType? TicketType { get; set; }
-    
+
     [Required(ErrorMessage = "Description is required")]
     [NoHtml(ErrorMessage = "Description cannot contain HTML")]
     [SafeStringLength(5000, ErrorMessage = "Description cannot exceed 5000 characters")]
     public required string Description { get; set; }
-    
+
     public DateTime? CompletionTarget { get; set; }
     public DateTime? CompletionDate { get; set; }
 
     // GERDA AI fields
     public int EstimatedEffortPoints { get; set; } = 0;
     public double PriorityScore { get; set; } = 0.0;
-    
+
     [SafeStringLength(1000, ErrorMessage = "Tags cannot exceed 1000 characters")]
     public string? GerdaTags { get; set; } // Comma-separated: "AI-Dispatched,Spam-Cluster"
 
@@ -66,7 +67,7 @@ public class Ticket : BaseModel
     // ═══════════════════════════════════════════
     // DOMAIN EXTENSIBILITY FIELDS
     // ═══════════════════════════════════════════
-    
+
     /// <summary>
     /// The domain this ticket belongs to (e.g., "IT", "Gardening", "TaxLaw").
     /// Defaults to "IT" for backward compatibility.

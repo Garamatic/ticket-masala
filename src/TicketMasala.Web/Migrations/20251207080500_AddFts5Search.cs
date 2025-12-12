@@ -49,7 +49,7 @@ namespace TicketMasala.Web.Migrations
                     VALUES (new.RowId, new.Id, new.Description, new.CustomFieldsJson);
                 END;
             ");
-            
+
             // 5. Initial Population (Backfill)
             migrationBuilder.Sql(@"
                 INSERT INTO Tickets_Search(rowid, Id, Description, CustomFieldsJson)

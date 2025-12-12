@@ -59,12 +59,12 @@ public class TicketsApiController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("External ticket submission from {Source} for {Email}", 
+            _logger.LogInformation("External ticket submission from {Source} for {Email}",
                 request.SourceSite, request.CustomerEmail);
 
             // 1. Find or create customer by email
             var customer = await FindOrCreateCustomerAsync(request.CustomerEmail, request.CustomerName);
-            
+
             if (customer == null)
             {
                 return BadRequest(new ExternalTicketResponse
@@ -76,7 +76,7 @@ public class TicketsApiController : ControllerBase
 
             // 2. Create the ticket
             var description = $"**{request.Subject}**\n\n{request.Description}";
-            
+
             if (!string.IsNullOrEmpty(request.SourceSite))
             {
                 description += $"\n\n---\n*Submitted via: {request.SourceSite}*";
@@ -94,7 +94,7 @@ public class TicketsApiController : ControllerBase
             ticket.GerdaTags = string.IsNullOrEmpty(ticket.GerdaTags)
                 ? $"External-Request,{request.SourceSite ?? "unknown"}"
                 : $"{ticket.GerdaTags},External-Request,{request.SourceSite ?? "unknown"}";
-            
+
             await _ticketRepository.UpdateAsync(ticket);
 
             _logger.LogInformation("External ticket {TicketId} created successfully", ticket.Guid);
@@ -125,7 +125,7 @@ public class TicketsApiController : ControllerBase
     {
         // Try to find existing customer
         var existingUser = await _userRepository.GetUserByEmailAsync(email);
-        
+
         if (existingUser != null)
         {
             return existingUser;
@@ -147,7 +147,7 @@ public class TicketsApiController : ControllerBase
         };
 
         var result = await _userManager.CreateAsync(newCustomer, "ExternalUser123!"); // Default password
-        
+
         if (result.Succeeded)
         {
             await _userManager.AddToRoleAsync(newCustomer, "Customer");
@@ -155,7 +155,7 @@ public class TicketsApiController : ControllerBase
             return newCustomer;
         }
 
-        _logger.LogWarning("Failed to create customer {Email}: {Errors}", 
+        _logger.LogWarning("Failed to create customer {Email}: {Errors}",
             email, string.Join(", ", result.Errors.Select(e => e.Description)));
         return null;
     }
@@ -179,7 +179,7 @@ public class TicketsApiController : ControllerBase
     public async Task<ActionResult<TicketDetailsViewModel>> GetById(Guid id)
     {
         var ticket = await _ticketService.GetTicketDetailsAsync(id);
-        
+
         if (ticket == null)
         {
             return NotFound();
@@ -200,12 +200,12 @@ public class TicketsApiController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Creating WorkItem with title: {Title}, domain: {Domain}", 
+            _logger.LogInformation("Creating WorkItem with title: {Title}, domain: {Domain}",
                 request.Title, request.DomainId);
 
             // Map custom fields to JSON
-            var customFieldsJson = request.CustomFields != null 
-                ? JsonSerializer.Serialize(request.CustomFields) 
+            var customFieldsJson = request.CustomFields != null
+                ? JsonSerializer.Serialize(request.CustomFields)
                 : "{}";
 
             // Create the ticket using internal service
@@ -226,8 +226,8 @@ public class TicketsApiController : ControllerBase
             _logger.LogInformation("Created WorkItem {Id} successfully", ticket.Guid);
 
             return CreatedAtAction(
-                nameof(GetById), 
-                new { id = ticket.Guid }, 
+                nameof(GetById),
+                new { id = ticket.Guid },
                 MapToWorkItemResponse(ticket));
         }
         catch (Exception ex)

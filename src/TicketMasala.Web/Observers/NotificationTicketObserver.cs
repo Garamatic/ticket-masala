@@ -74,7 +74,7 @@ public class NotificationTicketObserver : ITicketObserver
         // For this refactor, let's implement comment notifications first, 
         // and leave status update notifications in TicketService or move them carefully.
         // The architecture review asked for "Observer Pattern for Comments".
-        
+
         await Task.CompletedTask;
     }
 
@@ -89,7 +89,7 @@ public class NotificationTicketObserver : ITicketObserver
             {
                 // If author is customer -> notify responsible agent
                 // If author is employee -> notify customer
-                
+
                 var customerId = ticket.CreatorGuid.ToString();
                 if (customerId != null && customerId != comment.AuthorId)
                 {

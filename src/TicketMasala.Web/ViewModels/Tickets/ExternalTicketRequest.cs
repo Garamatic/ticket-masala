@@ -9,22 +9,22 @@ public class ExternalTicketRequest
     /// Customer's email address (used to find or create customer)
     /// </summary>
     public required string CustomerEmail { get; set; }
-    
+
     /// <summary>
     /// Customer's full name
     /// </summary>
     public required string CustomerName { get; set; }
-    
+
     /// <summary>
     /// Short subject/title for the ticket
     /// </summary>
     public required string Subject { get; set; }
-    
+
     /// <summary>
     /// Detailed description of the project request
     /// </summary>
     public required string Description { get; set; }
-    
+
     /// <summary>
     /// Identifier for the source website (e.g., "greenscape-landscaping")
     /// </summary>

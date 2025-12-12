@@ -3,52 +3,53 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.StaticFiles;
 
 namespace TicketMasala.Web.Engine.Core;
-    public class FileService : IFileService
+
+public class FileService : IFileService
+{
+    private readonly IWebHostEnvironment _environment;
+
+    public FileService(IWebHostEnvironment environment)
     {
-        private readonly IWebHostEnvironment _environment;
+        _environment = environment;
+    }
 
-        public FileService(IWebHostEnvironment environment)
+    public async Task<string> SaveFileAsync(IFormFile file, string subDirectory)
+    {
+        var uploadPath = Path.Combine(_environment.WebRootPath, "uploads", subDirectory);
+        if (!Directory.Exists(uploadPath))
         {
-            _environment = environment;
+            Directory.CreateDirectory(uploadPath);
         }
 
-        public async Task<string> SaveFileAsync(IFormFile file, string subDirectory)
+        var uniqueFileName = $"{Guid.NewGuid()}_{file.FileName}";
+        var filePath = Path.Combine(uploadPath, uniqueFileName);
+
+        using (var fileStream = new FileStream(filePath, FileMode.Create))
         {
-            var uploadPath = Path.Combine(_environment.WebRootPath, "uploads", subDirectory);
-            if (!Directory.Exists(uploadPath))
-            {
-                Directory.CreateDirectory(uploadPath);
-            }
-
-            var uniqueFileName = $"{Guid.NewGuid()}_{file.FileName}";
-            var filePath = Path.Combine(uploadPath, uniqueFileName);
-
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(fileStream);
-            }
-
-            return uniqueFileName;
+            await file.CopyToAsync(fileStream);
         }
 
-        public Task<Stream> GetFileStreamAsync(string fileName, string subDirectory)
-        {
-            var filePath = Path.Combine(_environment.WebRootPath, "uploads", subDirectory, fileName);
-            if (!File.Exists(filePath))
-            {
-                throw new FileNotFoundException($"File not found: {fileName}");
-            }
+        return uniqueFileName;
+    }
 
-            return Task.FromResult<Stream>(new FileStream(filePath, FileMode.Open, FileAccess.Read));
+    public Task<Stream> GetFileStreamAsync(string fileName, string subDirectory)
+    {
+        var filePath = Path.Combine(_environment.WebRootPath, "uploads", subDirectory, fileName);
+        if (!File.Exists(filePath))
+        {
+            throw new FileNotFoundException($"File not found: {fileName}");
         }
 
-        public string GetContentType(string fileName)
+        return Task.FromResult<Stream>(new FileStream(filePath, FileMode.Open, FileAccess.Read));
+    }
+
+    public string GetContentType(string fileName)
+    {
+        var provider = new FileExtensionContentTypeProvider();
+        if (!provider.TryGetContentType(fileName, out var contentType))
         {
-            var provider = new FileExtensionContentTypeProvider();
-            if (!provider.TryGetContentType(fileName, out var contentType))
-            {
-                contentType = "application/octet-stream";
-            }
-            return contentType;
+            contentType = "application/octet-stream";
         }
+        return contentType;
+    }
 }

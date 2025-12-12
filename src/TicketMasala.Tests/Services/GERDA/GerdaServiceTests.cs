@@ -128,7 +128,7 @@ public class GerdaServiceTests
         // Arrange
         var service = CreateService();
         var ticketGuid = Guid.NewGuid();
-        
+
         _groupingServiceMock.Setup(x => x.CheckAndGroupTicketAsync(ticketGuid))
             .ReturnsAsync((Guid?)null);
         _estimatingServiceMock.Setup(x => x.EstimateComplexityAsync(ticketGuid))
@@ -150,7 +150,7 @@ public class GerdaServiceTests
         // Arrange
         var service = CreateService();
         var ticketGuid = Guid.NewGuid();
-        
+
         _groupingServiceMock.Setup(x => x.CheckAndGroupTicketAsync(ticketGuid))
             .ReturnsAsync((Guid?)null);
         _estimatingServiceMock.Setup(x => x.EstimateComplexityAsync(ticketGuid))
@@ -193,7 +193,7 @@ public class GerdaServiceTests
             new() { Guid = Guid.NewGuid(), Description = "Test 2", Customer = customer, TicketStatus = Status.Assigned },
             new() { Guid = Guid.NewGuid(), Description = "Test 3", Customer = customer, TicketStatus = Status.Completed } // Should be excluded
         };
-        
+
         _ticketRepositoryMock.Setup(x => x.GetAllAsync(null))
             .ReturnsAsync(tickets);
         _groupingServiceMock.Setup(x => x.CheckAndGroupTicketAsync(It.IsAny<Guid>()))

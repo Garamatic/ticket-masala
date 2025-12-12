@@ -1,4 +1,5 @@
 namespace TicketMasala.Web.Utilities;
+
 public static class ViewModelMappers
 {
     public static int ComputeProgressPercent(int done, int total)

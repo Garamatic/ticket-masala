@@ -22,10 +22,10 @@ public class CorrelationIdMiddleware
         // Get or create correlation ID
         var correlationId = context.Request.Headers[CorrelationIdHeader].FirstOrDefault()
             ?? Guid.NewGuid().ToString("N")[..12]; // Short format for readability
-        
+
         // Store in HttpContext.Items for access throughout request
         context.Items[CorrelationIdKey] = correlationId;
-        
+
         // Add to response headers
         context.Response.OnStarting(() =>
         {
@@ -64,7 +64,7 @@ public static class CorrelationIdMiddlewareExtensions
     {
         return builder.UseMiddleware<CorrelationIdMiddleware>();
     }
-    
+
     /// <summary>
     /// Gets the correlation ID from the current HttpContext
     /// </summary>

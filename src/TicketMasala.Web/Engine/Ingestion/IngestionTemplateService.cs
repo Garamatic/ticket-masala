@@ -13,7 +13,7 @@ public interface IIngestionTemplateService
     /// Transforms source data using a named ingestion template
     /// </summary>
     IngestionResult Transform(string templateName, Dictionary<string, object> sourceData);
-    
+
     /// <summary>
     /// Lists available ingestion templates
     /// </summary>
@@ -48,7 +48,7 @@ public class IngestionTemplateService : IIngestionTemplateService
     {
         _logger = logger;
         _templates = new Dictionary<string, IngestionTemplate>();
-        
+
         // Load templates from configuration (appsettings.json or env vars)
         LoadTemplatesFromConfig(configuration);
     }
@@ -57,7 +57,7 @@ public class IngestionTemplateService : IIngestionTemplateService
     {
         // Load from appsettings.json section "IngestionTemplates"
         var section = configuration.GetSection("IngestionTemplates");
-        
+
         foreach (var child in section.GetChildren())
         {
             var template = new IngestionTemplate
@@ -68,18 +68,18 @@ public class IngestionTemplateService : IIngestionTemplateService
                 DomainId = child["DomainId"] ?? "IT",
                 CustomerIdTemplate = child["CustomerId"]
             };
-            
+
             // Load custom field mappings
             var fields = child.GetSection("CustomFields");
             foreach (var field in fields.GetChildren())
             {
                 template.CustomFieldTemplates[field.Key] = field.Value ?? "";
             }
-            
+
             _templates[child.Key] = template;
             _logger.LogInformation("Loaded ingestion template: {Name}", child.Key);
         }
-        
+
         // Add default template if none configured
         if (_templates.Count == 0)
         {

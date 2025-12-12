@@ -19,36 +19,37 @@ using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web.Data;
 
 namespace TicketMasala.Web.Controllers;
+
 [Authorize] // All authenticated users can access tickets
 public class TicketController : Controller
 {
-    private readonly IGerdaService? _gerdaService;
+    private readonly IGerdaService _gerdaService;
     private readonly ITicketService _ticketService;
     private readonly IAuditService _auditService;
     private readonly INotificationService _notificationService;
     private readonly IDomainConfigurationService _domainConfig;
-    private readonly MasalaDbContext _context;
+    private readonly ISavedFilterService _savedFilterService;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IRuleEngineService _ruleEngine;
     private readonly ILogger<TicketController> _logger;
 
     public TicketController(
+        IGerdaService gerdaService,
         ITicketService ticketService,
         IAuditService auditService,
         INotificationService notificationService,
         IDomainConfigurationService domainConfig,
-        MasalaDbContext context,
+        ISavedFilterService savedFilterService,
         IHttpContextAccessor httpContextAccessor,
         IRuleEngineService ruleEngine,
-        ILogger<TicketController> logger,
-        IGerdaService? gerdaService = null)
+        ILogger<TicketController> logger)
     {
         _gerdaService = gerdaService;
         _ticketService = ticketService;
         _auditService = auditService;
         _notificationService = notificationService;
         _domainConfig = domainConfig;
-        _context = context;
+        _savedFilterService = savedFilterService;
         _httpContextAccessor = httpContextAccessor;
         _ruleEngine = ruleEngine;
         _logger = logger;
@@ -74,21 +75,14 @@ public class TicketController : Controller
             var result = await _ticketService.SearchTicketsAsync(searchModel);
 
             // Populate dropdowns for filter UI
-            // Only show customer dropdown for non-customer users
-            if (!isCustomer)
-            {
-                result.Customers = await _ticketService.GetCustomerSelectListAsync();
-            }
+            result.Customers = await _ticketService.GetCustomerSelectListAsync();
             result.Employees = await _ticketService.GetEmployeeSelectListAsync();
             result.Projects = await _ticketService.GetProjectSelectListAsync();
 
             // Load saved filters for the current user
             if (!string.IsNullOrEmpty(userId))
             {
-                ViewBag.SavedFilters = await _context.SavedFilters
-                    .Where(f => f.UserId == userId)
-                    .OrderBy(f => f.Name)
-                    .ToListAsync();
+                ViewBag.SavedFilters = await _savedFilterService.GetFiltersForUserAsync(userId);
             }
 
             ViewBag.IsCustomer = isCustomer;
@@ -115,23 +109,8 @@ public class TicketController : Controller
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
-        var filter = new SavedFilter
-        {
-            Id = Guid.NewGuid(),
-            Name = name,
-            UserId = userId,
-            SearchTerm = searchModel.SearchTerm,
-            Status = searchModel.Status,
-            TicketType = searchModel.TicketType,
-            ProjectId = searchModel.ProjectId,
-            AssignedToId = searchModel.AssignedToId,
-            CustomerId = searchModel.CustomerId,
-            IsOverdue = searchModel.IsOverdue,
-            IsDueSoon = searchModel.IsDueSoon
-        };
-
-        _context.SavedFilters.Add(filter);
-        await _context.SaveChangesAsync();
+        // Delegate to service
+        await _savedFilterService.SaveFilterAsync(userId, name, searchModel);
 
         TempData["Success"] = "Filter saved successfully.";
         return RedirectToAction(nameof(Index), searchModel);
@@ -140,7 +119,7 @@ public class TicketController : Controller
     [HttpGet]
     public async Task<IActionResult> LoadFilter(Guid id)
     {
-        var filter = await _context.SavedFilters.FindAsync(id);
+        var filter = await _savedFilterService.GetFilterAsync(id);
         if (filter == null) return NotFound();
 
         var searchModel = new TicketSearchViewModel
@@ -162,14 +141,17 @@ public class TicketController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteFilter(Guid id)
     {
-        var filter = await _context.SavedFilters.FindAsync(id);
-        if (filter == null) return NotFound();
-
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (filter.UserId != userId) return Forbid();
+        if (string.IsNullOrEmpty(userId)) return Forbid();
 
-        _context.SavedFilters.Remove(filter);
-        await _context.SaveChangesAsync();
+        try
+        {
+            await _savedFilterService.DeleteFilterAsync(id, userId);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
 
         TempData["Success"] = "Filter deleted.";
         return RedirectToAction(nameof(Index));
@@ -180,6 +162,9 @@ public class TicketController : Controller
     {
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         var isCustomer = User.IsInRole(Constants.RoleCustomer);
+
+        ViewBag.Employees = await _ticketService.GetEmployeeSelectListAsync();
+        ViewBag.Projects = await _ticketService.GetProjectSelectListAsync();
 
         // Only show customer dropdown for non-customer users
         if (!isCustomer)
@@ -192,8 +177,6 @@ public class TicketController : Controller
             ViewBag.PreselectedCustomerId = userId;
         }
 
-        ViewBag.Employees = await _ticketService.GetEmployeeSelectListAsync();
-        ViewBag.Projects = await _ticketService.GetProjectSelectListAsync();
         ViewBag.IsCustomer = isCustomer;
 
         // Load domain configuration for dynamic work item types and custom fields
@@ -208,7 +191,14 @@ public class TicketController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(CreateTicketViewModel model)
+    public async Task<IActionResult> Create(
+        string description,
+        string customerId,
+        string? responsibleId,
+        Guid? projectGuid,
+        DateTime? completionTarget,
+        string? domainId,
+        string? workItemTypeCode)
     {
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         var isCustomer = User.IsInRole(Constants.RoleCustomer);
@@ -216,13 +206,17 @@ public class TicketController : Controller
         // Customer data scoping: override customer ID for customer users
         if (isCustomer && !string.IsNullOrEmpty(userId))
         {
-            model.CustomerId = userId;
+            customerId = userId;
         }
 
-        // Validate that customer is assigned
-        if (string.IsNullOrEmpty(model.CustomerId))
+        if (string.IsNullOrWhiteSpace(description))
         {
-            ModelState.AddModelError("CustomerId", "Customer must be specified");
+            ModelState.AddModelError("description", "Description is required");
+        }
+
+        if (string.IsNullOrWhiteSpace(customerId))
+        {
+            ModelState.AddModelError("customerId", "Customer is required");
         }
 
         if (!ModelState.IsValid)
@@ -242,17 +236,17 @@ public class TicketController : Controller
             ViewBag.WorkItemTypes = _domainConfig.GetWorkItemTypes(reloadDomain).ToList();
             ViewBag.CustomFields = _domainConfig.GetCustomFields(reloadDomain).ToList();
 
-            return View(model);
+            return View();
         }
 
         try
         {
             // Create ticket via service
-            var ticket = await _ticketService.CreateTicketAsync(model.Description, model.CustomerId, model.ResponsibleId, model.ProjectGuid, model.CompletionTarget);
+            var ticket = await _ticketService.CreateTicketAsync(description, customerId, responsibleId, projectGuid, completionTarget);
 
             // Set domain extensibility fields
-            ticket.DomainId = model.DomainId ?? _domainConfig.GetDefaultDomainId();
-            ticket.WorkItemTypeCode = model.WorkItemTypeCode;
+            ticket.DomainId = domainId ?? _domainConfig.GetDefaultDomainId();
+            ticket.WorkItemTypeCode = workItemTypeCode;
 
             // Extract custom fields from form and serialize to JSON
             var formDictionary = Request.Form.ToDictionary(x => x.Key, x => x.Value.ToString());
@@ -260,22 +254,14 @@ public class TicketController : Controller
 
             await _ticketService.UpdateTicketAsync(ticket);
 
-            // Process with GERDA AI (if available)
-            if (_gerdaService != null)
-            {
-                _logger.LogInformation("Processing ticket {TicketGuid} with GERDA AI (Domain: {DomainId}, Type: {WorkItemTypeCode})",
-                    ticket.Guid, ticket.DomainId, ticket.WorkItemTypeCode);
-                await _gerdaService.ProcessTicketAsync(ticket.Guid);
+            // Process with GERDA AI
+            _logger.LogInformation("Processing ticket {TicketGuid} with GERDA AI (Domain: {DomainId}, Type: {WorkItemTypeCode})",
+                ticket.Guid, ticket.DomainId, ticket.WorkItemTypeCode);
+            await _gerdaService.ProcessTicketAsync(ticket.Guid);
 
-                var entityLabel = _domainConfig.GetEntityLabels(ticket.DomainId).WorkItem;
-                TempData["Success"] = $"{entityLabel} created successfully! GERDA AI has processed the {entityLabel.ToLower()} (estimated effort, priority, and tags assigned).";
-                _logger.LogInformation("GERDA processing completed for ticket {TicketGuid}", ticket.Guid);
-            }
-            else
-            {
-                var entityLabel = _domainConfig.GetEntityLabels(ticket.DomainId).WorkItem;
-                TempData["Success"] = $"{entityLabel} created successfully!";
-            }
+            var entityLabel = _domainConfig.GetEntityLabels(ticket.DomainId).WorkItem;
+            TempData["Success"] = $"{entityLabel} created successfully! GERDA AI has processed the {entityLabel.ToLower()} (estimated effort, priority, and tags assigned).";
+            _logger.LogInformation("GERDA processing completed for ticket {TicketGuid}", ticket.Guid);
         }
         catch (Exception ex)
         {
@@ -300,32 +286,7 @@ public class TicketController : Controller
             return NotFound();
         }
 
-        // Load attachments
-        viewModel.Attachments = await _context.Documents
-            .Where(d => d.TicketId == id.Value)
-            .OrderByDescending(d => d.UploadDate)
-            .ToListAsync();
-
-        // Load audit logs
-        viewModel.AuditLogs = await _auditService.GetAuditLogForTicketAsync(id.Value);
-
-        // Load comments
-        viewModel.Comments = await _context.TicketComments
-            .Include(c => c.Author)
-            .Where(c => c.TicketId == id.Value)
-            .OrderByDescending(c => c.CreatedAt)
-            .ToListAsync();
-
-        // Load reviews
-        // viewModel.ReviewStatus is already populated by TicketService if added there
-        // viewModel.ReviewStatus = ticket.ReviewStatus;
-        viewModel.QualityReviews = await _context.QualityReviews
-            .Include(r => r.Reviewer)
-            .Where(r => r.TicketId == id.Value)
-            .OrderByDescending(r => r.CreatedAt)
-            .ToListAsync();
-
-        // Get recommended agent from Dispatching service (if ticket is unassigned)
+        // Recommended Agent Logic
         if (string.IsNullOrWhiteSpace(viewModel.ResponsibleId))
         {
             try
@@ -387,8 +348,6 @@ public class TicketController : Controller
 
         return View(viewModel);
     }
-
-
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -529,7 +488,85 @@ public class TicketController : Controller
         return View(viewModel);
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddComment(Guid id, string commentBody, bool isInternal)
+    {
+        if (string.IsNullOrWhiteSpace(commentBody))
+        {
+            if (Request.Headers.ContainsKey("HX-Request"))
+            {
+                return BadRequest("Comment body is required");
+            }
 
+            TempData["Error"] = "Comment cannot be empty";
+            return RedirectToAction(nameof(Detail), new { id });
+        }
+
+        var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+        try
+        {
+            await _ticketService.AddCommentAsync(id, commentBody, isInternal, userId);
+
+            if (Request.Headers.ContainsKey("HX-Request"))
+            {
+                // HTMX: Return the updated comment list
+                var ticketDetails = await _ticketService.GetTicketDetailsAsync(id);
+                return PartialView("_CommentListPartial", ticketDetails.Comments);
+            }
+
+            TempData["Success"] = "Comment added successfully";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error adding comment to ticket {TicketId}", id);
+            if (Request.Headers.ContainsKey("HX-Request"))
+            {
+                return StatusCode(500, "Error adding comment");
+            }
+            TempData["Error"] = "Failed to add comment";
+        }
+
+        return RedirectToAction(nameof(Detail), new { id });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RequestReview(Guid id)
+    {
+        var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+        await _ticketService.RequestReviewAsync(id, userId);
+
+        if (Request.Headers.ContainsKey("HX-Request"))
+        {
+            var ticketDetails = await _ticketService.GetTicketDetailsAsync(id);
+            return PartialView("_QualityReviewPartial", ticketDetails);
+        }
+
+        return RedirectToAction(nameof(Detail), new { id });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SubmitReview(Guid id, int score, string feedback, bool approve)
+    {
+        var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+        await _ticketService.SubmitReviewAsync(id, score, feedback, approve, userId);
+
+        if (Request.Headers.ContainsKey("HX-Request"))
+        {
+            var ticketDetails = await _ticketService.GetTicketDetailsAsync(id);
+            return PartialView("_QualityReviewPartial", ticketDetails);
+        }
+
+        return RedirectToAction(nameof(Detail), new { id });
+    }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -591,5 +628,58 @@ public class TicketController : Controller
             TempData["Error"] = "Failed to export tickets.";
             return RedirectToAction(nameof(Index));
         }
+    }
+
+    [HttpGet]
+    [Authorize(Roles = Constants.RoleEmployee + "," + Constants.RoleAdmin)]
+    public async Task<IActionResult> LogTime(Guid id)
+    {
+        var ticket = await _ticketService.GetTicketForEditAsync(id);
+        if (ticket == null) return NotFound();
+
+        ViewBag.TicketGuid = id;
+        ViewBag.TicketDescription = ticket.Description;
+
+        return View();
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = Constants.RoleEmployee + "," + Constants.RoleAdmin)]
+    public async Task<IActionResult> LogTime(Guid id, double hours, DateTime date, string description)
+    {
+        if (hours <= 0 || hours > 24)
+        {
+            ModelState.AddModelError("hours", "Hours must be between 0.1 and 24");
+        }
+
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            ModelState.AddModelError("description", "Description is required");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            var ticket = await _ticketService.GetTicketForEditAsync(id);
+            ViewBag.TicketGuid = id;
+            ViewBag.TicketDescription = ticket?.Description;
+            return View();
+        }
+
+        var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+        try
+        {
+            await _ticketService.LogTimeAsync(id, userId, hours, date, description);
+            TempData["Success"] = $"Successfully logged {hours} hours on this ticket.";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error logging time for ticket {TicketId}", id);
+            TempData["Error"] = "Failed to log time. Please try again.";
+        }
+
+        return RedirectToAction(nameof(Detail), new { id });
     }
 }

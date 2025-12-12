@@ -20,7 +20,7 @@ public class GerdaTicketObserver : ITicketObserver
     private readonly ILogger<GerdaTicketObserver> _logger;
 
     public GerdaTicketObserver(
-        IBackgroundTaskQueue taskQueue, 
+        IBackgroundTaskQueue taskQueue,
         IServiceScopeFactory serviceScopeFactory,
         ILogger<GerdaTicketObserver> logger)
     {
@@ -34,15 +34,15 @@ public class GerdaTicketObserver : ITicketObserver
         try
         {
             _logger.LogInformation("GERDA Observer: Queueing ticket {TicketGuid} for background processing", ticket.Guid);
-            
+
             await _taskQueue.QueueBackgroundWorkItemAsync(async token =>
             {
                 using (var scope = _serviceScopeFactory.CreateScope())
                 {
                     var gerdaService = scope.ServiceProvider.GetRequiredService<IGerdaService>();
                     var logger = scope.ServiceProvider.GetRequiredService<ILogger<GerdaTicketObserver>>();
-                    
-                    try 
+
+                    try
                     {
                         logger.LogInformation("GERDA Background: Processing ticket {TicketGuid}", ticket.Guid);
                         await gerdaService.ProcessTicketAsync(ticket.Guid);
@@ -68,7 +68,7 @@ public class GerdaTicketObserver : ITicketObserver
                 "GERDA Observer: Ticket {TicketGuid} assigned to {AgentName}",
                 ticket.Guid,
                 $"{assignee.FirstName} {assignee.LastName}");
-            
+
             // Could update training data here for future recommendations
             // For now, just log the assignment
         }
@@ -76,7 +76,7 @@ public class GerdaTicketObserver : ITicketObserver
         {
             _logger.LogError(ex, "GERDA Observer: Failed to handle assignment for ticket {TicketGuid}", ticket.Guid);
         }
-        
+
         await Task.CompletedTask;
     }
 
@@ -85,7 +85,7 @@ public class GerdaTicketObserver : ITicketObserver
         try
         {
             _logger.LogInformation("GERDA Observer: Ticket {TicketGuid} completed", ticket.Guid);
-            
+
             // Could trigger model retraining here if needed
             // For now, just log completion
         }
@@ -93,7 +93,7 @@ public class GerdaTicketObserver : ITicketObserver
         {
             _logger.LogError(ex, "GERDA Observer: Failed to handle completion for ticket {TicketGuid}", ticket.Guid);
         }
-        
+
         await Task.CompletedTask;
     }
 
@@ -108,7 +108,7 @@ public class GerdaTicketObserver : ITicketObserver
         {
             _logger.LogError(ex, "GERDA Observer: Failed to handle update for ticket {TicketGuid}", ticket.Guid);
         }
-        
+
         await Task.CompletedTask;
     }
 

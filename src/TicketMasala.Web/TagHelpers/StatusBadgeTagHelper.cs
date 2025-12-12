@@ -2,6 +2,7 @@
 using TicketMasala.Web.Models;
 
 namespace TicketMasala.Web.TagHelpers;
+
 public class StatusBadgeTagHelper : TagHelper
 {
     public Status TicketStatus { get; set; }

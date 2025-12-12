@@ -32,12 +32,12 @@ public class TicketRepositoryTests
     public async Task SearchTicketsAsync_FiltersByStatus()
     {
         // Arrange
-        var customer = new ApplicationUser { Id = "cust1", FirstName = "John", LastName = "Doe", UserName="john", Email="john@example.com", Code="C1", Phone="555-1234" };
+        var customer = new ApplicationUser { Id = "cust1", FirstName = "John", LastName = "Doe", UserName = "john", Email = "john@example.com", Code = "C1", Phone = "555-1234" };
         _context.Users.Add(customer);
-        
-        var t1 = new Ticket { Guid = Guid.NewGuid(), Title="T1", Description = "Desc1", TicketStatus = Status.Pending, Customer = customer, DomainId="IT" };
-        var t2 = new Ticket { Guid = Guid.NewGuid(), Title="T2", Description = "Desc2", TicketStatus = Status.Completed, Customer = customer, DomainId="IT" };
-        
+
+        var t1 = new Ticket { Guid = Guid.NewGuid(), Title = "T1", Description = "Desc1", TicketStatus = Status.Pending, Customer = customer, DomainId = "IT" };
+        var t2 = new Ticket { Guid = Guid.NewGuid(), Title = "T2", Description = "Desc2", TicketStatus = Status.Completed, Customer = customer, DomainId = "IT" };
+
         _context.Tickets.AddRange(t1, t2);
         await _context.SaveChangesAsync();
 
@@ -55,12 +55,12 @@ public class TicketRepositoryTests
     public async Task SearchTicketsAsync_FiltersBySearchTerm()
     {
         // Arrange
-        var customer = new ApplicationUser { Id = "cust1", FirstName = "John", LastName = "Doe", UserName="john", Email="john@example.com", Code="C1", Phone="555-1234" };
+        var customer = new ApplicationUser { Id = "cust1", FirstName = "John", LastName = "Doe", UserName = "john", Email = "john@example.com", Code = "C1", Phone = "555-1234" };
         _context.Users.Add(customer);
-        
-        var t1 = new Ticket { Guid = Guid.NewGuid(), Title="T1", Description = "Apple Problem", TicketStatus = Status.Pending, Customer = customer, DomainId="IT" };
-        var t2 = new Ticket { Guid = Guid.NewGuid(), Title="T2", Description = "Banana Issue", TicketStatus = Status.Pending, Customer = customer, DomainId="IT" };
-        
+
+        var t1 = new Ticket { Guid = Guid.NewGuid(), Title = "T1", Description = "Apple Problem", TicketStatus = Status.Pending, Customer = customer, DomainId = "IT" };
+        var t2 = new Ticket { Guid = Guid.NewGuid(), Title = "T2", Description = "Banana Issue", TicketStatus = Status.Pending, Customer = customer, DomainId = "IT" };
+
         _context.Tickets.AddRange(t1, t2);
         await _context.SaveChangesAsync();
 

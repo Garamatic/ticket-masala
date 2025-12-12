@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using TicketMasala.Web.Data;
-using TicketMasala.Web.Models;
-using Microsoft.EntityFrameworkCore;
+using TicketMasala.Web.Engine.GERDA.Tickets;
 using System.Security.Claims;
 
 namespace TicketMasala.Web.Controllers;
@@ -10,12 +8,12 @@ namespace TicketMasala.Web.Controllers;
 [Authorize]
 public class TicketCommentsController : Controller
 {
-    private readonly MasalaDbContext _context;
+    private readonly ITicketService _ticketService;
     private readonly ILogger<TicketCommentsController> _logger;
-    
-    public TicketCommentsController(MasalaDbContext context, ILogger<TicketCommentsController> logger)
+
+    public TicketCommentsController(ITicketService ticketService, ILogger<TicketCommentsController> logger)
     {
-        _context = context;
+        _ticketService = ticketService;
         _logger = logger;
     }
 
@@ -30,25 +28,19 @@ public class TicketCommentsController : Controller
         }
 
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+        try
         {
-            return Unauthorized();
+            await _ticketService.AddCommentAsync(id, commentBody, isInternal, userId);
+            TempData["Success"] = "Comment added successfully.";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error adding comment.");
+            TempData["Error"] = "Failed to add comment.";
         }
 
-        var comment = new TicketComment
-        {
-            Id = Guid.NewGuid(),
-            TicketId = id,
-            Body = commentBody,
-            IsInternal = isInternal,
-            AuthorId = userId,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _context.TicketComments.Add(comment);
-        await _context.SaveChangesAsync();
-
-       TempData["Success"] = "Comment added successfully.";
         return RedirectToAction("Detail", "Ticket", new { id });
     }
 
@@ -56,16 +48,20 @@ public class TicketCommentsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> RequestReview(Guid id)
     {
-        var ticket = await _context.Tickets.FindAsync(id);
-        if (ticket == null)
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+        try
         {
-            return NotFound();
+            await _ticketService.RequestReviewAsync(id, userId);
+            TempData["Success"] = "Review requested successfully.";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error requesting review.");
+            TempData["Error"] = "Failed to request review.";
         }
 
-        ticket.ReviewStatus = ReviewStatus.Pending;
-        await _context.SaveChangesAsync();
-
-        TempData["Success"] = "Review requested successfully.";
         return RedirectToAction("Detail", "Ticket", new { id });
     }
 
@@ -74,41 +70,20 @@ public class TicketCommentsController : Controller
     [Authorize(Roles = "Admin,Employee")]
     public async Task<IActionResult> SubmitReview(Guid id, int score, string feedback, bool approve)
     {
-        if (string.IsNullOrWhiteSpace(feedback))
-        {
-            TempData["Error"] = "Feedback is required.";
-            return RedirectToAction("Detail", "Ticket", new { id });
-        }
-
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+        try
         {
-            return Unauthorized();
+            await _ticketService.SubmitReviewAsync(id, score, feedback, approve, userId);
+            TempData["Success"] = approve ? "Review approved." : "Review rejected.";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error submitting review.");
+            TempData["Error"] = "Failed to submit review.";
         }
 
-        var ticket = await _context.Tickets.FindAsync(id);
-        if (ticket == null)
-        {
-            return NotFound();
-        }
-
-        var review = new QualityReview
-        {
-            Id = Guid.NewGuid(),
-            TicketId = id,
-            Ticket = ticket,
-            ReviewerId = userId,
-            Score = score,
-            Comments = feedback,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _context.QualityReviews.Add(review);
-        
-        ticket.ReviewStatus = approve ? ReviewStatus.Approved : ReviewStatus.Rejected;
-        await _context.SaveChangesAsync();
-
-        TempData["Success"] = approve ? "Review approved." : "Review rejected.";
         return RedirectToAction("Detail", "Ticket", new { id });
     }
 }

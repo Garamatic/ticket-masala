@@ -166,7 +166,9 @@ builder.Services.AddScoped<ITicketCommandService>(sp => sp.GetRequiredService<Ti
 builder.Services.AddScoped<ITicketFactory, TicketFactory>();
 
 builder.Services.AddScoped<IFileService, FileService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<ISavedFilterService, SavedFilterService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<ITicketImportService, TicketImportService>();
@@ -237,7 +239,7 @@ if (File.Exists(gerdaConfigPath))
         // Register GERDA Background Service for automated maintenance
         builder.Services.AddHostedService<GerdaBackgroundService>();
 
-        Console.WriteLine("GERDA AI services initialized successfully");
+        Console.WriteLine("GERDA AI Services registered successfully (G+E+R+D+A + Background Jobs)");
     }
 }
 else

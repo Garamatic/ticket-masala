@@ -12,18 +12,18 @@ public interface IAnticipationService
     /// <param name="horizonDays">Number of days to forecast</param>
     /// <returns>List of (Date, PredictedCount) tuples</returns>
     Task<List<(DateTime Date, int PredictedCount)>> ForecastInflowAsync(int horizonDays = 30);
-    
+
     /// <summary>
     /// Get current team capacity (tickets per day)
     /// </summary>
     Task<double> GetTeamCapacityAsync(Guid? projectGuid = null);
-    
+
     /// <summary>
     /// Check if there's a capacity risk in the forecast horizon
     /// </summary>
     /// <returns>Risk details if risk detected, null if no risk</returns>
     Task<CapacityRiskResult?> CheckCapacityRiskAsync();
-    
+
     /// <summary>
     /// Check if anticipation is enabled
     /// </summary>

@@ -1,0 +1,140 @@
+{
+    "client_config": {
+        "company": {
+            "name": "Brussels Municipal Services",
+            "slogan": "Serving Citizens, Building Community",
+            "description": "Your gateway to city services, permits, and civic engagement. Transparent, efficient, and at your service.",
+            "logoIcon": "fa-landmark",
+            "foundedYear": 1989
+        },
+        "contact": {
+            "email": "services@bruxelles.be",
+            "phone": "+32 2 800 2000",
+            "address": "Grand-Place 1, 1000 Brussels",
+            "social": {
+                "facebook": "https://facebook.com/citybrussels",
+                "twitter": "https://twitter.com/brussels"
+            }
+        },
+        "theme": {
+            "primaryColor": "#8B2942",
+            "primaryDark": "#6B1D32",
+            "primaryLight": "#A84A62",
+            "secondaryColor": "#1E3A5F",
+            "accentColor": "#C9A227",
+            "accentLight": "#E5C75F"
+        },
+        "services": [
+            {
+                "id": "permits",
+                "icon": "fas fa-file-signature",
+                "title": "Permits & Licenses",
+                "description": "Building permits, business licenses, event permits, and parking authorizations."
+            },
+            {
+                "id": "civil-status",
+                "icon": "fas fa-id-card",
+                "title": "Civil Status",
+                "description": "Birth certificates, marriage documents, identity cards, and residency registration."
+            },
+            {
+                "id": "complaints",
+                "icon": "fas fa-comment-dots",
+                "title": "Citizen Feedback",
+                "description": "Report issues, submit complaints, or provide feedback on city services."
+            },
+            {
+                "id": "information",
+                "icon": "fas fa-info-circle",
+                "title": "Information Requests",
+                "description": "General inquiries about city services, regulations, and public information."
+            }
+        ],
+        "projects": [
+            {
+                "title": "Digital Citizen Portal",
+                "description": "Online access to 200+ city services, reducing wait times by 70%.",
+                "location": "City-Wide Initiative",
+                "image": "assets/digital-portal.png"
+            },
+            {
+                "title": "Green Permit Fast-Track",
+                "description": "Expedited permits for sustainable building projects.",
+                "location": "Urban Development",
+                "image": "assets/green-permits.png"
+            },
+            {
+                "title": "Neighborhood Councils",
+                "description": "Community engagement platform connecting citizens with local governance.",
+                "location": "All Districts",
+                "image": "assets/community.png"
+            },
+            {
+                "title": "Smart City Infrastructure",
+                "description": "IoT sensors for traffic, waste management, and public safety.",
+                "location": "City Center",
+                "image": "assets/smart-city.png"
+            }
+        ],
+        "form": {
+            "title": "Submit a Service Request",
+            "submitButtonText": "Submit Request",
+            "projectTypes": [
+                {
+                    "value": "permit-building",
+                    "label": "Building Permit"
+                },
+                {
+                    "value": "permit-business",
+                    "label": "Business License"
+                },
+                {
+                    "value": "permit-event",
+                    "label": "Event Permit"
+                },
+                {
+                    "value": "civil-certificate",
+                    "label": "Certificate Request"
+                },
+                {
+                    "value": "complaint",
+                    "label": "Complaint / Issue Report"
+                },
+                {
+                    "value": "information",
+                    "label": "Information Request"
+                }
+            ]
+        }
+    },
+    "masala_config": {
+        "endpoint": "http://localhost:5054/api/v1/tickets/external",
+        "sourceSite": "brussels-municipal-services",
+        "auth": {
+            "apiKey": "public-client-key",
+            "method": "Bearer"
+        },
+        "retryPolicy": {
+            "maxRetries": 3,
+            "delayMs": 1000
+        }
+    },
+    "gerda_config": {
+        "domain": "Government",
+        "validationRules": {
+            "customerEmail": {
+                "required": true,
+                "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+            },
+            "description": {
+                "required": true,
+                "minLength": 25
+            }
+        },
+        "workflow": {
+            "defaultPriority": "Normal",
+            "autoAssign": false,
+            "requireApproval": true
+        }
+    }
+}

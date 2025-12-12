@@ -58,13 +58,13 @@ public class DispatchingService : IDispatchingService
         }
 
         var recommendations = await GetTopRecommendedAgentsAsync(ticketGuid, count: 5);
-        
+
         if (recommendations.Count == 0)
         {
-             _logger.LogInformation("GERDA-D: No agent recommendations available for ticket {TicketGuid}, using fallback", ticketGuid);
-             // Fallback is implicitly handled by strategy returning workload based or empty
-             // Strategy implementation (MatrixFactorization) handles fallback to workload
-             return null; 
+            _logger.LogInformation("GERDA-D: No agent recommendations available for ticket {TicketGuid}, using fallback", ticketGuid);
+            // Fallback is implicitly handled by strategy returning workload based or empty
+            // Strategy implementation (MatrixFactorization) handles fallback to workload
+            return null;
         }
 
         var bestAgent = recommendations.First().AgentId;
@@ -115,7 +115,7 @@ public class DispatchingService : IDispatchingService
         }
 
         var recommendedAgent = await GetRecommendedAgentAsync(ticketGuid);
-        
+
         if (string.IsNullOrEmpty(recommendedAgent))
         {
             return false;
@@ -128,8 +128,8 @@ public class DispatchingService : IDispatchingService
         }
 
         ticket.ResponsibleId = recommendedAgent;
-        ticket.GerdaTags = string.IsNullOrEmpty(ticket.GerdaTags) 
-            ? "AI-Dispatched" 
+        ticket.GerdaTags = string.IsNullOrEmpty(ticket.GerdaTags)
+            ? "AI-Dispatched"
             : $"{ticket.GerdaTags},AI-Dispatched";
 
         await _context.SaveChangesAsync();
@@ -148,7 +148,7 @@ public class DispatchingService : IDispatchingService
         // Retrain strategy for default domain (primary)
         // In the future: Iterate all domains and retrain all loaded strategies?
         // For now, defaulting to "MatrixFactorization" strategy explicitly or default domain's.
-        
+
         try
         {
             var defaultDomainId = _domainConfigService.GetDefaultDomainId();
@@ -189,7 +189,7 @@ public class DispatchingService : IDispatchingService
 
         // Get employees who could be project managers (all employees for now, could filter by role)
         var employees = await _context.Users.OfType<Employee>().ToListAsync();
-        
+
         if (employees.Count == 0)
         {
             _logger.LogWarning("GERDA-D: No employees found for PM recommendation");
@@ -209,14 +209,14 @@ public class DispatchingService : IDispatchingService
             .Where(p => p.ProjectManagerId != null)
             .Where(p => p.Status == Status.Completed || p.Status == Status.Failed)
             .GroupBy(p => p.ProjectManagerId)
-            .Select(g => new 
-            { 
-                PMId = g.Key!, 
+            .Select(g => new
+            {
+                PMId = g.Key!,
                 Total = g.Count(),
                 Completed = g.Count(p => p.Status == Status.Completed)
             })
             .ToDictionaryAsync(
-                x => x.PMId, 
+                x => x.PMId,
                 x => x.Total > 0 ? (double)x.Completed / x.Total : 0.5);
 
         // Score each potential PM
@@ -226,7 +226,7 @@ public class DispatchingService : IDispatchingService
         foreach (var employee in employees)
         {
             var currentProjects = pmProjectCounts.GetValueOrDefault(employee.Id, 0);
-            
+
             // Skip PMs who have too many active projects
             if (currentProjects >= maxProjectsPerPM)
             {
@@ -236,15 +236,15 @@ public class DispatchingService : IDispatchingService
             // Calculate score based on:
             // 1. Workload (fewer projects = higher score)
             var workloadScore = 1.0 - (currentProjects / (double)maxProjectsPerPM);
-            
+
             // 2. Historical success rate
             var successRate = pmSuccessRates.GetValueOrDefault(employee.Id, 0.5); // Default 50% for new PMs
-            
+
             // 3. Combine factors (60% workload, 40% success rate)
             var combinedScore = (workloadScore * 0.6) + (successRate * 0.4);
 
             scoredPMs.Add((employee.Id, combinedScore, $"{employee.FirstName} {employee.LastName}"));
-            
+
             _logger.LogDebug(
                 "GERDA-D: PM {Name} scored {Score:F2} (workload: {Workload:F2}, success: {Success:F2})",
                 $"{employee.FirstName} {employee.LastName}",
@@ -260,7 +260,7 @@ public class DispatchingService : IDispatchingService
         }
 
         var bestPM = scoredPMs.OrderByDescending(x => x.Score).First();
-        
+
         _logger.LogInformation(
             "GERDA-D: Recommended PM {Name} for ticket {TicketGuid} with score {Score:F2}",
             bestPM.Name, ticketGuid, bestPM.Score);

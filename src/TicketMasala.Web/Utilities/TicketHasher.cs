@@ -20,7 +20,7 @@ public static class TicketHasher
     {
         // 1. Sanitize
         var raw = $"{customerId}|{description}".ToLowerInvariant();
-        
+
         // 2. Normalize whitespace
         var clean = WhitespaceRegex.Replace(raw, " ").Trim();
 

@@ -114,10 +114,10 @@ public class TicketBuilder
         if (_customFields.Count > 0)
         {
             _ticket.CustomFieldsJson = JsonSerializer.Serialize(_customFields);
-            
+
             // Replicate SQLite Generated Column logic for indexed fields
             // This ensures integration tests accurately reflect production database state
-            
+
             // Example: CustomerTier derived from CustomFieldsJson
             if (_customFields.TryGetValue("customer_tier", out var tier))
             {
@@ -126,7 +126,7 @@ public class TicketBuilder
                 // Note: Ticket.CustomerTier property would need to exist for this to compile
                 // _ticket.CustomerTier = tier?.ToString();
             }
-            
+
             // Example: Urgency derived from CustomFieldsJson  
             if (_customFields.TryGetValue("urgency", out var urgency))
             {
@@ -134,7 +134,7 @@ public class TicketBuilder
                 // _ticket.Urgency = urgency?.ToString();
             }
         }
-        
+
         return _ticket;
     }
 }

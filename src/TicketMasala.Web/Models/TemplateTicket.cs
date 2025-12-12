@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using TicketMasala.Web.Utilities;
 
 namespace TicketMasala.Web.Models;
+
 public class TemplateTicket : BaseModel
 {
     [Required(ErrorMessage = "Description is required")]
@@ -14,11 +15,11 @@ public class TemplateTicket : BaseModel
     public int EstimatedEffortPoints { get; set; } = 5;
 
     public Priority Priority { get; set; } = Priority.Medium;
-    
+
     public TicketType TicketType { get; set; } = TicketType.Task;
 
     public Guid ProjectTemplateId { get; set; }
-    
+
     [ForeignKey("ProjectTemplateId")]
     public ProjectTemplate? ProjectTemplate { get; set; }
 }

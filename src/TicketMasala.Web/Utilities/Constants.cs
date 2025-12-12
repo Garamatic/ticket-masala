@@ -1,4 +1,5 @@
 namespace TicketMasala.Web.Utilities;
+
 public class Constants
 {
     public const string RoleAdmin = "Admin";

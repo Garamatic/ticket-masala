@@ -1,4 +1,44 @@
-# Deploy IT-Project2526 to Fly.io
+# Fly.io Deployment Guide for Ticket Masala
+
+## Overview & Strategy: The "Sleeping Giant"
+
+Ticket Masala is configured to use Fly.io's **"Sleeping Giant"** strategy. This allows the application to be highly performant when needed but cost-effective when idle.
+
+### Cost Structure
+
+| Scenario | Monthly Cost |
+|----------|--------------|
+| **Ideal (Demo)**: 5 hours/month usage | ~$0.05 |
+| **Light**: 50 hours/month usage | ~$0.50 |
+| **Heavy**: 24/7 running (2GB) | ~$13.00 |
+
+### Configuration
+
+The `fly.toml` configures:
+
+```toml
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true      # Stops when idle
+  auto_start_machines = true     # Starts on request
+  min_machines_running = 0       # Allows complete shutdown
+```
+
+### Critical Cost Warning
+
+⚠️ **DO NOT use external uptime monitors** (UptimeRobot, Pingdom, etc.)
+
+These services will ping your app constantly, preventing it from sleeping and causing 24/7 billing at ~$13/month. The internal Fly.io health check is configured correctly and won't prevent auto-stop.
+
+### Verifying Auto-Scale Works
+1. Deploy and access your app
+2. Wait 10 minutes without accessing it
+3. Run `fly status` - should show machine stopped
+4. Access the app again - first request takes 3-5s (cold start)
+5. Check billing dashboard after 24-48 hours
+
+---
 
 ## 1. Prerequisites
 
@@ -15,7 +55,6 @@ The application is configured to use **SQLite** in production (see `Program.cs`)
 A volume mapped to `/data` ensures the database is persisted across restarts.
 
 No external SQL Server connection string is required.
-
 
 ## 4. First Launch (if not already created)
 
@@ -88,12 +127,3 @@ docker run -p 8080:8080 -e ASPNETCORE_ENVIRONMENT=Development ticket-masala:test
 ```
 
 Then browse `http://localhost:8080`.
-
----
-Deployment files:
-
-- `Dockerfile`
-- `.dockerignore`
-- `fly.toml`
-
-Secrets are never committed—validate by listing releases or using `fly secrets list`.

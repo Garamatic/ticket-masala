@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
 namespace TicketMasala.Web.Data;
+
 public class DbSeeder
 {
     private readonly MasalaDbContext _context;
@@ -70,52 +71,35 @@ public class DbSeeder
             _logger.LogInformation("========== DATABASE SEEDING STARTED ==========");
 
             // Ensure database is created
-            _logger.LogInformation("Ensuring database exists...");
-
-            // Use EnsureCreated for SQLite (migrations have pending model changes issues)
-            _logger.LogInformation("Using SQLite with EnsureCreated");
-
-            // First, always try EnsureCreated - it's idempotent (does nothing if DB exists)
+            _logger.LogInformation("Ensuring database exists (SQLite EnsureCreated)...");
             var created = await _context.Database.EnsureCreatedAsync();
             _logger.LogInformation("EnsureCreatedAsync result: {Created}", created);
 
             // Verify tables exist
-            var tablesExist = await CheckTablesExistAsync();
-            if (!tablesExist)
+            if (!await CheckTablesExistAsync())
             {
                 _logger.LogError("CRITICAL: Tables still don't exist after EnsureCreatedAsync!");
                 throw new Exception("Failed to create database tables");
             }
 
-            _logger.LogInformation("SQLite database tables verified");
-
-            // EnsureCreated doesn't run HasData(), so we need to create roles manually
             await EnsureRolesExistAsync();
 
-            // Check if we already have users
             var userCount = await _context.Users.CountAsync();
             _logger.LogInformation("Current user count in database: {UserCount}", userCount);
 
-            // Create Project Templates
-            _logger.LogInformation("Creating project templates...");
+            // Create Project Templates and Knowledge Base (Always run these)
             await CreateProjectTemplates();
-
-            // Seed Knowledge Base
             await SeedKnowledgeBaseAsync();
-
 
             if (userCount > 0)
             {
                 _logger.LogWarning("Database already contains {UserCount} users. Skipping user/project seed.", userCount);
-                _logger.LogInformation("If you want to re-seed users, please delete all users first or drop the database");
-
-                _logger.LogInformation("========== DATABASE SEEDING COMPLETED SUCCESSFULLY! ==========");
                 return;
             }
 
             _logger.LogInformation("Database is empty. Loading seed data from configuration...");
-
             var seedConfig = await LoadSeedConfigurationAsync();
+
             if (seedConfig == null)
             {
                 _logger.LogError("Failed to load seed configuration. Aborting seed.");
@@ -137,13 +121,10 @@ public class DbSeeder
             await CreateUnassignedTicketsAsync(seedConfig.UnassignedWorkItems);
 
             _logger.LogInformation("========== DATABASE SEEDING COMPLETED SUCCESSFULLY! ==========");
-            _logger.LogInformation("You can now login with any of the test accounts");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "========== ERROR DURING DATABASE SEEDING ==========");
-            _logger.LogError("Error message: {Message}", ex.Message);
-            _logger.LogError("Inner exception: {InnerException}", ex.InnerException?.Message);
             throw;
         }
     }
@@ -158,8 +139,6 @@ public class DbSeeder
         if (!File.Exists(seedFilePath))
         {
             _logger.LogWarning("Seed data file not found at: {Path}", seedFilePath);
-            _logger.LogWarning("Skipping seed data. The database will be empty.");
-            _logger.LogInformation("To add seed data, create a seed_data.json file in your config directory.");
             return null;
         }
 
@@ -274,7 +253,6 @@ public class DbSeeder
                 CompletionDate = wc.CompletedDaysAgo.HasValue ? DateTime.UtcNow.AddDays(-wc.CompletedDaysAgo.Value) : null,
                 CreatorGuid = adminGuid
             };
-
             _context.Projects.Add(project);
             await _context.SaveChangesAsync(); // Save to get Project Guid
 
@@ -582,4 +560,5 @@ public class DbSeeder
         await _context.SaveChangesAsync();
         _logger.LogInformation("Added {Count} articles to Knowledge Base.", articles.Count);
     }
+
 }

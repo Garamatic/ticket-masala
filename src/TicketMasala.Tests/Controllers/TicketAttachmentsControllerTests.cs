@@ -87,7 +87,7 @@ public class TicketAttachmentsControllerTests : IDisposable
         // Assert
         var redirect = Assert.IsType<RedirectToActionResult>(result);
         Assert.Equal("Detail", redirect.ActionName);
-        
+
         var doc = await _context.Documents.FirstOrDefaultAsync(d => d.TicketId == ticketId);
         Assert.NotNull(doc);
         Assert.Equal("test.txt", doc.FileName);

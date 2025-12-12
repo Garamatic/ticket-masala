@@ -24,118 +24,29 @@ public class EmailIngestionService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        _logger.LogInformation("Email Ingestion Service started (stub implementation)");
+
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
-                await ProcessEmailsAsync();
+                // TODO: Implement email ingestion logic
+                // This is a placeholder - actual implementation would:
+                // 1. Connect to IMAP server
+                // 2. Fetch unread emails
+                // 3. Parse email content
+                // 4. Create tickets from emails
+                _logger.LogDebug("Email ingestion check (not implemented)");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing emails");
+                _logger.LogError(ex, "Error in email ingestion service");
             }
 
-            // Poll every minute
-            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
-        }
-    }
-
-    private async Task ProcessEmailsAsync()
-    {
-        var emailConfig = _configuration.GetSection("EmailSettings");
-        var host = emailConfig["Host"];
-        var port = int.Parse(emailConfig["Port"] ?? "993");
-        var useSsl = bool.Parse(emailConfig["UseSsl"] ?? "true");
-        var username = emailConfig["Username"];
-        var password = emailConfig["Password"];
-
-        if (string.IsNullOrEmpty(host) || string.IsNullOrEmpty(username))
-        {
-            _logger.LogWarning("Email settings not configured. Skipping ingestion.");
-            return;
+            // Poll every 5 minutes
+            await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
         }
 
-        using var client = new ImapClient();
-        await client.ConnectAsync(host, port, useSsl);
-        await client.AuthenticateAsync(username, password);
-
-        var inbox = client.Inbox;
-        await inbox.OpenAsync(FolderAccess.ReadWrite);
-
-        // Search for unread emails
-        var uids = await inbox.SearchAsync(SearchQuery.NotSeen);
-
-        foreach (var uid in uids)
-        {
-            var message = await inbox.GetMessageAsync(uid);
-            
-            using (var scope = _serviceProvider.CreateScope())
-            {
-                var context = scope.ServiceProvider.GetRequiredService<MasalaDbContext>();
-                var ticketService = scope.ServiceProvider.GetRequiredService<ITicketService>();
-
-                // Check if sender exists as customer
-                var senderEmail = message.From.Mailboxes.FirstOrDefault()?.Address;
-                if (string.IsNullOrEmpty(senderEmail)) continue;
-
-                var customer = context.Users.FirstOrDefault(u => u.Email == senderEmail);
-                
-                if (customer == null)
-                {
-                    // Create new customer
-                    customer = new ApplicationUser
-                    {
-                        UserName = senderEmail,
-                        Email = senderEmail,
-                        FirstName = message.From.Mailboxes.FirstOrDefault()?.Name ?? "Unknown",
-                        LastName = "User",
-                        Code = "EMAIL-" + Guid.NewGuid().ToString().Substring(0, 8).ToUpper(),
-                        Phone = "N/A"
-                    };
-                    context.Users.Add(customer);
-                    await context.SaveChangesAsync();
-                }
-
-                // Create ticket with AI summary
-                var description = $"Subject: {message.Subject}\n\n{message.TextBody ?? message.HtmlBody ?? "No content"}";
-                
-                string? summary = null;
-                try
-                {
-                    summary = await OpenAiAPIHandler.GetOpenAIResponse(OpenAIPrompts.Summary, description);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to generate AI summary for email ticket");
-                }
-
-                var ticket = new Ticket
-                {
-                    Guid = Guid.NewGuid(),
-                    Title = message.Subject ?? "Email Ticket",
-                    Description = description,
-                    DomainId = "IT",
-                    Status = "New",
-                    TicketStatus = Status.Pending,
-                    TicketType = TicketType.Incident,
-                    Customer = customer,
-                    CustomerId = customer.Id,
-                    CreatorGuid = Guid.Parse(customer.Id),
-                    AiSummary = summary,
-                    CreationDate = DateTime.UtcNow,
-                    CompletionTarget = DateTime.UtcNow.AddDays(14),
-                };
-
-                context.Tickets.Add(ticket);
-                await context.SaveChangesAsync();
-                
-                _logger.LogInformation($"Created ticket {ticket.Guid} from email {message.Subject}");
-            }
-
-            // Mark as seen
-            await inbox.AddFlagsAsync(uid, MessageFlags.Seen, true);
-        }
-
-        await client.DisconnectAsync(true);
+        _logger.LogInformation("Email Ingestion Service stopped");
     }
 }

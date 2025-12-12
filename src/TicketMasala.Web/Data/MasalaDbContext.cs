@@ -29,6 +29,7 @@ public class MasalaDbContext : IdentityDbContext<ApplicationUser, IdentityRole, 
     public DbSet<QualityReview> QualityReviews { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<AuditLogEntry> AuditLogs { get; set; }
+    public DbSet<TimeLog> TimeLogs { get; set; }
 
     public MasalaDbContext(DbContextOptions<MasalaDbContext> options) : base(options) { }
 

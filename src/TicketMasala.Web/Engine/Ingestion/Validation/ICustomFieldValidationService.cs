@@ -15,12 +15,12 @@ public interface ICustomFieldValidationService
     /// <param name="customFieldsJson">JSON string containing custom field values</param>
     /// <returns>Validation result with any errors</returns>
     CustomFieldValidationResult Validate(string domainId, string? workItemTypeCode, string? customFieldsJson);
-    
+
     /// <summary>
     /// Parses custom fields JSON into a dictionary for display.
     /// </summary>
     Dictionary<string, object?> ParseCustomFields(string? customFieldsJson);
-    
+
     /// <summary>
     /// Serializes custom field values to JSON.
     /// </summary>

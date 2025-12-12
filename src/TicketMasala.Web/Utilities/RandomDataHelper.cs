@@ -4,24 +4,24 @@ public static class RandomDataHelper
 {
     private static readonly Random _random = new Random();
 
-    private static readonly string[] _adjectives = 
-    { 
-        "Critical", "Minor", "Urgent", "Strange", "Intermittent", "Persistent", "Unexpected", "Annoying", "Major", "Cosmetic" 
+    private static readonly string[] _adjectives =
+    {
+        "Critical", "Minor", "Urgent", "Strange", "Intermittent", "Persistent", "Unexpected", "Annoying", "Major", "Cosmetic"
     };
 
-    private static readonly string[] _nouns = 
-    { 
-        "Error", "Bug", "Glitch", "Failure", "Crash", "Issue", "Problem", "Defect", "Slowdown", "Outage" 
+    private static readonly string[] _nouns =
+    {
+        "Error", "Bug", "Glitch", "Failure", "Crash", "Issue", "Problem", "Defect", "Slowdown", "Outage"
     };
 
-    private static readonly string[] _components = 
-    { 
-        "Login Page", "Dashboard", "API", "Database", "Payment Gateway", "Search Function", "User Profile", "Email Service", "Reports", "Mobile App" 
+    private static readonly string[] _components =
+    {
+        "Login Page", "Dashboard", "API", "Database", "Payment Gateway", "Search Function", "User Profile", "Email Service", "Reports", "Mobile App"
     };
 
-    private static readonly string[] _actions = 
-    { 
-        "failing", "crashing", "loading slowly", "timing out", "displaying wrong data", "throwing 500 error", "unresponsive", "missing buttons", "redirecting incorrectly", "freezing" 
+    private static readonly string[] _actions =
+    {
+        "failing", "crashing", "loading slowly", "timing out", "displaying wrong data", "throwing 500 error", "unresponsive", "missing buttons", "redirecting incorrectly", "freezing"
     };
 
     public static string GenerateTicketTitle()

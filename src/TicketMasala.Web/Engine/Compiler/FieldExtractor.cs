@@ -54,7 +54,7 @@ public static class FieldExtractor
             {
                 if (prop.ValueKind == JsonValueKind.True) return true;
                 if (prop.ValueKind == JsonValueKind.False) return false;
-                
+
                 // Fallback: Check if string "true"
                 if (prop.ValueKind == JsonValueKind.String)
                 {

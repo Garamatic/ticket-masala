@@ -14,7 +14,7 @@ namespace TicketMasala.Web.Engine.Compiler;
 public class RuleCompilerService
 {
     private readonly ILogger<RuleCompilerService> _logger;
-    
+
     // Cache: "Domain:State:TargetState" -> Delegate
     private ConcurrentDictionary<string, Func<Ticket, ClaimsPrincipal, bool>> _compiledRules = new();
 
@@ -33,11 +33,11 @@ public class RuleCompilerService
         {
             return rule;
         }
-        
+
         // Default behavior: If no rule is defined, is it allowed?
         // Assuming explicit rules are restrictions, so missing rule = allow.
         // Or if transitions are defined in workflow, they might just be allow-all unless restricted.
-        return (t, u) => true; 
+        return (t, u) => true;
     }
 
     /// <summary>
@@ -49,7 +49,6 @@ public class RuleCompilerService
         _logger.LogInformation("Compiling rules for hot reload...");
         var sw = System.Diagnostics.Stopwatch.StartNew();
         var newRules = new ConcurrentDictionary<string, Func<Ticket, ClaimsPrincipal, bool>>();
-        int ruleCount = 0;
 
         try
         {
@@ -57,7 +56,7 @@ public class RuleCompilerService
             {
                 var domainId = domain.Key;
                 var rankingConfig = domain.Value.AiStrategies.Ranking;
-                
+
                 // Compile Ranking Rules
                 if (rankingConfig != null && rankingConfig.Multipliers != null)
                 {
@@ -75,13 +74,13 @@ public class RuleCompilerService
 
                 // Placeholder for Transition Rules (Logic remains similar if needed later)
             }
-            
+
             // ATOMIC SWAP
             // Interlocked.Exchange replaces the reference to _compiledRules with newRules.
             // Any request currently executing GetRuleDelegate might hold a reference to the OLD dictionary,
             // which is fine (GC will handle it eventually). New requests get the NEW dictionary immediately.
             Interlocked.Exchange(ref _compiledRules, newRules);
-            
+
             sw.Stop();
             _logger.LogInformation("Successfully swapped {Count} compiled rule delegates in {Elapsed}ms.", newRules.Count, sw.ElapsedMilliseconds);
         }
@@ -163,7 +162,7 @@ public class RuleCompilerService
         if (condition.Field == "days_until_breach")
         {
             // (ticket.CompletionTarget.HasValue ? (ticket.CompletionTarget.Value - DateTime.UtcNow).TotalDays : 99999.0)
-            
+
             var completionTargetProp = Expression.Property(ticketParam, nameof(Ticket.CompletionTarget));
             var hasValue = Expression.Property(completionTargetProp, nameof(Nullable<DateTime>.HasValue));
             var value = Expression.Property(completionTargetProp, nameof(Nullable<DateTime>.Value));
@@ -171,11 +170,11 @@ public class RuleCompilerService
 
             var timeSpan = Expression.Subtract(value, utcNow);
             var totalDays = Expression.Property(timeSpan, nameof(TimeSpan.TotalDays));
-            
+
             var fallback = Expression.Constant(99999.0); // No deadline = not breaching
-            
+
             var calculated = Expression.Condition(hasValue, totalDays, fallback);
-            
+
             // Build comparison
             if (double.TryParse(condition.Value?.ToString(), out var targetVal))
             {
@@ -196,27 +195,27 @@ public class RuleCompilerService
 
         if (condition.Field == "age_days")
         {
-             // (DateTime.UtcNow - ticket.CreationDate).TotalDays
-             var creationDateProp = Expression.Property(ticketParam, nameof(Ticket.CreationDate));
-             var utcNow = Expression.Property(null, typeof(DateTime).GetProperty(nameof(DateTime.UtcNow))!);
-             var timeSpan = Expression.Subtract(utcNow, creationDateProp);
-             var totalDays = Expression.Property(timeSpan, nameof(TimeSpan.TotalDays));
-             
-             if (double.TryParse(condition.Value?.ToString(), out var targetVal))
-             {
-                 var target = Expression.Constant(targetVal);
-                 var opAge = condition.Operator?.ToLowerInvariant() ?? "==";
-                 return opAge switch
-                 {
-                     ">" => Expression.GreaterThan(totalDays, target),
-                     ">=" => Expression.GreaterThanOrEqual(totalDays, target),
-                     "<" => Expression.LessThan(totalDays, target),
-                     "<=" => Expression.LessThanOrEqual(totalDays, target),
-                     "!=" => Expression.NotEqual(totalDays, target),
-                     _ => Expression.Equal(totalDays, target)
-                 };
-             }
-             return Expression.Constant(false);
+            // (DateTime.UtcNow - ticket.CreationDate).TotalDays
+            var creationDateProp = Expression.Property(ticketParam, nameof(Ticket.CreationDate));
+            var utcNow = Expression.Property(null, typeof(DateTime).GetProperty(nameof(DateTime.UtcNow))!);
+            var timeSpan = Expression.Subtract(utcNow, creationDateProp);
+            var totalDays = Expression.Property(timeSpan, nameof(TimeSpan.TotalDays));
+
+            if (double.TryParse(condition.Value?.ToString(), out var targetVal))
+            {
+                var target = Expression.Constant(targetVal);
+                var opAge = condition.Operator?.ToLowerInvariant() ?? "==";
+                return opAge switch
+                {
+                    ">" => Expression.GreaterThan(totalDays, target),
+                    ">=" => Expression.GreaterThanOrEqual(totalDays, target),
+                    "<" => Expression.LessThan(totalDays, target),
+                    "<=" => Expression.LessThanOrEqual(totalDays, target),
+                    "!=" => Expression.NotEqual(totalDays, target),
+                    _ => Expression.Equal(totalDays, target)
+                };
+            }
+            return Expression.Constant(false);
         }
 
         // FieldExtractor.GetString(ticket.CustomFieldsJson, "fieldName") -> Value
@@ -226,7 +225,7 @@ public class RuleCompilerService
         // Determine type and method based on operator/value
         // Logic: If operator implies numeric comparison, use GetNumber. 
         // If boolean, use GetBool. Default String.
-        
+
         // Simplified inference for this implementation:
         // If Value parses as double, use number comparison.
         // If Value is "true"/"false", use bool.
@@ -241,7 +240,7 @@ public class RuleCompilerService
             // string.IsNullOrEmpty(call)
             return Expression.Call(typeof(string).GetMethod(nameof(string.IsNullOrEmpty))!, call);
         }
-        
+
         if (op == "is_not_empty")
         {
             var call = Expression.Call(typeof(FieldExtractor).GetMethod(nameof(FieldExtractor.GetString))!, jsonProp, keyConst);
@@ -255,7 +254,7 @@ public class RuleCompilerService
             var method = typeof(FieldExtractor).GetMethod(nameof(FieldExtractor.GetNumber), new[] { typeof(string), typeof(string) });
             var call = Expression.Call(method!, jsonProp, keyConst);
             var target = Expression.Constant(numVal);
-            
+
             return op switch
             {
                 ">" => Expression.GreaterThan(call, target),
@@ -280,7 +279,7 @@ public class RuleCompilerService
         var strMethod = typeof(FieldExtractor).GetMethod(nameof(FieldExtractor.GetString), new[] { typeof(string), typeof(string) });
         var strCall = Expression.Call(strMethod!, jsonProp, keyConst);
         var strTarget = Expression.Constant(condition.Value?.ToString() ?? "");
-        
+
         // String.Equals(a, b, StringComparison.OrdinalIgnoreCase)
         var equalsMethod = typeof(string).GetMethod(nameof(string.Equals), new[] { typeof(string), typeof(string), typeof(StringComparison) });
         var comparison = Expression.Call(equalsMethod!, strCall, strTarget, Expression.Constant(StringComparison.OrdinalIgnoreCase));

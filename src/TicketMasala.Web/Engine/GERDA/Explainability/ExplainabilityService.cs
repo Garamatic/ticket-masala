@@ -12,12 +12,12 @@ public interface IExplainabilityService
     /// Generates explanation for a dispatching recommendation
     /// </summary>
     ExplanationResult ExplainDispatchRecommendation(Ticket ticket, string recommendedAgentId);
-    
+
     /// <summary>
     /// Generates explanation for a priority score
     /// </summary>
     ExplanationResult ExplainPriorityScore(Ticket ticket);
-    
+
     /// <summary>
     /// Generates explanation for effort estimation
     /// </summary>
@@ -121,7 +121,7 @@ public class ExplainabilityService : IExplainabilityService
             var daysUntilDue = (ticket.CompletionTarget.Value - DateTime.UtcNow).TotalDays;
             var urgencyContribution = daysUntilDue <= 1 ? 0.40 : daysUntilDue <= 3 ? 0.25 : 0.10;
             totalContribution += urgencyContribution;
-            
+
             factors.Add(new ExplanationFactor
             {
                 Name = "SLA Urgency",
@@ -136,7 +136,7 @@ public class ExplainabilityService : IExplainabilityService
         var ageHours = (DateTime.UtcNow - ticket.CreationDate).TotalHours;
         var ageContribution = ageHours > 48 ? 0.20 : ageHours > 24 ? 0.10 : 0.05;
         totalContribution += ageContribution;
-        
+
         factors.Add(new ExplanationFactor
         {
             Name = "Ticket Age",
@@ -149,7 +149,7 @@ public class ExplainabilityService : IExplainabilityService
         // Estimated effort (WSJF impact)
         var effortContribution = ticket.EstimatedEffortPoints > 0 ? 0.15 : 0.05;
         totalContribution += effortContribution;
-        
+
         factors.Add(new ExplanationFactor
         {
             Name = "Effort Efficiency",

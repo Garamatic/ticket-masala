@@ -3,11 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using TicketMasala.Web.Utilities;
 
 namespace TicketMasala.Web.Controllers;
-    [Authorize(Roles = Constants.RoleEmployee + "," + Constants.RoleAdmin)]
-    public class EmployeeController : Controller
+
+[Authorize(Roles = Constants.RoleEmployee + "," + Constants.RoleAdmin)]
+public class EmployeeController : Controller
+{
+    public IActionResult Index()
     {
-        public IActionResult Index()
-        {
-            return View();
-        }
+        return View();
+    }
 }

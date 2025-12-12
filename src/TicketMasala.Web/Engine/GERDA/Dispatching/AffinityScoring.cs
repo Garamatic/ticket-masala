@@ -30,18 +30,18 @@ public static class AffinityScoring
         double expertiseScore;
         if (ftsMatchScore > 0)
         {
-             // Normalize unbounded BM25 score to 0-5 range
-             // Using Sigmoid centered at 5.0 with slope 1.0
-             // fts=0 -> 0.03 (approx 0)
-             // fts=5 -> 2.5 (mid)
-             // fts=10 -> 4.9 (max)
-             var normalized = 5.0 / (1.0 + Math.Exp(-(ftsMatchScore - 5.0)));
-             expertiseScore = normalized * 0.3;
+            // Normalize unbounded BM25 score to 0-5 range
+            // Using Sigmoid centered at 5.0 with slope 1.0
+            // fts=0 -> 0.03 (approx 0)
+            // fts=5 -> 2.5 (mid)
+            // fts=10 -> 4.9 (max)
+            var normalized = 5.0 / (1.0 + Math.Exp(-(ftsMatchScore - 5.0)));
+            expertiseScore = normalized * 0.3;
         }
-        else 
+        else
         {
-             // Fallback to V1 Legacy Regex
-             expertiseScore = CalculateExpertiseScore(ticket, agent) * 0.3;
+            // Fallback to V1 Legacy Regex
+            expertiseScore = CalculateExpertiseScore(ticket, agent) * 0.3;
         }
 
         // Factor 3: Language match (20% weight)
@@ -74,7 +74,7 @@ public static class AffinityScoring
 
             // Check for partial match (keywords)
             var keywords = category.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            var matchCount = keywords.Count(keyword => 
+            var matchCount = keywords.Count(keyword =>
                 specializations.Any(s => s.Contains(keyword, StringComparison.OrdinalIgnoreCase)));
 
             if (matchCount > 0)
@@ -191,7 +191,7 @@ public static class AffinityScoring
         var geographyScore = CalculateGeographyScore(agent, customer);
 
         var category = ExtractCategoryFromTicket(ticket);
-        
+
         return $"Past Interaction: {mlPrediction:F2} (40%), " +
                $"Expertise Match ({category}): {expertiseScore:F2} (30%), " +
                $"Language: {languageScore:F2} (20%), " +

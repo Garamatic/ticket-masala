@@ -113,7 +113,7 @@ public class GerdaService : IGerdaService
         // We want ALL open tickets regardless of department for the background job.
         // Ideally we should add GetOpenTicketsAsync to the repository, but to avoid changing the interface too much right now,
         // let's use GetAllAsync(null) and filter.
-        
+
         var allTickets = await _ticketRepository.GetAllAsync(null);
         var openTicketGuids = allTickets
             .Where(t => t.TicketStatus != Status.Completed && t.TicketStatus != Status.Failed)

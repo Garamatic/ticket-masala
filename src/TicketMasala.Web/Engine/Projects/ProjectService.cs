@@ -261,8 +261,8 @@ public class ProjectService : IProjectService
                 var ticket = new Ticket
                 {
                     Guid = Guid.NewGuid(),
-                    Title = templateTicket.Description.Length > 100 
-                        ? templateTicket.Description.Substring(0, 100) 
+                    Title = templateTicket.Description.Length > 100
+                        ? templateTicket.Description.Substring(0, 100)
                         : templateTicket.Description,
                     Description = templateTicket.Description,
                     DomainId = "IT",
@@ -409,7 +409,7 @@ public class ProjectService : IProjectService
         // Get GERDA PM recommendation
         string? recommendedPMId = null;
         string? recommendedPMName = null;
-        
+
         // Try to get PM recommendation from dispatching service (if available via DI)
         // For now, use workload-based fallback
         var employees = await _context.Users.OfType<Employee>().ToListAsync();
@@ -439,8 +439,8 @@ public class ProjectService : IProjectService
         {
             TicketId = ticketId,
             TicketDescription = ticket.Description,
-            CustomerName = ticket.Customer != null 
-                ? $"{ticket.Customer.FirstName} {ticket.Customer.LastName}" 
+            CustomerName = ticket.Customer != null
+                ? $"{ticket.Customer.FirstName} {ticket.Customer.LastName}"
                 : null,
             CustomerId = ticket.CustomerId,
             ProjectName = $"Project: {subject}",
@@ -562,8 +562,8 @@ public class ProjectService : IProjectService
                     Name = p.Name,
                     Description = p.Description,
                     Status = p.Status,
-                    ProjectManagerName = p.ProjectManager != null 
-                        ? $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}" 
+                    ProjectManagerName = p.ProjectManager != null
+                        ? $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}"
                         : "Not Assigned",
                     TicketCount = p.Tasks.Count
                 },
@@ -572,8 +572,8 @@ public class ProjectService : IProjectService
                     Guid = t.Guid,
                     Description = t.Description,
                     TicketStatus = t.TicketStatus,
-                    ResponsibleName = t.Responsible != null 
-                        ? $"{t.Responsible.FirstName} {t.Responsible.LastName}" 
+                    ResponsibleName = t.Responsible != null
+                        ? $"{t.Responsible.FirstName} {t.Responsible.LastName}"
                         : "Not Assigned",
                     CustomerName = t.Customer != null
                         ? $"{t.Customer.FirstName} {t.Customer.LastName}"
@@ -597,7 +597,7 @@ public class ProjectService : IProjectService
                 .ThenInclude(t => t.Customer)
             .Include(p => p.Customer)
             .Include(p => p.ProjectManager)
-            .Where(p => p.ValidUntil == null && 
+            .Where(p => p.ValidUntil == null &&
                 (p.Name.Contains(query) || p.Description.Contains(query)))
             .Select(p => new ProjectTicketViewModel
             {
@@ -607,8 +607,8 @@ public class ProjectService : IProjectService
                     Name = p.Name,
                     Description = p.Description,
                     Status = p.Status,
-                    ProjectManagerName = p.ProjectManager != null 
-                        ? $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}" 
+                    ProjectManagerName = p.ProjectManager != null
+                        ? $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}"
                         : "Not Assigned",
                     TicketCount = p.Tasks.Count
                 },
@@ -617,8 +617,8 @@ public class ProjectService : IProjectService
                     Guid = t.Guid,
                     Description = t.Description,
                     TicketStatus = t.TicketStatus,
-                    ResponsibleName = t.Responsible != null 
-                        ? $"{t.Responsible.FirstName} {t.Responsible.LastName}" 
+                    ResponsibleName = t.Responsible != null
+                        ? $"{t.Responsible.FirstName} {t.Responsible.LastName}"
                         : "Not Assigned",
                     CustomerName = t.Customer != null
                         ? $"{t.Customer.FirstName} {t.Customer.LastName}"
@@ -634,11 +634,11 @@ public class ProjectService : IProjectService
 
     public async Task<ProjectStatisticsViewModel> GetProjectStatisticsAsync(string customerId)
     {
-         var projects = await _context.Projects
-            .AsNoTracking()
-            .Include(p => p.Tasks)
-            .Where(p => p.CustomerId == customerId && p.ValidUntil == null)
-            .ToListAsync();
+        var projects = await _context.Projects
+           .AsNoTracking()
+           .Include(p => p.Tasks)
+           .Where(p => p.CustomerId == customerId && p.ValidUntil == null)
+           .ToListAsync();
 
         return new ProjectStatisticsViewModel
         {
@@ -654,7 +654,7 @@ public class ProjectService : IProjectService
     public async Task<bool> UpdateProjectStatusAsync(Guid projectGuid, Status status)
     {
         var project = await _context.Projects.FirstOrDefaultAsync(p => p.Guid == projectGuid && p.ValidUntil == null);
-        
+
         if (project == null)
         {
             return false;

@@ -498,7 +498,7 @@ weights:
 
 ---
 
-For a detailed critique of the configuration approach, see [Challenges](input/03-technical-critique.md).
+For a detailed critique of the configuration approach, see [Challenges](architecture/design-input/03-technical-critique.md).
 
 ## 5. Implementation Phases
 

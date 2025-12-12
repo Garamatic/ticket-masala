@@ -21,16 +21,21 @@ public interface ITicketRepository
     Task<IEnumerable<Ticket>> GetRecentAsync(int timeWindowMinutes, Guid? departmentId = null);
     Task<IEnumerable<Ticket>> GetPendingOrAssignedAsync(Guid? departmentId = null);
     Task<TicketSearchViewModel> SearchTicketsAsync(TicketSearchViewModel searchModel, Guid? departmentId = null);
-    
+
     // Write operations
     Task<Ticket> AddAsync(Ticket ticket);
     Task UpdateAsync(Ticket ticket);
     Task DeleteAsync(Guid id);
-    
+
     // Bulk operations
     Task<IEnumerable<Ticket>> GetActiveTicketsAsync();
     Task<IEnumerable<Ticket>> GetCompletedTicketsAsync();
     Task<int> CountAsync();
     Task<bool> ExistsAsync(Guid id);
+
+    // Related Data
+    Task<IEnumerable<Document>> GetDocumentsForTicketAsync(Guid ticketId);
+    Task<IEnumerable<TicketComment>> GetCommentsForTicketAsync(Guid ticketId);
+    Task<IEnumerable<QualityReview>> GetQualityReviewsForTicketAsync(Guid ticketId);
 
 }

@@ -22,7 +22,7 @@ public class LoggingTicketObserver : ITicketObserver
             ticket.Guid,
             ticket.CreatorGuid.ToString(),
             ticket.Description.Length > 50 ? ticket.Description.Substring(0, 50) + "..." : ticket.Description);
-        
+
         await Task.CompletedTask;
     }
 
@@ -33,7 +33,7 @@ public class LoggingTicketObserver : ITicketObserver
             ticket.Guid,
             $"{assignee.FirstName} {assignee.LastName}",
             assignee.Team);
-        
+
         await Task.CompletedTask;
     }
 
@@ -48,7 +48,7 @@ public class LoggingTicketObserver : ITicketObserver
             ticket.Guid,
             resolutionTime,
             ticket.TicketStatus);
-        
+
         await Task.CompletedTask;
     }
 
@@ -58,7 +58,7 @@ public class LoggingTicketObserver : ITicketObserver
             "Ticket Updated - ID: {TicketGuid}, Status: {Status}",
             ticket.Guid,
             ticket.TicketStatus);
-        
+
         return Task.CompletedTask;
     }
 

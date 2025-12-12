@@ -60,7 +60,7 @@ public class EstimatingService : IEstimatingService
         var domainId = ticket.DomainId ?? _domainConfigService.GetDefaultDomainId();
         var domainConfig = _domainConfigService.GetDomain(domainId);
         var strategyName = domainConfig?.AiStrategies.Estimating ?? "CategoryLookup";
-        
+
         int effortPoints = _config.GerdaAI.ComplexityEstimation.DefaultEffortPoints;
 
         try

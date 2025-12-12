@@ -8,11 +8,16 @@ public class NotificationService : INotificationService
 {
     private readonly MasalaDbContext _context;
     private readonly ILogger<NotificationService> _logger;
+    private readonly IEmailService _emailService;
 
-    public NotificationService(MasalaDbContext context, ILogger<NotificationService> logger)
+    public NotificationService(
+        MasalaDbContext context,
+        ILogger<NotificationService> logger,
+        IEmailService emailService)
     {
         _context = context;
         _logger = logger;
+        _emailService = emailService;
     }
 
     public async Task NotifyUserAsync(string userId, string message, string? linkUrl = null, string type = "Info")
@@ -32,8 +37,31 @@ public class NotificationService : INotificationService
 
             _context.Notifications.Add(notification);
             await _context.SaveChangesAsync();
-            
-            // TODO: Here we could also trigger email sending
+
+            // Send email notification
+            try
+            {
+                var user = await _context.Users.FindAsync(userId);
+                if (user != null && !string.IsNullOrEmpty(user.Email))
+                {
+                    var emailSubject = $"Ticket Masala: {type}";
+                    var emailBody = $@"
+                        <h2>{type} Notification</h2>
+                        <p>{message}</p>
+                        {(string.IsNullOrEmpty(linkUrl) ? "" : $"<p><a href='{linkUrl}'>View Details</a></p>")}
+                        <hr/>
+                        <p style='color: #666; font-size: 12px;'>This is an automated notification from Ticket Masala.</p>
+                    ";
+
+                    await _emailService.SendEmailAsync(user.Email, emailSubject, emailBody);
+                }
+            }
+            catch (Exception emailEx)
+            {
+                _logger.LogError(emailEx, "Failed to send email notification to user {UserId}", userId);
+                // Continue - email failure should not break notification creation
+            }
+
             _logger.LogInformation("Notification sent to user {UserId}: {Message}", userId, message);
         }
         catch (Exception ex)

@@ -7,28 +7,29 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace TicketMasala.Web.Views.Shared.Components.Notification;
-    public class NotificationViewComponent : ViewComponent
+
+public class NotificationViewComponent : ViewComponent
+{
+    private readonly INotificationService _notificationService;
+
+    public NotificationViewComponent(INotificationService notificationService)
     {
-        private readonly INotificationService _notificationService;
+        _notificationService = notificationService;
+    }
 
-        public NotificationViewComponent(INotificationService notificationService)
+    public async Task<IViewComponentResult> InvokeAsync()
+    {
+        var userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userId))
         {
-            _notificationService = notificationService;
+            return Content(string.Empty);
         }
 
-        public async Task<IViewComponentResult> InvokeAsync()
-        {
-            var userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Content(string.Empty);
-            }
+        var notifications = await _notificationService.GetUserNotificationsAsync(userId, 5);
+        var unreadCount = await _notificationService.GetUnreadCountAsync(userId);
 
-            var notifications = await _notificationService.GetUserNotificationsAsync(userId, 5);
-            var unreadCount = await _notificationService.GetUnreadCountAsync(userId);
-
-            ViewBag.UnreadCount = unreadCount;
-            return View(notifications);
-        }
+        ViewBag.UnreadCount = unreadCount;
+        return View(notifications);
+    }
 }

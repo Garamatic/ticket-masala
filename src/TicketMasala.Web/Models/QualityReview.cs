@@ -13,10 +13,10 @@ public class QualityReview
     public Guid TicketId { get; set; }
 
     [ForeignKey("TicketId")]
-    public Ticket Ticket { get; set; }
+    public Ticket? Ticket { get; set; }
 
     [Required]
-    public string ReviewerId { get; set; }
+    public string ReviewerId { get; set; } = string.Empty;
 
     [ForeignKey("ReviewerId")]
     public ApplicationUser? Reviewer { get; set; }
@@ -30,6 +30,8 @@ public class QualityReview
 
     [Range(0, 100)]
     public int Score { get; set; }
+
+    public bool IsApproved { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime ReviewDate { get; set; } = DateTime.UtcNow;

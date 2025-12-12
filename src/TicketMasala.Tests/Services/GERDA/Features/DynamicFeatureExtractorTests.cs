@@ -6,30 +6,31 @@ using Xunit;
 using Customer = TicketMasala.Web.Models.ApplicationUser;
 
 namespace TicketMasala.Tests.Services.GERDA.Features;
-    public class DynamicFeatureExtractorTests
+
+public class DynamicFeatureExtractorTests
+{
+    private readonly DynamicFeatureExtractor _extractor;
+
+    public DynamicFeatureExtractorTests()
     {
-        private readonly DynamicFeatureExtractor _extractor;
+        _extractor = new DynamicFeatureExtractor(new NullLogger<DynamicFeatureExtractor>());
+    }
 
-        public DynamicFeatureExtractorTests()
+    [Fact]
+    public void ExtractFeatures_NumericMinMax_ScalesCorrectly()
+    {
+        // Arrange
+        var ticket = new Ticket
         {
-            _extractor = new DynamicFeatureExtractor(new NullLogger<DynamicFeatureExtractor>());
-        }
+            CustomFieldsJson = "{\"soil_ph\": 7.0}",
+            TicketStatus = Status.Pending,
+            Description = "Test Ticket",
+            Customer = new ApplicationUser { Id = "C1", FirstName = "Test", LastName = "Customer", Email = "test@example.com", Phone = "1234567890", UserName = "test@example.com" }
+        };
 
-        [Fact]
-        public void ExtractFeatures_NumericMinMax_ScalesCorrectly()
+        var config = new GerdaModelConfig
         {
-            // Arrange
-            var ticket = new Ticket
-            {
-                CustomFieldsJson = "{\"soil_ph\": 7.0}",
-                TicketStatus = Status.Pending,
-                Description = "Test Ticket",
-                Customer = new ApplicationUser { Id = "C1", FirstName = "Test", LastName = "Customer", Email = "test@example.com", Phone = "1234567890", UserName = "test@example.com" }
-            };
-
-            var config = new GerdaModelConfig
-            {
-                Features = new List<FeatureDefinition>
+            Features = new List<FeatureDefinition>
                 {
                     new FeatureDefinition
                     {
@@ -43,31 +44,31 @@ namespace TicketMasala.Tests.Services.GERDA.Features;
                         }
                     }
                 }
-            };
+        };
 
-            // Act
-            var vector = _extractor.ExtractFeatures(ticket, config);
+        // Act
+        var vector = _extractor.ExtractFeatures(ticket, config);
 
-            // Assert
-            Assert.Single(vector);
-            Assert.Equal(0.5f, vector[0]); // 7 / 14 = 0.5
-        }
+        // Assert
+        Assert.Single(vector);
+        Assert.Equal(0.5f, vector[0]); // 7 / 14 = 0.5
+    }
 
-        [Fact]
-        public void ExtractFeatures_OneHot_MatchesTarget()
+    [Fact]
+    public void ExtractFeatures_OneHot_MatchesTarget()
+    {
+        // Arrange
+        var ticket = new Ticket
         {
-            // Arrange
-            var ticket = new Ticket
-            {
-                CustomFieldsJson = "{\"zone\": \"Z1\"}",
-                TicketStatus = Status.Pending,
-                Description = "Test Ticket",
-                Customer = new ApplicationUser { Id = "C1", FirstName = "Test", LastName = "Customer", Email = "test@example.com", Phone = "1234567890", UserName = "test@example.com" }
-            };
+            CustomFieldsJson = "{\"zone\": \"Z1\"}",
+            TicketStatus = Status.Pending,
+            Description = "Test Ticket",
+            Customer = new ApplicationUser { Id = "C1", FirstName = "Test", LastName = "Customer", Email = "test@example.com", Phone = "1234567890", UserName = "test@example.com" }
+        };
 
-            var config = new GerdaModelConfig
-            {
-                Features = new List<FeatureDefinition>
+        var config = new GerdaModelConfig
+        {
+            Features = new List<FeatureDefinition>
                 {
                     new FeatureDefinition
                     {
@@ -80,31 +81,31 @@ namespace TicketMasala.Tests.Services.GERDA.Features;
                         }
                     }
                 }
-            };
+        };
 
-            // Act
-            var vector = _extractor.ExtractFeatures(ticket, config);
+        // Act
+        var vector = _extractor.ExtractFeatures(ticket, config);
 
-            // Assert
-            Assert.Single(vector);
-            Assert.Equal(1.0f, vector[0]);
-        }
+        // Assert
+        Assert.Single(vector);
+        Assert.Equal(1.0f, vector[0]);
+    }
 
-        [Fact]
-        public void ExtractFeatures_OneHot_Mismatch_ReturnsZero()
+    [Fact]
+    public void ExtractFeatures_OneHot_Mismatch_ReturnsZero()
+    {
+        // Arrange
+        var ticket = new Ticket
         {
-            // Arrange
-            var ticket = new Ticket
-            {
-                CustomFieldsJson = "{\"zone\": \"Z2\"}",
-                TicketStatus = Status.Pending,
-                Description = "Test Ticket",
-                Customer = new ApplicationUser { Id = "C1", FirstName = "Test", LastName = "Customer", Email = "test@example.com", Phone = "1234567890", UserName = "test@example.com" }
-            };
+            CustomFieldsJson = "{\"zone\": \"Z2\"}",
+            TicketStatus = Status.Pending,
+            Description = "Test Ticket",
+            Customer = new ApplicationUser { Id = "C1", FirstName = "Test", LastName = "Customer", Email = "test@example.com", Phone = "1234567890", UserName = "test@example.com" }
+        };
 
-            var config = new GerdaModelConfig
-            {
-                Features = new List<FeatureDefinition>
+        var config = new GerdaModelConfig
+        {
+            Features = new List<FeatureDefinition>
                 {
                     new FeatureDefinition
                     {
@@ -117,13 +118,13 @@ namespace TicketMasala.Tests.Services.GERDA.Features;
                         }
                     }
                 }
-            };
+        };
 
-            // Act
-            var vector = _extractor.ExtractFeatures(ticket, config);
+        // Act
+        var vector = _extractor.ExtractFeatures(ticket, config);
 
-            // Assert
-            Assert.Single(vector);
-            Assert.Equal(0.0f, vector[0]);
-        }
+        // Assert
+        Assert.Single(vector);
+        Assert.Equal(0.0f, vector[0]);
+    }
 }

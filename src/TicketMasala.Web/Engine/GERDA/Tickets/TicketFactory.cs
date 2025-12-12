@@ -77,22 +77,22 @@ public class TicketFactory : ITicketFactory
             // V2 Grouping: Compute Hash
             ContentHash = TicketHasher.ComputeContentHash(description, customer.Id)
         };
-        
+
         if (responsible != null)
         {
             ticket.Responsible = responsible;
             ticket.ResponsibleId = responsible.Id;
         }
-        
+
         if (projectGuid.HasValue)
         {
             ticket.ProjectGuid = projectGuid.Value;
         }
-        
-        _logger.LogDebug("Created ticket from form: {Description} (Hash: {Hash})", 
+
+        _logger.LogDebug("Created ticket from form: {Description} (Hash: {Hash})",
             description?.Substring(0, Math.Min(50, description?.Length ?? 0)),
             ticket.ContentHash);
-        
+
         return ticket;
     }
 
@@ -106,10 +106,10 @@ public class TicketFactory : ITicketFactory
     {
         // Try to find customer by email
         var customer = await _userRepository.GetUserByEmailAsync(senderEmail);
-        
+
         // Build description from email
         var description = $"[Email] {subject}\n\n{body}";
-        
+
         var ticket = new Ticket
         {
             Guid = Guid.NewGuid(),
@@ -127,15 +127,15 @@ public class TicketFactory : ITicketFactory
             // V2 Grouping: Compute Hash
             ContentHash = TicketHasher.ComputeContentHash(description, customer?.Id ?? senderEmail)
         };
-        
+
         if (customer != null)
         {
             ticket.CreatorGuid = Guid.Parse(customer.Id);
         }
-        
-        _logger.LogInformation("Created ticket from email: {Subject} from {Sender} (Hash: {Hash})", 
+
+        _logger.LogInformation("Created ticket from email: {Subject} from {Sender} (Hash: {Hash})",
             subject, senderEmail, ticket.ContentHash);
-        
+
         return ticket;
     }
 }

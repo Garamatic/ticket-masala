@@ -10,12 +10,12 @@ public interface IGerdaService
     /// Process all GERDA functions for a ticket
     /// </summary>
     Task ProcessTicketAsync(Guid ticketGuid);
-    
+
     /// <summary>
     /// Run batch processing on all open tickets
     /// </summary>
     Task ProcessAllOpenTicketsAsync();
-    
+
     /// <summary>
     /// Check if GERDA is enabled
     /// </summary>

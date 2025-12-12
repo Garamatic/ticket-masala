@@ -1,0 +1,124 @@
+{
+    "client_config": {
+        "company": {
+            "name": "Your Company Name",
+            "slogan": "Your Tagline Here",
+            "description": "Brief description of your company and services.",
+            "logoIcon": "fa-building",
+            "foundedYear": 2020
+        },
+        "contact": {
+            "email": "info@yourcompany.com",
+            "phone": "+1 234 567 8900",
+            "address": "Your City, Country",
+            "social": {
+                "facebook": "#",
+                "linkedin": "#",
+                "twitter": "#"
+            }
+        },
+        "theme": {
+            "primaryColor": "#0052CC",
+            "primaryDark": "#003D99",
+            "primaryLight": "#4C9AFF",
+            "secondaryColor": "#172B4D",
+            "accentColor": "#FF5630",
+            "accentLight": "#FF8F73"
+        },
+        "services": [
+            {
+                "id": "service-1",
+                "icon": "fas fa-cog",
+                "title": "Service One",
+                "description": "Description of your first service offering."
+            },
+            {
+                "id": "service-2",
+                "icon": "fas fa-tools",
+                "title": "Service Two",
+                "description": "Description of your second service offering."
+            },
+            {
+                "id": "service-3",
+                "icon": "fas fa-chart-line",
+                "title": "Service Three",
+                "description": "Description of your third service offering."
+            },
+            {
+                "id": "service-4",
+                "icon": "fas fa-headset",
+                "title": "Service Four",
+                "description": "Description of your fourth service offering."
+            }
+        ],
+        "projects": [
+            {
+                "title": "Project One",
+                "description": "Description of a completed project or case study.",
+                "location": "Location",
+                "image": "assets/project-1.png"
+            },
+            {
+                "title": "Project Two",
+                "description": "Description of another project.",
+                "location": "Location",
+                "image": "assets/project-2.png"
+            }
+        ],
+        "form": {
+            "title": "Request a Quote",
+            "submitButtonText": "Submit Request",
+            "projectTypes": [
+                {
+                    "value": "service-1",
+                    "label": "Service One"
+                },
+                {
+                    "value": "service-2",
+                    "label": "Service Two"
+                },
+                {
+                    "value": "service-3",
+                    "label": "Service Three"
+                },
+                {
+                    "value": "service-4",
+                    "label": "Service Four"
+                },
+                {
+                    "value": "other",
+                    "label": "Other"
+                }
+            ]
+        }
+    },
+    "masala_config": {
+        "endpoint": "http://localhost:5054/api/v1/tickets/external",
+        "sourceSite": "your-company-name",
+        "auth": {
+            "apiKey": "public-client-key",
+            "method": "Bearer"
+        },
+        "retryPolicy": {
+            "maxRetries": 3,
+            "delayMs": 1000
+        }
+    },
+    "gerda_config": {
+        "domain": "IT",
+        "validationRules": {
+            "customerEmail": {
+                "required": true,
+                "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+            },
+            "description": {
+                "required": true,
+                "minLength": 10
+            }
+        },
+        "workflow": {
+            "defaultPriority": "Normal",
+            "autoAssign": true
+        }
+    }
+}

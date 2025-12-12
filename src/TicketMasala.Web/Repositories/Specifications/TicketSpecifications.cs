@@ -68,7 +68,7 @@ public class OpenTicketsSpecification : Specification<Ticket>
 {
     public OpenTicketsSpecification()
     {
-        SetCriteria(t => t.TicketStatus != Status.Completed && 
+        SetCriteria(t => t.TicketStatus != Status.Completed &&
                         t.TicketStatus != Status.Failed &&
                         t.ValidUntil == null);
         ApplyOrderByDescending(t => t.PriorityScore);
@@ -96,7 +96,7 @@ public class OverdueTicketsSpecification : Specification<Ticket>
     public OverdueTicketsSpecification()
     {
         var now = DateTime.UtcNow;
-        SetCriteria(t => t.CompletionTarget < now && 
+        SetCriteria(t => t.CompletionTarget < now &&
                         t.TicketStatus != Status.Completed &&
                         t.ValidUntil == null);
         ApplyOrderBy(t => t.CompletionTarget!);
@@ -110,7 +110,7 @@ public class HighPriorityTicketsSpecification : Specification<Ticket>
 {
     public HighPriorityTicketsSpecification(int priorityThreshold = 50)
     {
-        SetCriteria(t => t.PriorityScore >= priorityThreshold && 
+        SetCriteria(t => t.PriorityScore >= priorityThreshold &&
                         t.ValidUntil == null);
         ApplyOrderByDescending(t => t.PriorityScore);
     }

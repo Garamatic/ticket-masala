@@ -273,7 +273,7 @@ public class DatabaseTransactionTests : IDisposable
     {
         // Note: This test demonstrates the pattern but may not throw in SQLite
         // without explicit concurrency tokens configured
-        
+
         // Arrange
         var ticket = await _fixture.SeedTestTicketAsync();
         var ticketGuid = ticket.Guid;

@@ -23,13 +23,15 @@ Ticket Masala is a modular monolith application designed to streamline IT ticket
 
 ---
 
-## 2. Table of Contents
+## 2. Documentation Structure
 
-1. **Overview**: High-level introduction to the project.
-2. **Architecture Summary**: Detailed explanation of the system's modular monolith design.
-3. **AI Strategy**: Insights into the GERDA AI pipeline.
-4. **Frontend Design System**: Guidelines for building consistent user interfaces.
-5. **Configuration & Extensibility**: Blueprint for transforming the system into a configuration-driven engine.
+This documentation is organized as follows:
+
+- **[Architecture](architecture/SUMMARY.md)**: High-level and detailed architectural designs.
+- **[Deployment](deployment/FLY_IO.md)**: Guides for deploying to Fly.io, Docker, and Linux pilots.
+- **[Guides](guides/CONFIGURATION.md)**: Configuration, frontend development, and data seeding guides.
+- **[Project Management](project-management/roadmap_v3.md)**: Roadmaps, implementation phases, and sprint logs.
+- **[Assets](assets/)**: Screenshots, visuals, and presentation materials.
 
 ---
 
@@ -57,16 +59,6 @@ Presentation → Services → Repositories → Database
 | **Facade** | AI subsystem orchestration | `GerdaService` |
 | **Factory** | Object creation | `TicketFactory` |
 
-### GERDA AI Modules
-
-| Letter | Module | Technique |
-|--------|--------|-----------|
-| **G** | Grouping | K-Means (spam detection) |
-| **E** | Estimating | Classification (effort) |
-| **R** | Ranking | WSJF (priority) |
-| **D** | Dispatching | Matrix Factorization (agent matching) |
-| **A** | Anticipation | Time Series (forecast) |
-
 ### Service Architecture (CQRS-lite)
 
 | Interface | Responsibility |
@@ -74,15 +66,6 @@ Presentation → Services → Repositories → Database
 | `ITicketQueryService` | Read operations |
 | `ITicketCommandService` | Write operations |
 | `ITicketFactory` | Ticket creation |
-
-### Key Decisions
-
-| Decision | Rationale |
-|----------|-----------|
-| Local ML.NET | GDPR privacy, no API costs |
-| Modular Monolith | Simpler ops than microservices |
-| Observer Pattern | AI processing doesn't slow UI |
-| Repository Pattern | Testable, database-agnostic |
 
 ---
 
@@ -95,4 +78,5 @@ Presentation → Services → Repositories → Database
 
 ---
 
-For detailed instructions on deployment, see the `how-to-deploy` folder in the root directory.
+For detailed instructions on deployment, see the [deployment](deployment/FLY_IO.md) directory.
+For architectural details, see [Detailed Architecture](architecture/DETAILED.md).

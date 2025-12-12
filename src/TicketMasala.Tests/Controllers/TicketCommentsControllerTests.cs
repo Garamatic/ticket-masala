@@ -1,34 +1,25 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Microsoft.EntityFrameworkCore;
 using Moq;
 using System.Security.Claims;
 using TicketMasala.Web.Controllers;
-using TicketMasala.Web.Data;
-using TicketMasala.Web.Models;
+using TicketMasala.Web.Engine.GERDA.Tickets;
 using Xunit;
 
 namespace TicketMasala.Tests.Controllers;
 
-public class TicketCommentsControllerTests : IDisposable
+public class TicketCommentsControllerTests
 {
-    private readonly MasalaDbContext _context;
+    private readonly Mock<ITicketService> _mockTicketService;
     private readonly TicketCommentsController _controller;
 
     public TicketCommentsControllerTests()
     {
-        // Use in-memory database for testing
-        var options = new DbContextOptionsBuilder<MasalaDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .Options;
-
-        _context = new MasalaDbContext(options);
-
-        // Create a mock logger
+        _mockTicketService = new Mock<ITicketService>();
         var mockLogger = new Mock<Microsoft.Extensions.Logging.ILogger<TicketCommentsController>>();
 
-        _controller = new TicketCommentsController(_context, mockLogger.Object);
+        _controller = new TicketCommentsController(_mockTicketService.Object, mockLogger.Object);
 
         // Set up user claims
         var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
@@ -59,16 +50,16 @@ public class TicketCommentsControllerTests : IDisposable
         var result = await _controller.AddComment(ticketId, comment, isInternal);
 
         // Assert
+        _mockTicketService.Verify(s => s.AddCommentAsync(
+            ticketId,
+            comment,
+            isInternal,
+            "test-user-id"), Times.Once);
+
         var redirect = Assert.IsType<RedirectToActionResult>(result);
         Assert.Equal("Detail", redirect.ActionName);
         Assert.Equal("Ticket", redirect.ControllerName);
         Assert.Equal(ticketId, redirect.RouteValues?["id"]);
-
-        // Verify comment was added
-        var addedComment = await _context.TicketComments.FirstOrDefaultAsync(c => c.TicketId == ticketId);
-        Assert.NotNull(addedComment);
-        Assert.Equal(comment, addedComment.Body);
-        Assert.Equal(isInternal, addedComment.IsInternal);
     }
 
     [Fact]
@@ -81,46 +72,53 @@ public class TicketCommentsControllerTests : IDisposable
         var result = await _controller.AddComment(ticketId, "", false);
 
         // Assert
+        _mockTicketService.Verify(s => s.AddCommentAsync(
+            It.IsAny<Guid>(),
+            It.IsAny<string>(),
+            It.IsAny<bool>(),
+            It.IsAny<string>()), Times.Never);
+
         var redirect = Assert.IsType<RedirectToActionResult>(result);
         Assert.Equal("Detail", redirect.ActionName);
-
-        // Verify comment was not added
-        var comment = await _context.TicketComments.FirstOrDefaultAsync(c => c.TicketId == ticketId);
-        Assert.Null(comment);
     }
 
     [Fact]
-    public async Task RequestReview_SetsStatusToPending()
+    public async Task RequestReview_CallsService()
     {
         // Arrange
         var ticketGuid = Guid.NewGuid();
-        var ticket = new Ticket
-        {
-            Guid = ticketGuid,
-            Description = "Test ticket",
-            CreationDate = DateTime.UtcNow,
-            TicketStatus = Status.Pending,
-            ReviewStatus = ReviewStatus.None,
-            CustomerId = "test-customer-id"
-        };
-        _context.Tickets.Add(ticket);
-        await _context.SaveChangesAsync();
 
         // Act
         var result = await _controller.RequestReview(ticketGuid);
 
         // Assert
+        _mockTicketService.Verify(s => s.RequestReviewAsync(ticketGuid, "test-user-id"), Times.Once);
+
         var redirect = Assert.IsType<RedirectToActionResult>(result);
         Assert.Equal("Detail", redirect.ActionName);
-
-        // Verify review status was updated
-        var updatedTicket = await _context.Tickets.FirstOrDefaultAsync(t => t.Guid == ticketGuid);
-        Assert.NotNull(updatedTicket);
-        Assert.Equal(ReviewStatus.Pending, updatedTicket.ReviewStatus);
     }
 
-    public void Dispose()
+    [Fact]
+    public async Task SubmitReview_CallsService_WithCorrectParameters()
     {
-        _context?.Dispose();
+        // Arrange
+        var ticketGuid = Guid.NewGuid();
+        var score = 5;
+        var feedback = "Great work!";
+        var approve = true;
+
+        // Act
+        var result = await _controller.SubmitReview(ticketGuid, score, feedback, approve);
+
+        // Assert
+        _mockTicketService.Verify(s => s.SubmitReviewAsync(
+            ticketGuid,
+            score,
+            feedback,
+            approve,
+            "test-user-id"), Times.Once);
+
+        var redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal("Detail", redirect.ActionName);
     }
 }

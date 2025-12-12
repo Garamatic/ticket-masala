@@ -18,7 +18,7 @@ public class GardenComplexityStrategy : IEstimatingStrategy
             if (!string.IsNullOrEmpty(ticket.DomainCustomFieldsJson))
             {
                 var customFields = JsonSerializer.Deserialize<Dictionary<string, object>>(ticket.DomainCustomFieldsJson);
-                
+
                 if (customFields != null && customFields.ContainsKey("garden_size_sqm"))
                 {
                     // Handle potential type mismatches from JSON (string vs number)

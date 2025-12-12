@@ -29,7 +29,7 @@ public class DynamicFeatureExtractor : IFeatureExtractor
 
                 // Try to get as number first
                 rawValue = FieldExtractor.GetNumber(ticket.CustomFieldsJson, featureDef.SourceField);
-                
+
                 // If it's 0, it might be a categorical string or truly 0.
                 if (rawValue == 0)
                 {
@@ -59,7 +59,7 @@ public class DynamicFeatureExtractor : IFeatureExtractor
             case "one_hot":
                 return ApplyOneHot(def, rawString);
             case "bool":
-                 return ApplyBool(def, rawString);
+                return ApplyBool(def, rawString);
             default:
                 return (float)rawNumber; // Raw pass-through
         }
@@ -71,7 +71,7 @@ public class DynamicFeatureExtractor : IFeatureExtractor
         {
             float min = Convert.ToSingle(minObj);
             float max = Convert.ToSingle(maxObj);
-            
+
             if (max == min) return 0f;
 
             var val = (float)value;
@@ -97,11 +97,11 @@ public class DynamicFeatureExtractor : IFeatureExtractor
 
     private float ApplyBool(FeatureDefinition def, string? value)
     {
-         if (bool.TryParse(value, out bool boolVal))
-         {
-             return boolVal ? 1.0f : 0.0f;
-         }
-         return 0f;
+        if (bool.TryParse(value, out bool boolVal))
+        {
+            return boolVal ? 1.0f : 0.0f;
+        }
+        return 0f;
     }
 
 }

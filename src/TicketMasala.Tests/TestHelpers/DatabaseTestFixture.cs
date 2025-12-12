@@ -16,7 +16,7 @@ public class DatabaseTestFixture : IDisposable
 {
     private readonly SqliteConnection _connection;
     public MasalaDbContext Context { get; private set; }
-    
+
     // Repositories
     public EfCoreTicketRepository TicketRepository { get; private set; }
     public EfCoreProjectRepository ProjectRepository { get; private set; }
@@ -35,21 +35,21 @@ public class DatabaseTestFixture : IDisposable
             .Options;
 
         Context = new MasalaDbContext(options);
-        
+
         // Create the schema
         Context.Database.EnsureCreated();
 
         // Initialize repositories with mock loggers
         TicketRepository = new EfCoreTicketRepository(
-            Context, 
+            Context,
             Mock.Of<ILogger<EfCoreTicketRepository>>());
-        
+
         ProjectRepository = new EfCoreProjectRepository(
-            Context, 
+            Context,
             Mock.Of<ILogger<EfCoreProjectRepository>>());
-        
+
         UserRepository = new EfCoreUserRepository(
-            Context, 
+            Context,
             Mock.Of<ILogger<EfCoreUserRepository>>());
     }
 
@@ -93,8 +93,8 @@ public class DatabaseTestFixture : IDisposable
     /// Seeds the database with a standard test employee.
     /// </summary>
     public async Task<Employee> SeedTestEmployeeAsync(
-        string? id = null, 
-        string? email = null, 
+        string? id = null,
+        string? email = null,
         EmployeeType level = EmployeeType.Support,
         string team = "Support")
     {

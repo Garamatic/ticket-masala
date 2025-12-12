@@ -15,6 +15,7 @@ using System.Diagnostics;
 using System.Security.Claims;
 
 namespace TicketMasala.Web.Controllers;
+
 [Authorize(Roles = Constants.RoleEmployee + "," + Constants.RoleAdmin + "," + Constants.RoleCustomer)]
 public class ProjectsController : Controller
 {

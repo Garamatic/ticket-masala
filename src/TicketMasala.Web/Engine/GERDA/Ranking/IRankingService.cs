@@ -12,17 +12,17 @@ public interface IRankingService
     /// <param name="ticketGuid">The ticket Guid to rank</param>
     /// <returns>Priority score (higher = more urgent)</returns>
     Task<double> CalculatePriorityScoreAsync(Guid ticketGuid);
-    
+
     /// <summary>
     /// Recalculate priority scores for all open tickets
     /// </summary>
     Task RecalculateAllPrioritiesAsync();
-    
+
     /// <summary>
     /// Get tickets ordered by priority score
     /// </summary>
     Task<List<Guid>> GetPrioritizedTicketGuidsAsync(Guid? projectGuid = null);
-    
+
     /// <summary>
     /// Check if ranking is enabled
     /// </summary>

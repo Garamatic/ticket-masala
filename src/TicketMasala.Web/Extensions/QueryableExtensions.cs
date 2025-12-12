@@ -114,7 +114,7 @@ public static class QueryableExtensions
     /// </summary>
     public static IQueryable<Ticket> ForCustomer(this IQueryable<Ticket> query, string customerId)
     {
-        return query.Where(t => t.Customer.Id == customerId);
+        return query.Where(t => t.Customer != null && t.Customer.Id == customerId);
     }
 
     /// <summary>

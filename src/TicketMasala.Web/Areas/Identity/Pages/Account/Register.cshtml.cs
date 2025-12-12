@@ -55,19 +55,19 @@ public class RegisterModel : PageModel
     ///     directly from your code. This API may change or be removed in future releases.
     /// </summary>
     [BindProperty]
-    public InputModel Input { get; set; }
+    public InputModel Input { get; set; } = new();
 
     /// <summary>
     ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
     ///     directly from your code. This API may change or be removed in future releases.
     /// </summary>
-    public string ReturnUrl { get; set; }
+    public string ReturnUrl { get; set; } = string.Empty;
 
     /// <summary>
     ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
     ///     directly from your code. This API may change or be removed in future releases.
     /// </summary>
-    public IList<AuthenticationScheme> ExternalLogins { get; set; }
+    public IList<AuthenticationScheme> ExternalLogins { get; set; } = new List<AuthenticationScheme>();
 
     /// <summary>
     ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
@@ -77,11 +77,11 @@ public class RegisterModel : PageModel
     {
         [Required]
         [Display(Name = "First name")]
-        public string FirstName { get; set; }
+        public string FirstName { get; set; } = string.Empty;
 
         [Required]
         [Display(Name = "Last name")]
-        public string LastName { get; set; }
+        public string LastName { get; set; } = string.Empty;
 
         [Phone]
         [Display(Name = "Phone number")]
@@ -94,7 +94,7 @@ public class RegisterModel : PageModel
         [Required]
         [EmailAddress]
         [Display(Name = "Email")]
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
 
         /// <summary>
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
@@ -104,7 +104,7 @@ public class RegisterModel : PageModel
         [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
         [DataType(DataType.Password)]
         [Display(Name = "Password")]
-        public string Password { get; set; }
+        public string Password { get; set; } = string.Empty;
 
         /// <summary>
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
@@ -113,17 +113,17 @@ public class RegisterModel : PageModel
         [DataType(DataType.Password)]
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
-        public string ConfirmPassword { get; set; }
+        public string ConfirmPassword { get; set; } = string.Empty;
     }
 
 
-    public async Task OnGetAsync(string returnUrl = null)
+    public async Task OnGetAsync(string? returnUrl = null)
     {
-        ReturnUrl = returnUrl;
+        ReturnUrl = returnUrl ?? string.Empty;
         ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
     }
 
-    public async Task<IActionResult> OnPostAsync(string returnUrl = null)
+    public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
     {
         returnUrl ??= Url.Content("~/");
         ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
@@ -159,7 +159,7 @@ public class RegisterModel : PageModel
                     protocol: Request.Scheme);
 
                 await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-                    $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                    $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl ?? string.Empty)}'>clicking here</a>.");
 
                 if (_userManager.Options.SignIn.RequireConfirmedAccount)
                 {

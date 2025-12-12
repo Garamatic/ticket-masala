@@ -12,7 +12,7 @@ public class ProjectViewModel
     [StringLength(2000)]
     public string Description { get; init; } = string.Empty;
     public Status Status { get; init; }
-    public Employee ProjectManager { get; init; }
+    public Employee? ProjectManager { get; init; }
     public string ProjectManagerName { get; set; } = string.Empty;
     public int TicketCount { get; set; }
 

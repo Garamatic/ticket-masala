@@ -98,7 +98,7 @@ public class MatrixFactorizationDispatchingStrategy : IDispatchingStrategy
                 .Where(t => t.TicketStatus != Status.Completed && t.TicketStatus != Status.Failed)
                 .GroupBy(t => t.ResponsibleId)
                 .Select(g => new { AgentId = g.Key!, Count = g.Count() })
-                .ToDictionaryAsync(x => x.AgentId, x => x.Count);
+                .ToDictionaryAsync(x => x.AgentId!, x => x.Count);
 
             // Score each agent
             var scoredAgents = new List<(string AgentId, double Score)>();
@@ -134,7 +134,7 @@ public class MatrixFactorizationDispatchingStrategy : IDispatchingStrategy
                 // Predict affinity score using ML model (Factor 1: Past Interaction)
                 var input = new AgentCustomerRating
                 {
-                    AgentId = employee.Id,
+                    AgentId = employee.Id!, // Employee.Id is required, should not be null
                     CustomerId = ticket.CreatorGuid.ToString()
                 };
 
@@ -191,7 +191,7 @@ public class MatrixFactorizationDispatchingStrategy : IDispatchingStrategy
                     ticket.Guid,
                     ftsScore);
 
-                scoredAgents.Add((employee.Id, adjustedScore));
+                scoredAgents.Add((employee.Id!, adjustedScore));
             }
 
             var results = scoredAgents
@@ -235,9 +235,9 @@ public class MatrixFactorizationDispatchingStrategy : IDispatchingStrategy
 
         var trainingData = rawTickets.Select(t => new AgentCustomerRating
         {
-            AgentId = t.ResponsibleId!,
+            AgentId = t.ResponsibleId!, // Already filtered for non-null ResponsibleId
             CustomerId = t.CreatorGuid.ToString(),
-            Rating = CalculateImplicitRating(Enum.Parse<Status>(t.Status), t.CompletionDate, t.CreationDate)
+            Rating = CalculateImplicitRating(Enum.Parse<Status>(t.Status ?? "Pending"), t.CompletionDate, t.CreationDate)
         }).ToList();
 
         if (trainingData.Count < _config.GerdaAI.Dispatching.MinHistoryForAffinityMatch)

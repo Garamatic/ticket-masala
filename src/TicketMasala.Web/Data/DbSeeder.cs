@@ -201,7 +201,7 @@ public class DbSeeder
                 FirstName = empDto.FirstName,
                 LastName = empDto.LastName,
                 Phone = empDto.Phone,
-                Team = empDto.Team,
+                Team = empDto.Team ?? string.Empty,
                 Level = empDto.Level ?? EmployeeType.Support,
                 // GERDA Fields
                 Language = empDto.Language,

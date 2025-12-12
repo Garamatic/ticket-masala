@@ -49,7 +49,6 @@ public class RuleCompilerService
         _logger.LogInformation("Compiling rules for hot reload...");
         var sw = System.Diagnostics.Stopwatch.StartNew();
         var newRules = new ConcurrentDictionary<string, Func<Ticket, ClaimsPrincipal, bool>>();
-        int ruleCount = 0;
 
         try
         {

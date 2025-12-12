@@ -74,7 +74,7 @@
                                 <option value="">-- Select Customer --</option>
                                 @if (ViewBag.Customers != null)
                                 {
-                                    @foreach (var customer in ViewBag.Customers as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)
+                                    @foreach (var customer in ViewBag.Customers as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>())
                                     {
                                         <option value="@customer.Value">@customer.Text</option>
                                     }
@@ -96,7 +96,7 @@
                             <option value="">-- Unassigned --</option>
                             @if (ViewBag.Employees != null)
                             {
-                                @foreach (var employee in ViewBag.Employees as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)
+                                @foreach (var employee in ViewBag.Employees as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>())
                                 {
                                     <option value="@employee.Value">@employee.Text</option>
                                 }
@@ -112,7 +112,7 @@
                             <option value="">-- No @entityLabels.WorkContainer --</option>
                             @if (ViewBag.Projects != null)
                             {
-                                @foreach (var project in ViewBag.Projects as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)
+                                @foreach (var project in ViewBag.Projects as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>())
                                 {
                                     <option value="@project.Value">@project.Text</option>
                                 }

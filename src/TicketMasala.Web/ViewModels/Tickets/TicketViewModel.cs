@@ -15,8 +15,8 @@ public class TicketViewModel
 
     public DateTime CreationDate { get; set; }
     public DateTime? CompletionTarget { get; set; }
-    public string ResponsibleName { get; set; }
-    public string CustomerName { get; set; }
+    public string ResponsibleName { get; set; } = string.Empty;
+    public string CustomerName { get; set; } = string.Empty;
     public List<string> Comments { get; set; } = new List<string>();
 
     public Guid? ParentTicketGuid { get; set; }
@@ -30,5 +30,5 @@ public class SubTicketInfo
 {
     public Guid Guid { get; set; }
     public Status TicketStatus { get; set; }
-    public string Description { get; set; }
+    public string Description { get; set; } = string.Empty;
 }

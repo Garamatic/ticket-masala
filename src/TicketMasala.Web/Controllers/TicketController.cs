@@ -514,7 +514,11 @@ public class TicketController : Controller
             {
                 // HTMX: Return the updated comment list
                 var ticketDetails = await _ticketService.GetTicketDetailsAsync(id);
-                return PartialView("_CommentListPartial", ticketDetails.Comments);
+                if (ticketDetails != null)
+                {
+                    return PartialView("_CommentListPartial", ticketDetails.Comments);
+                }
+                return StatusCode(500, "Ticket not found");
             }
 
             TempData["Success"] = "Comment added successfully";

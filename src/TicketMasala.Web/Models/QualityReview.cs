@@ -13,10 +13,10 @@ public class QualityReview
     public Guid TicketId { get; set; }
 
     [ForeignKey("TicketId")]
-    public Ticket Ticket { get; set; }
+    public Ticket? Ticket { get; set; }
 
     [Required]
-    public string ReviewerId { get; set; }
+    public string ReviewerId { get; set; } = string.Empty;
 
     [ForeignKey("ReviewerId")]
     public ApplicationUser? Reviewer { get; set; }

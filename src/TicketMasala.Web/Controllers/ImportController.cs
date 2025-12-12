@@ -112,6 +112,12 @@ public class ImportController : Controller
             var uploaderId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             var departmentId = await _ticketService.GetCurrentUserDepartmentIdAsync();
 
+            if (string.IsNullOrEmpty(uploaderId))
+            {
+                TempData["Error"] = "User not authenticated.";
+                return RedirectToAction(nameof(Index));
+            }
+
             if (departmentId == null || departmentId == Guid.Empty)
             {
                 TempData["Error"] = "User has no department.";

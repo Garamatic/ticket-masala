@@ -203,6 +203,12 @@ public class TicketsApiController : ControllerBase
             _logger.LogInformation("Creating WorkItem with title: {Title}, domain: {Domain}",
                 request.Title, request.DomainId);
 
+            // Validate required fields
+            if (string.IsNullOrEmpty(request.CustomerId))
+            {
+                return BadRequest(new { error = "CustomerId is required" });
+            }
+
             // Map custom fields to JSON
             var customFieldsJson = request.CustomFields != null
                 ? JsonSerializer.Serialize(request.CustomFields)

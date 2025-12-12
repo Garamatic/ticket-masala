@@ -261,8 +261,8 @@ public class ProjectService : IProjectService
                 var ticket = new Ticket
                 {
                     Guid = Guid.NewGuid(),
-                    Title = templateTicket.Description.Length > 100 
-                        ? templateTicket.Description.Substring(0, 100) 
+                    Title = templateTicket.Description.Length > 100
+                        ? templateTicket.Description.Substring(0, 100)
                         : templateTicket.Description,
                     Description = templateTicket.Description,
                     DomainId = "IT",

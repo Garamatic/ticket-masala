@@ -66,8 +66,8 @@ public class ForecastData
 
 public class AgentPerformanceMetric
 {
-    public string AgentId { get; set; }
-    public string AgentName { get; set; }
+    public string AgentId { get; set; } = string.Empty;
+    public string AgentName { get; set; } = string.Empty;
     public int ClosedTickets { get; set; }
 }
 

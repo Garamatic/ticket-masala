@@ -192,7 +192,7 @@ public class DatabaseConstraintTests : IDisposable
         // Note: SQLite doesn't enforce NOT NULL for non-nullable reference type columns
         // the same way SQL Server does. The [Required] attribute is enforced at the
         // application level by model validation, not necessarily at the database level.
-        
+
         // Arrange
         var employee = new Employee
         {
@@ -232,7 +232,7 @@ public class DatabaseConstraintTests : IDisposable
     {
         // Note: SQLite in-memory doesn't enforce FK constraints by default
         // This test documents that behavior - in production with SQL Server, this would fail
-        
+
         // Arrange
         var ticket = new Ticket
         {
@@ -253,7 +253,6 @@ public class DatabaseConstraintTests : IDisposable
         try
         {
             await _fixture.Context.SaveChangesAsync();
-            Assert.NotNull(ticket.Guid); // FK not enforced in SQLite in-memory
         }
         catch (DbUpdateException)
         {
@@ -286,7 +285,7 @@ public class DatabaseConstraintTests : IDisposable
         var fromDb = await _fixture.Context.Projects
             .Include(p => p.Customer)
             .FirstAsync(p => p.Guid == project.Guid);
-        
+
         Assert.NotNull(fromDb.Customer);
         Assert.Equal(customer.Id, fromDb.Customer.Id);
     }
@@ -301,7 +300,7 @@ public class DatabaseConstraintTests : IDisposable
         // Arrange
         var email = "duplicate@example.com";
         var normalizedEmail = email.ToUpperInvariant();
-        
+
         var user1 = new ApplicationUser
         {
             Id = Guid.NewGuid().ToString(),
@@ -344,20 +343,20 @@ public class DatabaseConstraintTests : IDisposable
     {
         // Arrange
         var customer = await _fixture.SeedTestCustomerAsync();
-        
+
         var ticket1 = await _fixture.SeedTestTicketAsync(customer: customer);
         ticket1.ContentHash = null; // No hash
-        
+
         var ticket2 = await _fixture.SeedTestTicketAsync(customer: customer);
         ticket2.ContentHash = null; // Also no hash
 
         // Act & Assert - Should not throw (null values allowed in index)
         await _fixture.Context.SaveChangesAsync();
-        
+
         var ticketsWithoutHash = await _fixture.Context.Tickets
             .Where(t => t.ContentHash == null)
             .ToListAsync();
-        
+
         Assert.Equal(2, ticketsWithoutHash.Count);
     }
 
@@ -366,10 +365,10 @@ public class DatabaseConstraintTests : IDisposable
     {
         // Arrange
         var customer = await _fixture.SeedTestCustomerAsync();
-        
+
         var ticket1 = await _fixture.SeedTestTicketAsync(customer: customer);
         ticket1.ContentHash = "hash1abc";
-        
+
         var ticket2 = await _fixture.SeedTestTicketAsync(customer: customer);
         ticket2.ContentHash = "hash2def";
 

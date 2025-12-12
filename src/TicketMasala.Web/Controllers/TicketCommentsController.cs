@@ -25,7 +25,7 @@ public class TicketCommentsController : Controller
         if (!string.IsNullOrWhiteSpace(commentBody))
         {
             var currentUserId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            try 
+            try
             {
                 await _ticketService.AddCommentAsync(id, commentBody, isInternal, currentUserId);
             }

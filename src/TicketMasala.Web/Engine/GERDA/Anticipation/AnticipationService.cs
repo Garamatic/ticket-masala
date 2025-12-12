@@ -107,7 +107,7 @@ public class AnticipationService : IAnticipationService
         var employeeCount = await _context.Users.OfType<Employee>().CountAsync();
         var capacity = employeeCount * _config.GerdaAI.Dispatching.MaxAssignedTicketsPerAgent;
 
-        _logger.LogDebug("GERDA-A: Current team capacity = {Capacity} tickets ({Employees} agents)", 
+        _logger.LogDebug("GERDA-A: Current team capacity = {Capacity} tickets ({Employees} agents)",
             capacity, employeeCount);
 
         return capacity;
@@ -123,7 +123,7 @@ public class AnticipationService : IAnticipationService
 
         // Get 7-day forecast
         var forecast = await ForecastInflowAsync(horizonDays: 7);
-        
+
         if (forecast.Count == 0)
         {
             _logger.LogWarning("GERDA-A: Insufficient data for forecasting");
@@ -162,7 +162,7 @@ public class AnticipationService : IAnticipationService
                               $"Consider hiring additional agents or prioritizing tickets.";
 
             _logger.LogWarning("GERDA-A: {Message}", alertMessage);
-            
+
             return new CapacityRiskResult
             {
                 RiskStartDate = DateTime.UtcNow.Date,
@@ -173,9 +173,9 @@ public class AnticipationService : IAnticipationService
             };
         }
 
-        _logger.LogInformation("GERDA-A: Capacity is healthy: {Utilization:P0} utilization (threshold: {Threshold:P0})", 
+        _logger.LogInformation("GERDA-A: Capacity is healthy: {Utilization:P0} utilization (threshold: {Threshold:P0})",
             utilizationRate, riskThreshold);
-        
+
         return null;
     }
 
@@ -188,7 +188,7 @@ public class AnticipationService : IAnticipationService
 
         // Get historical data for the past 30 days
         var thirtyDaysAgo = DateTime.UtcNow.Date.AddDays(-30);
-        
+
         var actualCounts = await _context.Tickets
             .Where(t => t.CreationDate >= thirtyDaysAgo)
             .GroupBy(t => t.CreationDate.Date)
@@ -231,10 +231,10 @@ public class AnticipationService : IAnticipationService
             .ToListAsync();
 
         // Convert to ML.NET format
-        return ticketCounts.Select(tc => new TicketInflowData 
-        { 
-            Date = tc.Date, 
-            TicketCount = tc.Count 
+        return ticketCounts.Select(tc => new TicketInflowData
+        {
+            Date = tc.Date,
+            TicketCount = tc.Count
         }).ToList();
     }
 }

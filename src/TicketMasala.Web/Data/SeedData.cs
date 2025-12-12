@@ -23,7 +23,7 @@ public class SeedUser
     public string? Team { get; set; }
     public EmployeeType? Level { get; set; }
     public string? Code { get; set; }
-    
+
     // GERDA Fields
     public string? Language { get; set; }
     public string? Specializations { get; set; }

@@ -22,7 +22,7 @@ public class TicketGeneratorService : BackgroundService
         _logger = logger;
         _configuration = configuration;
         _channel = channel;
-        
+
         _enabled = _configuration.GetValue<bool>("TicketGenerator:Enabled");
         var intervalSeconds = _configuration.GetValue<int>("TicketGenerator:IntervalSeconds", 60);
         _interval = TimeSpan.FromSeconds(intervalSeconds);
@@ -55,7 +55,7 @@ public class TicketGeneratorService : BackgroundService
     {
         using var scope = _serviceProvider.CreateScope();
         var ticketGenerator = scope.ServiceProvider.GetRequiredService<ITicketGenerator>();
-        
+
         await ticketGenerator.GenerateRandomTicketAsync(stoppingToken);
     }
 

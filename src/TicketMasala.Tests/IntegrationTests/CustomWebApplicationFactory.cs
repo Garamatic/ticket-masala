@@ -13,7 +13,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
-        
+
         builder.ConfigureServices(services =>
         {
             // Remove the app's DbContext registration.

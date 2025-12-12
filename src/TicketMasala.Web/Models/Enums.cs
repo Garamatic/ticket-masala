@@ -1,4 +1,5 @@
 namespace TicketMasala.Web.Models;
+
 public enum Status
 {
     Pending,
@@ -49,7 +50,7 @@ public enum SubCategory
     Unknown = 0,
     General,
 }
-public enum EmployeeType 
+public enum EmployeeType
 {
     Admin,
     ProjectManager,

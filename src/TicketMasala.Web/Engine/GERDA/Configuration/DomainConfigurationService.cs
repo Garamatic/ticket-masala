@@ -28,7 +28,7 @@ public class DomainConfigurationService : IDomainConfigurationService, IDisposab
         _logger = logger;
         _environment = environment;
         _ruleCompiler = ruleCompiler;
-        
+
         // Check for env var override (Docker/Production)
         var configPath = Environment.GetEnvironmentVariable("MASALA_CONFIG_PATH");
         if (!string.IsNullOrEmpty(configPath))
@@ -43,9 +43,9 @@ public class DomainConfigurationService : IDomainConfigurationService, IDisposab
         {
             _configFilePath = Path.Combine(_environment.ContentRootPath, "..", "..", "config", "masala_domains.yaml");
         }
-        
+
         _config = new MasalaDomainsConfig();
-        
+
         LoadConfiguration();
         SetupFileWatcher();
     }
@@ -56,21 +56,21 @@ public class DomainConfigurationService : IDomainConfigurationService, IDisposab
         {
             var directory = Path.GetDirectoryName(_configFilePath);
             var fileName = Path.GetFileName(_configFilePath);
-            
+
             if (directory == null) return;
-            
+
             _fileWatcher = new FileSystemWatcher(directory, fileName)
             {
                 NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size,
                 EnableRaisingEvents = true
             };
-            
+
             // Debounce: only reload if file hasn't changed in 500ms
             _fileWatcher.Changed += (_, _) =>
             {
                 Task.Delay(500).ContinueWith(_ => ReloadConfiguration());
             };
-            
+
             _logger.LogInformation("File watcher enabled for {Path}", _configFilePath);
         }
         catch (Exception ex)
@@ -99,24 +99,24 @@ public class DomainConfigurationService : IDomainConfigurationService, IDisposab
                 }
 
                 var yaml = File.ReadAllText(_configFilePath);
-                
+
                 var deserializer = new DeserializerBuilder()
                     .WithNamingConvention(UnderscoredNamingConvention.Instance)
                     .IgnoreUnmatchedProperties()
                     .Build();
-                
+
                 var newConfig = deserializer.Deserialize<MasalaDomainsConfig>(yaml) ?? CreateDefaultConfig();
-                
+
                 // HOT RELOAD LOGIC:
                 // 1. Update local config object
                 _config = newConfig;
                 _lastLoadTime = DateTime.UtcNow;
-                
+
                 // 2. Push new config to Rule Compiler for atomic swap
                 _ruleCompiler.ReplaceRuleCache(_config);
-                
+
                 _logger.LogInformation(
-                    "Loaded domain configuration with {Count} domains: {Domains}", 
+                    "Loaded domain configuration with {Count} domains: {Domains}",
                     _config.Domains.Count,
                     string.Join(", ", _config.Domains.Keys));
             }

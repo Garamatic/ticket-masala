@@ -32,7 +32,7 @@ public class TicketGenerator : ITicketGenerator
         // Get a random customer
         var customer = await _userManager.GetUsersInRoleAsync(Constants.RoleCustomer);
         if (customer.Count == 0) return;
-        
+
         var randomCustomer = customer[new Random().Next(customer.Count)];
 
         // Get a random project safely
@@ -58,10 +58,10 @@ public class TicketGenerator : ITicketGenerator
             var allProjectIds = await _context.Projects.Select(p => p.Guid).ToListAsync(cancellationToken);
             if (allProjectIds.Any())
             {
-                 var randomProjectId = allProjectIds[new Random().Next(allProjectIds.Count)];
-                 project = await _context.Projects
-                    .Include(p => p.ProjectManager)
-                    .FirstOrDefaultAsync(p => p.Guid == randomProjectId, cancellationToken);
+                var randomProjectId = allProjectIds[new Random().Next(allProjectIds.Count)];
+                project = await _context.Projects
+                   .Include(p => p.ProjectManager)
+                   .FirstOrDefaultAsync(p => p.Guid == randomProjectId, cancellationToken);
             }
         }
 
@@ -69,7 +69,7 @@ public class TicketGenerator : ITicketGenerator
 
         var title = RandomDataHelper.GenerateTicketTitle();
         var description = RandomDataHelper.GenerateTicketDescription();
-        
+
         // Create ticket using the service method which handles defaults and notifications
         var ticket = await _ticketService.CreateTicketAsync(
             description: $"{title} - {description}",
@@ -81,7 +81,7 @@ public class TicketGenerator : ITicketGenerator
 
         // The service method sets defaults. If we want random priority, we might need to update it after creation.
         ticket.PriorityScore = new Random().NextDouble() * 100;
-        
+
         await _ticketService.UpdateTicketAsync(ticket);
 
         _logger.LogInformation("Generated random ticket: {Title} for Customer: {Customer}", title, randomCustomer.UserName);

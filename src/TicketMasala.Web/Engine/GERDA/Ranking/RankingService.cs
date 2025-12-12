@@ -58,7 +58,7 @@ public class RankingService : IRankingService
 
         double priorityScore = 0.0;
 
-        try 
+        try
         {
             var strategy = _strategyFactory.GetStrategy<IJobRankingStrategy, double>(strategyName);
             priorityScore = strategy.CalculateScore(ticket, _config);

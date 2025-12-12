@@ -44,7 +44,7 @@ public class DispatchBacklogService : IDispatchBacklogService
         // Get unassigned or pending tickets  
         var allTickets = (await _ticketRepository.GetAllAsync()).ToList();
         var unassignedTickets = allTickets
-            .Where(t => t.TicketStatus == Status.Pending || 
+            .Where(t => t.TicketStatus == Status.Pending ||
                        (t.TicketStatus == Status.Assigned && t.ResponsibleId == null))
             .OrderByDescending(t => t.CreationDate)
             .ToList();
@@ -57,10 +57,10 @@ public class DispatchBacklogService : IDispatchBacklogService
         foreach (var employee in employees)
         {
             var tickets = await _ticketRepository.GetByResponsibleIdAsync(employee.Id);
-            var activeTickets = tickets.Where(t => 
-                t.TicketStatus != Status.Completed && 
+            var activeTickets = tickets.Where(t =>
+                t.TicketStatus != Status.Completed &&
                 t.TicketStatus != Status.Failed).ToList();
-            
+
             agentWorkloads[employee.Id] = (
                 activeTickets.Count,
                 activeTickets.Sum(t => t.EstimatedEffortPoints)
@@ -113,8 +113,8 @@ public class DispatchBacklogService : IDispatchBacklogService
             TicketsWithAgentRecommendation = ticketDispatchInfos.Count(t => t.RecommendedAgents.Any()),
             TotalAvailableAgents = agentInfos.Count(a => a.IsAvailable),
             OverloadedAgents = agentInfos.Count(a => a.WorkloadPercentage >= 100),
-            AverageTicketAge = unassignedTickets.Any() 
-                ? unassignedTickets.Average(t => (now - t.CreationDate).TotalHours) 
+            AverageTicketAge = unassignedTickets.Any()
+                ? unassignedTickets.Average(t => (now - t.CreationDate).TotalHours)
                 : 0,
             HighPriorityTickets = ticketDispatchInfos.Count(t => t.PriorityScore >= 50),
             TicketsOlderThan24Hours = ticketDispatchInfos.Count(t => t.TimeInBacklog.TotalHours >= 24)
@@ -125,8 +125,8 @@ public class DispatchBacklogService : IDispatchBacklogService
         {
             Guid = p.Guid,
             Name = p.Name,
-            CustomerName = p.Customer != null 
-                ? $"{p.Customer.FirstName} {p.Customer.LastName}" 
+            CustomerName = p.Customer != null
+                ? $"{p.Customer.FirstName} {p.Customer.LastName}"
                 : "Unknown",
             CurrentTicketCount = p.Tasks.Count,
             Status = p.Status

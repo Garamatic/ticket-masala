@@ -32,7 +32,7 @@ public class NotificationService : INotificationService
 
             _context.Notifications.Add(notification);
             await _context.SaveChangesAsync();
-            
+
             // TODO: Here we could also trigger email sending
             _logger.LogInformation("Notification sent to user {UserId}: {Message}", userId, message);
         }

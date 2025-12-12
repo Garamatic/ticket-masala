@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using TicketMasala.Web.Utilities;
 
 namespace TicketMasala.Web.Models;
+
 public class ProjectTemplate : BaseModel
 {
     [Required(ErrorMessage = "Template name is required")]

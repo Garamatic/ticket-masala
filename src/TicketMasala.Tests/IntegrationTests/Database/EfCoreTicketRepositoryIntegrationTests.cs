@@ -47,7 +47,7 @@ public class EfCoreTicketRepositoryIntegrationTests : IDisposable
         // Assert
         Assert.NotNull(result);
         Assert.NotEqual(Guid.Empty, result.Guid);
-        
+
         // Verify it's actually in the database
         var fromDb = await _fixture.Context.Tickets.FindAsync(result.Guid);
         Assert.NotNull(fromDb);
@@ -163,7 +163,7 @@ public class EfCoreTicketRepositoryIntegrationTests : IDisposable
         var customer = await _fixture.SeedTestCustomerAsync();
         var employee = await _fixture.SeedTestEmployeeAsync();
         var ticket = await _fixture.SeedTestTicketAsync(customer: customer);
-        
+
         ticket.ResponsibleId = employee.Id;
         ticket.TicketStatus = Status.Assigned;
 
@@ -175,7 +175,7 @@ public class EfCoreTicketRepositoryIntegrationTests : IDisposable
         var fromDb = await _fixture.Context.Tickets
             .Include(t => t.Responsible)
             .FirstAsync(t => t.Guid == ticket.Guid);
-        
+
         Assert.Equal(employee.Id, fromDb.ResponsibleId);
         Assert.Equal(Status.Assigned, fromDb.TicketStatus);
     }
@@ -238,7 +238,7 @@ public class EfCoreTicketRepositoryIntegrationTests : IDisposable
         // Arrange
         var customer1 = await _fixture.SeedTestCustomerAsync();
         var customer2 = await _fixture.SeedTestCustomerAsync();
-        
+
         await _fixture.SeedTestTicketAsync(customer: customer1);
         await _fixture.SeedTestTicketAsync(customer: customer1);
         await _fixture.SeedTestTicketAsync(customer: customer2);
@@ -262,7 +262,7 @@ public class EfCoreTicketRepositoryIntegrationTests : IDisposable
         var customer = await _fixture.SeedTestCustomerAsync();
         var employee1 = await _fixture.SeedTestEmployeeAsync();
         var employee2 = await _fixture.SeedTestEmployeeAsync();
-        
+
         await _fixture.SeedTestTicketAsync(customer: customer, responsible: employee1);
         await _fixture.SeedTestTicketAsync(customer: customer, responsible: employee1);
         await _fixture.SeedTestTicketAsync(customer: customer, responsible: employee2);
@@ -296,7 +296,7 @@ public class EfCoreTicketRepositoryIntegrationTests : IDisposable
 
         // Assert
         Assert.Equal(3, activeTickets.Count());
-        Assert.All(activeTickets, t => 
+        Assert.All(activeTickets, t =>
             Assert.True(t.TicketStatus != Status.Completed && t.TicketStatus != Status.Failed));
     }
 

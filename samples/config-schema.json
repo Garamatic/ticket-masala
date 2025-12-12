@@ -1,0 +1,298 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://ticketmasala.dev/schemas/sample-config.json",
+    "title": "TicketMasala Sample Configuration",
+    "description": "Configuration schema for TicketMasala sample client instances",
+    "type": "object",
+    "required": [
+        "client_config",
+        "masala_config"
+    ],
+    "properties": {
+        "client_config": {
+            "type": "object",
+            "description": "Client-specific branding and content configuration",
+            "required": [
+                "company",
+                "theme",
+                "services"
+            ],
+            "properties": {
+                "company": {
+                    "type": "object",
+                    "required": [
+                        "name"
+                    ],
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "description": "Company or organization name"
+                        },
+                        "slogan": {
+                            "type": "string",
+                            "description": "Tagline or slogan"
+                        },
+                        "description": {
+                            "type": "string",
+                            "description": "Brief company description"
+                        },
+                        "logoIcon": {
+                            "type": "string",
+                            "description": "FontAwesome icon class for logo"
+                        },
+                        "logoImage": {
+                            "type": "string",
+                            "description": "Path to logo image file"
+                        },
+                        "foundedYear": {
+                            "type": "integer",
+                            "description": "Year the company was founded"
+                        }
+                    }
+                },
+                "contact": {
+                    "type": "object",
+                    "properties": {
+                        "email": {
+                            "type": "string",
+                            "format": "email"
+                        },
+                        "phone": {
+                            "type": "string"
+                        },
+                        "address": {
+                            "type": "string"
+                        },
+                        "social": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string",
+                                "format": "uri"
+                            }
+                        }
+                    }
+                },
+                "theme": {
+                    "type": "object",
+                    "required": [
+                        "primaryColor"
+                    ],
+                    "properties": {
+                        "primaryColor": {
+                            "type": "string",
+                            "pattern": "^#[0-9A-Fa-f]{6}$",
+                            "description": "Primary brand color in hex format"
+                        },
+                        "primaryDark": {
+                            "type": "string",
+                            "pattern": "^#[0-9A-Fa-f]{6}$",
+                            "description": "Darker variant of primary color"
+                        },
+                        "primaryLight": {
+                            "type": "string",
+                            "pattern": "^#[0-9A-Fa-f]{6}$",
+                            "description": "Lighter variant of primary color"
+                        },
+                        "secondaryColor": {
+                            "type": "string",
+                            "pattern": "^#[0-9A-Fa-f]{6}$",
+                            "description": "Secondary brand color"
+                        },
+                        "accentColor": {
+                            "type": "string",
+                            "pattern": "^#[0-9A-Fa-f]{6}$",
+                            "description": "Accent/CTA color"
+                        },
+                        "accentLight": {
+                            "type": "string",
+                            "pattern": "^#[0-9A-Fa-f]{6}$",
+                            "description": "Light accent color"
+                        },
+                        "heroBackground": {
+                            "type": "string",
+                            "description": "CSS gradient or color for hero section"
+                        }
+                    }
+                },
+                "services": {
+                    "type": "array",
+                    "description": "List of services offered",
+                    "items": {
+                        "type": "object",
+                        "required": [
+                            "id",
+                            "title"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "description": "Unique service identifier"
+                            },
+                            "icon": {
+                                "type": "string",
+                                "description": "FontAwesome icon class"
+                            },
+                            "title": {
+                                "type": "string"
+                            },
+                            "description": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "projects": {
+                    "type": "array",
+                    "description": "Portfolio or showcase items",
+                    "items": {
+                        "type": "object",
+                        "required": [
+                            "title"
+                        ],
+                        "properties": {
+                            "title": {
+                                "type": "string"
+                            },
+                            "description": {
+                                "type": "string"
+                            },
+                            "location": {
+                                "type": "string"
+                            },
+                            "image": {
+                                "type": "string",
+                                "description": "Path to project thumbnail"
+                            }
+                        }
+                    }
+                },
+                "form": {
+                    "type": "object",
+                    "description": "Form customization",
+                    "properties": {
+                        "title": {
+                            "type": "string"
+                        },
+                        "submitButtonText": {
+                            "type": "string"
+                        },
+                        "projectTypes": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "value": {
+                                        "type": "string"
+                                    },
+                                    "label": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "masala_config": {
+            "type": "object",
+            "description": "TicketMasala backend configuration",
+            "required": [
+                "endpoint",
+                "sourceSite"
+            ],
+            "properties": {
+                "endpoint": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "API endpoint for ticket submission"
+                },
+                "sourceSite": {
+                    "type": "string",
+                    "description": "Unique identifier for this client source"
+                },
+                "auth": {
+                    "type": "object",
+                    "properties": {
+                        "apiKey": {
+                            "type": "string"
+                        },
+                        "method": {
+                            "type": "string",
+                            "enum": [
+                                "Bearer",
+                                "ApiKey",
+                                "Basic"
+                            ]
+                        }
+                    }
+                },
+                "retryPolicy": {
+                    "type": "object",
+                    "properties": {
+                        "maxRetries": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 10
+                        },
+                        "delayMs": {
+                            "type": "integer",
+                            "minimum": 100
+                        }
+                    }
+                }
+            }
+        },
+        "gerda_config": {
+            "type": "object",
+            "description": "GERDA AI validation and workflow configuration",
+            "properties": {
+                "domain": {
+                    "type": "string",
+                    "description": "Domain name matching masala_domains.yaml"
+                },
+                "validationRules": {
+                    "type": "object",
+                    "description": "Field-level validation rules",
+                    "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                            "required": {
+                                "type": "boolean"
+                            },
+                            "pattern": {
+                                "type": "string"
+                            },
+                            "minLength": {
+                                "type": "integer"
+                            },
+                            "maxLength": {
+                                "type": "integer"
+                            }
+                        }
+                    }
+                },
+                "workflow": {
+                    "type": "object",
+                    "properties": {
+                        "defaultPriority": {
+                            "type": "string",
+                            "enum": [
+                                "Low",
+                                "Normal",
+                                "High",
+                                "Critical"
+                            ]
+                        },
+                        "autoAssign": {
+                            "type": "boolean"
+                        },
+                        "requireApproval": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

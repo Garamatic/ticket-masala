@@ -1,0 +1,77 @@
+@model TicketMasala.Web.ViewModels.Tickets.TicketDetailsViewModel
+
+<div class="card mb-4" id="qualityReviewCard">
+    <div class="card-header">
+        <h5 class="mb-0">Quality Review</h5>
+    </div>
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <span>Status: 
+                <span class="badge bg-@(Model.ReviewStatus == TicketMasala.Web.Models.ReviewStatus.Approved ? "success" : (Model.ReviewStatus == TicketMasala.Web.Models.ReviewStatus.Rejected ? "danger" : (Model.ReviewStatus == TicketMasala.Web.Models.ReviewStatus.Pending ? "warning" : "secondary")))">
+                    @Model.ReviewStatus
+                </span>
+            </span>
+            @if (Model.ReviewStatus == TicketMasala.Web.Models.ReviewStatus.None || Model.ReviewStatus == TicketMasala.Web.Models.ReviewStatus.Rejected)
+            {
+                <form asp-action="RequestReview" method="post" class="d-inline"
+                      hx-post="@Url.Action("RequestReview", "Ticket")"
+                      hx-target="#qualityReviewCard"
+                      hx-swap="outerHTML">
+                    <input type="hidden" name="id" value="@Model.Guid" />
+                    <button type="submit" class="btn btn-sm btn-outline-primary">Request Review</button>
+                </form>
+            }
+        </div>
+
+        @if (Model.ReviewStatus == TicketMasala.Web.Models.ReviewStatus.Pending && (User.IsInRole("Admin") || User.IsInRole("Employee")))
+        {
+            <div class="border p-3 rounded bg-light mb-3">
+                <h6>Submit Review</h6>
+                <form asp-action="SubmitReview" method="post"
+                      hx-post="@Url.Action("SubmitReview", "Ticket")"
+                      hx-target="#qualityReviewCard"
+                      hx-swap="outerHTML">
+                    <input type="hidden" name="id" value="@Model.Guid" />
+                    <div class="mb-2">
+                        <label class="form-label">Score (1-5)</label>
+                        <select name="score" class="form-select">
+                            <option value="5">5 - Excellent</option>
+                            <option value="4">4 - Good</option>
+                            <option value="3">3 - Average</option>
+                            <option value="2">2 - Poor</option>
+                            <option value="1">1 - Unacceptable</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Feedback</label>
+                        <textarea name="feedback" class="form-control" rows="2" required></textarea>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" name="approve" value="true" class="btn btn-success btn-sm">Approve</button>
+                        <button type="submit" name="approve" value="false" class="btn btn-danger btn-sm">Reject</button>
+                    </div>
+                </form>
+            </div>
+        }
+
+        @if (Model.QualityReviews.Any())
+        {
+            <h6>History</h6>
+            <ul class="list-group list-group-flush">
+                @foreach (var review in Model.QualityReviews)
+                {
+                    <li class="list-group-item px-0">
+                        <div class="d-flex justify-content-between">
+                            <strong>@(review.Reviewer?.FirstName ?? "Unknown")</strong>
+                            <small class="text-muted">@review.CreatedAt.ToString("g")</small>
+                        </div>
+                        <div>
+                            @for(int i=0; i<review.Score; i++) { <i class="fas fa-star text-warning"></i> }
+                            <span class="ms-2">@review.Comments</span>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>

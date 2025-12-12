@@ -103,13 +103,13 @@ public class AndSpecification<T> : Specification<T>
     public AndSpecification(ISpecification<T> left, ISpecification<T> right)
     {
         var parameter = Expression.Parameter(typeof(T), "x");
-        
+
         var leftBody = Expression.Invoke(left.Criteria, parameter);
         var rightBody = Expression.Invoke(right.Criteria, parameter);
         var andExpression = Expression.AndAlso(leftBody, rightBody);
-        
+
         SetCriteria(Expression.Lambda<Func<T, bool>>(andExpression, parameter));
-        
+
         // Merge includes
         foreach (var include in left.Includes.Concat(right.Includes))
             AddInclude(include);
@@ -126,11 +126,11 @@ public class OrSpecification<T> : Specification<T>
     public OrSpecification(ISpecification<T> left, ISpecification<T> right)
     {
         var parameter = Expression.Parameter(typeof(T), "x");
-        
+
         var leftBody = Expression.Invoke(left.Criteria, parameter);
         var rightBody = Expression.Invoke(right.Criteria, parameter);
         var orExpression = Expression.OrElse(leftBody, rightBody);
-        
+
         SetCriteria(Expression.Lambda<Func<T, bool>>(orExpression, parameter));
     }
 }

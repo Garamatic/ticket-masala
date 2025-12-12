@@ -31,6 +31,8 @@ public class QualityReview
     [Range(0, 100)]
     public int Score { get; set; }
 
+    public bool IsApproved { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime ReviewDate { get; set; } = DateTime.UtcNow;
 }

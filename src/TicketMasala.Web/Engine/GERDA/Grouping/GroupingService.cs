@@ -50,8 +50,8 @@ public class GroupingService : IGroupingService
         // Fallback: If ContentHash is null (legacy data), compute/save it now
         if (string.IsNullOrEmpty(ticket.ContentHash))
         {
-             ticket.ContentHash = TicketHasher.ComputeContentHash(ticket.Description, ticket.CustomerId ?? "");
-             await _context.SaveChangesAsync();
+            ticket.ContentHash = TicketHasher.ComputeContentHash(ticket.Description, ticket.CustomerId ?? "");
+            await _context.SaveChangesAsync();
         }
 
         // Find GROUPABLE tickets with SAME HASH within WINDOW
@@ -81,19 +81,19 @@ public class GroupingService : IGroupingService
 
         // Find or create parent ticket from these candidates
         var parentTicketGuid = await FindOrCreateParentTicketAsync(ticket, duplicateCandidates);
-        
+
         if (parentTicketGuid.HasValue && _config.GerdaAI.SpamDetection.Action == "AutoMerge")
         {
             // Link this ticket to the parent
             ticket.ParentTicketGuid = parentTicketGuid;
-            
+
             // Add GERDA tag
-            ticket.GerdaTags = string.IsNullOrEmpty(ticket.GerdaTags) 
-                ? "Spam-Cluster" 
+            ticket.GerdaTags = string.IsNullOrEmpty(ticket.GerdaTags)
+                ? "Spam-Cluster"
                 : $"{ticket.GerdaTags},Spam-Cluster";
-                
+
             await _context.SaveChangesAsync();
-            
+
             _logger.LogInformation(
                 "GERDA-G: Linked ticket {TicketGuid} to parent ticket {ParentGuid}",
                 ticketGuid, parentTicketGuid);
@@ -114,11 +114,11 @@ public class GroupingService : IGroupingService
         // We will keep it as "Get by customer" for legacy calls, or update callers?
         // Callers: Only CheckAndGroupTicketAsync calls it internally in previous version.
         // If interface requires it, we leave it as customer lookup, but CheckAndGroup uses Hash logic above.
-        
+
         var ticketGuids = await _context.Tickets
             .Where(t => t.CustomerId == customerId)
             .Where(t => t.CreationDate >= cutoffTime)
-            .Where(t => t.ParentTicketGuid == null) 
+            .Where(t => t.ParentTicketGuid == null)
             .Where(t => t.TicketStatus != Status.Completed && t.TicketStatus != Status.Failed)
             .OrderByDescending(t => t.CreationDate)
             .Select(t => t.Guid)
@@ -167,11 +167,11 @@ public class GroupingService : IGroupingService
                     parentTicket.GerdaTags = "Parent-Cluster";
                 }
                 await _context.SaveChangesAsync();
-                
+
                 _logger.LogInformation(
                     "GERDA-G: Promoted ticket {TicketGuid} as parent for group",
                     bestParentGuid);
-                    
+
                 return bestParentGuid;
             }
         }

@@ -52,9 +52,9 @@ public class TicketCommentsControllerTests
 
         // Assert
         _mockTicketService.Verify(s => s.AddCommentAsync(
-            ticketId, 
-            comment, 
-            isInternal, 
+            ticketId,
+            comment,
+            isInternal,
             "test-user-id"), Times.Once);
 
         var redirect = Assert.IsType<RedirectToActionResult>(result);
@@ -74,9 +74,9 @@ public class TicketCommentsControllerTests
 
         // Assert
         _mockTicketService.Verify(s => s.AddCommentAsync(
-            It.IsAny<Guid>(), 
-            It.IsAny<string>(), 
-            It.IsAny<bool>(), 
+            It.IsAny<Guid>(),
+            It.IsAny<string>(),
+            It.IsAny<bool>(),
             It.IsAny<string>()), Times.Never);
 
         var redirect = Assert.IsType<RedirectToActionResult>(result);

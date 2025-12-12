@@ -3,6 +3,7 @@ using TicketMasala.Web.Models;
 using System;
 
 namespace TicketMasala.Web.ViewModels.Tickets;
+
 public class TicketViewModel
 {
     public Guid Guid { get; set; }
@@ -22,12 +23,12 @@ public class TicketViewModel
     public Guid? ProjectGuid { get; set; }
     public List<SubTicketInfo> SubTickets { get; set; } = new List<SubTicketInfo> { };
 
-    
+
 }
 
-    public class SubTicketInfo
-    {
-        public Guid Guid { get; set; }
-        public Status TicketStatus { get; set; }
-        public string Description { get; set; }
+public class SubTicketInfo
+{
+    public Guid Guid { get; set; }
+    public Status TicketStatus { get; set; }
+    public string Description { get; set; }
 }

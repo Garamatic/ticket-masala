@@ -1,0 +1,166 @@
+{
+    "client_config": {
+        "company": {
+            "name": "GreenScape Tuinaanleg",
+            "slogan": "Transformeer Uw Buitenparadijs",
+            "description": "Bekroonde tuinontwerp- en installatiediensten. Wij brengen uw tuindromen tot leven.",
+            "logoIcon": "fa-leaf",
+            "foundedYear": 2010
+        },
+        "contact": {
+            "email": "info@greenscape.be",
+            "phone": "+32 2 123 4567",
+            "address": "Brussel, België",
+            "social": {
+                "facebook": "#",
+                "instagram": "#",
+                "pinterest": "#"
+            }
+        },
+        "labels": {
+            "nav": {
+                "home": "Home",
+                "services": "Diensten",
+                "projects": "Projecten",
+                "contact": "Offerte Aanvragen"
+            },
+            "hero": {
+                "cta": "Gratis Offerte"
+            },
+            "sections": {
+                "services": "Onze Diensten",
+                "projects": "Uitgelichte Projecten",
+                "contact": "Vraag een Projectofferte Aan",
+                "contact_sub": "Vertel ons over uw droomtuin en wij nemen binnen 24 uur contact op.",
+                "follow_us": "Volg Ons",
+                "quick_links": "Snelle Links"
+            },
+            "form": {
+                "name": "Uw Naam *",
+                "name_placeholder": "Jan Jansen",
+                "email": "E-mailadres *",
+                "email_placeholder": "jan@example.com",
+                "phone": "Telefoonnummer",
+                "phone_placeholder": "+32 ...",
+                "type": "Projecttype *",
+                "type_default": "Selecteer een dienst...",
+                "description": "Projectbeschrijving *",
+                "description_placeholder": "Vertel ons over uw project...",
+                "submit": "Verstuur Aanvraag"
+            },
+            "footer": {
+                "rights": "Alle rechten voorbehouden."
+            }
+        },
+        "theme": {
+            "primaryColor": "#2d5a27",
+            "secondaryColor": "#4a7c43",
+            "accentColor": "#ffffff"
+        },
+        "services": [
+            {
+                "id": "landscape-design",
+                "icon": "fas fa-drafting-compass",
+                "title": "Tuinontwerp",
+                "description": "Op maat gemaakte tuinontwerpen afgestemd op uw ruimte, levensstijl en budget."
+            },
+            {
+                "id": "planting",
+                "icon": "fas fa-seedling",
+                "title": "Beplanting & Tuinen",
+                "description": "Deskundige selectie en aanplant van bomen, struiken en vaste planten."
+            },
+            {
+                "id": "water-features",
+                "icon": "fas fa-water",
+                "title": "Waterpartijen",
+                "description": "Vijvers, fonteinen en irrigatiesystemen voor een rustgevende sfeer."
+            },
+            {
+                "id": "hardscaping",
+                "icon": "fas fa-hammer",
+                "title": "Bestrating & Constructie",
+                "description": "Terrassen, paden, keermuren en buitenruimtes."
+            }
+        ],
+        "projects": [
+            {
+                "title": "Moderne Zen Tuin",
+                "description": "Een rustgevend toevluchtsoord met Japanse esdoorns, stapstenen en een koivijver.",
+                "location": "Brussel",
+                "image": "project-thumbnails/thn1.png"
+            },
+            {
+                "title": "Buiten Leefruimte",
+                "description": "Compleet terras met vuurplaats, buitenkeuken en inheemse beplanting.",
+                "location": "Antwerpen",
+                "image": "project-thumbnails/thn2.png"
+            },
+            {
+                "title": "Watertuin Oase",
+                "description": "Natuurlijke zwemvijver met waterplanten en houten vlonder.",
+                "location": "Gent",
+                "image": "project-thumbnails/thn3.png"
+            },
+            {
+                "title": "Landgoed Renovatie",
+                "description": "Volledige transformatie van een landgoed van 2 hectare met formele tuinen.",
+                "location": "Leuven",
+                "image": "project-thumbnails/thn4.png"
+            }
+        ],
+        "form": {
+            "projectTypes": [
+                {
+                    "value": "landscape-design",
+                    "label": "Tuinontwerp"
+                },
+                {
+                    "value": "planting",
+                    "label": "Beplanting & Tuinen"
+                },
+                {
+                    "value": "water-features",
+                    "label": "Waterpartijen"
+                },
+                {
+                    "value": "hardscaping",
+                    "label": "Bestrating & Constructie"
+                },
+                {
+                    "value": "full-renovation",
+                    "label": "Volledige Tuinrenovatie"
+                }
+            ]
+        }
+    },
+    "masala_config": {
+        "endpoint": "http://localhost:5054/api/v1/tickets/external",
+        "sourceSite": "greenscape-landscaping",
+        "auth": {
+            "apiKey": "public-client-key",
+            "method": "Bearer"
+        },
+        "retryPolicy": {
+            "maxRetries": 3,
+            "delayMs": 1000
+        }
+    },
+    "gerda_config": {
+        "domain": "Landscaping",
+        "validationRules": {
+            "customerEmail": {
+                "required": true,
+                "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+            },
+            "description": {
+                "required": true,
+                "minLength": 10
+            }
+        },
+        "workflow": {
+            "defaultPriority": "Normal",
+            "autoAssign": true
+        }
+    }
+}

@@ -26,7 +26,7 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
-        var claims = new[] { 
+        var claims = new[] {
             new Claim(ClaimTypes.Name, "Test Customer"),
             new Claim(ClaimTypes.NameIdentifier, "test-customer-id"),
             new Claim(ClaimTypes.Role, "Customer")
@@ -62,7 +62,7 @@ public class AuthenticatedRouteTests : IClassFixture<CustomWebApplicationFactory
                     options.DefaultChallengeScheme = "Test";
                 })
                 .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", options => { });
-                
+
                 // Seed test user
                 var sp = services.BuildServiceProvider();
                 using (var scope = sp.CreateScope())
@@ -70,10 +70,10 @@ public class AuthenticatedRouteTests : IClassFixture<CustomWebApplicationFactory
                     var db = scope.ServiceProvider.GetRequiredService<MasalaDbContext>();
                     if (!db.Users.Any(u => u.Id == "test-customer-id"))
                     {
-                        db.Users.Add(new ApplicationUser 
-                        { 
-                            Id = "test-customer-id", 
-                            UserName = "test.customer", 
+                        db.Users.Add(new ApplicationUser
+                        {
+                            Id = "test-customer-id",
+                            UserName = "test.customer",
                             Email = "test@example.com",
                             FirstName = "Test",
                             LastName = "Customer",
@@ -97,7 +97,7 @@ public class AuthenticatedRouteTests : IClassFixture<CustomWebApplicationFactory
         // Assert
         Assert.NotEqual(HttpStatusCode.InternalServerError, response.StatusCode);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        
+
         var content = await response.Content.ReadAsStringAsync();
         Assert.Contains("Test Customer", content); // User name usually appears in nav
     }

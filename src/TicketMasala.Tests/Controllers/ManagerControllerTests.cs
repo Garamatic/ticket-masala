@@ -65,11 +65,11 @@ public class ManagerControllerTests
         var expectedVm = new TeamDashboardViewModel();
         _mockMetricsService.Setup(s => s.CalculateTeamMetricsAsync())
             .ReturnsAsync(expectedVm);
-        
+
         // Corrected Types based on IMetricsService definition
         _mockMetricsService.Setup(s => s.CalculateForecastAsync())
-            .ReturnsAsync(new List<ForecastData>()); 
-            
+            .ReturnsAsync(new List<ForecastData>());
+
         _mockMetricsService.Setup(s => s.CalculateClosedTicketsPerAgentAsync())
             .ReturnsAsync(new List<AgentPerformanceMetric>());
 

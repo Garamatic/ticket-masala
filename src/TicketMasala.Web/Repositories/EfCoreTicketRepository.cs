@@ -58,7 +58,7 @@ public class EfCoreTicketRepository : ITicketRepository
             .Include(t => t.Customer)
             .Include(t => t.Project)
             .Where(t => t.ValidUntil == null)
-            .Where(t => t.TicketStatus == Status.Pending || 
+            .Where(t => t.TicketStatus == Status.Pending ||
                        (t.TicketStatus == Status.Assigned && t.ResponsibleId == null));
 
         if (departmentId.HasValue)
@@ -162,8 +162,8 @@ public class EfCoreTicketRepository : ITicketRepository
         if (!string.IsNullOrWhiteSpace(searchModel.SearchTerm))
         {
             var term = searchModel.SearchTerm.ToLower();
-            query = query.Where(t => 
-                t.Description.ToLower().Contains(term) || 
+            query = query.Where(t =>
+                t.Description.ToLower().Contains(term) ||
                 (t.Customer != null && (t.Customer.FirstName.ToLower().Contains(term) || t.Customer.LastName.ToLower().Contains(term))) ||
                 (t.Project != null && t.Project.Name.ToLower().Contains(term))
             );
@@ -198,7 +198,7 @@ public class EfCoreTicketRepository : ITicketRepository
         {
             query = query.Where(t => t.CreationDate <= searchModel.DateTo.Value);
         }
-        
+
         // Count total items before pagination
         searchModel.TotalItems = await query.CountAsync();
 
@@ -265,6 +265,32 @@ public class EfCoreTicketRepository : ITicketRepository
     public async Task<bool> ExistsAsync(Guid id)
     {
         return await _context.Tickets.AnyAsync(t => t.Guid == id);
+    }
+
+    public async Task<IEnumerable<Document>> GetDocumentsForTicketAsync(Guid ticketId)
+    {
+        return await _context.Documents
+            .Where(d => d.TicketId == ticketId)
+            .OrderByDescending(d => d.UploadDate)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<TicketComment>> GetCommentsForTicketAsync(Guid ticketId)
+    {
+        return await _context.TicketComments
+            .Include(c => c.Author)
+            .Where(c => c.TicketId == ticketId)
+            .OrderByDescending(c => c.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<QualityReview>> GetQualityReviewsForTicketAsync(Guid ticketId)
+    {
+        return await _context.QualityReviews
+            .Include(r => r.Reviewer)
+            .Where(r => r.TicketId == ticketId)
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync();
     }
 
 }

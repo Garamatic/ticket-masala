@@ -1,0 +1,135 @@
+{
+    "client_config": {
+        "company": {
+            "name": "TechCorp IT",
+            "slogan": "Technology Solutions That Work",
+            "description": "Enterprise IT support and managed services. Fast response, expert solutions, 24/7 availability.",
+            "logoIcon": "fa-headset",
+            "foundedYear": 2015
+        },
+        "contact": {
+            "email": "support@techcorp-it.com",
+            "phone": "+32 2 555 0100",
+            "address": "Brussels Business Park, Belgium",
+            "social": {
+                "linkedin": "https://linkedin.com/company/techcorp",
+                "twitter": "https://twitter.com/techcorp"
+            }
+        },
+        "theme": {
+            "primaryColor": "#0052CC",
+            "primaryDark": "#003D99",
+            "primaryLight": "#4C9AFF",
+            "secondaryColor": "#172B4D",
+            "accentColor": "#00C853",
+            "accentLight": "#69F0AE"
+        },
+        "services": [
+            {
+                "id": "incident",
+                "icon": "fas fa-fire-extinguisher",
+                "title": "Incident Response",
+                "description": "Rapid response to system outages, security incidents, and critical failures. Average resolution under 2 hours."
+            },
+            {
+                "id": "service-request",
+                "icon": "fas fa-cogs",
+                "title": "Service Requests",
+                "description": "New equipment setup, software installation, access provisioning, and configuration changes."
+            },
+            {
+                "id": "problem-management",
+                "icon": "fas fa-search",
+                "title": "Problem Management",
+                "description": "Root cause analysis and permanent fixes for recurring issues. Prevent problems before they happen."
+            },
+            {
+                "id": "change-request",
+                "icon": "fas fa-exchange-alt",
+                "title": "Change Requests",
+                "description": "Planned infrastructure changes, upgrades, and migrations with minimal business disruption."
+            }
+        ],
+        "projects": [
+            {
+                "title": "Cloud Migration",
+                "description": "Migrated 500+ workstations to Azure AD with zero downtime.",
+                "location": "Enterprise Client",
+                "image": "assets/cloud-migration.png"
+            },
+            {
+                "title": "Security Overhaul",
+                "description": "Implemented Zero Trust architecture reducing breaches by 95%.",
+                "location": "Financial Services",
+                "image": "assets/security.png"
+            },
+            {
+                "title": "Helpdesk Automation",
+                "description": "AI-powered ticket routing reduced response times by 60%.",
+                "location": "Healthcare Provider",
+                "image": "assets/automation.png"
+            },
+            {
+                "title": "Network Modernization",
+                "description": "Complete WAN refresh with SD-WAN implementation.",
+                "location": "Retail Chain",
+                "image": "assets/network.png"
+            }
+        ],
+        "form": {
+            "title": "Submit a Support Request",
+            "submitButtonText": "Submit Ticket",
+            "projectTypes": [
+                {
+                    "value": "incident",
+                    "label": "Incident / Outage"
+                },
+                {
+                    "value": "service-request",
+                    "label": "Service Request"
+                },
+                {
+                    "value": "problem",
+                    "label": "Problem / Investigation"
+                },
+                {
+                    "value": "change",
+                    "label": "Change Request"
+                },
+                {
+                    "value": "question",
+                    "label": "General Question"
+                }
+            ]
+        }
+    },
+    "masala_config": {
+        "endpoint": "http://localhost:5054/api/v1/tickets/external",
+        "sourceSite": "techcorp-it-helpdesk",
+        "auth": {
+            "apiKey": "public-client-key",
+            "method": "Bearer"
+        },
+        "retryPolicy": {
+            "maxRetries": 3,
+            "delayMs": 1000
+        }
+    },
+    "gerda_config": {
+        "domain": "IT",
+        "validationRules": {
+            "customerEmail": {
+                "required": true,
+                "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+            },
+            "description": {
+                "required": true,
+                "minLength": 20
+            }
+        },
+        "workflow": {
+            "defaultPriority": "Normal",
+            "autoAssign": true
+        }
+    }
+}

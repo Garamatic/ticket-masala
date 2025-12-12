@@ -31,7 +31,7 @@ The system uses a **layered terminology strategy** to balance external API consi
 >
 > **Views:** Labels are domain-configurable via `masala_domains.yaml` → `entity_labels`.
 
-See [ADR-001](./architecture/ADR-001-uem-terminology.md) for full rationale.
+See [ADR-001](architecture/ADR-001-uem-terminology.md) for full rationale.
 
 ---
 

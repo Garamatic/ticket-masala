@@ -37,7 +37,7 @@ public class TicketAttachmentsController : Controller
         try
         {
             var storedFileName = await _fileService.SaveFileAsync(file, "tickets");
-            
+
             var document = new Document
             {
                 Id = Guid.NewGuid(),

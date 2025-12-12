@@ -28,6 +28,10 @@ namespace IT_Project2526.AI
 
                 if (promptType == OpenAIPrompts.Steps)
                     return FormatSteps(answer);
+                if (promptType == OpenAIPrompts.Summary)
+                    return FormatSummary(answer);
+                if (promptType == OpenAIPrompts.ProsCons)
+                    return FormatProsCons(answer);
 
                 return answer;
             }
@@ -37,42 +41,61 @@ namespace IT_Project2526.AI
             }
         }
 
+
         private static string CreatePrompt(string query, OpenAIPrompts promptType)
         {
-            switch (promptType)
+            return promptType switch
             {
-                case OpenAIPrompts.Normal:
-                    return query;
+                OpenAIPrompts.Normal =>
+                    query,
 
-                case OpenAIPrompts.Steps:
-                    return $@"
-                        Please break down the following task into clear step-by-step instructions:
-                            {query}
-                        Return ONLY a JSON array of steps. No explanations, no markdown, no commentary.
-                        Example:
-                        [
-                        ""First do X..."",
-                        ""Then do Y...""
-                        ]
-                        ";
+                OpenAIPrompts.Steps =>
+                    $@"
+                    Break down this task into clear step-by-step instructions:
+                    {query}
+                    Return ONLY a JSON array of steps. No explanations or markdown.
+                    Example:
+                    [
+                      ""First do X..."",
+                      ""Then do Y...""
+                    ]
+                    ",
 
-                case OpenAIPrompts.Quick:
-                    return $"Provide a concise answer for: {query}. Do not give follow up questions.";
+                OpenAIPrompts.Quick =>
+                    $"Provide a concise answer for: {query}. Do not give follow up questions.",
 
-                case OpenAIPrompts.Detailed:
-                    return $"Provide a detailed and thorough explanation of: {query}. Do not give follow up questions.";
+                OpenAIPrompts.Detailed =>
+                    $"Provide a detailed explanation of: {query}. Do not give follow up questions.",
 
-                case OpenAIPrompts.ProsCons:
-                    return $"List the pros and cons of: {query}. Do not give follow up questions.";
+                OpenAIPrompts.ProsCons =>
+                    $"List the pros and cons of: {query}. Return JSON in this exact format: {{\"pros\":[...], \"cons\":[...]}}",
 
-                case OpenAIPrompts.Summary:
-                    return $"Summarize the key points about: {query}. Do not give follow up questions.";
+                OpenAIPrompts.Summary =>
+                    $"Summarize the key points about: {query}. Return ONLY a JSON array of bullet points.",
 
-                default:
-                    return query;
-            }
+                _ => query
+            };
         }
+        private static string CleanJson(string raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+                return raw;
 
+            raw = raw.Trim();
+
+            raw = Regex.Replace(raw, @"^```[a-zA-Z0-9]*", "", RegexOptions.Multiline).Trim();
+            raw = Regex.Replace(raw, @"```$", "", RegexOptions.Multiline).Trim();
+
+            int firstBracket = raw.IndexOf('[');
+            if (firstBracket > 0)
+                raw = raw.Substring(firstBracket);
+
+            int lastBracket = raw.LastIndexOf(']');
+            if (lastBracket > 0)
+                raw = raw.Substring(0, lastBracket + 1);
+
+            return raw.Trim();
+        }
         private static string FormatSteps(string raw)
         {
             if (string.IsNullOrWhiteSpace(raw))
@@ -80,7 +103,8 @@ namespace IT_Project2526.AI
 
             try
             {
-                var steps = JsonSerializer.Deserialize<string[]>(raw);
+                var cleanJson = CleanJson(raw);
+                var steps = JsonSerializer.Deserialize<string[]>(cleanJson);
                 if (steps != null && steps.Any())
                 {
                     return string.Join(Environment.NewLine + Environment.NewLine,
@@ -89,35 +113,64 @@ namespace IT_Project2526.AI
             }
             catch
             {
-                return "";
+                // fall through
             }
 
-            var parts = Regex.Split(raw, @"(?=###)")
-                .Select(x => x.Trim())
-                .Where(x => !string.IsNullOrWhiteSpace(x))
-                .ToList();
+            return raw;
+        }
 
-            if (parts.Count > 1)
-                return string.Join(Environment.NewLine + Environment.NewLine, parts);
+        private static string FormatSummary(string raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+                return raw;
 
-            parts = Regex.Split(raw, @"(?:(?:\n|^)\s*\d+\.\s+)")
-                .Select(x => x.Trim())
-                .Where(x => !string.IsNullOrWhiteSpace(x))
-                .ToList();
-
-            if (parts.Count > 1)
+            try
             {
-                return string.Join(Environment.NewLine + Environment.NewLine,
-                    parts.Select((p, i) => $"###{i + 1} {p}"));
+                var cleanJson = CleanJson(raw);
+                var points = JsonSerializer.Deserialize<string[]>(cleanJson);
+                if (points != null && points.Any())
+                {
+                    return string.Join(Environment.NewLine,
+                        points.Select(p => $"• {p.Trim()} \n"));
+                }
+            }
+            catch
+            {
+                return "No summary";
             }
 
-            var sentences = Regex.Split(raw, @"(?<=[\.!\?])\s+(?=[A-Z])")
-                .Select(s => s.Trim())
-                .Where(s => s.Length > 0)
-                .ToList();
+            return raw;
+        }
 
-            return string.Join(Environment.NewLine + Environment.NewLine,
-                sentences.Select((p, i) => $"###{i + 1} {p}"));
+        private static string FormatProsCons(string raw)
+        {
+            try
+            {
+                var cleanJson = CleanJson(raw);
+                var json = JsonDocument.Parse(cleanJson);
+
+                var pros = json.RootElement.GetProperty("pros").EnumerateArray()
+                    .Select(p => p.GetString())
+                    .Where(p => p != null)
+                    .ToList();
+
+                var cons = json.RootElement.GetProperty("cons").EnumerateArray()
+                    .Select(p => p.GetString())
+                    .Where(p => p != null)
+                    .ToList();
+
+                string formatted =
+                    "### Pros\n" +
+                    string.Join(Environment.NewLine, pros.Select(p => $"• {p}")) +
+                    "\n\n### Cons\n" +
+                    string.Join(Environment.NewLine, cons.Select(p => $"• {p}"));
+
+                return formatted;
+            }
+            catch
+            {
+                return raw;
+            }
         }
     }
 }

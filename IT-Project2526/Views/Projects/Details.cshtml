@@ -24,7 +24,7 @@
         <dd class="col-sm-9">@Model.ProjectDetails.ProjectManagerName</dd>
 
         <dt class="col-sm-3">Completion Target</dt>
-        <dd class="col-sm-9">@Model.ProjectDetails.CompletionTarget?.ToString("yyyy-MM-dd") ?? "Not set"</dd>
+        <dd class="col-sm-9">@(Model.ProjectDetails.CompletionTarget?.ToString("yyyy-MM-dd") ?? "Not set")</dd>
     </dl>
 </div>
 <h3>Proposed AI Roadmap</h3>

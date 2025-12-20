@@ -145,6 +145,27 @@
                                         <span>Manual Review</span>
                                     </a>
                                 </li>
+                                <li class="sidebar-item">
+                                    <a class="sidebar-link @(ViewContext.RouteData.Values["area"]?.ToString() == "Eht" && currentController == "AddressValidation" ? "active" : "")" 
+                                       asp-area="Eht" asp-controller="AddressValidation" asp-action="Index">
+                                        <i class="fas fa-map-marked-alt sidebar-icon"></i>
+                                        <span>Address Validation</span>
+                                    </a>
+                                </li>
+                                <li class="sidebar-item">
+                                    <a class="sidebar-link @(ViewContext.RouteData.Values["area"]?.ToString() == "Eht" && currentController == "EntityClustering" ? "active" : "")" 
+                                       asp-area="Eht" asp-controller="EntityClustering" asp-action="Index">
+                                        <i class="fas fa-project-diagram sidebar-icon"></i>
+                                        <span>Entity Clustering</span>
+                                    </a>
+                                </li>
+                                <li class="sidebar-item">
+                                    <a class="sidebar-link @(ViewContext.RouteData.Values["area"]?.ToString() == "Eht" && currentController == "BpValidator" ? "active" : "")" 
+                                       asp-area="Eht" asp-controller="BpValidator" asp-action="Index">
+                                        <i class="fas fa-id-badge sidebar-icon"></i>
+                                        <span>BP Validator</span>
+                                    </a>
+                                </li>
                                 
                                 <!-- Redundant Manager Projects link removed -->
                             }

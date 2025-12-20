@@ -1,0 +1,140 @@
+{
+    "client_config": {
+        "company": {
+            "name": "TechCorp IT Services",
+            "slogan": "Your Technology Partner",
+            "description": "Professional IT support and solutions for businesses. Fast, reliable, and expert technical assistance.",
+            "logoIcon": "fa-desktop",
+            "foundedYear": 2015
+        },
+        "contact": {
+            "email": "support@techcorp.com",
+            "phone": "+1 555 TECH (8324)",
+            "address": "123 Tech Plaza, Silicon Valley, CA 94025",
+            "social": {
+                "facebook": "https://facebook.com/techcorpit",
+                "twitter": "https://twitter.com/techcorpit"
+            }
+        },
+        "theme": {
+            "primaryColor": "#2563EB",
+            "primaryDark": "#1D4ED8",
+            "primaryLight": "#3B82F6",
+            "secondaryColor": "#64748B",
+            "accentColor": "#10B981",
+            "accentLight": "#34D399"
+        },
+        "services": [
+            {
+                "id": "hardware-support",
+                "icon": "fas fa-tools",
+                "title": "Hardware Support",
+                "description": "Computer repairs, hardware upgrades, and equipment troubleshooting."
+            },
+            {
+                "id": "software-support",
+                "icon": "fas fa-code",
+                "title": "Software Support",
+                "description": "Software installation, updates, licensing, and application troubleshooting."
+            },
+            {
+                "id": "network-support",
+                "icon": "fas fa-network-wired",
+                "title": "Network Support",
+                "description": "Network setup, connectivity issues, security, and performance optimization."
+            },
+            {
+                "id": "user-training",
+                "icon": "fas fa-graduation-cap",
+                "title": "User Training",
+                "description": "Technology training sessions and user education programs."
+            }
+        ],
+        "projects": [
+            {
+                "title": "Enterprise Cloud Migration",
+                "description": "Migrated 500+ workstations to cloud infrastructure with 99.9% uptime.",
+                "location": "Fortune 500 Company",
+                "image": "assets/cloud-migration.png"
+            },
+            {
+                "title": "Cybersecurity Overhaul",
+                "description": "Implemented comprehensive security framework reducing incidents by 85%.",
+                "location": "Financial Services",
+                "image": "assets/cybersecurity.png"
+            },
+            {
+                "title": "Remote Work Setup",
+                "description": "Enabled seamless remote work for 200+ employees during pandemic.",
+                "location": "Healthcare Organization",
+                "image": "assets/remote-work.png"
+            },
+            {
+                "title": "Legacy System Modernization",
+                "description": "Upgraded 20-year-old systems to modern, efficient infrastructure.",
+                "location": "Manufacturing Plant",
+                "image": "assets/modernization.png"
+            }
+        ],
+        "form": {
+            "title": "Submit an IT Support Request",
+            "submitButtonText": "Submit Ticket",
+            "projectTypes": [
+                {
+                    "value": "hardware-issue",
+                    "label": "Hardware Issue"
+                },
+                {
+                    "value": "software-issue",
+                    "label": "Software Problem"
+                },
+                {
+                    "value": "network-issue",
+                    "label": "Network/Connectivity"
+                },
+                {
+                    "value": "account-access",
+                    "label": "Account/Access Issue"
+                },
+                {
+                    "value": "new-request",
+                    "label": "New Equipment/Software Request"
+                },
+                {
+                    "value": "training",
+                    "label": "Training Request"
+                }
+            ]
+        }
+    },
+    "masala_config": {
+        "endpoint": "/api/v1/tickets/external",
+        "sourceSite": "techcorp-it-services",
+        "auth": {
+            "apiKey": "public-client-key",
+            "method": "Bearer"
+        },
+        "retryPolicy": {
+            "maxRetries": 3,
+            "delayMs": 1000
+        }
+    },
+    "gerda_config": {
+        "domain": "ITHelpdesk",
+        "validationRules": {
+            "customerEmail": {
+                "required": true,
+                "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+            },
+            "description": {
+                "required": true,
+                "minLength": 15
+            }
+        },
+        "workflow": {
+            "defaultPriority": "Normal",
+            "autoAssign": true,
+            "requireApproval": false
+        }
+    }
+}

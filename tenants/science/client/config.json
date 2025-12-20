@@ -1,0 +1,140 @@
+{
+    "client_config": {
+        "company": {
+            "name": "MediCare Plus Clinic",
+            "slogan": "Your Health, Our Priority",
+            "description": "Comprehensive science project management services. Modern tools, experienced staff, and research-centered approach.",
+            "logoIcon": "fa-heartbeat",
+            "foundedYear": 2008
+        },
+        "contact": {
+            "email": "appointments@medicareplus.com",
+            "phone": "+1 555 CARE (2273)",
+            "address": "456 Health Avenue, Medical District, NY 10001",
+            "social": {
+                "facebook": "https://facebook.com/medicareplus",
+                "twitter": "https://twitter.com/medicareplus"
+            }
+        },
+        "theme": {
+            "primaryColor": "#059669",
+            "primaryDark": "#047857",
+            "primaryLight": "#10B981",
+            "secondaryColor": "#6B7280",
+            "accentColor": "#3B82F6",
+            "accentLight": "#60A5FA"
+        },
+        "services": [
+            {
+                "id": "appointments",
+                "icon": "fas fa-calendar-check",
+                "title": "Appointments",
+                "description": "Schedule consultations, follow-ups, and specialist appointments."
+            },
+            {
+                "id": "prescriptions",
+                "icon": "fas fa-prescription-bottle-alt",
+                "title": "Prescriptions",
+                "description": "Prescription refills, medication consultations, and pharmacy services."
+            },
+            {
+                "id": "lab-results",
+                "icon": "fas fa-vial",
+                "title": "Lab Results",
+                "description": "Request lab work, view results, and schedule follow-up consultations."
+            },
+            {
+                "id": "insurance",
+                "icon": "fas fa-shield-alt",
+                "title": "Insurance & Billing",
+                "description": "Insurance verification, billing inquiries, and payment assistance."
+            }
+        ],
+        "projects": [
+            {
+                "title": "Telemedicine Platform",
+                "description": "Virtual consultations serving 1000+ patients monthly with 95% satisfaction.",
+                "location": "Remote Care Initiative",
+                "image": "assets/telemedicine.png"
+            },
+            {
+                "title": "Preventive Care Program",
+                "description": "Comprehensive wellness program reducing emergency visits by 40%.",
+                "location": "Community Health",
+                "image": "assets/preventive-care.png"
+            },
+            {
+                "title": "Digital Health Records",
+                "description": "Seamless patient data management improving care coordination.",
+                "location": "Technology Integration",
+                "image": "assets/digital-records.png"
+            },
+            {
+                "title": "Specialty Care Network",
+                "description": "Connected network of specialists providing comprehensive care.",
+                "location": "Multi-Specialty Clinic",
+                "image": "assets/specialty-care.png"
+            }
+        ],
+        "form": {
+            "title": "Submit a Science Project Request",
+            "submitButtonText": "Submit Request",
+            "projectTypes": [
+                {
+                    "value": "appointment",
+                    "label": "Schedule Appointment"
+                },
+                {
+                    "value": "prescription-refill",
+                    "label": "Prescription Refill"
+                },
+                {
+                    "value": "lab-request",
+                    "label": "Lab Work Request"
+                },
+                {
+                    "value": "insurance-inquiry",
+                    "label": "Insurance/Billing Question"
+                },
+                {
+                    "value": "medical-records",
+                    "label": "Medical Records Request"
+                },
+                {
+                    "value": "general-inquiry",
+                    "label": "General Health Inquiry"
+                }
+            ]
+        }
+    },
+    "masala_config": {
+        "endpoint": "/api/v1/tickets/external",
+        "sourceSite": "medicare-plus-clinic",
+        "auth": {
+            "apiKey": "public-client-key",
+            "method": "Bearer"
+        },
+        "retryPolicy": {
+            "maxRetries": 3,
+            "delayMs": 1000
+        }
+    },
+    "gerda_config": {
+        "domain": "Science",
+        "validationRules": {
+            "customerEmail": {
+                "required": true,
+                "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+            },
+            "description": {
+                "required": true,
+                "minLength": 20
+            }
+        },
+        "workflow": {
+            "defaultPriority": "High",
+            "autoAssign": true,
+            "requireApproval": false
+        }
+    }
+}

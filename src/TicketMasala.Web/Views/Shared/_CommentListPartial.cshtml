@@ -1,0 +1,28 @@
+@model IEnumerable<TicketMasala.Web.Models.TicketComment>
+
+@if (Model != null && Model.Any())
+{
+    <div class="list-group list-group-flush mb-3">
+        @foreach (var comment in Model)
+        {
+            <div class="list-group-item @(comment.IsInternal ? "list-group-item-warning" : "")">
+                <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">
+                        @if (comment.IsInternal)
+                        {
+                            <span class="badge bg-warning text-dark me-2">Internal Note</span>
+                        }
+                        <strong>@(comment.Author?.FirstName ?? "Unknown") @(comment.Author?.LastName ?? "")</strong>
+                    </h6>
+                    <small class="text-muted">@comment.CreatedAt.ToString("g")</small>
+                </div>
+                <div class="mb-1 comment-content" data-content="@comment.Body"></div>
+            </div>
+        }
+    </div>
+
+}
+else
+{
+    <p class="text-muted text-center my-3">No comments yet. Start the discussion!</p>
+}

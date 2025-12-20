@@ -1,0 +1,106 @@
+@{
+    ViewData["Title"] = "Tenant Showcase";
+}
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold">Select a Demo Tenant</h1>
+        <p class="lead text-secondary">Experience Ticket Masala across different industries and use cases.</p>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        <!-- IT Service Management -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm hover-shadow transition-all border-0">
+                <div class="card-body text-center p-4">
+                    <div class="icon-circle bg-primary text-white mb-3 mx-auto">
+                        <i class="fas fa-server fa-2x"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">IT Service Management</h5>
+                    <p class="card-text text-muted">Internal IT helpdesk and support operations.</p>
+                    <div class="d-grid gap-2 mt-3">
+                        <a href="#" onclick="launchTenant(8080); return false;" class="btn btn-outline-primary rounded-pill">
+                            <i class="fas fa-server me-2"></i>Ticket Masala
+                        </a>
+                        <a href="#" onclick="launchTenant(8080, '/client/'); return false;" class="btn btn-primary rounded-pill">
+                            <i class="fas fa-laptop-house me-2"></i>Client Portal
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Government -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm hover-shadow transition-all border-0">
+                <div class="card-body text-center p-4">
+                    <div class="icon-circle bg-danger text-white mb-3 mx-auto">
+                        <i class="fas fa-landmark fa-2x"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Government</h5>
+                    <p class="card-text text-muted">Brussels Services: Permits, citizen complaints, and licensing.</p>
+                    <div class="d-grid gap-2 mt-3">
+                        <a href="#" onclick="launchTenant(8081); return false;" class="btn btn-outline-danger rounded-pill">
+                            <i class="fas fa-server me-2"></i>Ticket Masala
+                        </a>
+                        <a href="#" onclick="launchTenant(8081, '/client/'); return false;" class="btn btn-danger rounded-pill">
+                            <i class="fas fa-laptop-house me-2"></i>Client Portal
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Healthcare -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm hover-shadow transition-all border-0">
+                <div class="card-body text-center p-4">
+                    <div class="icon-circle bg-success text-white mb-3 mx-auto">
+                        <i class="fas fa-user-md fa-2x"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Healthcare</h5>
+                    <p class="card-text text-muted">WellCare Clinic: Patient appointments and medical records.</p>
+                    <div class="d-grid gap-2 mt-3">
+                        <a href="#" onclick="launchTenant(8088); return false;" class="btn btn-outline-success rounded-pill">
+                            <i class="fas fa-server me-2"></i>Ticket Masala
+                        </a>
+                        <a href="#" onclick="launchTenant(8088, '/client/'); return false;" class="btn btn-success rounded-pill">
+                            <i class="fas fa-laptop-house me-2"></i>Client Portal
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Landscaping -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm hover-shadow transition-all border-0">
+                <div class="card-body text-center p-4">
+                    <div class="icon-circle bg-warning text-white mb-3 mx-auto">
+                        <i class="fas fa-leaf fa-2x"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Landscaping</h5>
+                    <p class="card-text text-muted">GreenScape: Garden maintenance and service quotes.</p>
+                    <div class="d-grid gap-2 mt-3">
+                        <a href="#" onclick="launchTenant(8084); return false;" class="btn btn-outline-warning rounded-pill">
+                            <i class="fas fa-server me-2"></i>Ticket Masala
+                        </a>
+                        <a href="#" onclick="launchTenant(8084, '/client/'); return false;" class="btn btn-warning rounded-pill">
+                            <i class="fas fa-laptop-house me-2"></i>Client Portal
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function launchTenant(port, path = '/') {
+        // Construct URL using current hostname but specified port
+        const protocol = window.location.protocol;
+        const hostname = window.location.hostname;
+        const url = `${protocol}//${hostname}:${port}${path}`;
+        window.open(url, '_blank');
+    }
+</script>

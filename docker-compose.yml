@@ -1,0 +1,118 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# Ticket Masala Multi-Tenant Docker Compose
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# This configuration supports running multiple tenant instances from the
+# same codebase with different configurations. Each tenant mounts its own
+# config, data, and theme directories.
+#
+# Usage:
+#   docker compose up default          # Start default instance
+#   docker compose up government       # Start government services instance
+#   docker compose --profile all up    # Start all instances
+# ═══════════════════════════════════════════════════════════════════════════
+
+services:
+  # ════════════════════════════════════════════════════════════
+  # DEFAULT TENANT (Base Configuration)
+  # ════════════════════════════════════════════════════════════
+  default: &app-base
+    image: ticket-masala:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+
+    ports:
+      - "8080:8080"
+
+    volumes:
+      # THE BRAIN: Injecting tenant config (Read Only)
+      - ./tenants/default/config:/app/inputs/config:ro
+      # THE MEMORY: Persisting the DB (Read Write)
+      - ./tenants/default/data:/app/inputs/data:rw
+      # THE FACE: Injecting client app (Read Only) - Using Helpdesk client for default IT demo
+      - ./tenants/helpdesk/client:/app/wwwroot/client:ro
+      # THE STYLE: Injecting tenant theme (Read Only)
+      - ./tenants/default/theme:/app/wwwroot/tenant-theme:ro
+
+    environment:
+      - ConnectionStrings__DefaultConnection=Data Source=/app/inputs/data/masala.db;Cache=Shared;Mode=ReadWriteCreate
+      - MasalaConfig__ConfigPath=/app/inputs/config
+      - ASPNETCORE_ENVIRONMENT=Production
+      - MASALA_CONFIG_PATH=/app/inputs/config
+      - MASALA_DB_PATH=/app/inputs/data/masala.db
+
+  # ════════════════════════════════════════════════════════════
+  # GOVERNMENT SERVICES TENANT
+  # ════════════════════════════════════════════════════════════
+  government:
+    <<: *app-base
+    container_name: ticket_masala_government
+    profiles:
+      - government
+      - all
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./tenants/government/config:/app/inputs/config:ro
+      - ./tenants/government/data:/app/inputs/data:rw
+      - ./tenants/government/client:/app/wwwroot/client:ro
+      - ./tenants/government/theme:/app/wwwroot/tenant-theme:ro
+
+  # ════════════════════════════════════════════════════════════
+  # HEALTHCARE CLINIC TENANT
+  # ════════════════════════════════════════════════════════════
+  healthcare:
+    <<: *app-base
+    container_name: ticket_masala_healthcare
+    profiles:
+      - healthcare
+      - all
+    ports:
+      - "8088:8080"
+    volumes:
+      - ./tenants/healthcare/config:/app/inputs/config:ro
+      - ./tenants/healthcare/data:/app/inputs/data:rw
+      - ./tenants/healthcare/client:/app/wwwroot/client:ro
+      - ./tenants/healthcare/theme:/app/wwwroot/tenant-theme:ro
+
+  # ════════════════════════════════════════════════════════════
+  # IT HELPDESK TENANT
+  # ════════════════════════════════════════════════════════════
+  helpdesk:
+    <<: *app-base
+    container_name: ticket_masala_helpdesk
+    profiles:
+      - helpdesk
+      - all
+    ports:
+      - "8083:8080"
+    volumes:
+      - ./tenants/helpdesk/config:/app/inputs/config:ro
+      - ./tenants/helpdesk/data:/app/inputs/data:rw
+      - ./tenants/helpdesk/client:/app/wwwroot/client:ro
+      - ./tenants/helpdesk/theme:/app/wwwroot/tenant-theme:ro
+
+  # ════════════════════════════════════════════════════════════
+  # LANDSCAPING SERVICES TENANT
+  # ════════════════════════════════════════════════════════════
+  landscaping:
+    <<: *app-base
+    container_name: ticket_masala_landscaping
+    profiles:
+      - landscaping
+      - all
+    ports:
+      - "8084:8080"
+    volumes:
+      - ./tenants/landscaping/config:/app/inputs/config:ro
+      - ./tenants/landscaping/data:/app/inputs/data:rw
+      - ./tenants/landscaping/client:/app/wwwroot/client:ro
+      - ./tenants/landscaping/theme:/app/wwwroot/tenant-theme:ro

@@ -1,0 +1,734 @@
+@model TicketMasala.Web.ViewModels.GERDA.GerdaDispatchViewModel
+@using TicketMasala.Web.Models
+
+@{
+    ViewData["Title"] = "GERDA Dispatch Backlog";
+    ViewData["Description"] = "AI-powered ticket assignment dashboard";
+}
+
+<style>
+    .agent-scroll-container {
+        max-height: 80vh; 
+        overflow-y: auto;
+        padding-right: 5px; /* Avoiding scrollbar overlap */
+    }
+    
+    /* Custom Scrollbar for smoother look */
+    .agent-scroll-container::-webkit-scrollbar {
+        width: 8px;
+    }
+    .agent-scroll-container::-webkit-scrollbar-track {
+        background: #f1f1f1; 
+    }
+    .agent-scroll-container::-webkit-scrollbar-thumb {
+        background: #888; 
+        border-radius: 4px;
+    }
+    .agent-scroll-container::-webkit-scrollbar-thumb:hover {
+        background: #555; 
+    }
+</style>
+
+<!-- Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <i class="fas fa-robot text-primary me-2"></i>
+            GERDA Dispatch Backlog
+        </h1>
+        <p class="page-subtitle">AI-powered ticket assignment and workload balancing</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-outline-primary" onclick="location.reload()">
+            <i class="fas fa-sync-alt me-2"></i>
+            Refresh
+        </button>
+    </div>
+</div>
+
+<!-- Statistics Overview -->
+<div class="stats-grid mb-4">
+    <div class="stat-card primary">
+        <i class="fas fa-ticket-alt stat-card-icon"></i>
+        <div class="stat-card-title">@Localizer["Unassigned Tickets"]</div>
+        <div class="stat-card-value">@Model.Statistics.TotalUnassignedTickets</div>
+        <div class="stat-card-change">@Localizer["Awaiting triage"]</div>
+    </div>
+    <div class="stat-card accent">
+        <i class="fas fa-magic stat-card-icon"></i>
+        <div class="stat-card-title">@Localizer["With AI Recommendations"]</div>
+        <div class="stat-card-value">@Model.Statistics.TicketsWithAgentRecommendation</div>
+        <div class="stat-card-change">@Localizer["Ready for auto-assign"]</div>
+    </div>
+    <div class="stat-card success">
+        <i class="fas fa-users stat-card-icon"></i>
+        <div class="stat-card-title">@Localizer["Available Agents"]</div>
+        <div class="stat-card-value">@Model.Statistics.TotalAvailableAgents</div>
+        <div class="stat-card-change">@Localizer["Online now"]</div>
+    </div>
+    <div class="stat-card danger">
+        <i class="fas fa-clock stat-card-icon"></i>
+        <div class="stat-card-title">@Localizer["Tickets > 24h Old"]</div>
+        <div class="stat-card-value text-white">@Model.Statistics.TicketsOlderThan24Hours</div>
+        <div class="stat-card-change">@Localizer["SLA Risk"]</div>
+    </div>
+</div>
+
+<!-- GERDA Insights Charts -->
+@if (Model.UnassignedTickets.Any() || Model.AvailableAgents.Any())
+{
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-pie me-2"></i>@Localizer["Priority Distribution"]
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area" style="height: 200px;">
+                        <canvas id="priorityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-bar me-2"></i>@Localizer["Team Workload"]
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area" style="height: 200px;">
+                        <canvas id="workloadChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Main Content -->
+<div class="row">
+    <!-- Tickets List -->
+    <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3>
+                <i class="fas fa-inbox me-2"></i>
+                @Localizer["Pending Tickets"]
+            </h3>
+        </div>
+
+        <!-- Batch Controls MOVED HERE -->
+        @if (Model.UnassignedTickets.Any())
+        {
+            <div class="batch-controls mb-3">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="selectAll" onchange="toggleSelectAll(this)">
+                            <label class="form-check-label fw-bold" for="selectAll">
+                                @Localizer["Select All"] (<span id="selectedCount">0</span> @Localizer["selected"])
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-8 text-end">
+                        <button class="btn btn-primary" onclick="batchAssignWithGerda()" id="batchGerdaBtn" disabled>
+                            <i class="fas fa-robot me-2"></i>
+                            @Localizer["Auto-Assign (GERDA)"]
+                        </button>
+                        <button class="btn btn-secondary" onclick="showManualBatchAssign()" id="batchManualBtn" disabled>
+                            <i class="fas fa-user-cog me-2"></i>
+                            @Localizer["Manual Assign"]
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+        
+        @if (!Model.UnassignedTickets.Any())
+        {
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>@Localizer["All clear!"]</strong> @Localizer["No unassigned tickets in the backlog."]
+            </div>
+        }
+        else
+        {
+            <div id="ticketsList">
+                @foreach (var ticket in Model.UnassignedTickets)
+                {
+                    <div class="ticket-card" data-ticket-id="@ticket.Guid">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="form-check">
+                                <input class="form-check-input ticket-checkbox" type="checkbox" 
+                                       value="@ticket.Guid" onchange="updateSelectedCount()">
+                                <label class="form-check-label">
+                                    <strong>@Localizer["Ticket"] #@ticket.Guid.ToString()[..8]</strong>
+                                </label>
+                            </div>
+                            <div>
+                                @if (ticket.PriorityScore >= 75)
+                                {
+                                    <span class="priority-badge priority-high">
+                                        <i class="fas fa-exclamation-circle"></i> @Localizer["HIGH"]
+                                    </span>
+                                }
+                                else if (ticket.PriorityScore >= 40)
+                                {
+                                    <span class="priority-badge priority-medium">
+                                        <i class="fas fa-exclamation-triangle"></i> @Localizer["MEDIUM"]
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="priority-badge priority-low">
+                                        <i class="fas fa-info-circle"></i> @Localizer["LOW"]
+                                    </span>
+                                }
+                                <span class="badge bg-secondary ms-2">
+                                    <i class="fas fa-clock"></i> @ticket.TimeInBacklogDisplay
+                                </span>
+                            </div>
+                        </div>
+
+                        <p class="mb-2">@ticket.Description</p>
+
+                        <div class="row mb-2">
+                            <div class="col-md-6">
+                                <small class="text-muted">
+                                    <i class="fas fa-user me-1"></i>
+                                    @Localizer["Customer"]: <strong>@ticket.CustomerName</strong>
+                                </small>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted">
+                                    <i class="fas fa-chart-line me-1"></i>
+                                    @Localizer["Effort"]: <strong>@ticket.EstimatedEffortPoints @Localizer["pts"]</strong> | 
+                                    @Localizer["Priority"]: <strong>@ticket.PriorityScore.ToString("F1")</strong>
+                                </small>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(ticket.GerdaTags))
+                        {
+                            <div class="mb-2">
+                                @foreach (var tag in ticket.GerdaTags.Split(','))
+                                {
+                                    <a href="@Url.Action("Projects", "Manager", new { search = tag })" class="gerda-tag text-decoration-none">@tag</a>
+                                }
+                            </div>
+                        }
+
+                        @if (ticket.RecommendedProjectGuid.HasValue)
+                        {
+                            <div class="alert alert-info py-2 mb-2">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                <strong>@Localizer["Recommended Project"]:</strong> @ticket.RecommendedProjectName
+                            </div>
+                        }
+
+                        @if (ticket.RecommendedAgents.Any())
+                        {
+                            <div class="mt-4 mb-3">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge-gerda rounded-pill">
+                                        <i class="fas fa-magic me-2"></i>@Localizer["GERDA Insight"]
+                                    </span>
+                                    <span class="ms-2 text-muted small">@Localizer["AI-optimized agent matches"]</span>
+                                </div>
+                                @for (int i = 0; i < ticket.RecommendedAgents.Count; i++)
+                                {
+                                    var agent = ticket.RecommendedAgents[i];
+                                    var isTopPick = i == 0;
+                                    
+                                    <div class="agent-recommendation @(isTopPick ? "top-pick" : "")" 
+                                         onclick="assignTicketToAgent('@ticket.Guid', '@agent.AgentId', '@agent.AgentName')">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <strong>
+                                                    @if (isTopPick)
+                                                    {
+                                                        <i class="fas fa-star text-warning me-1"></i>
+                                                    }
+                                                    @agent.AgentName
+                                                </strong>
+                                                <br>
+                                                <small class="text-muted">
+                                                    @agent.Team
+                                                    @if (!string.IsNullOrEmpty(agent.Language))
+                                                    {
+                                                        <span> | <i class="fas fa-language"></i> @agent.Language</span>
+                                                    }
+                                                </small>
+                                            </div>
+                                            <div class="text-end">
+                                                <span class="score-badge @(agent.Score >= 70 ? "score-high" : agent.Score >= 40 ? "score-medium" : "score-low")">
+                                                    @Localizer["Score"]: @agent.ScoreDisplay
+                                                </span>
+                                                <br>
+                                                <small class="text-muted">@Localizer["Load"]: @agent.WorkloadDisplay</small>
+                                            </div>
+                                        </div>
+                                        <div class="workload-bar">
+                                            <div class="workload-fill @(agent.WorkloadPercentage < 60 ? "workload-low" : agent.WorkloadPercentage < 90 ? "workload-medium" : "workload-high")" 
+                                                 style="width: @(Math.Min(agent.WorkloadPercentage, 100))%"></div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning py-2 mt-3">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                @Localizer["No GERDA recommendations available. Manual assignment required."]
+                            </div>
+                        }
+
+                        <div class="mt-3 text-end">
+                            <button class="btn btn-sm btn-outline-primary" 
+                                    onclick="showAssignModal('@ticket.Guid')">
+                                <i class="fas fa-user-plus me-1"></i>
+                                @Localizer["Manual Assign"]
+                            </button>
+                        </div>
+
+                        <!-- Ticket Status Badge -->
+                        <div class="mt-2">
+                            @if (ticket.Status.ToString() == "Dispatching")
+                            {
+                                <span class="badge-dispatching">@Localizer["Dispatching"]</span>
+                            }
+                            else if (ticket.Status.ToString() == "Anticipation")
+                            {
+                                <span class="badge-anticipation">@Localizer["Anticipation"]</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">@ticket.Status</span>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Pagination -->
+            @if (Model.TotalPages > 1)
+            {
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+                            <a class="page-link" href="@Url.Action("DispatchBacklog", new { page = Model.CurrentPage - 1, pageSize = Model.PageSize })" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        @for (int i = 1; i <= Model.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                <a class="page-link" href="@Url.Action("DispatchBacklog", new { page = i, pageSize = Model.PageSize })">@i</a>
+                            </li>
+                        }
+                        <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+                            <a class="page-link" href="@Url.Action("DispatchBacklog", new { page = Model.CurrentPage + 1, pageSize = Model.PageSize })" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        }
+    </div>
+
+    <!-- Agent Availability Sidebar -->
+    <div class="col-lg-4">
+        <div class="position-sticky" style="top: 1rem;">
+            <h3 class="mb-3">
+                <i class="fas fa-users me-2"></i>
+                @Localizer["Agent Availability"]
+            </h3>
+            
+            <div class="agent-scroll-container"> <!-- Added scroll container -->
+                @foreach (var team in Model.AvailableAgents.GroupBy(a => a.Team))
+                {
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <strong>@team.Key</strong>
+                        </div>
+                        <div class="card-body p-2">
+                            @foreach (var agent in team)
+                            {
+                                <div class="mb-3 pb-2 border-bottom">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <strong><a href="@Url.Action("Index", "Ticket", new { responsibleId = agent.Id })" class="text-dark text-decoration-none">@agent.Name</a></strong>
+                                            <br>
+                                            <small class="text-muted">
+                                                @agent.CurrentWorkload / @agent.MaxCapacity tickets
+                                                <br>
+                                                @agent.CurrentEffortPoints / @agent.MaxCapacityPoints points
+                                            </small>
+                                        </div>
+                                        <div>
+                                            @if (agent.IsAvailable)
+                                            {
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check"></i> Available
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-times"></i> Full
+                                                </span>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="workload-bar mt-2">
+                                        <div class="workload-fill @(agent.WorkloadPercentage < 60 ? "workload-low" : agent.WorkloadPercentage < 90 ? "workload-medium" : "workload-high")" 
+                                             style="width: @(Math.Min(agent.WorkloadPercentage, 100))%"></div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Manual Assignment Modal -->
+<div class="modal fade" id="assignModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@Localizer["Assign Ticket"]</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="assignTicketGuid">
+                
+                <div class="mb-3">
+                    <label class="form-label">@Localizer["Agent"]</label>
+                    <select class="form-select" id="assignAgentId">
+                        <option value="">@Localizer["-- Select Agent --"]</option>
+                        @foreach (var agent in Model.AvailableAgents.OrderBy(a => a.Team).ThenBy(a => a.Name))
+                        {
+                            <option value="@agent.Id">@agent.Name (@agent.Team) - @agent.CurrentWorkload/@agent.MaxCapacity</option>
+                        }
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">@Localizer["Project (Optional)"]</label>
+                    <select class="form-select" id="assignProjectGuid">
+                        <option value="">@Localizer["-- No Project --"]</option>
+                        @foreach (var project in Model.Projects.OrderBy(p => p.Name))
+                        {
+                            <option value="@project.Guid">@project.Name (@project.CustomerName)</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Cancel"]</button>
+                <button type="button" class="btn btn-primary" onclick="submitManualAssign()">@Localizer["Assign"]</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // GERDA Insights Charts
+    document.addEventListener('DOMContentLoaded', function() {
+        // Priority Distribution Chart
+        const priorityCtx = document.getElementById('priorityChart');
+        if (priorityCtx) {
+            @{
+                // Important: Charts need stats for ALL tickets, but Model.UnassignedTickets is paged.
+                // For simplicity visualization, we might just use the paged ones OR we should pass stats separately.
+                // Model.Statistics contains global counts, but not distribution data arrays.
+                // For now, let's visualize the CURRENT PAGE or consider enhancing stats model later.
+                // Using current page data for the charts to avoid breaking change in logic,
+                // but noted this limitation. Ideally stats should be global.
+                
+                var highPriority = Model.UnassignedTickets.Count(t => t.PriorityScore >= 75);
+                var mediumPriority = Model.UnassignedTickets.Count(t => t.PriorityScore >= 40 && t.PriorityScore < 75);
+                var lowPriority = Model.UnassignedTickets.Count(t => t.PriorityScore < 40);
+            }
+            new Chart(priorityCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['@Localizer["High"]', '@Localizer["Medium"]', '@Localizer["Low"]'],
+                    datasets: [{
+                        data: [@highPriority, @mediumPriority, @lowPriority],
+                        backgroundColor: ['#dc3545', '#ffc107', '#28a745'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Team Workload Chart
+        const workloadCtx = document.getElementById('workloadChart');
+        if (workloadCtx) {
+            @{
+                var agents = Model.AvailableAgents.Take(6).ToList();
+                var agentNames = string.Join(",", agents.Select(a => $"\"{a.Name.Split(' ')[0]}\""));
+                var agentWorkloads = string.Join(",", agents.Select(a => a.WorkloadPercentage));
+            }
+            new Chart(workloadCtx, {
+                type: 'bar',
+                data: {
+                    labels: [@Html.Raw(agentNames)],
+                    datasets: [{
+                        label: '@Localizer["Workload %"]',
+                        data: [@agentWorkloads],
+                        backgroundColor: function(context) {
+                            const value = context.raw;
+                            if (value >= 90) return '#dc3545';
+                            if (value >= 60) return '#ffc107';
+                            return '#28a745';
+                        },
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+    });
+
+    let selectedTickets = new Set();
+
+    function updateSelectedCount() {
+        selectedTickets.clear();
+        document.querySelectorAll('.ticket-checkbox:checked').forEach(cb => {
+            selectedTickets.add(cb.value);
+            cb.closest('.ticket-card').classList.add('selected');
+        });
+        document.querySelectorAll('.ticket-checkbox:not(:checked)').forEach(cb => {
+            cb.closest('.ticket-card').classList.remove('selected');
+        });
+        
+        const count = selectedTickets.size;
+        document.getElementById('selectedCount').textContent = count;
+        document.getElementById('batchGerdaBtn').disabled = count === 0;
+        document.getElementById('batchManualBtn').disabled = count === 0;
+    }
+
+    function toggleSelectAll(checkbox) {
+        document.querySelectorAll('.ticket-checkbox').forEach(cb => {
+            cb.checked = checkbox.checked;
+        });
+        updateSelectedCount();
+    }
+
+    async function assignTicketToAgent(ticketGuid, agentId, agentName) {
+        if (!confirm(`Assign this ticket to ${agentName}?`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch('@Url.Action("AssignTicket", "Manager")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: new URLSearchParams({
+                    ticketGuid: ticketGuid,
+                    agentId: agentId
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('Ticket assigned successfully!');
+                location.reload();
+            } else {
+                alert('Error: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to assign ticket');
+        }
+    }
+
+    async function batchAssignWithGerda() {
+        if (selectedTickets.size === 0) {
+            alert('Please select at least one ticket');
+            return;
+        }
+
+        if (!confirm(`Auto-assign ${selectedTickets.size} ticket(s) using GERDA AI?`)) {
+            return;
+        }
+
+        const btn = document.getElementById('batchGerdaBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+
+        try {
+            const response = await fetch('@Url.Action("BatchAssignTickets", "Manager")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: JSON.stringify({
+                    ticketGuids: Array.from(selectedTickets),
+                    useGerdaRecommendations: true
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                alert(`Successfully assigned ${result.successCount} ticket(s)!\nFailed: ${result.failureCount}`);
+                location.reload();
+            } else {
+                alert('Error: ' + result.message);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-robot me-2"></i>Auto-Assign (GERDA)';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to batch assign tickets');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-robot me-2"></i>Auto-Assign (GERDA)';
+        }
+    }
+
+    function showAssignModal(ticketGuid) {
+        document.getElementById('assignTicketGuid').value = ticketGuid;
+        document.getElementById('assignAgentId').value = '';
+        document.getElementById('assignProjectGuid').value = '';
+        
+        const modal = new bootstrap.Modal(document.getElementById('assignModal'));
+        modal.show();
+    }
+
+    async function submitManualAssign() {
+        const ticketGuid = document.getElementById('assignTicketGuid').value;
+        const agentId = document.getElementById('assignAgentId').value;
+        const projectGuid = document.getElementById('assignProjectGuid').value || null;
+
+        if (!agentId) {
+            alert('Please select an agent');
+            return;
+        }
+
+        try {
+            const response = await fetch('@Url.Action("AssignTicket", "Manager")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: new URLSearchParams({
+                    ticketGuid: ticketGuid,
+                    agentId: agentId,
+                    projectGuid: projectGuid
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('Ticket assigned successfully!');
+                location.reload();
+            } else {
+                alert('Error: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to assign ticket');
+        }
+    }
+
+    function showManualBatchAssign() {
+        // For simplicity, prompt for agent selection
+        const agentSelect = document.getElementById('assignAgentId');
+        const agentId = prompt('Enter agent ID for batch assignment (or leave empty to skip):');
+        
+        if (agentId === null) return; // Cancelled
+        
+        if (confirm(`Assign ${selectedTickets.size} ticket(s) to the selected agent?`)) {
+            batchAssignManual(agentId);
+        }
+    }
+
+    async function batchAssignManual(agentId) {
+        const btn = document.getElementById('batchManualBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+
+        try {
+            const response = await fetch('@Url.Action("BatchAssignTickets", "Manager")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: JSON.stringify({
+                    ticketGuids: Array.from(selectedTickets),
+                    useGerdaRecommendations: false,
+                    forceAgentId: agentId || null
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                alert(`Successfully assigned ${result.successCount} ticket(s)!\nFailed: ${result.failureCount}`);
+                location.reload();
+            } else {
+                alert('Error: ' + result.message);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-user-cog me-2"></i>Manual Assign';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to batch assign tickets');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-user-cog me-2"></i>Manual Assign';
+        }
+    }
+</script>
+}
+
+@Html.AntiForgeryToken()

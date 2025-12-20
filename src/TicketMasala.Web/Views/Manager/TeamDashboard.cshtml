@@ -1,0 +1,450 @@
+@model TicketMasala.Web.ViewModels.Dashboard.TeamDashboardViewModel
+@{
+    ViewData["Title"] = "Team Dashboard - GERDA AI";
+}
+
+<div class="container-fluid mt-4">
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div>
+                <h1 class="page-title">
+                <i class="fas fa-tachometer-alt text-primary me-2"></i>
+                @Localizer["Team Dashboard"]
+            </h1>
+            <p class="page-subtitle">@Localizer["GERDA AI Intelligence & Analytics"]</p>
+        </div>
+        <div class="page-actions">
+            <a asp-controller="Import" asp-action="Index" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-file-import"></i> @Localizer["Import Tickets"]
+            </a>
+            <button id="btnGenerateTicket" class="btn btn-primary btn-sm ms-2">
+                <i class="fas fa-magic"></i> @Localizer["Generate Random Ticket"]
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary Cards Row -->
+    <!-- Summary Cards Row -->
+    <div class="stats-grid mb-4">
+        <!-- Active Tickets -->
+        <div class="stat-card primary">
+            <i class="fas fa-ticket-alt stat-card-icon"></i>
+            <div class="stat-card-title">@Localizer["Active Tickets"]</div>
+            <div class="stat-card-value">@Model.TotalActiveTickets</div>
+            <div class="stat-card-change">
+                @Model.UnassignedTickets @Localizer["unassigned"] • @Model.AssignedTickets @Localizer["in progress"]
+            </div>
+        </div>
+
+        <!-- SLA Compliance -->
+        <div class="stat-card @(Model.SlaComplianceRate >= 90 ? "success" : "warning")">
+            <i class="fas fa-check-circle stat-card-icon"></i>
+            <div class="stat-card-title">@Localizer["SLA Compliance"]</div>
+            <div class="stat-card-value">@Model.SlaComplianceRate%</div>
+            <div class="stat-card-change">
+                @Model.TicketsWithinSla @Localizer["within SLA"], @Model.TicketsBreachingSla @Localizer["breached"]
+            </div>
+        </div>
+
+        <!-- AI Assignment Rate -->
+        <div class="stat-card accent">
+            <i class="fas fa-robot stat-card-icon"></i>
+            <div class="stat-card-title">@Localizer["AI Assignment Rate"]</div>
+            <div class="stat-card-value">@Model.AiAssignmentAcceptanceRate%</div>
+            <div class="stat-card-change">
+                @Model.AiAssignedCount @Localizer["AI-assigned tickets"]
+            </div>
+        </div>
+
+        <!-- Avg Priority -->
+        <div class="stat-card @(Model.AveragePriorityScore > 75 ? "danger" : "warning")">
+            <i class="fas fa-layer-group stat-card-icon"></i>
+            <div class="stat-card-title">@Localizer["Avg Priority"]</div>
+            <div class="stat-card-value">@Model.AveragePriorityScore.ToString("F1")</div>
+            <div class="stat-card-change">
+                @Localizer["Avg complexity"]: @Model.AverageComplexity.ToString("F1") @Localizer["points"]
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-line"></i> @Localizer["Ticket Volume Forecast"]
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="forecastChart" style="height: 250px;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-trophy"></i> @Localizer["Agent Performance (Closed Tickets)"]
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="performanceChart" style="height: 250px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Distribution Charts Row -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar"></i> @Localizer["Priority Distribution"]
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="priorityChart" style="height: 250px;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar"></i> @Localizer["Complexity Distribution"]
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="complexityChart" style="height: 250px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Agent Workload Table -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-users"></i> @Localizer["Agent Workload"]
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>@Localizer["Agent"]</th>
+                                    <th>@Localizer["Assigned Tickets"]</th>
+                                    <th>@Localizer["Current Workload"]</th>
+                                    <th>@Localizer["Utilization"]</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var agent in Model.AgentWorkloads)
+                                {
+                                    <tr>
+                                        <td>@agent.AgentName</td>
+                                        <td>@agent.AssignedTicketCount</td>
+                                        <td>
+                                            <span class="badge bg-secondary">
+                                                @agent.CurrentWorkload / @agent.MaxCapacity @Localizer["points"]
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="progress" style="height: 25px;">
+                                                <div class="progress-bar bg-@agent.UtilizationClass" 
+                                                     role="progressbar" 
+                                                     style="width: @agent.UtilizationPercentage%"
+                                                     aria-valuenow="@agent.UtilizationPercentage" 
+                                                     aria-valuemin="0" 
+                                                     aria-valuemax="100">
+                                                    @agent.UtilizationPercentage%
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Tags and Recent Activity Row -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-tags"></i> @Localizer["Top GERDA Tags"]
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.TopTags.Any())
+                    {
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var tag in Model.TopTags)
+                            {
+                                <span class="badge bg-primary fs-6">
+                                    @tag.TagName <span class="badge bg-light text-dark ms-1">@tag.Count</span>
+                                </span>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">@Localizer["No tags available yet."]</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-history"></i> @Localizer["Recent Activity"]
+                    </h5>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    @if (Model.RecentActivity.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var activity in Model.RecentActivity)
+                            {
+                                <div class="list-group-item px-0">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <span class="badge bg-@activity.ActivityClass me-2">@activity.ActivityType</span>
+                                            <strong>#@activity.TicketGuid</strong>
+                                            <p class="mb-1 small">@activity.TicketDescription</p>
+                                            <small class="text-muted">
+                                                @activity.AgentName • @activity.Timestamp.ToString("MMM dd, HH:mm")
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">@Localizer["No recent activity."]</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <!-- Action Buttons -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <a asp-action="Projects" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> @Localizer["Back to Projects"]
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Forecast Chart
+            const forecastCtx = document.getElementById('forecastChart').getContext('2d');
+            const forecastChart = new Chart(forecastCtx, {
+                type: 'line',
+                data: {
+                    labels: @Html.Raw(Json.Serialize(Model.ForecastData.Select(f => f.Date.ToString("MMM dd")))),
+                    datasets: [{
+                        label: '@Localizer["Predicted Volume"]',
+                        data: @Html.Raw(Json.Serialize(Model.ForecastData.Select(f => f.PredictedVolume))),
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '@Localizer["Tickets"]'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // Performance Chart
+            const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+            const performanceChart = new Chart(performanceCtx, {
+                type: 'bar',
+                data: {
+                    labels: @Html.Raw(Json.Serialize(Model.AgentPerformance.Select(a => a.AgentName))),
+                    datasets: [{
+                        label: '@Localizer["Closed Tickets"]',
+                        data: @Html.Raw(Json.Serialize(Model.AgentPerformance.Select(a => a.ClosedTickets))),
+                        backgroundColor: 'rgba(153, 102, 255, 0.7)',
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // Priority Distribution Chart
+            const priorityCtx = document.getElementById('priorityChart').getContext('2d');
+            const priorityChart = new Chart(priorityCtx, {
+                type: 'bar',
+                data: {
+                    labels: @Html.Raw(Json.Serialize(Model.PriorityDistribution.Keys)),
+                    datasets: [{
+                        label: '@Localizer["Tickets by Priority"]',
+                        data: @Html.Raw(Json.Serialize(Model.PriorityDistribution.Values)),
+                        backgroundColor: [
+                            'rgba(220, 53, 69, 0.7)',   // Critical - Red
+                            'rgba(255, 193, 7, 0.7)',   // High - Yellow
+                            'rgba(13, 110, 253, 0.7)',  // Medium - Blue
+                            'rgba(25, 135, 84, 0.7)'    // Low - Green
+                        ],
+                        borderColor: [
+                            'rgba(220, 53, 69, 1)',
+                            'rgba(255, 193, 7, 1)',
+                            'rgba(13, 110, 253, 1)',
+                            'rgba(25, 135, 84, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // Complexity Distribution Chart
+            const complexityCtx = document.getElementById('complexityChart').getContext('2d');
+            const complexityChart = new Chart(complexityCtx, {
+                type: 'bar',
+                data: {
+                    labels: @Html.Raw(Json.Serialize(Model.ComplexityDistribution.Keys)),
+                    datasets: [{
+                        label: '@Localizer["Tickets by Complexity"]',
+                        data: @Html.Raw(Json.Serialize(Model.ComplexityDistribution.Values)),
+                        backgroundColor: [
+                            'rgba(25, 135, 84, 0.7)',   // Trivial - Green
+                            'rgba(13, 202, 240, 0.7)',  // Simple - Cyan
+                            'rgba(13, 110, 253, 0.7)',  // Medium - Blue
+                            'rgba(255, 193, 7, 0.7)',   // Complex - Yellow
+                            'rgba(220, 53, 69, 0.7)'    // Very Complex - Red
+                        ],
+                        borderColor: [
+                            'rgba(25, 135, 84, 1)',
+                            'rgba(13, 202, 240, 1)',
+                            'rgba(13, 110, 253, 1)',
+                            'rgba(255, 193, 7, 1)',
+                            'rgba(220, 53, 69, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        });
+
+        // Generate Random Ticket
+        document.getElementById('btnGenerateTicket').addEventListener('click', function() {
+            const btn = this;
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> @Localizer["Generating..."]';
+
+            fetch('@Url.Action("GenerateRandomTicket", "Manager")', {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message); // Server message, could also be localized on server
+                    location.reload(); // Reload to see the new ticket
+                } else {
+                    alert('@Localizer["Error:"] ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('@Localizer["An error occurred while generating the ticket."]');
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            });
+        });
+    </script>
+}

@@ -1,0 +1,143 @@
+{
+    "Admins": [
+        {
+            "UserName": "admin@brussels.gov",
+            "Email": "admin@brussels.gov",
+            "FirstName": "Municipal",
+            "LastName": "Administrator",
+            "Phone": "+32-2-279-2211",
+            "Code": "GOV001"
+        }
+    ],
+    "Employees": [
+        {
+            "UserName": "services@brussels.gov",
+            "Email": "services@brussels.gov",
+            "FirstName": "Marie",
+            "LastName": "Dubois",
+            "Phone": "+32-2-279-2212",
+            "Team": "Citizen Services",
+            "Level": "Support",
+            "Language": "fr",
+            "Specializations": "Permits,Licenses",
+            "MaxCapacityPoints": 25,
+            "Region": "Brussels"
+        },
+        {
+            "UserName": "manager@brussels.gov",
+            "Email": "manager@brussels.gov",
+            "FirstName": "Jean",
+            "LastName": "Van Der Berg",
+            "Phone": "+32-2-279-2213",
+            "Team": "Municipal Management",
+            "Level": "ProjectManager",
+            "Language": "nl",
+            "Specializations": "Urban Planning",
+            "MaxCapacityPoints": 15,
+            "Region": "Brussels"
+        },
+        {
+            "UserName": "inspector@brussels.gov",
+            "Email": "inspector@brussels.gov",
+            "FirstName": "Pierre",
+            "LastName": "Janssen",
+            "Phone": "+32-2-279-2214",
+            "Team": "Building Inspection",
+            "Level": "Developer",
+            "Language": "fr",
+            "Specializations": "Building Codes,Safety",
+            "MaxCapacityPoints": 30,
+            "Region": "Brussels"
+        }
+    ],
+    "Customers": [
+        {
+            "UserName": "citizen@example.be",
+            "Email": "citizen@example.be",
+            "FirstName": "Anna",
+            "LastName": "Vermeulen",
+            "Phone": "+32-2-555-0001",
+            "Code": "CIT001"
+        },
+        {
+            "UserName": "business@example.be",
+            "Email": "business@example.be",
+            "FirstName": "Marc",
+            "LastName": "Peeters",
+            "Phone": "+32-2-555-0002",
+            "Code": "BUS001"
+        }
+    ],
+    "WorkContainers": [
+        {
+            "Name": "Building Permit Applications",
+            "Description": "Processing building permit requests for residential and commercial properties",
+            "CustomerEmail": "citizen@example.be",
+            "Status": "InProgress",
+            "Priority": "High",
+            "DomainId": "Government",
+            "EstimatedHours": 40,
+            "ActualHours": 25,
+            "CreatedDate": "2024-11-01T08:00:00Z",
+            "DueDate": "2024-12-31T17:00:00Z"
+        },
+        {
+            "Name": "Municipal Services Digitization",
+            "Description": "Digital transformation of citizen services and permit processes",
+            "CustomerEmail": "business@example.be",
+            "Status": "Planning",
+            "Priority": "Normal",
+            "DomainId": "Government",
+            "EstimatedHours": 80,
+            "ActualHours": 15,
+            "CreatedDate": "2024-11-15T09:00:00Z",
+            "DueDate": "2025-02-15T17:00:00Z"
+        }
+    ],
+    "UnassignedWorkItems": [
+        {
+            "Title": "Review architectural plans for compliance",
+            "Description": "New residential building permit application at Rue de la Loi 123. Plans submitted for review including structural engineering, fire safety compliance, and zoning requirements. Requires inspection team approval.",
+            "CustomerEmail": "citizen@example.be",
+            "Status": "New",
+            "Priority": "High",
+            "DomainId": "Government",
+            "EstimatedHours": 8,
+            "CreatedDate": "2024-12-11T09:00:00Z",
+            "DueDate": "2024-12-25T17:00:00Z"
+        },
+        {
+            "Title": "Process business license renewal",
+            "Description": "Annual business license renewal for restaurant establishment. Documentation submitted includes health department certificates, fire safety inspection, and tax compliance verification.",
+            "CustomerEmail": "business@example.be",
+            "Status": "New",
+            "Priority": "Normal",
+            "DomainId": "Government",
+            "EstimatedHours": 5,
+            "CreatedDate": "2024-12-10T14:30:00Z",
+            "DueDate": "2024-12-20T17:00:00Z"
+        },
+        {
+            "Title": "Marriage certificate request - urgent",
+            "Description": "Citizen needs certified marriage certificate for visa application. Original ceremony performed in Brussels 2019. Requires verification in municipal records and official seal.",
+            "CustomerEmail": "citizen@example.be",
+            "Status": "New",
+            "Priority": "High",
+            "DomainId": "Government",
+            "EstimatedHours": 2,
+            "CreatedDate": "2024-12-12T11:15:00Z",
+            "DueDate": "2024-12-16T17:00:00Z"
+        },
+        {
+            "Title": "Parking permit application for disabled resident",
+            "Description": "Application for disabled parking permit including medical documentation and proof of residence. Requires review by accessibility committee and site inspection for designated parking space.",
+            "CustomerEmail": "business@example.be",
+            "Status": "New",
+            "Priority": "Normal",
+            "DomainId": "Government",
+            "EstimatedHours": 6,
+            "CreatedDate": "2024-12-09T16:45:00Z",
+            "DueDate": "2024-12-23T17:00:00Z"
+        }
+    ]
+}

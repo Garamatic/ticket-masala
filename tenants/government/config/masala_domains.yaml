@@ -1,0 +1,118 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# Ticket Masala Domain Configuration - Government Tenant
+# ═══════════════════════════════════════════════════════════════════════════
+
+domains:
+  # ════════════════════════════════════════════════════════════
+  # GOVERNMENT / MUNICIPAL SERVICES DOMAIN
+  # ════════════════════════════════════════════════════════════
+  Government:
+    display_name: "Municipal Services"
+    description: "Citizen service requests, permits, and civic engagement"
+    
+    entity_labels:
+      work_item: "Request"
+      work_container: "Department"
+      work_handler: "Case Worker"
+    
+    work_item_types:
+      - code: PERMIT_REQUEST
+        name: "Permit Request"
+        icon: "fa-file-signature"
+        color: "#8B2942"
+        default_sla_days: 30
+      - code: LICENSE_APPLICATION
+        name: "License Application"
+        icon: "fa-id-card"
+        color: "#1E3A5F"
+        default_sla_days: 21
+      - code: CITIZEN_COMPLAINT
+        name: "Citizen Complaint"
+        icon: "fa-comment-dots"
+        color: "#C9A227"
+        default_sla_days: 14
+      - code: INFORMATION_REQUEST
+        name: "Information Request"
+        icon: "fa-info-circle"
+        color: "#17a2b8"
+        default_sla_days: 7
+    
+    custom_fields:
+      - name: reference_number
+        label: "National Registry Number"
+        type: text
+        required: false
+      - name: district
+        label: "District/Commune"
+        type: select
+        options: ["Brussels", "Ixelles", "Schaerbeek", "Anderlecht", "Molenbeek"]
+        required: true
+      - name: urgency_reason
+        label: "Reason for Urgency"
+        type: text
+        required_for_priority: ["High", "Critical"]
+    
+    workflow:
+      states:
+        - code: SUBMITTED
+          name: "Submitted"
+          color: "#6c757d"
+        - code: UNDER_REVIEW
+          name: "Under Review"
+          color: "#ffc107"
+        - code: PENDING_DOCUMENTS
+          name: "Pending Documents"
+          color: "#fd7e14"
+        - code: APPROVED
+          name: "Approved"
+          color: "#28a745"
+        - code: REJECTED
+          name: "Rejected"
+          color: "#dc3545"
+        - code: COMPLETED
+          name: "Completed"
+          color: "#343a40"
+      
+      transitions:
+        SUBMITTED: [UNDER_REVIEW, REJECTED]
+        UNDER_REVIEW: [PENDING_DOCUMENTS, APPROVED, REJECTED]
+        PENDING_DOCUMENTS: [UNDER_REVIEW]
+        APPROVED: [COMPLETED]
+        REJECTED: []
+        COMPLETED: []
+    
+    ai_strategies:
+      ranking: 
+        strategy_name: "WSJF"
+        base_formula: "legal_deadline_weight * urgency"
+        multipliers:
+          - conditions:
+              - field: "type"
+                operator: "=="
+                value: "PERMIT_REQUEST"
+            value: 1.5
+      dispatching: DepartmentBased
+      estimating: RegulationComplexity
+    
+    ai_prompts:
+      summarize: "Summarize this citizen request. Identify the specific service needed and any regulatory requirements."
+    
+    integrations:
+      ingestion:
+        - type: api
+          enabled: true
+          config:
+            endpoint: "/api/v1/tickets/external"
+            source_filter: "brussels-municipal-services"
+            auth: api_key
+      
+      outbound:
+        - type: email
+          trigger: on_status_change
+          template: "citizen_notification"
+
+# Global configuration
+global:
+  default_domain: "Government"
+  allow_domain_switching: false
+  config_reload_enabled: true

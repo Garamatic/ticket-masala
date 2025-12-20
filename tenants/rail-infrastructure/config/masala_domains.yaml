@@ -1,0 +1,121 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# Ticket Masala Domain Configuration - Rail Infrastructure Tenant
+# ═══════════════════════════════════════════════════════════════════════════
+
+domains:
+  # ════════════════════════════════════════════════════════════
+  # RAIL INFRASTRUCTURE DOMAIN
+  # ════════════════════════════════════════════════════════════
+  RailInfrastructure:
+    display_name: "Rail Infrastructure Projects"
+    description: "Management of rail infrastructure maintenance and development projects"
+    
+    entity_labels:
+      work_item: "Project Task"
+      work_container: "Rail Section"
+      work_handler: "Engineer"
+    
+    work_item_types:
+      - code: INSPECTION
+        name: "Inspection Task"
+        icon: "fa-search"
+        color: "#ffc107"
+        default_sla_days: 5
+      - code: MAINTENANCE
+        name: "Maintenance Task"
+        icon: "fa-tools"
+        color: "#007bff"
+        default_sla_days: 10
+      - code: UPGRADE
+        name: "Upgrade Task"
+        icon: "fa-arrow-up"
+        color: "#28a745"
+        default_sla_days: 15
+      - code: EMERGENCY_REPAIR
+        name: "Emergency Repair"
+        icon: "fa-exclamation-triangle"
+        color: "#dc3545"
+        default_sla_days: 1
+    
+    custom_fields:
+      - name: rail_section_id
+        label: "Rail Section ID"
+        type: text
+        required: true
+      - name: inspection_date
+        label: "Inspection Date"
+        type: date
+        required: true
+      - name: issue_type
+        label: "Issue Type"
+        type: select
+        options: ["Track Damage", "Signal Failure", "Overhead Line Issue"]
+        required: true
+      - name: estimated_cost
+        label: "Estimated Cost"
+        type: number
+        required: false
+      - name: priority_level
+        label: "Priority Level"
+        type: select
+        options: ["Low", "Medium", "High"]
+        required: true
+    
+    workflow:
+      states:
+        - code: IDENTIFIED
+          name: "Identified"
+          color: "#6c757d"
+        - code: PLANNED
+          name: "Planned"
+          color: "#17a2b8"
+        - code: IN_PROGRESS
+          name: "In Progress"
+          color: "#007bff"
+        - code: COMPLETED
+          name: "Completed"
+          color: "#28a745"
+        - code: CANCELLED
+          name: "Cancelled"
+          color: "#dc3545"
+      
+      transitions:
+        IDENTIFIED: [PLANNED, CANCELLED]
+        PLANNED: [IN_PROGRESS, CANCELLED]
+        IN_PROGRESS: [COMPLETED]
+        COMPLETED: []
+        CANCELLED: []
+    
+    ai_strategies:
+      ranking: 
+        strategy_name: "CriticalityBased"
+        base_formula: "priority_level * urgency"
+        multipliers: []
+      dispatching: SectionBased
+      estimating: TaskComplexity
+    
+    ai_prompts:
+      summarize: "Summarize this rail infrastructure project task. Highlight any safety concerns or regulatory compliance issues."
+    
+    integrations:
+      ingestion:
+        - type: api
+          enabled: true
+          config:
+            endpoint: "/api/v1/tickets/external"
+            source_filter: "greenscape-rail"
+            auth: api_key
+      
+      outbound:
+        - type: webhook
+          trigger: on_status_change
+          url: "https://greenscape.com/api/job-status"
+        - type: email
+          trigger: on_quoted
+          template: "quote_ready"
+
+# Global configuration
+global:
+  default_domain: "RailInfrastructure"
+  allow_domain_switching: false
+  config_reload_enabled: true

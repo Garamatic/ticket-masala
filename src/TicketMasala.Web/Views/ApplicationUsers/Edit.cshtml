@@ -1,0 +1,133 @@
+@model TicketMasala.Web.ViewModels.ApplicationUsers.UserEditViewModel
+@using TicketMasala.Web.Utilities
+
+@{
+    ViewData["Title"] = "Edit User";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0"><i class="fas fa-user-edit me-2"></i>@ViewData["Title"]</h4>
+            </div>
+            <div class="card-body">
+                <form asp-action="Edit" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    
+                    <input type="hidden" asp-for="Id" />
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="FirstName" class="form-label">First Name</label>
+                            <input asp-for="FirstName" class="form-control" />
+                            <span asp-validation-for="FirstName" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="LastName" class="form-label">Last Name</label>
+                            <input asp-for="LastName" class="form-control" />
+                            <span asp-validation-for="LastName" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label">Email Address</label>
+                        <input asp-for="Email" class="form-control" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="UserName" class="form-label">Username</label>
+                        <input asp-for="UserName" class="form-control" />
+                        <span asp-validation-for="UserName" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Phone" class="form-label">Phone Number</label>
+                        <input asp-for="Phone" class="form-control" />
+                        <span asp-validation-for="Phone" class="text-danger"></span>
+                    </div>
+                    
+                    <hr />
+                    
+                    <div class="mb-3">
+                        <label asp-for="Role" class="form-label fw-bold">User Role</label>
+                        <select asp-for="Role" class="form-select" id="roleSelect">
+                            @foreach (var role in ViewBag.Roles as List<string> ?? new List<string>())
+                            {
+                                <option value="@role">@role</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Role" class="text-danger"></span>
+                         <div class="alert alert-warning mt-2 small">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            Changing a user's role might not automatically update their properties (e.g. converting Customer to Employee). Use with caution.
+                        </div>
+                    </div>
+
+                    <!-- Employee Specific Fields -->
+                    <div id="employeeFields" style="display: none;">
+                        <h5 class="mt-4 mb-3 border-bottom pb-2 text-primary">Employee Details</h5>
+                        <p class="text-muted small">These fields are only applicable for Employees/Admins.</p>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Team" class="form-label">Team</label>
+                                <input asp-for="Team" class="form-control" />
+                                <span asp-validation-for="Team" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Level" class="form-label">Seniority Level</label>
+                                <select asp-for="Level" class="form-select" asp-items="Html.GetEnumSelectList<EmployeeType>()">
+                                    <option value="">-- Select Level --</option>
+                                </select>
+                                <span asp-validation-for="Level" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="MaxCapacityPoints" class="form-label">Max Workload Points</label>
+                                <input asp-for="MaxCapacityPoints" class="form-control" type="number" />
+                                <span asp-validation-for="MaxCapacityPoints" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Language" class="form-label">Languages Spoken</label>
+                                <input asp-for="Language" class="form-control" />
+                                <span asp-validation-for="Language" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-warning btn-lg text-dark">Save Changes</button>
+                        <a asp-action="Index" class="btn btn-light">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        $(document).ready(function() {
+            function toggleEmployeeFields() {
+                var role = $('#roleSelect').val();
+                if (role === '@Constants.RoleEmployee' || role === '@Constants.RoleAdmin') {
+                    $('#employeeFields').slideDown();
+                } else {
+                    $('#employeeFields').slideUp();
+                }
+            }
+
+            // Initial check
+            toggleEmployeeFields();
+
+            // Check on change
+            $('#roleSelect').change(toggleEmployeeFields);
+        });
+    </script>
+}

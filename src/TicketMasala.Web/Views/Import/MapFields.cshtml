@@ -1,0 +1,64 @@
+@model List<string>
+@{
+    ViewData["Title"] = "Map CSV Fields";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">Map CSV Columns</h3>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Map the columns from your CSV file to the Ticket fields.</p>
+                    
+                    <form asp-action="ExecuteImport" method="post">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Description / Title (Required)</label>
+                            <select name="mapping[Description]" class="form-select" required>
+                                <option value="">Select Column...</option>
+                                @foreach (var header in Model)
+                                {
+                                    <option value="@header">@header</option>
+                                }
+                            </select>
+                            <div class="form-text">The main content of the ticket.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Ticket Type</label>
+                            <select name="mapping[TicketType]" class="form-select">
+                                <option value="">(Skip)</option>
+                                @foreach (var header in Model)
+                                {
+                                    <option value="@header">@header</option>
+                                }
+                            </select>
+                            <div class="form-text">Values should match: Question, Incident, Problem, Request.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Customer Email</label>
+                            <select name="mapping[CustomerEmail]" class="form-select">
+                                <option value="">(Skip)</option>
+                                @foreach (var header in Model)
+                                {
+                                    <option value="@header">@header</option>
+                                }
+                            </select>
+                            <div class="form-text">Used to link ticket to an existing customer.</div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-file-import me-2"></i> Start Import
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

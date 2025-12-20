@@ -1,0 +1,174 @@
+@using TicketMasala.Web.Models.Configuration
+@{
+    var entityLabels = ViewBag.EntityLabels as EntityLabels ?? new EntityLabels();
+    var workItemTypes = ViewBag.WorkItemTypes as List<WorkItemTypeDefinition> ?? new List<WorkItemTypeDefinition>();
+    var workItemLabel = entityLabels.WorkItem ?? "Ticket";
+    
+    ViewData["Title"] = $"Create {workItemLabel}";
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <i class="fas fa-plus-circle text-primary me-2"></i>
+            Create New @workItemLabel
+        </h1>
+        <p class="page-subtitle">Create a new @workItemLabel.ToLower() for processing</p>
+    </div>
+    <div class="page-actions">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>
+            Back to @(workItemLabel)s
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="DomainId" value="@ViewBag.DomainId" />
+            
+            <!-- Work Item Type Selector (from Domain Config) -->
+            @if (workItemTypes.Any())
+            {
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <label class="form-label">@workItemLabel Type <span class="text-danger">*</span></label>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var type in workItemTypes)
+                            {
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input visually-hidden" type="radio" 
+                                           name="WorkItemTypeCode" id="type_@type.Code" 
+                                           value="@type.Code" @(type == workItemTypes.First() ? "checked" : "") />
+                                    <label class="btn btn-outline-secondary type-selector" for="type_@type.Code" 
+                                           style="--type-color: @type.Color;">
+                                        <i class="fas @type.Icon me-2"></i>
+                                        @type.Name
+                                    </label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+            
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        <label for="Description" class="form-label">Description <span class="text-danger">*</span></label>
+                        <textarea name="Description" id="Description" class="form-control" rows="4" placeholder="Describe the @workItemLabel.ToLower()..." required></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                @if (ViewBag.IsCustomer != true)
+                {
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="CustomerId" class="form-label">Customer <span class="text-danger">*</span></label>
+                            <select name="CustomerId" id="CustomerId" class="form-select" required>
+                                <option value="">-- Select Customer --</option>
+                                @if (ViewBag.Customers != null)
+                                {
+                                    @foreach (var customer in ViewBag.Customers as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>())
+                                    {
+                                        <option value="@customer.Value">@customer.Text</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    @* Pre-populate customer ID for customer users *@
+                    <input type="hidden" name="CustomerId" value="@ViewBag.PreselectedCustomerId" />
+                }
+
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="ResponsibleId" class="form-label">Assign To (Optional)</label>
+                        <select name="ResponsibleId" id="ResponsibleId" class="form-select">
+                            <option value="">-- Unassigned --</option>
+                            @if (ViewBag.Employees != null)
+                            {
+                                @foreach (var employee in ViewBag.Employees as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>())
+                                {
+                                    <option value="@employee.Value">@employee.Text</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="ProjectGuid" class="form-label">@entityLabels.WorkContainer (Optional)</label>
+                        <select name="ProjectGuid" id="ProjectGuid" class="form-select">
+                            <option value="">-- No @entityLabels.WorkContainer --</option>
+                            @if (ViewBag.Projects != null)
+                            {
+                                @foreach (var project in ViewBag.Projects as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>())
+                                {
+                                    <option value="@project.Value">@project.Text</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="CompletionTarget" class="form-label">Target Completion Date</label>
+                        <input type="date" name="CompletionTarget" id="CompletionTarget" class="form-control" 
+                               value="@DateTime.Now.AddDays(14).ToString("yyyy-MM-dd")" />
+                    </div>
+                </div>
+            </div>
+
+            @* Custom Fields from Domain Configuration *@
+            @if (ViewBag.CustomFields != null)
+            {
+                <hr class="my-4" />
+                @await Html.PartialAsync("_CustomFieldsPartial", ViewBag.CustomFields as IEnumerable<TicketMasala.Web.Models.Configuration.CustomFieldDefinition>)
+            }
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i>
+                    Create @workItemLabel
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary ms-2">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    /* Work Item Type Selector Styles */
+    .type-selector {
+        transition: all 0.2s ease;
+        border-radius: 0.5rem;
+        padding: 0.5rem 1rem;
+    }
+    
+    .type-selector:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    input[type="radio"]:checked + .type-selector {
+        background-color: var(--type-color, #0d6efd);
+        border-color: var(--type-color, #0d6efd);
+        color: white;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+</style>

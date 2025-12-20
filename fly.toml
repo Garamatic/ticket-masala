@@ -1,0 +1,47 @@
+# fly.toml app configuration file for Ticket Masala (Default Tenant)
+#
+# For multi-tenant deployment on Fly.io, create separate apps for each tenant:
+# - ticket-masala (default/IT helpdesk)
+# - ticket-masala-government 
+# - ticket-masala-healthcare
+# - ticket-masala-helpdesk
+# - ticket-masala-landscaping
+#
+# Each tenant app uses the same Docker image but different environment variables
+# and volumes for complete isolation.
+#
+
+app = 'ticket-masala'
+primary_region = 'ord'
+
+[build]
+  dockerfile = 'Dockerfile'
+
+[env]
+  ASPNETCORE_ENVIRONMENT = 'Production'
+  ASPNETCORE_URLS = 'http://+:8080'
+  MASALA_CONFIG_PATH = '/app/tenants/default/config'
+  ConnectionStrings__DefaultConnection = 'Data Source=/app/tenants/default/data/masala.db;Cache=Shared;Mode=ReadWriteCreate'
+
+[[mounts]]
+  source = 'ticket_data'
+  destination = '/app/tenants/default/data'
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+  [[http_service.checks]]
+    interval = '15s'
+    timeout = '2s'
+    grace_period = '30s'
+    path = '/health'
+
+[[vm]]
+  memory = '2gb'
+  cpu_kind = 'shared'
+  cpus = 1

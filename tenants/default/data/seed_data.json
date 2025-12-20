@@ -1,0 +1,524 @@
+{
+    "Admins": [
+        {
+            "UserName": "admin@ticketmasala.com",
+            "Email": "admin@ticketmasala.com",
+            "FirstName": "John",
+            "LastName": "Administrator",
+            "Phone": "+1-555-0100",
+            "Team": "Management",
+            "Level": "Admin"
+        },
+        {
+            "UserName": "sarah.admin@ticketmasala.com",
+            "Email": "sarah.admin@ticketmasala.com",
+            "FirstName": "Sarah",
+            "LastName": "Wilson",
+            "Phone": "+1-555-0101",
+            "Team": "Management",
+            "Level": "CEO"
+        }
+    ],
+    "Employees": [
+        {
+            "UserName": "mike.pm@ticketmasala.com",
+            "Email": "mike.pm@ticketmasala.com",
+            "FirstName": "Mike",
+            "LastName": "Johnson",
+            "Phone": "+1-555-0200",
+            "Team": "Project Management",
+            "Level": "ProjectManager",
+            "Language": "EN",
+            "Specializations": "[\"Project Management\",\"Agile\",\"Risk Management\"]",
+            "MaxCapacityPoints": 50,
+            "Region": "North America"
+        },
+        {
+            "UserName": "lisa.pm@ticketmasala.com",
+            "Email": "lisa.pm@ticketmasala.com",
+            "FirstName": "Lisa",
+            "LastName": "Chen",
+            "Phone": "+1-555-0201",
+            "Team": "Project Management",
+            "Level": "ProjectManager",
+            "Language": "EN,ZH",
+            "Specializations": "[\"Project Management\",\"DevOps\",\"Infrastructure\"]",
+            "MaxCapacityPoints": 45,
+            "Region": "Asia-Pacific"
+        },
+        {
+            "UserName": "david.support@ticketmasala.com",
+            "Email": "david.support@ticketmasala.com",
+            "FirstName": "David",
+            "LastName": "Martinez",
+            "Phone": "+1-555-0300",
+            "Team": "Technical Support",
+            "Level": "Support",
+            "Language": "EN,ES",
+            "Specializations": "[\"Hardware Support\",\"Network Troubleshooting\",\"System Outage\"]",
+            "MaxCapacityPoints": 40,
+            "Region": "North America"
+        },
+        {
+            "UserName": "claude.support@ticketmasala.com",
+            "Email": "claude.support@ticketmasala.com",
+            "FirstName": "Claude",
+            "LastName": "Dubois",
+            "Phone": "+32-555-0400",
+            "Team": "European Support",
+            "Level": "Support",
+            "Language": "FR,EN",
+            "Specializations": "[\"Software Troubleshooting\",\"Refund Request\",\"Tax Processing\"]",
+            "MaxCapacityPoints": 45,
+            "Region": "Europe"
+        },
+        {
+            "UserName": "pieter.support@ticketmasala.com",
+            "Email": "pieter.support@ticketmasala.com",
+            "FirstName": "Pieter",
+            "LastName": "Vandenberg",
+            "Phone": "+31-555-0500",
+            "Team": "Benelux Support",
+            "Level": "Support",
+            "Language": "NL,EN,FR",
+            "Specializations": "[\"Project Management\",\"Agile\",\"Infrastructure\"]",
+            "MaxCapacityPoints": 42,
+            "Region": "Europe"
+        },
+        {
+            "UserName": "emma.support@ticketmasala.com",
+            "Email": "emma.support@ticketmasala.com",
+            "FirstName": "Emma",
+            "LastName": "Taylor",
+            "Phone": "+1-555-0301",
+            "Team": "Technical Support",
+            "Level": "Support",
+            "Language": "EN,FR",
+            "Specializations": "[\"Software Troubleshooting\",\"Bug Triage\",\"System Outage\"]",
+            "MaxCapacityPoints": 35,
+            "Region": "Europe"
+        },
+        {
+            "UserName": "robert.finance@ticketmasala.com",
+            "Email": "robert.finance@ticketmasala.com",
+            "FirstName": "Robert",
+            "LastName": "Anderson",
+            "Phone": "+1-555-0400",
+            "Team": "Finance",
+            "Level": "Finance",
+            "Language": "EN",
+            "Specializations": "[\"Payroll\",\"Tax Processing\",\"Refund Request\"]",
+            "MaxCapacityPoints": 30,
+            "Region": "North America"
+        }
+    ],
+    "Customers": [
+        {
+            "UserName": "alice.customer@example.com",
+            "Email": "alice.customer@example.com",
+            "FirstName": "Alice",
+            "LastName": "Smith",
+            "Phone": "+1-555-1000",
+            "Code": "CUST001"
+        },
+        {
+            "UserName": "bob.jones@example.com",
+            "Email": "bob.jones@example.com",
+            "FirstName": "Bob",
+            "LastName": "Jones",
+            "Phone": "+1-555-1001",
+            "Code": "CUST002"
+        },
+        {
+            "UserName": "carol.white@techcorp.com",
+            "Email": "carol.white@techcorp.com",
+            "FirstName": "Carol",
+            "LastName": "White",
+            "Phone": "+1-555-1002",
+            "Code": "CUST003"
+        },
+        {
+            "UserName": "daniel.brown@startup.io",
+            "Email": "daniel.brown@startup.io",
+            "FirstName": "Daniel",
+            "LastName": "Brown",
+            "Phone": "+1-555-1003",
+            "Code": "CUST004"
+        },
+        {
+            "UserName": "emily.davis@enterprise.net",
+            "Email": "emily.davis@enterprise.net",
+            "FirstName": "Emily",
+            "LastName": "Davis",
+            "Phone": "+1-555-1004",
+            "Code": "CUST005"
+        }
+    ],
+    "WorkContainers": [
+        {
+            "Name": "Website Redesign",
+            "Description": "Complete redesign of the company website with modern UI/UX",
+            "Status": "InProgress",
+            "CustomerEmail": "alice.customer@example.com",
+            "ProjectManagerEmail": "mike.pm@ticketmasala.com",
+            "CompletionTargetMonths": 2,
+            "WorkItems": [
+                {
+                    "Description": "Design homepage mockup",
+                    "Status": "Completed",
+                    "Type": "Subtask",
+                    "ResponsibleEmail": "david.support@ticketmasala.com",
+                    "CompletionTargetDays": 7,
+                    "CompletionDaysAgo": 2,
+                    "Comments": [
+                        {
+                            "Body": "Initial design completed",
+                            "AuthorEmail": "david.support@ticketmasala.com",
+                            "CreatedDaysAgo": 3
+                        },
+                        {
+                            "Body": "Client approved the mockup",
+                            "AuthorEmail": "alice.customer@example.com",
+                            "CreatedDaysAgo": 2
+                        }
+                    ]
+                },
+                {
+                    "Description": "Implement responsive navigation menu",
+                    "Status": "InProgress",
+                    "Type": "Subtask",
+                    "ResponsibleEmail": "emma.support@ticketmasala.com",
+                    "CompletionTargetDays": 14,
+                    "Comments": [
+                        {
+                            "Body": "Started implementation",
+                            "AuthorEmail": "emma.support@ticketmasala.com",
+                            "CreatedDaysAgo": 1
+                        },
+                        {
+                            "Body": "Mobile view needs adjustment",
+                            "AuthorEmail": "emma.support@ticketmasala.com",
+                            "CreatedDaysAgo": 0
+                        }
+                    ]
+                },
+                {
+                    "Description": "Performance optimization needed",
+                    "Status": "Pending",
+                    "Type": "ProjectRequest",
+                    "CompletionTargetDays": 30
+                }
+            ]
+        },
+        {
+            "Name": "Mobile App Development",
+            "Description": "Develop iOS and Android mobile applications for customer portal",
+            "Status": "InProgress",
+            "CustomerEmail": "carol.white@techcorp.com",
+            "ProjectManagerEmail": "lisa.pm@ticketmasala.com",
+            "CompletionTargetMonths": 4,
+            "WorkItems": [
+                {
+                    "Description": "Setup authentication system",
+                    "Status": "Assigned",
+                    "Type": "Subtask",
+                    "ResponsibleEmail": "david.support@ticketmasala.com",
+                    "CompletionTargetDays": 21,
+                    "Comments": [
+                        {
+                            "Body": "Analyzing requirements",
+                            "AuthorEmail": "david.support@ticketmasala.com",
+                            "CreatedDaysAgo": 0
+                        }
+                    ]
+                },
+                {
+                    "Description": "Bug: Payment gateway integration fails",
+                    "Status": "InProgress",
+                    "Type": "Subtask",
+                    "ResponsibleEmail": "emma.support@ticketmasala.com",
+                    "CompletionTargetDays": 3,
+                    "Comments": [
+                        {
+                            "Body": "Issue reproduced",
+                            "AuthorEmail": "emma.support@ticketmasala.com",
+                            "CreatedDaysAgo": 0
+                        },
+                        {
+                            "Body": "Working on fix",
+                            "AuthorEmail": "emma.support@ticketmasala.com",
+                            "CreatedDaysAgo": 0
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Name": "Cloud Migration",
+            "Description": "Migrate on-premise infrastructure to AWS cloud",
+            "Status": "Pending",
+            "CustomerEmail": "daniel.brown@startup.io",
+            "ProjectManagerEmail": "mike.pm@ticketmasala.com",
+            "CompletionTargetMonths": 6
+        },
+        {
+            "Name": "CRM Integration",
+            "Description": "Integrate Salesforce CRM with internal systems",
+            "Status": "Completed",
+            "CustomerEmail": "alice.customer@example.com",
+            "ProjectManagerEmail": "lisa.pm@ticketmasala.com",
+            "CompletionTargetMonths": -1,
+            "CompletedDaysAgo": 5
+        }
+    ],
+    "UnassignedWorkItems": [
+        {
+            "Description": "Laptop screen is flickering intermittently",
+            "Status": "Pending",
+            "Type": "ProjectRequest",
+            "CustomerEmail": "alice.customer@example.com",
+            "CompletionTargetDays": 2,
+            "Comments": [
+                {
+                    "Body": "Issue started yesterday",
+                    "AuthorEmail": "alice.customer@example.com"
+                }
+            ],
+            "EstimatedEffortPoints": 3,
+            "PriorityScore": 45.0,
+            "GerdaTags": "Hardware"
+        },
+        {
+            "Description": "Printer not responding to print jobs",
+            "Status": "Pending",
+            "Type": "ProjectRequest",
+            "CustomerEmail": "bob.jones@example.com",
+            "CompletionTargetDays": 1,
+            "Comments": [
+                {
+                    "Body": "Urgent - affects entire department",
+                    "AuthorEmail": "bob.jones@example.com"
+                }
+            ],
+            "EstimatedEffortPoints": 2,
+            "PriorityScore": 65.0,
+            "GerdaTags": "Hardware,Urgent"
+        },
+        {
+            "Description": "Need replacement keyboard - keys are stuck",
+            "Status": "Pending",
+            "Type": "ProjectRequest",
+            "CustomerEmail": "carol.white@techcorp.com",
+            "CompletionTargetDays": 3,
+            "EstimatedEffortPoints": 1,
+            "PriorityScore": 25.0,
+            "GerdaTags": "Hardware"
+        },
+        {
+            "Description": "Cannot connect to VPN from home office",
+            "Status": "Pending",
+            "Type": "ProjectRequest",
+            "CustomerEmail": "daniel.brown@startup.io",
+            "CompletionTargetDays": 1,
+            "Comments": [
+                {
+                    "Body": "Error message: Connection timeout",
+                    "AuthorEmail": "daniel.brown@startup.io"
+                }
+            ],
+            "EstimatedEffortPoints": 5,
+            "PriorityScore": 55.0,
+            "GerdaTags": "Network"
+        },
+        {
+            "Description": "Slow internet connection in conference room B",
+            "Status": "Pending",
+            "Type": "ProjectRequest",
+            "CustomerEmail": "emily.davis@enterprise.net",
+            "CompletionTargetDays": 2,
+            "Comments": [
+                {
+                    "Body": "Speed test shows 1 Mbps instead of 100 Mbps",
+                    "AuthorEmail": "emily.davis@enterprise.net"
+                }
+            ],
+            "EstimatedEffortPoints": 3,
+            "PriorityScore": 40.0,
+            "GerdaTags": "Network"
+        },
+        {
+            "Description": "Application crashes when opening large files",
+            "Status": "Pending",
+            "Type": "ProjectRequest",
+            "CustomerEmail": "alice.customer@example.com",
+            "CompletionTargetDays": 3,
+            "Comments": [
+                {
+                    "Body": "Happens with files over 50MB",
+                    "AuthorEmail": "alice.customer@example.com"
+                }
+            ],
+            "EstimatedEffortPoints": 8,
+            "PriorityScore": 50.0,
+            "GerdaTags": "Software,Bug"
+        },
+        {
+            "Description": "Email client not syncing with server",
+            "Status": "Pending",
+            "Type": "ProjectRequest",
+            "CustomerEmail": "bob.jones@example.com",
+            "CompletionTargetDays": 1,
+            "Comments": [
+                {
+                    "Body": "Critical - missing important emails",
+                    "AuthorEmail": "bob.jones@example.com"
+                }
+            ],
+            "EstimatedEffortPoints": 5,
+            "PriorityScore": 75.0,
+            "GerdaTags": "Software,Critical"
+        },
+        {
+            "Description": "Software update fails with error 0x80070005",
+            "Status": "Pending",
+            "Type": "ProjectRequest",
+            "CustomerEmail": "carol.white@techcorp.com",
+            "CompletionTargetDays": 2,
+            "Comments": [
+                {
+                    "Body": "Tried restarting multiple times",
+                    "AuthorEmail": "carol.white@techcorp.com"
+                }
+            ],
+            "EstimatedEffortPoints": 3,
+            "PriorityScore": 35.0,
+            "GerdaTags": "Software"
+        },
+        {
+            "Description": "Forgot password for HR portal - need urgent reset",
+            "Status": "Pending",
+            "Type": "ProjectRequest",
+            "CustomerEmail": "daniel.brown@startup.io",
+            "CompletionTargetDays": 1,
+            "Comments": [
+                {
+                    "Body": "Need to submit timesheet today",
+                    "AuthorEmail": "daniel.brown@startup.io"
+                }
+            ],
+            "EstimatedEffortPoints": 1,
+            "PriorityScore": 60.0,
+            "GerdaTags": "Password"
+        },
+        {
+            "Description": "Account locked after multiple failed login attempts",
+            "Status": "Pending",
+            "Type": "ProjectRequest",
+            "CustomerEmail": "emily.davis@enterprise.net",
+            "CompletionTargetDays": 1,
+            "EstimatedEffortPoints": 1,
+            "PriorityScore": 70.0,
+            "GerdaTags": "Password,Locked"
+        },
+        {
+            "Description": "Incorrect tax deduction on last paycheck",
+            "Status": "Pending",
+            "Type": "ProjectRequest",
+            "CustomerEmail": "alice.customer@example.com",
+            "CompletionTargetDays": 5,
+            "Comments": [
+                {
+                    "Body": "Deducted 30% instead of 25%",
+                    "AuthorEmail": "alice.customer@example.com"
+                }
+            ],
+            "EstimatedEffortPoints": 5,
+            "PriorityScore": 55.0,
+            "GerdaTags": "Payroll,Tax"
+        },
+        {
+            "Description": "Need copy of W2 form from 2023",
+            "Status": "Pending",
+            "Type": "ProjectRequest",
+            "CustomerEmail": "bob.jones@example.com",
+            "CompletionTargetDays": 7,
+            "EstimatedEffortPoints": 2,
+            "PriorityScore": 30.0,
+            "GerdaTags": "Payroll,Tax"
+        },
+        {
+            "Description": "Request refund for cancelled subscription",
+            "Status": "Pending",
+            "Type": "ProjectRequest",
+            "CustomerEmail": "carol.white@techcorp.com",
+            "CompletionTargetDays": 10,
+            "Comments": [
+                {
+                    "Body": "Cancelled on Nov 15 but charged on Dec 1",
+                    "AuthorEmail": "carol.white@techcorp.com"
+                }
+            ],
+            "EstimatedEffortPoints": 3,
+            "PriorityScore": 40.0,
+            "GerdaTags": "Refund"
+        },
+        {
+            "Description": "Setup continuous deployment pipeline for new project",
+            "Status": "Pending",
+            "Type": "ProjectRequest",
+            "CustomerEmail": "daniel.brown@startup.io",
+            "CompletionTargetDays": 14,
+            "EstimatedEffortPoints": 13,
+            "PriorityScore": 45.0,
+            "GerdaTags": "DevOps"
+        }
+    ],
+    "Tickets": [
+        {
+            "ticket_id": "IT-001",
+            "issue": "Cannot connect to VPN",
+            "priority": "High",
+            "status": "Open",
+            "assigned_to": "John Doe",
+            "created_at": "2025-12-01"
+        },
+        {
+            "ticket_id": "IT-002",
+            "issue": "Email not syncing",
+            "priority": "Medium",
+            "status": "In Progress",
+            "assigned_to": "Jane Smith",
+            "created_at": "2025-12-05"
+        },
+        {
+            "project_id": "DEV-001",
+            "description": "Develop a custom CRM solution for client X",
+            "status": "Planning",
+            "lead_developer": "Alice Brown",
+            "start_date": "2025-12-10"
+        },
+        {
+            "project_id": "DEV-002",
+            "description": "Migrate legacy system to cloud infrastructure",
+            "status": "In Progress",
+            "lead_developer": "Bob Green",
+            "start_date": "2025-11-20"
+        },
+        {
+            "consultancy_id": "CONS-001",
+            "client": "Startup Y",
+            "topic": "Agile coaching and process improvement",
+            "status": "Scheduled",
+            "consultant": "Eve White",
+            "date": "2025-12-15"
+        },
+        {
+            "consultancy_id": "CONS-002",
+            "client": "SME Z",
+            "topic": "Technical architecture review",
+            "status": "Completed",
+            "consultant": "Charlie Black",
+            "date": "2025-11-30"
+        }
+    ]
+}

@@ -1,0 +1,87 @@
+@model List<TicketMasala.Web.ViewModels.Customers.CustomerListViewModel>
+@using TicketMasala.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> Localizer
+
+@{
+    ViewData["Title"] = Localizer["Customers: Overview"];
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div class="mb-3 d-flex justify-content-between align-items-center">
+    <div class="col-md-4">
+        <input type="text" id="customerSearch" class="form-control" placeholder="@Localizer["Search customers..."]">
+    </div>
+    <div class="col-md-3">
+        <select id="roleFilter" class="form-select">
+            <option value="">@Localizer["All Roles"]</option>
+            <option value="Customer">Customer</option>
+            <option value="Admin">Admin</option>
+            <option value="ProjectManager">ProjectManager</option>
+            <option value="Support">Support</option>
+            <option value="Finance">Finance</option>
+            <option value="CEO">CEO</option>
+        </select>
+    </div>
+</div>
+
+<table class="table" id="customerTable">
+    <thead>
+        <tr>
+            <th>@Localizer["First Name"]</th>
+            <th>@Localizer["Last Name"]</th>
+            <th>@Localizer["Email"]</th>
+            <th>@Localizer["Role"]</th>
+            <th>@Localizer["Projects"]</th>
+            <th>@Localizer["Actions"]</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var customer in Model ?? new List<TicketMasala.Web.ViewModels.Customers.CustomerListViewModel>())
+        {
+            <tr class="customer-row" data-role="@customer.Role">
+                <td>@customer.FirstName</td>
+                <td>@customer.LastName</td>
+                <td>@customer.Email</td>
+                <td>
+                    <span class="badge @(customer.Role == "Customer" ? "bg-secondary" : "bg-primary")">
+                        @customer.Role
+                    </span>
+                </td>
+                <td>@customer.ProjectCount</td>
+                <td>
+                    <a asp-action="Detail" asp-route-id="@customer.Id" class="btn btn-info btn-sm">@Localizer["Details"]</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('customerSearch');
+            const roleFilter = document.getElementById('roleFilter');
+            const rows = document.querySelectorAll('.customer-row');
+
+            function filterCustomers() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const selectedRole = roleFilter.value;
+
+                rows.forEach(row => {
+                    const text = row.innerText.toLowerCase();
+                    const role = row.getAttribute('data-role');
+                    
+                    const matchesSearch = text.includes(searchTerm);
+                    const matchesRole = !selectedRole || role === selectedRole;
+
+                    row.style.display = matchesSearch && matchesRole ? '' : 'none';
+                });
+            }
+
+            searchInput.addEventListener('input', filterCustomers);
+            roleFilter.addEventListener('change', filterCustomers);
+        });
+    </script>
+}

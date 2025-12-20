@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="Welcome to Ticket Masala" xml:space="preserve">
+    <value>Welkom bij Ticket Masala</value>
+  </data>
+  <data name="Your all-in-one project and ticket management solution" xml:space="preserve">
+    <value>Uw alles-in-één oplossing voor project- en ticketbeheer</value>
+  </data>
+</root>

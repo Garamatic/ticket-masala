@@ -1,0 +1,82 @@
+/* ============================================
+   Science Project Theme
+   Medical Green/Blue Theme
+   ============================================ */
+
+:root {
+    /* Science Theme */
+    --primary: #059669;
+    --primary-dark: #047857;
+    --primary-light: #10B981;
+    --secondary: #0F766E;
+    --accent: #0EA5E9;
+    --accent-light: #38BDF8;
+
+    /* Neutrals */
+    --text: #064E3B;
+    --text-light: #065F46;
+    --text-muted: #6B7280;
+    --bg: #F0FDF4;
+    --bg-alt: #ECFDF5;
+    --white: #ffffff;
+
+    /* Effects */
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+    --radius: 8px;
+    --transition: all 0.25s ease;
+}
+
+/* Override primary colors */
+.btn-primary {
+    background-color: var(--primary) !important;
+    border-color: var(--primary) !important;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark) !important;
+    border-color: var(--primary-dark) !important;
+}
+
+.navbar-brand {
+    color: var(--primary) !important;
+}
+
+.nav-link.active {
+    color: var(--primary) !important;
+}
+
+/* Medical accent colors */
+.btn-info {
+    background-color: var(--accent) !important;
+    border-color: var(--accent) !important;
+}
+
+.btn-info:hover {
+    background-color: #0284C7 !important;
+    border-color: #0284C7 !important;
+}
+
+/* Status badges */
+.badge-primary {
+    background-color: var(--primary) !important;
+}
+
+.badge-success {
+    background-color: var(--primary) !important;
+}
+
+.badge-info {
+    background-color: var(--accent) !important;
+}
+
+/* Science-specific styling */
+.card {
+    border-radius: var(--radius) !important;
+    border: 1px solid #D1FAE5 !important;
+}
+
+.card-header {
+    background-color: #ECFDF5 !important;
+    border-bottom: 1px solid #D1FAE5 !important;
+}

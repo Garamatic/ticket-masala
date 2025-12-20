@@ -1,0 +1,75 @@
+@model TicketMasala.Web.ViewModels.Customers.CustomerEditViewModel
+@using TicketMasala.Web.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> Localizer
+
+@{
+    ViewData["Title"] = Localizer["Edit Customer"];
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <i class="fas fa-user-edit text-primary me-2"></i>
+            @Localizer["Edit Customer"]
+        </h1>
+        <p class="page-subtitle">@Localizer["Update customer information"]</p>
+    </div>
+    <div class="page-actions">
+        <a asp-action="Detail" asp-route-id="@Model.Id" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>@Localizer["Back to Details"]
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form asp-action="Edit" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="FirstName" class="form-label"></label>
+                    <input asp-for="FirstName" class="form-control" />
+                    <span asp-validation-for="FirstName" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="LastName" class="form-label"></label>
+                    <input asp-for="LastName" class="form-control" />
+                    <span asp-validation-for="LastName" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" type="email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="PhoneNumber" class="form-label"></label>
+                    <input asp-for="PhoneNumber" type="tel" class="form-control" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i>@Localizer["Save Changes"]
+                </button>
+                <a asp-action="Detail" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+                    @Localizer["Cancel"]
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

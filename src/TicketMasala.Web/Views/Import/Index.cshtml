@@ -1,0 +1,40 @@
+@{
+    ViewData["Title"] = "Import Tickets";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">Import Tickets from CSV</h3>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Upload a CSV or Excel file to import tickets. The file should contain headers.</p>
+                    
+                    <form asp-action="Upload" method="post" enctype="multipart/form-data">
+                        <div class="mb-4">
+                            <label for="file" class="form-label">Select File (CSV, XLSX)</label>
+                            <input type="file" class="form-control" id="file" name="file" accept=".csv, .xlsx, .xls" required>
+                        </div>
+                        
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary">
+                                Next: Map Fields <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <h5>Instructions</h5>
+                <ul>
+                    <li>File must be in CSV or Excel (XLSX) format.</li>
+                    <li>First row must contain column headers.</li>
+                    <li>Supported fields for mapping: Description, Ticket Type, Customer Email.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

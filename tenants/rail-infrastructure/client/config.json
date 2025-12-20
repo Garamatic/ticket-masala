@@ -1,0 +1,136 @@
+{
+    "client_config": {
+        "company": {
+            "name": "Rail Infrastructure Management",
+            "slogan": "Keeping Your Network on Track",
+            "description": "Professional rail infrastructure services ensuring safety and efficiency. From inspections to upgrades, we keep your network on track.",
+            "logoIcon": "fa-train",
+            "foundedYear": 2005
+        },
+        "contact": {
+            "email": "info@railinfra.com",
+            "phone": "+1 555 RAIL (7245)",
+            "address": "456 Rail Yard, Train City, CA 90210",
+            "social": {
+                "facebook": "https://facebook.com/railinfrastructure",
+                "twitter": "https://twitter.com/railinfra"
+            }
+        },
+        "theme": {
+            "primaryColor": "#2563EB",
+            "primaryDark": "#1E40AF",
+            "primaryLight": "#3B82F6",
+            "secondaryColor": "#374151",
+            "accentColor": "#F59E0B",
+            "accentLight": "#FBBF24"
+        },
+        "services": [
+            {
+                "id": "inspections",
+                "icon": "fas fa-eye",
+                "title": "Rail Inspections",
+                "description": "Comprehensive inspections to ensure track and train safety."
+            },
+            {
+                "id": "maintenance",
+                "icon": "fas fa-wrench",
+                "title": "Maintenance",
+                "description": "Regular maintenance services for tracks, signals, and structures."
+            },
+            {
+                "id": "upgrades",
+                "icon": "fas fa-arrow-up",
+                "title": "System Upgrades",
+                "description": "Upgrading rail systems for improved performance and safety."
+            },
+            {
+                "id": "consultation",
+                "icon": "fas fa-comments",
+                "title": "Consultation",
+                "description": "Expert advice on rail infrastructure planning and improvements."
+            }
+        ],
+        "projects": [
+            {
+                "title": "High-Speed Rail Link",
+                "description": "Construction of a new high-speed rail link reducing travel time by 50%.",
+                "location": "Central Valley to Bay Area",
+                "image": "assets/high-speed-rail.png"
+            },
+            {
+                "title": "Urban Transit Upgrade",
+                "description": "Upgraded urban transit rail with modern signaling and safety systems.",
+                "location": "Downtown Metropolis",
+                "image": "assets/urban-transit.png"
+            },
+            {
+                "title": "Freight Corridor Expansion",
+                "description": "Expanded freight corridor to accommodate larger trains and increase capacity.",
+                "location": "Midwest Freight Hub",
+                "image": "assets/freight-corridor.png"
+            },
+            {
+                "title": "Rail Bridge Reconstruction",
+                "description": "Reconstructed rail bridge using advanced materials for enhanced durability.",
+                "location": "Riverdale",
+                "image": "assets/rail-bridge.png"
+            }
+        ],
+        "form": {
+            "title": "Request Rail Infrastructure Services",
+            "submitButtonText": "Get Quote",
+            "projectTypes": [
+                {
+                    "value": "rail-inspection",
+                    "label": "Rail Inspection"
+                },
+                {
+                    "value": "track-maintenance",
+                    "label": "Track Maintenance"
+                },
+                {
+                    "value": "signal-upgrade",
+                    "label": "Signal Upgrade"
+                },
+                {
+                    "value": "bridge-inspection",
+                    "label": "Bridge Inspection"
+                },
+                {
+                    "value": "consultation-service",
+                    "label": "Consultation Service"
+                }
+            ]
+        }
+    },
+    "masala_config": {
+        "endpoint": "/api/v1/tickets/external",
+        "sourceSite": "rail-infra-management",
+        "auth": {
+            "apiKey": "public-client-key",
+            "method": "Bearer"
+        },
+        "retryPolicy": {
+            "maxRetries": 3,
+            "delayMs": 1000
+        }
+    },
+    "gerda_config": {
+        "domain": "Rail Infrastructure",
+        "validationRules": {
+            "customerEmail": {
+                "required": true,
+                "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+            },
+            "description": {
+                "required": true,
+                "minLength": 20
+            }
+        },
+        "workflow": {
+            "defaultPriority": "Normal",
+            "autoAssign": true,
+            "requireApproval": false
+        }
+    }
+}

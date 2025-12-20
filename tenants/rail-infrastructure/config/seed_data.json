@@ -1,0 +1,153 @@
+{
+    "Admins": [
+        {
+            "UserName": "admin@greenscape.com",
+            "Email": "admin@greenscape.com",
+            "FirstName": "Robert",
+            "LastName": "Green",
+            "Phone": "+15554733601",
+            "Code": "ADM001"
+        }
+    ],
+    "Employees": [
+        {
+            "UserName": "design@greenscape.com",
+            "Email": "design@greenscape.com",
+            "FirstName": "Lisa",
+            "LastName": "Designer",
+            "Phone": "+15554733602",
+            "Team": "Design Team",
+            "Level": "Designer",
+            "Language": "en",
+            "Specializations": "Landscape Design",
+            "MaxCapacityPoints": 25,
+            "Region": "West Coast"
+        },
+        {
+            "UserName": "crew@greenscape.com",
+            "Email": "crew@greenscape.com",
+            "FirstName": "Carlos",
+            "LastName": "Martinez",
+            "Phone": "+15554733603",
+            "Team": "Installation Crew",
+            "Level": "Technician",
+            "Language": "en",
+            "Specializations": "Installation",
+            "MaxCapacityPoints": 35,
+            "Region": "West Coast"
+        },
+        {
+            "UserName": "maintenance@greenscape.com",
+            "Email": "maintenance@greenscape.com",
+            "FirstName": "Maria",
+            "LastName": "Gardener",
+            "Phone": "+15554733604",
+            "Team": "Maintenance Team",
+            "Level": "Specialist",
+            "Language": "en",
+            "Specializations": "Garden Maintenance",
+            "MaxCapacityPoints": 30,
+            "Region": "West Coast"
+        }
+    ],
+    "Customers": [
+        {
+            "UserName": "homeowner@example.com",
+            "Email": "homeowner@example.com",
+            "FirstName": "Jennifer",
+            "LastName": "Wilson",
+            "Phone": "+15554733605",
+            "Code": "HOME001"
+        },
+        {
+            "UserName": "business@example.com",
+            "Email": "business@example.com",
+            "FirstName": "David",
+            "LastName": "Corporate",
+            "Phone": "+15554733606",
+            "Code": "BIZ001"
+        }
+    ],
+    "WorkContainers": [
+        {
+            "Name": "Residential Garden Makeover",
+            "Description": "Complete backyard transformation for Wilson family home",
+            "CustomerEmail": "homeowner@example.com",
+            "Status": "InProgress",
+            "Priority": "Normal",
+            "DomainId": "Landscaping",
+            "EstimatedHours": 40,
+            "ActualHours": 25,
+            "CreatedDate": "2024-11-15T09:00:00Z",
+            "DueDate": "2024-12-20T17:00:00Z"
+        },
+        {
+            "Name": "Corporate Campus Landscaping",
+            "Description": "Design and install landscaping for new office complex",
+            "CustomerEmail": "business@example.com",
+            "Status": "Planning",
+            "Priority": "High",
+            "DomainId": "Landscaping",
+            "EstimatedHours": 120,
+            "ActualHours": 15,
+            "CreatedDate": "2024-11-20T10:00:00Z",
+            "DueDate": "2025-01-15T17:00:00Z"
+        }
+    ],
+    "UnassignedWorkItems": [
+        {
+            "Title": "Design consultation for front yard renovation",
+            "Description": "Client wants to replace existing lawn with drought-resistant native plants and add decorative stone pathways. Property is approximately 800 sq ft front yard with southern exposure.",
+            "CustomerEmail": "homeowner@example.com",
+            "Status": "New",
+            "Priority": "Normal",
+            "DomainId": "Landscaping",
+            "EstimatedHours": 8,
+            "CreatedDate": "2024-12-10T14:30:00Z",
+            "DueDate": "2024-12-18T17:00:00Z"
+        },
+        {
+            "Title": "Irrigation system repair - Zone 3 not working",
+            "Description": "Customer reports that irrigation zone 3 in the backyard is not activating. Other zones working normally. Installed system 2 years ago, may be valve or wiring issue.",
+            "CustomerEmail": "homeowner@example.com",
+            "Status": "New",
+            "Priority": "High",
+            "DomainId": "Landscaping",
+            "EstimatedHours": 4,
+            "CreatedDate": "2024-12-12T08:15:00Z",
+            "DueDate": "2024-12-14T17:00:00Z"
+        },
+        {
+            "Title": "Seasonal cleanup and pruning service",
+            "Description": "Annual winter cleanup including leaf removal, pruning of deciduous trees and shrubs, mulch refresh, and preparation for spring growth. Property includes mature oak trees and rose garden.",
+            "CustomerEmail": "business@example.com",
+            "Status": "New",
+            "Priority": "Normal",
+            "DomainId": "Landscaping",
+            "EstimatedHours": 12,
+            "CreatedDate": "2024-12-11T11:00:00Z",
+            "DueDate": "2024-12-22T17:00:00Z"
+        },
+        {
+            "Title": "Install new flower beds with seasonal plantings",
+            "Description": "Create three new flower beds along the building entrance with colorful seasonal flowers. Include soil preparation, edging installation, and initial planting with winter-hardy varieties.",
+            "CustomerEmail": "business@example.com",
+            "Status": "New",
+            "Priority": "Normal",
+            "DomainId": "Landscaping",
+            "EstimatedHours": 16,
+            "CreatedDate": "2024-12-09T16:45:00Z",
+            "DueDate": "2024-12-25T17:00:00Z"
+        }
+    ],
+    "RailInfrastructureTasks": [
+        {
+            "DomainId": "Rail Infrastructure",
+            "Task": "Track Inspection"
+        },
+        {
+            "DomainId": "Rail Infrastructure",
+            "Task": "Signal Maintenance"
+        }
+    ]
+}

@@ -1,0 +1,311 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using TicketMasala.Web.Models
+@using TicketMasala.Web
+@using Microsoft.AspNetCore.Mvc.Localization
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+
+@{
+    ViewData["Title"] = "Ticket Masala";
+    ViewData["Description"] = Localizer["Your all-in-one project and ticket management solution"];
+    ViewData["HideSidebar"] = !SignInManager.IsSignedIn(User);
+}
+
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <!-- Dashboard Header -->
+    <div class="dashboard-header text-center mb-4">
+        <h1 class="dashboard-title d-flex align-items-center justify-content-center">
+            <img src="~/images/logo.png" alt="Ticket Masala" height="48" class="me-3" />
+            @Localizer["Welcome to Ticket Masala"]
+        </h1>
+        <p class="dashboard-subtitle">
+            @Localizer["Your all-in-one project and ticket management solution"]
+        </p>
+    </div>
+    <!-- Quick Stats for Authenticated Users -->
+    <div class="stats-grid">
+        <a asp-controller="Projects" asp-action="Index" class="stat-card primary text-decoration-none transform-hover">
+            <i class="fas fa-folder-open stat-card-icon"></i>
+            <div class="stat-card-title text-white">@Localizer["Your Projects"]</div>
+            <div class="stat-card-value text-white">@(ViewBag.ProjectCount ?? 0)</div>
+            <div class="stat-card-change text-white-50">
+                <i class="fas fa-arrow-up me-1"></i> @Localizer["{0} new this week", ViewBag.NewProjectsThisWeek ?? 0]
+            </div>
+        </a>
+        
+        <a asp-controller="Ticket" asp-action="Index" class="stat-card secondary text-decoration-none transform-hover">
+            <i class="fas fa-ticket-alt stat-card-icon"></i>
+            <div class="stat-card-title text-white">@Localizer["Active Tickets"]</div>
+            <div class="stat-card-value text-white">@(ViewBag.ActiveTicketCount ?? 0)</div>
+            <div class="stat-card-change text-white-50">
+                <i class="fas fa-check me-1"></i> @Localizer["{0} completed today", ViewBag.CompletedToday ?? 0]
+            </div>
+        </a>
+        
+        @if (!User.IsInRole("Customer"))
+        {
+            <a asp-controller="Manager" asp-action="TeamDashboard" class="stat-card warning text-decoration-none transform-hover">
+                <i class="fas fa-clock stat-card-icon"></i>
+                <div class="stat-card-title text-white">@Localizer["Pending Tasks"]</div>
+                <div class="stat-card-value text-white">@(ViewBag.PendingTaskCount ?? 0)</div>
+                <div class="stat-card-change text-white-50">
+                    <i class="fas fa-exclamation-circle me-1"></i> @Localizer["{0} due soon", ViewBag.DueSoon ?? 0]
+                </div>
+            </a>
+            
+            <a asp-controller="Manager" asp-action="DispatchBacklog" class="stat-card success text-decoration-none transform-hover">
+                <i class="fas fa-chart-line stat-card-icon"></i>
+                <div class="stat-card-title text-white">@Localizer["Completion Rate"]</div>
+                <div class="stat-card-value text-white">@(ViewBag.CompletionRate ?? 0)%</div>
+                <div class="stat-card-change text-white-50">
+                    <i class="fas fa-trophy me-1"></i> @Localizer["Great progress!"]
+                </div>
+            </a>
+        }
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <a asp-controller="Projects" asp-action="NewProject" class="card h-100 text-center text-decoration-none transform-hover">
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <div class="icon-circle bg-primary-subtle text-primary mx-auto">
+                            <i class="fas fa-plus fa-2x"></i>
+                        </div>
+                    </div>
+                    <h3 class="card-title h5 text-dark">@Localizer["Create Project"]</h3>
+                    <p class="text-secondary mb-0">@Localizer["Start a new project"]</p>
+                </div>
+            </a>
+        </div>
+        
+        <div class="col-md-4">
+            <a asp-controller="Ticket" asp-action="Create" class="card h-100 text-center text-decoration-none transform-hover">
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <div class="icon-circle bg-success-subtle text-success mx-auto">
+                            <i class="fas fa-ticket-alt fa-2x"></i>
+                        </div>
+                    </div>
+                    <h3 class="card-title h5 text-dark">@Localizer["Create Ticket"]</h3>
+                    <p class="text-secondary mb-0">@Localizer["Raise a new issue"]</p>
+                </div>
+            </a>
+        </div>
+        
+        @if (User.IsInRole("Employee") || User.IsInRole("Admin"))
+        {
+            <div class="col-md-4">
+                <a asp-controller="Customer" asp-action="Index" class="card h-100 text-center text-decoration-none transform-hover">
+                    <div class="card-body p-4">
+                        <div class="mb-3">
+                            <div class="icon-circle bg-info-subtle text-info mx-auto">
+                                <i class="fas fa-users fa-2x"></i>
+                            </div>
+                        </div>
+                        <h3 class="card-title h5 text-dark">@Localizer["Manage Customers"]</h3>
+                        <p class="text-secondary mb-0">@Localizer["View client directory"]</p>
+                    </div>
+                </a>
+            </div>
+        }
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-history me-2"></i>
+                @Localizer["Recent Activity"]
+            </h3>
+        </div>
+        <div class="card-body">
+            <div class="ticket-list">
+                @if (ViewBag.RecentActivity != null)
+                {
+                    var activities = (List<TicketMasala.Web.ViewModels.Tickets.TicketViewModel>)ViewBag.RecentActivity;
+                    if (activities.Any())
+                    {
+                        foreach (var ticket in activities)
+                        {
+                            <a href="@Url.Action("Details", "Ticket", new { id = ticket.Guid })" class="text-decoration-none text-dark">
+                                <div class="ticket-item transform-hover" style="cursor: pointer;">
+                                    <div class="ticket-header">
+                                        <span class="ticket-id">#@ticket.Guid.ToString().Substring(0, 8)</span>
+                                        <span class="badge @(ticket.TicketStatus.ToString() == "Completed" ? "badge-success" : ticket.TicketStatus.ToString() == "Pending" ? "badge-pending" : "badge-in-progress")">
+                                            @ticket.TicketStatus
+                                        </span>
+                                    </div>
+                                    <div class="ticket-description">@ticket.Description</div>
+                                    <div class="ticket-footer text-secondary">
+                                        <i class="fas fa-user me-1"></i> @ticket.ResponsibleName
+                                        <i class="fas fa-clock ms-3 me-1"></i> @ticket.CreationDate.ToLocalTime().ToString("g")
+                                    </div>
+                                </div>
+                            </a>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center my-4">@Localizer["No recent activity found."]</p>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <!-- Hero Section -->
+    <div class="row align-items-center py-5 mb-5 hero-section">
+        <div class="col-lg-6 mb-5 mb-lg-0">
+            <span class="badge bg-primary-subtle text-primary mb-3 px-3 py-2 rounded-pill fw-semibold">
+                <i class="fas fa-sparkles me-2"></i> @Localizer["Introducing GERDA AI"]
+            </span>
+            <h1 class="display-3 fw-bold mb-4 text-dark lh-sm">
+                @Localizer["Stop Drowning in"] <span class="text-primary position-relative">@Localizer["Tickets"]<svg class="position-absolute w-100" style="bottom: 0; left: 0; height: 10px; z-index: -1; opacity: 0.3;" viewBox="0 0 100 10" preserveAspectRatio="none"><path d="M0 5 Q 50 10 100 5" stroke="var(--color-primary)" stroke-width="8" fill="none"/></svg></span>
+            </h1>
+            <p class="lead text-secondary mb-5 pe-lg-5" style="font-size: 1.25rem;">
+                @Localizer["Ticket Masala unifies your support tickets, projects, and team workflows into one beautiful, AI-powered platform. Ship faster, stress less."]
+            </p>
+            <div class="d-flex flex-column flex-sm-row gap-3 pe-lg-5 position-relative" style="z-index: 10;">
+                <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-primary btn-lg px-5 py-3 rounded-pill fw-bold shadow-sm transform-hover">
+                    @Localizer["Get Started Free"] <i class="fas fa-arrow-right ms-2 opacity-75"></i>
+                </a>
+                <a asp-controller="Home" asp-action="Demo" class="btn btn-outline-secondary btn-lg px-5 py-3 rounded-pill fw-semibold transform-hover">
+                    @Localizer["Live Demo"]
+                </a>
+            </div>
+            <div class="mt-4 text-muted small">
+                <i class="fas fa-check-circle text-success me-1"></i> @Localizer["No credit card required"] &nbsp;&nbsp;
+                <i class="fas fa-check-circle text-success me-1"></i> @Localizer["14-day free trial"]
+            </div>
+        </div>
+        <div class="col-lg-6 position-relative">
+            <!-- Abstract Hero Graphic -->
+            <div class="position-absolute top-0 end-0 translate-middle-y w-75 h-75 bg-primary rounded-circle opacity-10 blur-3xl" style="filter: blur(80px); z-index: -1;"></div>
+            
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-4" style="background: rgba(255,255,255,0.9); backdrop-filter: blur(10px);">
+                <div class="card-header bg-white border-0 py-3 px-4 d-flex align-items-center justify-content-between">
+                    <div class="d-flex gap-2">
+                        <div class="rounded-circle bg-danger" style="width: 10px; height: 10px;"></div>
+                        <div class="rounded-circle bg-warning" style="width: 10px; height: 10px;"></div>
+                        <div class="rounded-circle bg-success" style="width: 10px; height: 10px;"></div>
+                    </div>
+                    <div class="small fw-bold text-muted">Ticket #4922 - Urgent</div>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex gap-3 mb-4">
+                        <div class="avatar bg-primary text-white rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">JS</div>
+                        <div>
+                            <div class="fw-bold text-dark">Jane Smith</div>
+                            <div class="small text-muted">Product Manager</div>
+                            <div class="mt-2 text-dark">
+                                "We need a way to auto-assign incoming tickets based on complexity. Can GERDA handle this?"
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- AI Reply Simulation -->
+                    <div class="d-flex gap-3 bg-light rounded-3 p-3 border border-primary-subtle">
+                        <div class="avatar bg-gradient-primary text-white rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="w-100">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-bold text-primary">GERDA AI</span>
+                                <span class="badge bg-primary-subtle text-primary rounded-pill" style="font-size: 0.7rem;">INSIGHT</span>
+                            </div>
+                            <div class="small text-dark">
+                                Suggested Action: <strong class="text-success">Auto-Route to Senior Dev Team</strong>
+                                <br>
+                                <span class="text-muted">Analysis: High complexity detected. Matching skill set found in 'Core Eng'.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Floating Metrics -->
+            <div class="card border-0 shadow bg-white rounded-4 position-absolute p-3 d-none d-md-block" style="bottom: -20px; left: -20px; width: 180px;">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-success-subtle p-2 text-success">
+                        <i class="fas fa-arrow-trend-up fa-lg"></i>
+                    </div>
+                    <div>
+                        <div class="small text-muted fw-bold">Efficiency</div>
+                        <div class="h5 mb-0 fw-bold text-dark">+32%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Value Props Grid -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm hover-shadow transition-all bg-light">
+                <div class="card-body p-4 p-lg-5">
+                    <div class="mb-4">
+                        <div class="icon-circle bg-primary text-white mb-4 shadow-sm">
+                            <i class="fas fa-magic fa-2x"></i>
+                        </div>
+                    </div>
+                    <h3 class="h4 fw-bold text-dark mb-3">@Localizer["AI-Powered Triage"]</h3>
+                    <p class="text-secondary mb-0">
+                        @Localizer["Let GERDA analyze incoming tickets, estimate effort, and route them to the perfect agent instantly."]
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm hover-shadow transition-all bg-light">
+                <div class="card-body p-4 p-lg-5">
+                    <div class="mb-4">
+                        <div class="icon-circle bg-dark text-white mb-4 shadow-sm">
+                            <i class="fas fa-shield-alt fa-2x"></i>
+                        </div>
+                    </div>
+                    <h3 class="h4 fw-bold text-dark mb-3">@Localizer["Enterprise Secure"]</h3>
+                    <p class="text-secondary mb-0">
+                        @Localizer["Built with security first. Role-based access control, audit logs, and encrypted data storage keep your business safe."]
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm hover-shadow transition-all bg-light">
+                <div class="card-body p-4 p-lg-5">
+                    <div class="mb-4">
+                        <div class="icon-circle bg-info text-white mb-4 shadow-sm">
+                            <i class="fas fa-bolt fa-2x"></i>
+                        </div>
+                    </div>
+                    <h3 class="h4 fw-bold text-dark mb-3">@Localizer["Lightning Fast"]</h3>
+                    <p class="text-secondary mb-0">
+                        @Localizer["A modern SPA feel with server-side reliability. Pages load instantly so your team never breaks flow."]
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        // Add fade-in animation to cards
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('fade-in');
+                }, index * 100);
+            });
+        });
+    </script>
+}

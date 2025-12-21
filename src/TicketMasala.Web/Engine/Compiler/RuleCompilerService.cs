@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 using System.Security.Claims;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
-using TicketMasala.Domain.Entities.Configuration;
+using TicketMasala.Domain.Configuration;
 
 namespace TicketMasala.Web.Engine.Compiler;
 

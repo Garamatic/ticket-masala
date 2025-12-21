@@ -7,8 +7,6 @@ namespace TicketMasala.Web.Engine.GERDA.Estimating;
 
 using TicketMasala.Web.Engine.GERDA.Strategies;
 using TicketMasala.Web.Engine.GERDA.Configuration;
-using TicketMasala.Domain.Entities;
-using Microsoft.EntityFrameworkCore;
 
 /// <summary>
 /// E - Estimating: Complexity estimation using Fibonacci points

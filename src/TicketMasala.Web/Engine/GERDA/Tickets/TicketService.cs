@@ -2,7 +2,7 @@ using TicketMasala.Web.Engine.Compiler;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
 using TicketMasala.Web.ViewModels.Tickets;
-using TicketMasala.Domain.Entities; // ApplicationUser, Employee
+using TicketMasala.Web.Data;
 using TicketMasala.Web.ViewModels.Projects;
 using TicketMasala.Web.ViewModels.GERDA;
 using TicketMasala.Web.Repositories;
@@ -10,7 +10,6 @@ using TicketMasala.Web.Observers;
 using TicketMasala.Web.Engine.Core;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using TicketMasala.Web.Data;
 
 namespace TicketMasala.Web.Engine.GERDA.Tickets;
 

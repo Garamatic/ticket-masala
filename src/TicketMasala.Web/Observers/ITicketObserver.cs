@@ -1,6 +1,5 @@
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
-using TicketMasala.Domain.Entities; // ApplicationUser, Employee
 
 namespace TicketMasala.Web.Observers;
 

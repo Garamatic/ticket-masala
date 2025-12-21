@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web.Data;
 
 namespace TicketMasala.Web.Engine.Core;
-using TicketMasala.Web.Data;
 
 public class AuditService : IAuditService
 {

@@ -6,8 +6,6 @@ using TicketMasala.Web.ViewModels.Customers;
 using TicketMasala.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Common;
-using TicketMasala.Domain.Entities; // ApplicationUser, Employee
 
 namespace TicketMasala.Web.Controllers;
 

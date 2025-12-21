@@ -1,9 +1,8 @@
-﻿@model TicketMasala.Web.ViewModels.Tickets.TicketDetailsViewModel
+@model TicketMasala.Web.ViewModels.Tickets.TicketDetailsViewModel
 @using System.Linq
 @using TicketMasala.Web
 @using TicketMasala.Domain.Entities
 @using TicketMasala.Domain.Common
-@using TicketMasala.Domain.Entities
 @using TicketMasala.Web.ViewModels.Tickets
 
 @{
@@ -86,7 +85,7 @@
                 @if (ViewBag.CustomFields != null)
                 {
                     <div class="mt-4">
-                        @await Html.PartialAsync("_CustomFieldsDisplayPartial", ViewBag.CustomFields as IEnumerable<TicketMasala.Domain.Entities.Configuration.CustomFieldDefinition>)
+                        @await Html.PartialAsync("_CustomFieldsDisplayPartial", ViewBag.CustomFields as IEnumerable<global::TicketMasala.Domain.Configuration.CustomFieldDefinition>)
                     </div>
                 }
 

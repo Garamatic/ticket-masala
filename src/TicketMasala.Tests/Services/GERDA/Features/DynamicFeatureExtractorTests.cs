@@ -1,5 +1,5 @@
 using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Entities.Configuration;
+using TicketMasala.Domain.Configuration;
 using TicketMasala.Web.Engine.GERDA.Features;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;

@@ -2,7 +2,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
-using TicketMasala.Domain.Entities.Configuration;
+using TicketMasala.Domain.Configuration;
 using TicketMasala.Web.Engine.GERDA.Configuration;
 
 namespace TicketMasala.Web.Engine.Compiler;

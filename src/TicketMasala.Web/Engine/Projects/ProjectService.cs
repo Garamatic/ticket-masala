@@ -1,8 +1,7 @@
-using TicketMasala.Web.Data;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Web.Data;
 using TicketMasala.Web.ViewModels.Projects;
-using TicketMasala.Domain.Entities; // ApplicationUser, Employee
 using TicketMasala.Web.ViewModels.Tickets;
 using TicketMasala.Web.ViewModels.Customers;
 using TicketMasala.Web.Repositories;

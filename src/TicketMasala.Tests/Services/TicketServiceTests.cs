@@ -16,9 +16,10 @@ using Microsoft.AspNetCore.Http;
 using TicketMasala.Web;
 using System.Security.Claims;
 using TicketMasala.Web.Engine.Compiler;
+using TicketMasala.Domain.Data;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.GERDA.Configuration;
-using TicketMasala.Domain.Entities.Configuration;
+using TicketMasala.Domain.Configuration;
 
 namespace TicketMasala.Tests.Services;
 

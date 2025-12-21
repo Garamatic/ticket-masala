@@ -8,6 +8,7 @@ using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.Engine.Ingestion;
 using TicketMasala.Web.Engine.Ingestion.Background;
 using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Data;
 using TicketMasala.Web.Data;
 using Customer = TicketMasala.Domain.Entities.ApplicationUser;
 

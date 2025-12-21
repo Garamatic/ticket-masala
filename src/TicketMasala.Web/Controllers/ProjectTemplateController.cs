@@ -3,8 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
-using TicketMasala.Domain.Entities; // ApplicationUser, Employee
-using TicketMasala.Domain.Common;
 using TicketMasala.Web.Data;
 
 namespace TicketMasala.Web.Controllers;

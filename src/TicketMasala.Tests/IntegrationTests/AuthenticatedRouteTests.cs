@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TicketMasala.Web;
+using TicketMasala.Domain.Data;
 using TicketMasala.Web.Data;
 using TicketMasala.Domain.Entities;
 using Xunit;

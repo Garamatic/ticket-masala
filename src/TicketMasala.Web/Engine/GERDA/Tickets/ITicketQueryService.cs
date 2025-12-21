@@ -1,7 +1,6 @@
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
 using TicketMasala.Web.ViewModels.Tickets;
-using TicketMasala.Domain.Entities; // ApplicationUser, Employee
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace TicketMasala.Web.Engine.GERDA.Tickets;

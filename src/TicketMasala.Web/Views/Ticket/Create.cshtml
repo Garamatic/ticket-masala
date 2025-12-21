@@ -1,4 +1,4 @@
-@using TicketMasala.Domain.Entities.Configuration
+@using TicketMasala.Domain.Configuration
 @{
     var entityLabels = ViewBag.EntityLabels as EntityLabels ?? new EntityLabels();
     var workItemTypes = ViewBag.WorkItemTypes as List<WorkItemTypeDefinition> ?? new List<WorkItemTypeDefinition>();
@@ -136,7 +136,7 @@
             @if (ViewBag.CustomFields != null)
             {
                 <hr class="my-4" />
-                @await Html.PartialAsync("_CustomFieldsPartial", ViewBag.CustomFields as IEnumerable<TicketMasala.Domain.Entities.Configuration.CustomFieldDefinition>)
+                @await Html.PartialAsync("_CustomFieldsPartial", ViewBag.CustomFields as IEnumerable<global::TicketMasala.Domain.Configuration.CustomFieldDefinition>)
             }
 
             <div class="mt-4">

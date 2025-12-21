@@ -1,8 +1,6 @@
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
 using TicketMasala.Web.Data;
-using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Common; // ApplicationUser, Employee
 using Microsoft.EntityFrameworkCore;
 
 namespace TicketMasala.Web.Repositories;

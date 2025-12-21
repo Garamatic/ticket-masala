@@ -8,6 +8,7 @@ using TicketMasala.Web.Engine.GERDA.Strategies;
 using TicketMasala.Web.Engine.GERDA.Configuration;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Web;
+using TicketMasala.Domain.Data;
 using TicketMasala.Web.Data;
 
 namespace TicketMasala.Tests.Services;

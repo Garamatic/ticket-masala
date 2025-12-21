@@ -1,4 +1,4 @@
-using TicketMasala.Domain.Entities.Configuration;
+using TicketMasala.Domain.Configuration;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using TicketMasala.Web.Engine.Compiler;

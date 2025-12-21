@@ -1,6 +1,6 @@
 using System.Text.Json;
 using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
 using TicketMasala.Web.ViewModels.Api;
 
 namespace TicketMasala.Web.Extensions;

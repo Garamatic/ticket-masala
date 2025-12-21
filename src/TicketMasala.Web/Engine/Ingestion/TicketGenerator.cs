@@ -1,9 +1,7 @@
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
 using TicketMasala.Web.Engine.GERDA.Tickets;
-using TicketMasala.Domain.Common;
 using TicketMasala.Web.Data;
-using TicketMasala.Domain.Entities; // ApplicationUser
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web;

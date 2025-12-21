@@ -1,5 +1,6 @@
 using NetArchTest.Rules;
 using TicketMasala.Web.Controllers;
+using TicketMasala.Domain.Data;
 using TicketMasala.Web.Data;
 using Xunit;
 

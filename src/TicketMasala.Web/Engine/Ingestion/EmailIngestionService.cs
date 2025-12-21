@@ -1,7 +1,7 @@
 using TicketMasala.Web.AI;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
-using TicketMasala.Domain.Entities; // ApplicationUser
+using TicketMasala.Web.Engine.Core;
 using MailKit;
 using MailKit.Net.Imap;
 using MailKit.Search;

@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Asp.Versioning;
-using Asp.Versioning;
 using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.ViewModels.Api;
 using TicketMasala.Web.Repositories;

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
+using TicketMasala.Domain.Data;
 using TicketMasala.Web.Data;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;

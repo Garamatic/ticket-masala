@@ -1,8 +1,6 @@
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
 using TicketMasala.Web.Repositories;
-using TicketMasala.Domain.Common;
-using TicketMasala.Domain.Entities; // ApplicationUser, Employee
 
 namespace TicketMasala.Web.Engine.GERDA.Tickets;
 

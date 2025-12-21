@@ -1,6 +1,6 @@
 using System.Globalization;
 using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Entities.Configuration;
+using TicketMasala.Domain.Configuration;
 using TicketMasala.Web.Engine.Compiler;
 
 namespace TicketMasala.Web.Engine.GERDA.Features;

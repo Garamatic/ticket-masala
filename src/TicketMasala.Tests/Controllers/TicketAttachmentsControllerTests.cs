@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using System.Security.Claims;
 using TicketMasala.Web.Controllers;
+using TicketMasala.Domain.Data;
 using TicketMasala.Web.Data;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Engine.Core;

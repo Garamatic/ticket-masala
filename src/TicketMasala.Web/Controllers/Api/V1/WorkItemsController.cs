@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Asp.Versioning;
-using Asp.Versioning;
 using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.ViewModels.Api;
 using TicketMasala.Web.Repositories;

@@ -1,0 +1,318 @@
+/* Ticket Masala Documentation - Custom Styles */
+
+/* ==========================================
+   GOOGLE FONTS - Matching Website
+   ========================================== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700&display=swap');
+
+/* ==========================================
+   CUSTOM PROPERTIES
+   ========================================== */
+:root {
+  /* Ticket Masala Theme Colors */
+  --tm-primary: #4CAF50;
+  /* Ticket Masala Green */
+  --tm-primary-dark: #2E7D32;
+  /* Darker green */
+  --tm-primary-light: #81C784;
+  /* Lighter green */
+  --tm-secondary: #6366F1;
+  /* Indigo */
+  --tm-accent: #8B5CF6;
+  /* Purple */
+  --tm-warning: #F59E0B;
+  /* Amber */
+  --tm-success: #10B981;
+  /* Emerald */
+
+  /* Fonts - Matching website */
+  --tm-font-heading: 'Rajdhani', system-ui, sans-serif;
+  --tm-font-base: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* ==========================================
+   FONT OVERRIDES - Apply website fonts
+   ========================================== */
+.md-typeset {
+  font-family: var(--tm-font-base);
+}
+
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3,
+.md-typeset h4,
+.md-typeset h5,
+.md-typeset h6 {
+  font-family: var(--tm-font-heading);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+/* Override Material theme with Ticket Masala fonts */
+:root {
+  --md-text-font: "Inter";
+  --md-code-font: "SFMono-Regular", "Consolas", "Liberation Mono", monospace;
+}
+
+/* ==========================================
+   COLOR OVERRIDES
+   ========================================== */
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: #4CAF50;
+  --md-primary-fg-color--light: #81C784;
+  --md-primary-fg-color--dark: #2E7D32;
+  --md-accent-fg-color: #8B5CF6;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #66BB6A;
+  --md-primary-fg-color--light: #81C784;
+  --md-primary-fg-color--dark: #4CAF50;
+  --md-accent-fg-color: #A78BFA;
+}
+
+/* ==========================================
+   LOGO STYLING
+   ========================================== */
+.md-header__button.md-logo img,
+.md-logo img {
+  filter: brightness(0) invert(1);
+  display: block;
+}
+
+[data-md-color-scheme="default"] .md-header__button.md-logo img,
+[data-md-color-scheme="default"] .md-logo img {
+  filter: none;
+}
+
+/* ==========================================
+   CODE BLOCKS
+   ========================================== */
+.md-typeset code {
+  background-color: rgba(76, 175, 80, 0.1);
+  border-radius: 0.25rem;
+  padding: 0.1rem 0.3rem;
+  color: #2E7D32;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+}
+
+[data-md-color-scheme="slate"] .md-typeset code {
+  background-color: rgba(102, 187, 106, 0.15);
+  color: #81C784;
+}
+
+.md-typeset pre>code {
+  background-color: transparent;
+  padding: 0;
+}
+
+/* ==========================================
+   TABLE STYLING
+   ========================================== */
+.md-typeset table:not([class]) {
+  border: 1px solid rgba(76, 175, 80, 0.2);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.md-typeset table:not([class]) th {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(76, 175, 80, 0.05));
+  font-weight: 600;
+  color: #2E7D32;
+  font-family: var(--tm-font-heading);
+}
+
+[data-md-color-scheme="slate"] .md-typeset table:not([class]) th {
+  background: linear-gradient(135deg, rgba(102, 187, 106, 0.15), rgba(102, 187, 106, 0.08));
+  color: #81C784;
+}
+
+/* ==========================================
+   ADMONITIONS
+   ========================================== */
+.md-typeset .admonition.note,
+.md-typeset details.note {
+  border-color: #3B82F6;
+}
+
+.md-typeset .note>.admonition-title,
+.md-typeset .note>summary {
+  background-color: rgba(59, 130, 246, 0.1);
+  font-family: var(--tm-font-heading);
+}
+
+.md-typeset .admonition.tip,
+.md-typeset details.tip {
+  border-color: #4CAF50;
+}
+
+.md-typeset .tip>.admonition-title,
+.md-typeset .tip>summary {
+  background-color: rgba(76, 175, 80, 0.1);
+  font-family: var(--tm-font-heading);
+}
+
+.md-typeset .admonition.important,
+.md-typeset details.important {
+  border-color: #8B5CF6;
+}
+
+.md-typeset .important>.admonition-title,
+.md-typeset .important>summary {
+  background-color: rgba(139, 92, 246, 0.1);
+  font-family: var(--tm-font-heading);
+}
+
+.md-typeset .admonition.warning,
+.md-typeset details.warning {
+  border-color: #F59E0B;
+}
+
+.md-typeset .warning>.admonition-title,
+.md-typeset .warning>summary {
+  background-color: rgba(245, 158, 11, 0.1);
+  font-family: var(--tm-font-heading);
+}
+
+.md-typeset .admonition.caution,
+.md-typeset .admonition.danger,
+.md-typeset details.caution,
+.md-typeset details.danger {
+  border-color: #EF4444;
+}
+
+.md-typeset .caution>.admonition-title,
+.md-typeset .danger>.admonition-title,
+.md-typeset .caution>summary,
+.md-typeset .danger>summary {
+  background-color: rgba(239, 68, 68, 0.1);
+  font-family: var(--tm-font-heading);
+}
+
+/* ==========================================
+   NAVIGATION TABS
+   ========================================== */
+.md-tabs {
+  background: linear-gradient(135deg, #4CAF50, #2E7D32);
+  font-family: var(--tm-font-heading);
+}
+
+[data-md-color-scheme="slate"] .md-tabs {
+  background: linear-gradient(135deg, #66BB6A, #4CAF50);
+}
+
+/* ==========================================
+   SEARCH BOX
+   ========================================== */
+.md-search__input {
+  border-radius: 0.5rem;
+  font-family: var(--tm-font-base);
+}
+
+.md-search__input:focus {
+  box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
+}
+
+/* ==========================================
+   LINKS
+   ========================================== */
+.md-typeset a {
+  color: #4CAF50;
+  font-weight: 500;
+}
+
+.md-typeset a:hover {
+  color: #2E7D32;
+}
+
+[data-md-color-scheme="slate"] .md-typeset a {
+  color: #81C784;
+}
+
+[data-md-color-scheme="slate"] .md-typeset a:hover {
+  color: #66BB6A;
+}
+
+/* ==========================================
+   HOMEPAGE CARDS
+   ========================================== */
+.md-typeset .grid.cards>ol,
+.md-typeset .grid.cards>ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1rem;
+}
+
+.md-typeset .grid.cards>ol>li,
+.md-typeset .grid.cards>ul>li {
+  border: 1px solid rgba(76, 175, 80, 0.2);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  font-family: var(--tm-font-base);
+}
+
+.md-typeset .grid.cards>ol>li:hover,
+.md-typeset .grid.cards>ul>li:hover {
+  border-color: #4CAF50;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.15);
+  transform: translateY(-2px);
+}
+
+.md-typeset .grid.cards h2,
+.md-typeset .grid.cards h3 {
+  font-family: var(--tm-font-heading);
+}
+
+/* ==========================================
+   BACK TO TOP BUTTON
+   ========================================== */
+.md-top {
+  background-color: #4CAF50;
+}
+
+.md-top:hover {
+  background-color: #2E7D32;
+}
+
+/* ==========================================
+   MERMAID DIAGRAMS
+   ========================================== */
+.mermaid {
+  text-align: center;
+  font-family: var(--tm-font-base);
+}
+
+/* ==========================================
+   FOOTER
+   ========================================== */
+.md-footer {
+  background: linear-gradient(135deg, #2E7D32, #1B5E20);
+  font-family: var(--tm-font-base);
+}
+
+.md-footer-meta {
+  background-color: rgba(27, 94, 32, 0.8);
+}
+
+/* ==========================================
+   SIDEBAR NAVIGATION
+   ========================================== */
+.md-nav__link {
+  font-family: var(--tm-font-base);
+}
+
+.md-nav__link--active {
+  font-weight: 600;
+}
+
+/* ==========================================
+   HEADER
+   ========================================== */
+.md-header {
+  font-family: var(--tm-font-heading);
+}
+
+.md-header__title {
+  font-weight: 600;
+}

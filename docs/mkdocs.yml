@@ -1,0 +1,169 @@
+site_name: Ticket Masala Documentation
+site_description: AI-powered workflow management platform
+site_author: Ticket Masala Team
+site_url: https://yourusername.github.io/ticket-masala/
+
+repo_name: ticket-masala
+repo_url: https://github.com/yourusername/ticket-masala
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  language: en
+  logo: assets/logo.png
+  favicon: assets/logo.png
+  
+  palette:
+    # Light mode - Ticket Masala theme
+    - scheme: default
+      primary: green
+      accent: deep purple
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode - Ticket Masala theme
+    - scheme: slate
+      primary: green
+      accent: deep purple
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  
+  features:
+    - navigation.instant        # Fast page loading
+    - navigation.tracking       # URL updates with scroll
+    - navigation.tabs           # Top-level navigation tabs
+    - navigation.tabs.sticky    # Tabs stay visible on scroll
+    - navigation.sections       # Group navigation items
+    - navigation.expand         # Expand all sections by default
+    - navigation.top            # Back to top button
+    - search.suggest            # Search suggestions
+    - search.highlight          # Highlight search terms
+    - search.share              # Share search results
+    - content.code.copy         # Copy button for code blocks
+    - content.code.annotate     # Code annotations
+    - content.action.edit       # Edit button on pages
+    - content.action.view       # View source button
+  
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
+    view: material/eye
+
+extra_css:
+  - stylesheets/extra.css
+
+markdown_extensions:
+  # Python Markdown
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+  
+  # Python Markdown Extensions
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.critic
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+plugins:
+  - search:
+      lang: 
+        - en
+        - nl
+  - tags
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/yourusername/ticket-masala
+      name: GitHub Repository
+  
+  version:
+    provider: mike
+
+nav:
+  - Home: index.md
+  
+  - English:
+    - Overview: en/README.md
+    - Getting Started:
+      - Development Setup: en/guides/DEVELOPMENT.md
+      - Configuration: en/guides/CONFIGURATION.md
+      - Testing: en/guides/TESTING.md
+      - Troubleshooting: en/guides/TROUBLESHOOTING.md
+    
+    - Architecture:
+      - Summary: en/architecture/SUMMARY.md
+      - Detailed Design: en/architecture/DETAILED.md
+      - Controllers: en/architecture/CONTROLLERS.md
+      - Domain Model: en/architecture/DOMAIN_MODEL.md
+      - Repositories: en/architecture/REPOSITORIES.md
+      - Observers: en/architecture/OBSERVERS.md
+      - Middleware: en/architecture/MIDDLEWARE.md
+      - Extensions: en/architecture/EXTENSIONS.md
+      - GERDA AI:
+        - Overview: en/architecture/gerda-ai/GERDA_MODULES.md
+    
+    - Guides:
+      - Tenants vs Domains: en/guides/TENANTS_VS_DOMAINS.md
+      - Gatekeeper API: en/guides/GATEKEEPER_API.md
+    
+    - API Reference:
+      - REST API: en/api/API_REFERENCE.md
+    
+    - Project Management:
+      - Roadmap: en/project-management/roadmap_v3.md
+  
+  - Nederlands:
+    - Overzicht: nl/README.md
+    - Aan de slag:
+      - Ontwikkeling: nl/guides/DEVELOPMENT.md
+      - Configuratie: nl/guides/CONFIGURATION.md
+      - Testen: nl/guides/TESTING.md
+      - Probleemoplossing: nl/guides/TROUBLESHOOTING.md
+    
+    - Architectuur:
+      - Samenvatting: nl/architecture/SUMMARY.md
+      - Gedetailleerd: nl/architecture/DETAILED.md
+      - GERDA AI:
+        - Overzicht: nl/architecture/gerda-ai/GERDA_MODULES.md
+    
+    - Gidsen:
+      - Tenants vs Domeinen: nl/guides/TENANTS_VS_DOMAINS.md
+      - Gatekeeper API: nl/guides/GATEKEEPER_API.md
+    
+    - Projectbeheer:
+      - Roadmap: nl/project-management/ROADMAP.md
+      - Implementatiefasen: nl/project-management/IMPLEMENTATION_PHASES.md

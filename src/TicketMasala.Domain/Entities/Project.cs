@@ -10,13 +10,9 @@ public class Project : BaseModel
 {
     public Status Status { get; set; }
 
-    [Required]
-    [StringLength(200)]
-    public required string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
-    [Required]
-    [StringLength(5000)]
-    public required string Description { get; set; }
+    public string Description { get; set; } = string.Empty;
 
     // User references (configured via EF Core in Web layer)
     public string? ProjectManagerId { get; set; }
@@ -30,7 +26,7 @@ public class Project : BaseModel
     public Guid? DepartmentId { get; set; }
 
     public string? ProjectType { get; set; }
-    
+
     [StringLength(2000)]
     public string? Notes { get; set; }
 

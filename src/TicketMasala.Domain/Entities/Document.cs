@@ -10,16 +10,11 @@ public class Document
     [Key]
     public Guid Id { get; set; }
 
-    [Required]
-    [StringLength(255)]
-    public required string FileName { get; set; }
+    public string FileName { get; set; } = string.Empty;
 
-    [Required]
-    [StringLength(255)]
-    public required string StoredFileName { get; set; }
+    public string StoredFileName { get; set; } = string.Empty;
 
-    [StringLength(100)]
-    public required string ContentType { get; set; }
+    public string ContentType { get; set; } = string.Empty;
 
     public long FileSize { get; set; }
 

@@ -1,6 +1,4 @@
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Diagnostics.CodeAnalysis;
 using TicketMasala.Domain.Common;
 
 namespace TicketMasala.Domain.Entities;
@@ -14,9 +12,7 @@ public class Ticket : BaseModel
     public Status TicketStatus { get; set; } = Common.Status.Pending;
     public TicketType? TicketType { get; set; }
 
-    [Required]
-    [StringLength(5000)]
-    public required string Description { get; set; }
+    public string Description { get; set; } = string.Empty;
 
     public DateTime? CompletionTarget { get; set; }
     public DateTime? CompletionDate { get; set; }
@@ -33,17 +29,11 @@ public class Ticket : BaseModel
     public string? CurrentProjectName { get; set; }
 
     // --- RIGID COLUMNS (Indexed, Relational) ---
-    [Required]
-    [MaxLength(50)]
-    public required string DomainId { get; set; } // e.g., "IT", "LEGAL"
+    public string DomainId { get; set; } = "IT"; // e.g., "IT", "LEGAL"
 
-    [Required]
-    [MaxLength(20)]
-    public required string Status { get; set; } = "New"; // "New", "Triaged", "Done"
+    public string Status { get; set; } = "New"; // "New", "Triaged", "Done"
 
-    [Required]
-    [MaxLength(200)]
-    public required string Title { get; set; }
+    public string Title { get; set; } = string.Empty;
 
     // Used for Duplicate Detection (SHA256)
     [MaxLength(64)]
@@ -55,7 +45,7 @@ public class Ticket : BaseModel
 
     // --- FLEXIBLE STORAGE (The "Masala" Model) ---
     [Column(TypeName = "TEXT")]
-    public required string CustomFieldsJson { get; set; } = "{}";
+    public string CustomFieldsJson { get; set; } = "{}";
 
     // --- GENERATED COLUMNS (The Performance Secret) ---
     // These properties do not exist in C# memory as settable values.
@@ -104,8 +94,7 @@ public class Ticket : BaseModel
     public virtual ICollection<Ticket> SubTickets { get; set; } = new List<Ticket>();
     public virtual Ticket? ParentTicket { get; set; }
 
-    // Backwards-compatibility: ensure required members have safe defaults
-    [SetsRequiredMembers]
+    // Backwards-compatibility: ensure members have safe defaults
     public Ticket()
     {
         Description = string.Empty;

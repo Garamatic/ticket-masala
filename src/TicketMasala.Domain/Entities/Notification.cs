@@ -10,12 +10,9 @@ public class Notification
     [Key]
     public Guid Id { get; set; }
 
-    [Required]
-    public required string UserId { get; set; }
+    public string UserId { get; set; } = string.Empty;
 
-    [Required]
-    [StringLength(500)]
-    public required string Message { get; set; }
+    public string Message { get; set; } = string.Empty;
 
     [StringLength(500)]
     public string? LinkUrl { get; set; }

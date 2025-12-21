@@ -13,22 +13,11 @@ namespace TicketMasala.Domain.Entities;
 
 public class ApplicationUser : IdentityUser
 {
-    [ProtectedPersonalData]
-    [Required(ErrorMessage = "First name is required")]
-    [NoHtml(ErrorMessage = "First name cannot contain HTML")]
-    [SafeStringLength(100, ErrorMessage = "First name cannot exceed 100 characters")]
-    public required string FirstName { get; set; }
+    public string FirstName { get; set; } = string.Empty;
 
-    [ProtectedPersonalData]
-    [Required(ErrorMessage = "Last name is required")]
-    [NoHtml(ErrorMessage = "Last name cannot contain HTML")]
-    [SafeStringLength(100, ErrorMessage = "Last name cannot exceed 100 characters")]
-    public required string LastName { get; set; }
+    public string LastName { get; set; } = string.Empty;
 
-    [ProtectedPersonalData]
-    [Phone(ErrorMessage = "Invalid phone number")]
-    [SafeStringLength(50, ErrorMessage = "Phone number cannot exceed 50 characters")]
-    public required string? Phone { get; set; }
+    public string? Phone { get; set; }
 
 
     [ProtectedPersonalData]
@@ -50,12 +39,9 @@ public class ApplicationUser : IdentityUser
 public class Guest : ApplicationUser { }
 public class Employee : ApplicationUser
 {
-    [Required(ErrorMessage = "Team is required")]
-    [NoHtml(ErrorMessage = "Team cannot contain HTML")]
-    [SafeStringLength(100, ErrorMessage = "Team cannot exceed 100 characters")]
-    public required string Team { get; set; }
+    public string Team { get; set; } = string.Empty;
 
-    public required EmployeeType Level { get; set; }
+    public EmployeeType Level { get; set; }
 
     // GERDA AI Fields
     /// <summary>

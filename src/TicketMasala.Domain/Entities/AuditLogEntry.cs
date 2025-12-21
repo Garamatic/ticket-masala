@@ -13,8 +13,7 @@ public class AuditLogEntry
     [Required]
     public Guid TicketId { get; set; }
 
-    [Required]
-    public required string Action { get; set; } // e.g., "Created", "Updated", "StatusChanged"
+    public string Action { get; set; } = string.Empty; // e.g., "Created", "Updated", "StatusChanged"
 
     public string? PropertyName { get; set; }
     public string? OldValue { get; set; }

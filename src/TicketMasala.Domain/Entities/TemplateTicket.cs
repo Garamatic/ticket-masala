@@ -8,9 +8,7 @@ namespace TicketMasala.Domain.Entities;
 /// </summary>
 public class TemplateTicket : BaseModel
 {
-    [Required]
-    [StringLength(1000)]
-    public required string Description { get; set; }
+    public string Description { get; set; } = string.Empty;
 
     [Range(1, 100)]
     public int EstimatedEffortPoints { get; set; } = 5;

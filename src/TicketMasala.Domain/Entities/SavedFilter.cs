@@ -11,9 +11,7 @@ public class SavedFilter
     [Key]
     public Guid Id { get; set; }
 
-    [Required]
-    [StringLength(100)]
-    public required string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     public string? UserId { get; set; }
 

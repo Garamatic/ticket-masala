@@ -8,7 +8,7 @@ namespace TicketMasala.Domain.Entities;
 public class Resource : BaseModel
 {
     // Could be path or url
-    public required string Location { get; set; }
+    public string Location { get; set; } = string.Empty;
     // TODO: implement resource permissions
 }
 

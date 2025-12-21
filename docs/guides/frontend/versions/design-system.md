@@ -181,7 +181,7 @@ A comprehensive design system for building consistent, professional, and on-bran
 
 All variables are defined in:
 
-- **CSS**: [`wwwroot/css/design-system.css`](file:///Users/juanbenjumea/coding/projects/ticket-masala/IT-Project2526/wwwroot/css/design-system.css)
+- **CSS**: [`wwwroot/css/design-system.css`](file:///home/juan/coding/project-atom/src/factory/TicketMasala/src/TicketMasala.Web/wwwroot/css/design-system.css)
 
 Fonts loaded via Google Fonts in `_Layout.cshtml`:
 

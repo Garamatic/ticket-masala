@@ -16,6 +16,12 @@ public static class WebApplicationExtensions
     /// </summary>
     public static WebApplication UseMasalaCore(this WebApplication app, IWebHostEnvironment env)
     {
+        // Correlation ID (must be early in pipeline)
+        app.UseMiddleware<CorrelationIdMiddleware>();
+
+        // Exception handling (must be early in pipeline)
+        app.UseExceptionHandler();
+
         // Forward headers (for reverse proxies)
         app.UseForwardedHeaders();
 
@@ -35,8 +41,13 @@ public static class WebApplicationExtensions
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Ticket Masala API v1");
-                c.RoutePrefix = "swagger";
+                var provider = app.Services.GetRequiredService<Asp.Versioning.ApiExplorer.IApiVersionDescriptionProvider>();
+
+                // Build a swagger endpoint for each discovered API version
+                foreach (var description in provider.ApiVersionDescriptions)
+                {
+                    c.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName.ToUpperInvariant());
+                }
             });
         }
         else
@@ -51,6 +62,9 @@ public static class WebApplicationExtensions
 
         // Request logging
         app.UseMiddleware<RequestLoggingMiddleware>();
+
+        // Deprecation headers for legacy API
+        app.UseMiddleware<DeprecationHeaderMiddleware>();
 
         // WebOptimizer for bundling
         app.UseWebOptimizer();

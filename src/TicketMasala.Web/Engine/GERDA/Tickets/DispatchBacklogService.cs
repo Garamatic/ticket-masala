@@ -1,4 +1,5 @@
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
 using TicketMasala.Web.ViewModels.Tickets;
 using TicketMasala.Web.ViewModels.GERDA;
 using TicketMasala.Web.Repositories;

@@ -1,5 +1,5 @@
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Engine.GERDA.Dispatching;
-using TicketMasala.Web.Models;
 
 namespace TicketMasala.Web.Engine.GERDA.Dispatching
 {

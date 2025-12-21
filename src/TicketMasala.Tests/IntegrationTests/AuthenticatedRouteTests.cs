@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TicketMasala.Web;
 using TicketMasala.Web.Data;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
 using Xunit;
 
 namespace TicketMasala.Tests.IntegrationTests;

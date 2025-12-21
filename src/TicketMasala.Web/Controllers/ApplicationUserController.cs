@@ -1,10 +1,12 @@
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities; // ApplicationUser, Employee
 using TicketMasala.Web.ViewModels.ApplicationUsers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
-using TicketMasala.Web.Utilities;
+using TicketMasala.Domain.Common;
 
 namespace TicketMasala.Web.Controllers;
 

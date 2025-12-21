@@ -1,8 +1,9 @@
 using TicketMasala.Web;
 using TicketMasala.Web.Data;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Tenancy;
 using TicketMasala.Web.Extensions;
+using TicketMasala.Web.Configuration;
 
 using TicketMasala.Web.Health;
 using TicketMasala.Web.Middleware;
@@ -15,6 +16,11 @@ using Microsoft.AspNetCore.Localization;
 using WebOptimizer;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ============================================
+// STRONGLY-TYPED CONFIGURATION
+// ============================================
+builder.Services.AddMasalaConfiguration(builder.Configuration);
 
 // ============================================
 // TENANT PLUGIN SYSTEM

@@ -4,8 +4,9 @@ using TicketMasala.Web.Engine.GERDA.Grouping;
 using TicketMasala.Web.Engine.GERDA.Estimating;
 using TicketMasala.Web.Engine.GERDA.Ranking;
 using TicketMasala.Web.Engine.GERDA.Dispatching;
-using TicketMasala.Web.Models;
-using Customer = TicketMasala.Web.Models.ApplicationUser;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
+using Customer = TicketMasala.Domain.Entities.ApplicationUser;
 using TicketMasala.Web.Repositories;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -189,9 +190,9 @@ public class GerdaServiceTests
         var customer = new ApplicationUser { Id = Guid.NewGuid().ToString(), FirstName = "Test", LastName = "Customer", Email = "test@example.com", Phone = "555-1234" };
         var tickets = new List<Ticket>
         {
-            new() { Guid = Guid.NewGuid(), Description = "Test 1", Customer = customer, TicketStatus = Status.Pending },
-            new() { Guid = Guid.NewGuid(), Description = "Test 2", Customer = customer, TicketStatus = Status.Assigned },
-            new() { Guid = Guid.NewGuid(), Description = "Test 3", Customer = customer, TicketStatus = Status.Completed } // Should be excluded
+            new() { Guid = Guid.NewGuid(), Description = "Test 1", Customer = customer, TicketStatus = TicketMasala.Domain.Common.Status.Pending },
+            new() { Guid = Guid.NewGuid(), Description = "Test 2", Customer = customer, TicketStatus = TicketMasala.Domain.Common.Status.Assigned },
+            new() { Guid = Guid.NewGuid(), Description = "Test 3", Customer = customer, TicketStatus = TicketMasala.Domain.Common.Status.Completed } // Should be excluded
         };
 
         _ticketRepositoryMock.Setup(x => x.GetAllAsync(null))

@@ -1,4 +1,4 @@
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
 
 namespace TicketMasala.Web.Engine.Core;
 

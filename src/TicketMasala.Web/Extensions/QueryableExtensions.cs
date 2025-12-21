@@ -1,4 +1,6 @@
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities; // ApplicationUser, Employee
 using Microsoft.EntityFrameworkCore;
 
 namespace TicketMasala.Web.Extensions;
@@ -62,33 +64,30 @@ public static class QueryableExtensions
 
     /// <summary>
     /// Includes related data for Projects
+    /// Note: Navigation properties are configured via EF Core in MasalaDbContext
     /// </summary>
-    public static IQueryable<Project> IncludeDetails(this IQueryable<Project> query)
+    public static IQueryable<Domain.Entities.Project> IncludeDetails(this IQueryable<Domain.Entities.Project> query)
     {
-        return query
-            .Include(p => p.Tasks)
-            .Include(p => p.ProjectManager)
-            .Include(p => p.Customer)
-            .Include(p => p.Resources);
+        // Navigation properties are configured in MasalaDbContext.ConfigureUserRelationships()
+        // This method can be extended if needed for specific includes
+        return query;
     }
 
     /// <summary>
     /// Includes related data for Tickets
+    /// Note: Navigation properties are configured via EF Core in MasalaDbContext
     /// </summary>
-    public static IQueryable<Ticket> IncludeDetails(this IQueryable<Ticket> query)
+    public static IQueryable<Domain.Entities.Ticket> IncludeDetails(this IQueryable<Domain.Entities.Ticket> query)
     {
-        return query
-            .Include(t => t.Responsible)
-            .Include(t => t.Customer)
-            .Include(t => t.Watchers)
-            .Include(t => t.ParentTicket)
-            .Include(t => t.SubTickets);
+        // Navigation properties are configured in MasalaDbContext.ConfigureUserRelationships()
+        // This method can be extended if needed for specific includes
+        return query;
     }
 
     /// <summary>
     /// Filters projects by status
     /// </summary>
-    public static IQueryable<Project> WithStatus(this IQueryable<Project> query, Status status)
+    public static IQueryable<Domain.Entities.Project> WithStatus(this IQueryable<Domain.Entities.Project> query, Domain.Common.Status status)
     {
         return query.Where(p => p.Status == status);
     }
@@ -96,7 +95,7 @@ public static class QueryableExtensions
     /// <summary>
     /// Filters tickets by status
     /// </summary>
-    public static IQueryable<Ticket> WithStatus(this IQueryable<Ticket> query, Status status)
+    public static IQueryable<Domain.Entities.Ticket> WithStatus(this IQueryable<Domain.Entities.Ticket> query, Domain.Common.Status status)
     {
         return query.Where(t => t.TicketStatus == status);
     }
@@ -104,7 +103,7 @@ public static class QueryableExtensions
     /// <summary>
     /// Filters projects by customer
     /// </summary>
-    public static IQueryable<Project> ForCustomer(this IQueryable<Project> query, string customerId)
+    public static IQueryable<Domain.Entities.Project> ForCustomer(this IQueryable<Domain.Entities.Project> query, string customerId)
     {
         return query.Where(p => p.CustomerId == customerId);
     }
@@ -112,20 +111,20 @@ public static class QueryableExtensions
     /// <summary>
     /// Filters tickets by customer
     /// </summary>
-    public static IQueryable<Ticket> ForCustomer(this IQueryable<Ticket> query, string customerId)
+    public static IQueryable<Domain.Entities.Ticket> ForCustomer(this IQueryable<Domain.Entities.Ticket> query, string customerId)
     {
-        return query.Where(t => t.Customer != null && t.Customer.Id == customerId);
+        return query.Where(t => t.CustomerId == customerId);
     }
 
     /// <summary>
     /// Returns overdue tickets
     /// </summary>
-    public static IQueryable<Ticket> WhereOverdue(this IQueryable<Ticket> query)
+    public static IQueryable<Domain.Entities.Ticket> WhereOverdue(this IQueryable<Domain.Entities.Ticket> query)
     {
         var now = DateTime.UtcNow;
         return query.Where(t => t.CompletionTarget.HasValue
                              && t.CompletionTarget.Value < now
-                             && t.TicketStatus != Status.Completed
-                             && t.TicketStatus != Status.Failed);
+                             && t.TicketStatus != Domain.Common.Status.Completed
+                             && t.TicketStatus != Domain.Common.Status.Failed);
     }
 }

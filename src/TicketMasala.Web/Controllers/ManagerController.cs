@@ -5,8 +5,10 @@ using TicketMasala.Web.ViewModels.Dashboard;
 using TicketMasala.Web.ViewModels.Tickets;
 using TicketMasala.Web.ViewModels.GERDA;
 using TicketMasala.Web.ViewModels.Projects;
-using TicketMasala.Web.Models;
-using TicketMasala.Web.Utilities;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities; // ApplicationUser, Employee
+using TicketMasala.Domain.Common;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Engine.Projects;

@@ -6,7 +6,7 @@ using TicketMasala.Web.Engine.GERDA.Dispatching;
 using TicketMasala.Web.Engine.GERDA.Models;
 using TicketMasala.Web.Engine.GERDA.Strategies;
 using TicketMasala.Web.Engine.GERDA.Configuration;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web;
 using TicketMasala.Web.Data;
 
@@ -75,7 +75,7 @@ public class DispatchingServiceTests
             LastName = "One",
             Phone = "123",
             Team = "Support",
-            Level = EmployeeType.Support
+            Level = TicketMasala.Domain.Common.EmployeeType.Support
         };
         var employee2 = new Employee
         {
@@ -86,7 +86,7 @@ public class DispatchingServiceTests
             LastName = "Two",
             Phone = "123",
             Team = "Support",
-            Level = EmployeeType.Support
+            Level = TicketMasala.Domain.Common.EmployeeType.Support
         };
 
         context.Users.AddRange(customer, employee1, employee2);
@@ -99,7 +99,7 @@ public class DispatchingServiceTests
             Status = "New",
             Title = "Test Ticket",
             CustomFieldsJson = "{}",
-            TicketStatus = Status.Pending
+            TicketStatus = TicketMasala.Domain.Common.Status.Pending
         };
         context.Tickets.Add(ticket);
         await context.SaveChangesAsync();
@@ -147,7 +147,7 @@ public class DispatchingServiceTests
             LastName = "Bee",
             Phone = "123",
             Team = "Support",
-            Level = EmployeeType.Support
+            Level = TicketMasala.Domain.Common.EmployeeType.Support
         };
         var freeEmployee = new Employee
         {
@@ -158,7 +158,7 @@ public class DispatchingServiceTests
             LastName = "Bird",
             Phone = "123",
             Team = "Support",
-            Level = EmployeeType.Support
+            Level = TicketMasala.Domain.Common.EmployeeType.Support
         };
 
         context.Users.AddRange(customer, busyEmployee, freeEmployee);
@@ -175,7 +175,7 @@ public class DispatchingServiceTests
                 Title = $"Busy Ticket {i}",
                 CustomFieldsJson = "{}",
                 ResponsibleId = busyEmployee.Id,
-                TicketStatus = Status.Assigned
+                TicketStatus = TicketMasala.Domain.Common.Status.Assigned
             });
         }
 
@@ -187,7 +187,7 @@ public class DispatchingServiceTests
             Status = "New",
             Title = "New Ticket",
             CustomFieldsJson = "{}",
-            TicketStatus = Status.Pending
+            TicketStatus = TicketMasala.Domain.Common.Status.Pending
         };
         context.Tickets.Add(ticket);
         await context.SaveChangesAsync();

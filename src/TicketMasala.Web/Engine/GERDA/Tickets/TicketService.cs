@@ -1,6 +1,8 @@
 using TicketMasala.Web.Engine.Compiler;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
 using TicketMasala.Web.ViewModels.Tickets;
+using TicketMasala.Domain.Entities; // ApplicationUser, Employee
 using TicketMasala.Web.ViewModels.Projects;
 using TicketMasala.Web.ViewModels.GERDA;
 using TicketMasala.Web.Repositories;
@@ -227,7 +229,7 @@ public class TicketService : ITicketService, ITicketQueryService, ITicketCommand
             Status = responsible != null ? "Assigned" : "New",
             Title = "New Ticket", // Required property
             DomainId = "IT", // Required property
-            TicketStatus = responsible != null ? TicketMasala.Web.Models.Status.Assigned : TicketMasala.Web.Models.Status.Pending,
+            TicketStatus = responsible != null ? TicketMasala.Domain.Common.Status.Assigned : TicketMasala.Domain.Common.Status.Pending,
             CompletionTarget = completionTarget ?? DateTime.UtcNow.AddDays(14),
             CreatorGuid = Guid.Parse(customer.Id),
             Comments = new List<TicketComment>()
@@ -966,7 +968,7 @@ public class TicketService : ITicketService, ITicketQueryService, ITicketCommand
     {
         IQueryable<Ticket> query = _context.Tickets
             .Include(t => t.Customer)
-            .Include(t => t.Responsible) 
+            .Include(t => t.Responsible)
             .AsNoTracking();
 
         if (!string.IsNullOrEmpty(userId))
@@ -974,9 +976,9 @@ public class TicketService : ITicketService, ITicketQueryService, ITicketCommand
             var user = await _userRepository.GetUserByIdAsync(userId);
             // In this system, Customers are base ApplicationUsers, Employees are derived.
             // So if it is NOT an Employee, it is a Customer.
-            if (user is not TicketMasala.Web.Models.Employee)
+            if (user is not TicketMasala.Domain.Entities.Employee)
             {
-                 query = query.Where(t => t.CustomerId == userId);
+                query = query.Where(t => t.CustomerId == userId);
             }
         }
 
@@ -992,7 +994,7 @@ public class TicketService : ITicketService, ITicketQueryService, ITicketCommand
             TicketStatus = t.TicketStatus,
             CreationDate = t.CreationDate,
             CompletionTarget = t.CompletionTarget,
-             ResponsibleName = t.Responsible != null
+            ResponsibleName = t.Responsible != null
                 ? $"{t.Responsible.FirstName} {t.Responsible.LastName}"
                 : "Unassigned",
             CustomerName = t.Customer != null

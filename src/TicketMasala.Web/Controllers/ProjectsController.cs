@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Authorization;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities; // ApplicationUser, Employee
 using TicketMasala.Web.ViewModels.Projects;
 using TicketMasala.Web.ViewModels.Tickets;
 using TicketMasala.Web.ViewModels.Customers;
@@ -10,7 +12,7 @@ using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.Engine.Ingestion;
 using TicketMasala.Web.Engine.Ingestion.Background;
-using TicketMasala.Web.Utilities;
+using TicketMasala.Domain.Common;
 using System.Diagnostics;
 using System.Security.Claims;
 

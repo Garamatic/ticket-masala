@@ -1,7 +1,7 @@
 ﻿@model TicketMasala.Web.ViewModels.Customers.CustomerDetailViewModel
 @using System.Linq
 @using TicketMasala.Web
-@using TicketMasala.Web.Models;
+@using TicketMasala.Domain.Entities;
 @using TicketMasala.Web.ViewModels.Customers
 
 @{
@@ -79,14 +79,14 @@
 </div>
 
 @functions {
-    string GetStatusBadgeClass(TicketMasala.Web.Models.Status status)
+    string GetStatusBadgeClass(TicketMasala.Domain.Common.Status status)
     {
         return status switch
         {
-            TicketMasala.Web.Models.Status.Completed => "bg-success",
-            TicketMasala.Web.Models.Status.Assigned => "bg-primary",
-            TicketMasala.Web.Models.Status.Pending => "bg-warning text-dark",
-            TicketMasala.Web.Models.Status.Cancelled => "bg-danger",
+            TicketMasala.Domain.Common.Status.Completed => "bg-success",
+            TicketMasala.Domain.Common.Status.Assigned => "bg-primary",
+            TicketMasala.Domain.Common.Status.Pending => "bg-warning text-dark",
+            TicketMasala.Domain.Common.Status.Cancelled => "bg-danger",
             _ => "bg-secondary"
         };
     }

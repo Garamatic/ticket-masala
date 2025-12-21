@@ -1,5 +1,6 @@
 using System.Text.Json;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
 
 namespace TicketMasala.Web.Tests.Fixtures;
 
@@ -77,7 +78,7 @@ public class TicketBuilder
         return this;
     }
 
-    public TicketBuilder AssignedTo(ApplicationUser agent)
+    public TicketBuilder AssignedTo(Employee agent)
     {
         _ticket.Responsible = agent;
         _ticket.ResponsibleId = agent.Id;

@@ -1,5 +1,5 @@
-using TicketMasala.Web.Models;
-using TicketMasala.Web.Utilities;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;

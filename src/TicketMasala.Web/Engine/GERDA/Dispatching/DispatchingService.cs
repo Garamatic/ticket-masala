@@ -1,17 +1,16 @@
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.GERDA.Models;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
+using TicketMasala.Web.Engine.GERDA.Strategies;
+using TicketMasala.Web.Engine.GERDA.Configuration;
+using TicketMasala.Domain.Entities; // ApplicationUser, Employee
 using Microsoft.EntityFrameworkCore;
 using Microsoft.ML;
 using Microsoft.ML.Data;
 using Microsoft.ML.Trainers;
 
 namespace TicketMasala.Web.Engine.GERDA.Dispatching;
-
-using TicketMasala.Web.Engine.GERDA.Strategies;
-using TicketMasala.Web.Engine.GERDA.Configuration;
-using TicketMasala.Web.Models;
-using Microsoft.EntityFrameworkCore;
 
 /// <summary>
 /// D - Dispatching: Agent-ticket matching using ML.NET Matrix Factorization

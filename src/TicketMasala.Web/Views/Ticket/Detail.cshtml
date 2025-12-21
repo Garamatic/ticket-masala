@@ -1,7 +1,9 @@
 ﻿@model TicketMasala.Web.ViewModels.Tickets.TicketDetailsViewModel
 @using System.Linq
 @using TicketMasala.Web
-@using TicketMasala.Web.Models
+@using TicketMasala.Domain.Entities
+@using TicketMasala.Domain.Common
+@using TicketMasala.Domain.Entities
 @using TicketMasala.Web.ViewModels.Tickets
 
 @{
@@ -84,7 +86,7 @@
                 @if (ViewBag.CustomFields != null)
                 {
                     <div class="mt-4">
-                        @await Html.PartialAsync("_CustomFieldsDisplayPartial", ViewBag.CustomFields as IEnumerable<TicketMasala.Web.Models.Configuration.CustomFieldDefinition>)
+                        @await Html.PartialAsync("_CustomFieldsDisplayPartial", ViewBag.CustomFields as IEnumerable<TicketMasala.Domain.Entities.Configuration.CustomFieldDefinition>)
                     </div>
                 }
 
@@ -132,7 +134,7 @@
                                 <textarea class="form-control" id="commentBody" name="commentBody" rows="3" required></textarea>
                                 <div class="form-text">Supports Markdown (**bold**, *italic*, - list)</div>
                             </div>
-                            @if (User.IsInRole(TicketMasala.Web.Utilities.Constants.RoleAdmin) || User.IsInRole(TicketMasala.Web.Utilities.Constants.RoleEmployee))
+                            @if (User.IsInRole(TicketMasala.Domain.Common.Constants.RoleAdmin) || User.IsInRole(TicketMasala.Domain.Common.Constants.RoleEmployee))
                             {
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" id="isInternal" name="isInternal" value="true">
@@ -253,7 +255,7 @@
 
     <!-- Right Column: GERDA AI Insights -->
     <!-- Right Column: GERDA AI Insights (Internal Only) -->
-    @if (User.IsInRole(TicketMasala.Web.Utilities.Constants.RoleAdmin) || User.IsInRole(TicketMasala.Web.Utilities.Constants.RoleEmployee))
+    @if (User.IsInRole(TicketMasala.Domain.Common.Constants.RoleAdmin) || User.IsInRole(TicketMasala.Domain.Common.Constants.RoleEmployee))
     {
         <div class="col-md-4">
             <div class="card border-primary mb-3">
@@ -348,7 +350,7 @@
     }
 </div>
 
-@if (Model.CompletionTarget.HasValue && Model.TicketStatus != TicketMasala.Web.Models.Status.Completed)
+@if (Model.CompletionTarget.HasValue && Model.TicketStatus != TicketMasala.Domain.Common.Status.Completed)
 {
     var timeRemaining = Model.CompletionTarget.Value - DateTime.UtcNow;
     var isOverdue = timeRemaining.TotalSeconds < 0;

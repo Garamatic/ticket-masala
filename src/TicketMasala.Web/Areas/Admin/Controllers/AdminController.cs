@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web.Data;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
 
 namespace TicketMasala.Web.Areas.Admin.Controllers;
 

@@ -9,7 +9,8 @@ using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.Engine.Ingestion;
 using TicketMasala.Web.Engine.Ingestion.Background;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.Observers;
 using TicketMasala.Web.ViewModels.Projects;
@@ -83,7 +84,7 @@ public class ProjectServiceTests
         {
             Name = "Project 1",
             Description = "Description 1",
-            Status = Status.Pending,
+            Status = TicketMasala.Domain.Common.Status.Pending,
             Customer = customer
         };
         project1.Customers.Add(customer);
@@ -92,7 +93,7 @@ public class ProjectServiceTests
         {
             Name = "Project 2",
             Description = "Description 2",
-            Status = Status.Assigned,
+            Status = TicketMasala.Domain.Common.Status.Assigned,
             Customer = customer
         };
         project2.Customers.Add(customer);
@@ -125,7 +126,7 @@ public class ProjectServiceTests
         {
             Name = "Customer1 Project",
             Description = "Description 1",
-            Status = Status.Pending,
+            Status = TicketMasala.Domain.Common.Status.Pending,
             Customer = customer1
         };
         project1.Customers.Add(customer1);
@@ -134,7 +135,7 @@ public class ProjectServiceTests
         {
             Name = "Customer2 Project",
             Description = "Description 2",
-            Status = Status.Pending,
+            Status = TicketMasala.Domain.Common.Status.Pending,
             Customer = customer2
         };
         project2.Customers.Add(customer2);
@@ -165,7 +166,7 @@ public class ProjectServiceTests
         {
             Name = "Test Project",
             Description = "Test Description",
-            Status = Status.InProgress,
+            Status = TicketMasala.Domain.Common.Status.InProgress,
             Customer = customer
         };
 
@@ -179,7 +180,7 @@ public class ProjectServiceTests
         Assert.NotNull(result);
         Assert.Equal("Test Project", result.ProjectDetails.Name);
         Assert.Equal("Test Description", result.ProjectDetails.Description);
-        Assert.Equal(Status.InProgress, result.ProjectDetails.Status);
+        Assert.Equal(TicketMasala.Domain.Common.Status.InProgress, result.ProjectDetails.Status);
     }
 
     [Fact]
@@ -210,7 +211,7 @@ public class ProjectServiceTests
         {
             Name = "Edit Test Project",
             Description = "Edit Test Description",
-            Status = Status.Pending,
+            Status = TicketMasala.Domain.Common.Status.Pending,
             Customer = customer,
             CompletionTarget = DateTime.UtcNow.AddDays(30)
         };
@@ -257,7 +258,7 @@ public class ProjectServiceTests
         {
             Name = "Original Name",
             Description = "Original Description",
-            Status = Status.Pending,
+            Status = TicketMasala.Domain.Common.Status.Pending,
             Customer = customer
         };
 
@@ -361,7 +362,7 @@ public class ProjectServiceTests
         {
             Name = "Deleted Project",
             Description = "Description",
-            Status = Status.Pending,
+            Status = TicketMasala.Domain.Common.Status.Pending,
             Customer = customer,
             ValidUntil = DateTime.UtcNow.AddDays(-1) // Soft deleted
         };
@@ -386,9 +387,9 @@ public class ProjectServiceTests
         context.Users.Add(customer);
 
         context.Projects.AddRange(
-            new Project { Name = "Alpha Project", Description = "Desc 1", Status = Status.Pending, Customer = customer },
-            new Project { Name = "Beta Project", Description = "Project Alpha related", Status = Status.Pending, Customer = customer },
-            new Project { Name = "Gamma Project", Description = "Desc 2", Status = Status.Pending, Customer = customer }
+            new Project { Name = "Alpha Project", Description = "Desc 1", Status = TicketMasala.Domain.Common.Status.Pending, Customer = customer },
+            new Project { Name = "Beta Project", Description = "Project Alpha related", Status = TicketMasala.Domain.Common.Status.Pending, Customer = customer },
+            new Project { Name = "Gamma Project", Description = "Desc 2", Status = TicketMasala.Domain.Common.Status.Pending, Customer = customer }
         );
         await context.SaveChangesAsync();
 
@@ -412,13 +413,13 @@ public class ProjectServiceTests
         var customer = CreateTestCustomer();
         context.Users.Add(customer);
 
-        var p1 = new Project { Name = "P1", Description = "Desc 1", Status = Status.InProgress, Customer = customer };
-        p1.Tasks.Add(new Ticket { TicketStatus = Status.Completed });
-        p1.Tasks.Add(new Ticket { TicketStatus = Status.InProgress });
+        var p1 = new Project { Name = "P1", Description = "Desc 1", Status = TicketMasala.Domain.Common.Status.InProgress, Customer = customer };
+        p1.Tasks.Add(new Ticket { TicketStatus = TicketMasala.Domain.Common.Status.Completed });
+        p1.Tasks.Add(new Ticket { TicketStatus = TicketMasala.Domain.Common.Status.InProgress });
 
-        var p2 = new Project { Name = "P2", Description = "Desc 2", Status = Status.Completed, Customer = customer };
+        var p2 = new Project { Name = "P2", Description = "Desc 2", Status = TicketMasala.Domain.Common.Status.Completed, Customer = customer };
 
-        var p3 = new Project { Name = "P3", Description = "Desc 3", Status = Status.Pending, Customer = customer };
+        var p3 = new Project { Name = "P3", Description = "Desc 3", Status = TicketMasala.Domain.Common.Status.Pending, Customer = customer };
 
         context.Projects.AddRange(p1, p2, p3);
         await context.SaveChangesAsync();

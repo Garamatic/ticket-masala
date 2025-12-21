@@ -1,5 +1,7 @@
 @model TicketMasala.Web.ViewModels.Tickets.TicketSearchViewModel
-@using TicketMasala.Web.Models
+@using TicketMasala.Domain.Entities
+@using TicketMasala.Domain.Common
+@using TicketMasala.Domain.Entities
 @using TicketMasala.Web.Resources
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResource> Localizer
@@ -216,7 +218,7 @@
                                 </div>
                             </td>
                             <td class="d-none d-md-table-cell">
-                                <span class="badge bg-@(ticket.TicketStatus == TicketMasala.Web.Models.Status.Completed ? "success" : "primary")">
+                                <span class="badge bg-@(ticket.TicketStatus == Status.Completed ? "success" : "primary")">
                                     @ticket.TicketStatus
                                 </span>
                             </td>

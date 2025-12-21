@@ -1,6 +1,7 @@
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.GERDA.Models;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.ML;
 using Microsoft.ML.Data;

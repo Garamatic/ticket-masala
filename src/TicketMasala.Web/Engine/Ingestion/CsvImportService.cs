@@ -1,12 +1,13 @@
-namespace TicketMasala.Web.Engine.Ingestion;
-
 using System.Data;
 using System.Globalization;
 using CsvHelper;
 using CsvHelper.Configuration;
 using ExcelDataReader;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
 using TicketMasala.Web.Data;
+
+namespace TicketMasala.Web.Engine.Ingestion;
 
 public interface ITicketImportService
 {

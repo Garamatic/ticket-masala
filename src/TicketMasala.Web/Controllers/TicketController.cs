@@ -1,5 +1,6 @@
 ﻿using TicketMasala.Web;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
 using TicketMasala.Web.ViewModels.Tickets;
 using TicketMasala.Web.ViewModels.Projects;
 using TicketMasala.Web.ViewModels.Customers;
@@ -11,7 +12,6 @@ using TicketMasala.Web.Engine.Ingestion.Background;
 using TicketMasala.Web.Engine.GERDA;
 using TicketMasala.Web.Engine.GERDA.Configuration;
 using TicketMasala.Web.Engine.Compiler;
-using TicketMasala.Web.Utilities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Rendering;

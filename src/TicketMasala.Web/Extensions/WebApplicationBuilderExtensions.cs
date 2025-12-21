@@ -1,5 +1,5 @@
 using TicketMasala.Web.Data;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Tenancy;
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.Observers;

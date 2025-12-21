@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using TicketMasala.Web.Utilities;
+using TicketMasala.Domain.Common;
 
 namespace TicketMasala.Web.ViewModels.Customers;
 

@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
 
 namespace TicketMasala.Web.Areas.Identity.Pages.Account;
 

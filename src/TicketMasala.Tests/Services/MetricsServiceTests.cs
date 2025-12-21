@@ -7,9 +7,9 @@ using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.Engine.Ingestion;
 using TicketMasala.Web.Engine.Ingestion.Background;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Data;
-using Customer = TicketMasala.Web.Models.ApplicationUser;
+using Customer = TicketMasala.Domain.Entities.ApplicationUser;
 
 namespace TicketMasala.Tests.Services;
 
@@ -70,7 +70,7 @@ public class MetricsServiceTests
             LastName = "Employee",
             Phone = "987654321",
             Team = "Support",
-            Level = EmployeeType.Support
+            Level = TicketMasala.Domain.Common.EmployeeType.Support
         };
 
         context.Users.AddRange(customer, employee);
@@ -80,21 +80,21 @@ public class MetricsServiceTests
             {
                 Description = "Pending ticket",
                 Customer = customer,
-                TicketStatus = Status.Pending
+                TicketStatus = TicketMasala.Domain.Common.Status.Pending
             },
             new Ticket
             {
                 Description = "Assigned ticket",
                 Customer = customer,
                 Responsible = employee,
-                TicketStatus = Status.Assigned
+                TicketStatus = TicketMasala.Domain.Common.Status.Assigned
             },
             new Ticket
             {
                 Description = "Completed ticket",
                 Customer = customer,
                 Responsible = employee,
-                TicketStatus = Status.Completed
+                TicketStatus = TicketMasala.Domain.Common.Status.Completed
             }
         );
 
@@ -135,14 +135,14 @@ public class MetricsServiceTests
             {
                 Description = "High priority",
                 Customer = customer,
-                TicketStatus = Status.Pending,
+                TicketStatus = TicketMasala.Domain.Common.Status.Pending,
                 PriorityScore = 15.0
             },
             new Ticket
             {
                 Description = "Medium priority",
                 Customer = customer,
-                TicketStatus = Status.Pending,
+                TicketStatus = TicketMasala.Domain.Common.Status.Pending,
                 PriorityScore = 10.0
             }
         );
@@ -183,7 +183,7 @@ public class MetricsServiceTests
             LastName = "One",
             Phone = "987654321",
             Team = "Support",
-            Level = EmployeeType.Support,
+            Level = TicketMasala.Domain.Common.EmployeeType.Support,
             MaxCapacityPoints = 40
         };
 
@@ -195,7 +195,7 @@ public class MetricsServiceTests
                 Description = "Ticket 1",
                 Customer = customer,
                 Responsible = employee,
-                TicketStatus = Status.Assigned,
+                TicketStatus = TicketMasala.Domain.Common.Status.Assigned,
                 EstimatedEffortPoints = 8
             },
             new Ticket
@@ -203,7 +203,7 @@ public class MetricsServiceTests
                 Description = "Ticket 2",
                 Customer = customer,
                 Responsible = employee,
-                TicketStatus = Status.Assigned,
+                TicketStatus = TicketMasala.Domain.Common.Status.Assigned,
                 EstimatedEffortPoints = 13
             }
         );
@@ -249,14 +249,14 @@ public class MetricsServiceTests
             {
                 Description = "Within SLA",
                 Customer = customer,
-                TicketStatus = Status.Pending,
+                TicketStatus = TicketMasala.Domain.Common.Status.Pending,
                 CompletionTarget = tomorrow
             },
             new Ticket
             {
                 Description = "Breaching SLA",
                 Customer = customer,
-                TicketStatus = Status.Pending,
+                TicketStatus = TicketMasala.Domain.Common.Status.Pending,
                 CompletionTarget = yesterday
             }
         );

@@ -1,4 +1,5 @@
-﻿using TicketMasala.Web.Models;
+﻿using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities; // ApplicationUser, Employee
 using System.ComponentModel.DataAnnotations;
 
 namespace TicketMasala.Web.ViewModels.Projects;

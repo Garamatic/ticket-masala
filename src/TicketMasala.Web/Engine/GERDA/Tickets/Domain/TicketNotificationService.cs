@@ -1,6 +1,7 @@
 using TicketMasala.Web.Engine.Core;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Repositories;
+using TicketMasala.Domain.Common;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 using System.Collections.Generic;

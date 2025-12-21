@@ -19,7 +19,10 @@ namespace TicketMasala.Tests.Architecture
                 "ProjectTemplateController",
                 "SeedController",
                 "TicketAttachmentsController",
-                "CustomerController"
+                "CustomerController",
+                "AdminController",
+                "BatchOperationsController",
+                "SystemController"
             };
 
             var result = Types.InAssembly(typeof(TicketController).Assembly)

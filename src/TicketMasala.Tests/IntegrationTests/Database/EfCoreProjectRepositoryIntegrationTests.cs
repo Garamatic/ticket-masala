@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Tests.TestHelpers;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
 using Xunit;
 
 namespace TicketMasala.Tests.IntegrationTests.Database;
@@ -33,7 +34,7 @@ public class EfCoreProjectRepositoryIntegrationTests : IDisposable
         {
             Name = "New Test Project",
             Description = "Test Project Description",
-            Status = Status.Pending,
+            Status = TicketMasala.Domain.Common.Status.Pending,
             CustomerId = customer.Id,
             CreatorGuid = Guid.NewGuid(),
             CreationDate = DateTime.UtcNow
@@ -62,7 +63,7 @@ public class EfCoreProjectRepositoryIntegrationTests : IDisposable
         {
             Name = "Managed Project",
             Description = "Project with manager",
-            Status = Status.InProgress,
+            Status = TicketMasala.Domain.Common.Status.InProgress,
             CustomerId = customer.Id,
             ProjectManagerId = manager.Id,
             CreatorGuid = Guid.NewGuid(),
@@ -141,8 +142,8 @@ public class EfCoreProjectRepositoryIntegrationTests : IDisposable
     {
         // Arrange
         var customer = await _fixture.SeedTestCustomerAsync();
-        await _fixture.SeedTestProjectAsync(customer: customer, status: Status.InProgress);
-        await _fixture.SeedTestProjectAsync(customer: customer, status: Status.Pending);
+        await _fixture.SeedTestProjectAsync(customer: customer, status: TicketMasala.Domain.Common.Status.InProgress);
+        await _fixture.SeedTestProjectAsync(customer: customer, status: TicketMasala.Domain.Common.Status.Pending);
 
         // Act
         var projects = await _fixture.ProjectRepository.GetAllAsync();
@@ -178,10 +179,10 @@ public class EfCoreProjectRepositoryIntegrationTests : IDisposable
     {
         // Arrange
         var customer = await _fixture.SeedTestCustomerAsync();
-        await _fixture.SeedTestProjectAsync(customer: customer, status: Status.Pending);
-        await _fixture.SeedTestProjectAsync(customer: customer, status: Status.InProgress);
-        await _fixture.SeedTestProjectAsync(customer: customer, status: Status.Completed);
-        await _fixture.SeedTestProjectAsync(customer: customer, status: Status.Cancelled);
+        await _fixture.SeedTestProjectAsync(customer: customer, status: TicketMasala.Domain.Common.Status.Pending);
+        await _fixture.SeedTestProjectAsync(customer: customer, status: TicketMasala.Domain.Common.Status.InProgress);
+        await _fixture.SeedTestProjectAsync(customer: customer, status: TicketMasala.Domain.Common.Status.Completed);
+        await _fixture.SeedTestProjectAsync(customer: customer, status: TicketMasala.Domain.Common.Status.Cancelled);
 
         // Act
         var activeProjects = await _fixture.ProjectRepository.GetActiveProjectsAsync();
@@ -189,7 +190,7 @@ public class EfCoreProjectRepositoryIntegrationTests : IDisposable
         // Assert
         Assert.Equal(2, activeProjects.Count());
         Assert.All(activeProjects, p =>
-            Assert.True(p.Status == Status.Pending || p.Status == Status.InProgress));
+            Assert.True(p.Status == TicketMasala.Domain.Common.Status.Pending || p.Status == TicketMasala.Domain.Common.Status.InProgress));
     }
 
     #endregion
@@ -229,7 +230,7 @@ public class EfCoreProjectRepositoryIntegrationTests : IDisposable
         {
             Name = "Old Project",
             Description = "Created first",
-            Status = Status.InProgress,
+            Status = TicketMasala.Domain.Common.Status.InProgress,
             CustomerId = customer.Id,
             CreatorGuid = Guid.NewGuid(),
             CreationDate = DateTime.UtcNow.AddDays(-10)
@@ -240,7 +241,7 @@ public class EfCoreProjectRepositoryIntegrationTests : IDisposable
         {
             Name = "New Project",
             Description = "Created later",
-            Status = Status.InProgress,
+            Status = TicketMasala.Domain.Common.Status.InProgress,
             CustomerId = customer.Id,
             CreatorGuid = Guid.NewGuid(),
             CreationDate = DateTime.UtcNow
@@ -261,7 +262,7 @@ public class EfCoreProjectRepositoryIntegrationTests : IDisposable
     {
         // Arrange
         var customer = await _fixture.SeedTestCustomerAsync();
-        await _fixture.SeedTestProjectAsync(customer: customer, status: Status.Completed);
+        await _fixture.SeedTestProjectAsync(customer: customer, status: TicketMasala.Domain.Common.Status.Completed);
 
         // Act
         var recommended = await _fixture.ProjectRepository.GetRecommendedProjectForCustomerAsync(customer.Id);
@@ -280,7 +281,7 @@ public class EfCoreProjectRepositoryIntegrationTests : IDisposable
         // Arrange
         var project = await _fixture.SeedTestProjectAsync();
         project.Name = "Updated Project Name";
-        project.Status = Status.Completed;
+        project.Status = TicketMasala.Domain.Common.Status.Completed;
 
         // Act
         await _fixture.ProjectRepository.UpdateAsync(project);
@@ -290,7 +291,7 @@ public class EfCoreProjectRepositoryIntegrationTests : IDisposable
         var fromDb = await _fixture.Context.Projects.FindAsync(project.Guid);
         Assert.NotNull(fromDb);
         Assert.Equal("Updated Project Name", fromDb.Name);
-        Assert.Equal(Status.Completed, fromDb.Status);
+        Assert.Equal(TicketMasala.Domain.Common.Status.Completed, fromDb.Status);
     }
 
     #endregion

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Tests.TestHelpers;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
 using Xunit;
 
 namespace TicketMasala.Tests.IntegrationTests.Database;
@@ -40,7 +41,7 @@ public class DatabaseTransactionTests : IDisposable
             DomainId = "IT",
             Status = "New",
             CustomFieldsJson = "{}",
-            TicketStatus = Status.Pending,
+            TicketStatus = TicketMasala.Domain.Common.Status.Pending,
             CustomerId = customer.Id,
             CreatorGuid = Guid.Parse(customer.Id)
         };
@@ -77,7 +78,7 @@ public class DatabaseTransactionTests : IDisposable
             DomainId = "IT",
             Status = "New",
             CustomFieldsJson = "{}",
-            TicketStatus = Status.Pending,
+            TicketStatus = TicketMasala.Domain.Common.Status.Pending,
             CustomerId = customer.Id,
             CreatorGuid = Guid.Parse(customer.Id)
         };
@@ -121,7 +122,7 @@ public class DatabaseTransactionTests : IDisposable
                 DomainId = "IT",
                 Status = "New",
                 CustomFieldsJson = "{}",
-                TicketStatus = Status.Pending,
+                TicketStatus = TicketMasala.Domain.Common.Status.Pending,
                 CustomerId = customer.Id,
                 CreatorGuid = Guid.Parse(customer.Id)
             };
@@ -133,7 +134,7 @@ public class DatabaseTransactionTests : IDisposable
             {
                 Name = "Valid Project",
                 Description = "This project is valid",
-                Status = Status.Pending,
+                Status = TicketMasala.Domain.Common.Status.Pending,
                 CustomerId = customer.Id,
                 CreatorGuid = Guid.NewGuid(),
                 CreationDate = DateTime.UtcNow
@@ -149,7 +150,7 @@ public class DatabaseTransactionTests : IDisposable
                 DomainId = "IT",
                 Status = "New",
                 CustomFieldsJson = "{}",
-                TicketStatus = Status.Pending,
+                TicketStatus = TicketMasala.Domain.Common.Status.Pending,
                 CustomerId = customer.Id,
                 CreatorGuid = Guid.Parse(customer.Id)
             };
@@ -190,7 +191,7 @@ public class DatabaseTransactionTests : IDisposable
             DomainId = "IT",
             Status = "New",
             CustomFieldsJson = "{}",
-            TicketStatus = Status.Pending,
+            TicketStatus = TicketMasala.Domain.Common.Status.Pending,
             CustomerId = customer.Id,
             CreatorGuid = Guid.Parse(customer.Id)
         };
@@ -202,7 +203,7 @@ public class DatabaseTransactionTests : IDisposable
             DomainId = "IT",
             Status = "New",
             CustomFieldsJson = "{}",
-            TicketStatus = Status.Pending,
+            TicketStatus = TicketMasala.Domain.Common.Status.Pending,
             CustomerId = customer.Id,
             CreatorGuid = Guid.Parse(customer.Id)
         };
@@ -211,7 +212,7 @@ public class DatabaseTransactionTests : IDisposable
         {
             Name = "Batch Project",
             Description = "Project in batch",
-            Status = Status.Pending,
+            Status = TicketMasala.Domain.Common.Status.Pending,
             CustomerId = customer.Id,
             CreatorGuid = Guid.NewGuid(),
             CreationDate = DateTime.UtcNow
@@ -250,7 +251,7 @@ public class DatabaseTransactionTests : IDisposable
             DomainId = "IT",
             Status = "New",
             CustomFieldsJson = "{}",
-            TicketStatus = Status.Pending,
+            TicketStatus = TicketMasala.Domain.Common.Status.Pending,
             CustomerId = customer.Id,
             CreatorGuid = Guid.Parse(customer.Id)
         };
@@ -320,7 +321,7 @@ public class DatabaseTransactionTests : IDisposable
             DomainId = "IT",
             Status = "New",
             CustomFieldsJson = "{}",
-            TicketStatus = Status.Pending,
+            TicketStatus = TicketMasala.Domain.Common.Status.Pending,
             CustomerId = customer.Id,
             CreatorGuid = Guid.Parse(customer.Id)
         };

@@ -1,4 +1,5 @@
-﻿using TicketMasala.Web.Models;
+﻿using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities; // ApplicationUser, Employee
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;

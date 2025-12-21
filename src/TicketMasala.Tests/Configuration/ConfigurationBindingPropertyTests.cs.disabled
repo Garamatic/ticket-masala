@@ -1,0 +1,226 @@
+using System.Text.Json;
+using FsCheck;
+using FsCheck.Xunit;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using TicketMasala.Web.Configuration;
+using Xunit;
+
+namespace TicketMasala.Tests.Configuration;
+
+/// <summary>
+/// Property-based tests for configuration binding round-trip.
+/// Feature: ticketmasala-architecture-improvements, Property 3: Configuration Binding Round-Trip
+/// Validates: Requirements 3.2, 3.5
+/// </summary>
+public class ConfigurationBindingPropertyTests
+{
+    /// <summary>
+    /// Property 3: Configuration Binding Round-Trip
+    /// For any valid MasalaOptions object, serializing it to JSON and binding it back
+    /// via IOptions&lt;MasalaOptions&gt; SHALL produce an equivalent object with all properties preserved.
+    /// </summary>
+    [Property(MaxTest = 100)]
+    public Property ConfigurationRoundTrip_PreservesAllProperties()
+    {
+        return Prop.ForAll(
+            ValidMasalaOptionsGenerator(),
+            original =>
+            {
+                // Serialize to JSON
+                var json = SerializeToConfigJson(original);
+                
+                // Build configuration from JSON
+                var configuration = new ConfigurationBuilder()
+                    .AddJsonStream(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(json)))
+                    .Build();
+                
+                // Bind back to MasalaOptions
+                var services = new ServiceCollection();
+                services.Configure<MasalaOptions>(configuration.GetSection(MasalaOptions.SectionName));
+                var serviceProvider = services.BuildServiceProvider();
+                var options = serviceProvider.GetRequiredService<IOptions<MasalaOptions>>().Value;
+                
+                // Verify all properties are preserved
+                return AreEquivalent(original, options);
+            });
+    }
+
+
+    [Property(MaxTest = 100)]
+    public Property DatabaseOptions_RoundTrip_PreservesValues()
+    {
+        return Prop.ForAll(
+            ValidDatabaseOptionsGenerator(),
+            original =>
+            {
+                var masalaOptions = new MasalaOptions { Database = original };
+                var json = SerializeToConfigJson(masalaOptions);
+                
+                var configuration = new ConfigurationBuilder()
+                    .AddJsonStream(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(json)))
+                    .Build();
+                
+                var services = new ServiceCollection();
+                services.Configure<MasalaOptions>(configuration.GetSection(MasalaOptions.SectionName));
+                var serviceProvider = services.BuildServiceProvider();
+                var options = serviceProvider.GetRequiredService<IOptions<MasalaOptions>>().Value;
+                
+                return options.Database.Provider == original.Provider &&
+                       options.Database.ConnectionString == original.ConnectionString;
+            });
+    }
+
+    [Property(MaxTest = 100)]
+    public Property FeatureFlags_RoundTrip_PreservesValues()
+    {
+        return Prop.ForAll(
+            ValidFeatureFlagsGenerator(),
+            original =>
+            {
+                var masalaOptions = new MasalaOptions 
+                { 
+                    Database = new DatabaseOptions { Provider = "Sqlite", ConnectionString = "test" },
+                    Features = original 
+                };
+                var json = SerializeToConfigJson(masalaOptions);
+                
+                var configuration = new ConfigurationBuilder()
+                    .AddJsonStream(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(json)))
+                    .Build();
+                
+                var services = new ServiceCollection();
+                services.Configure<MasalaOptions>(configuration.GetSection(MasalaOptions.SectionName));
+                var serviceProvider = services.BuildServiceProvider();
+                var options = serviceProvider.GetRequiredService<IOptions<MasalaOptions>>().Value;
+                
+                return options.Features.TicketGenerator == original.TicketGenerator &&
+                       options.Features.TicketGeneratorIntervalSeconds == original.TicketGeneratorIntervalSeconds &&
+                       options.Features.EmailNotifications == original.EmailNotifications &&
+                       options.Features.KnowledgeBase == original.KnowledgeBase;
+            });
+    }
+
+
+    // Helper methods
+
+    private static string SerializeToConfigJson(MasalaOptions options)
+    {
+        var configObject = new
+        {
+            Masala = new
+            {
+                ConfigPath = options.ConfigPath,
+                Database = new
+                {
+                    Provider = options.Database.Provider,
+                    ConnectionString = options.Database.ConnectionString
+                },
+                Gerda = new
+                {
+                    Enabled = options.Gerda.Enabled,
+                    ModelPath = options.Gerda.ModelPath,
+                    OpenAiApiKey = options.Gerda.OpenAiApiKey,
+                    OpenAiModel = options.Gerda.OpenAiModel
+                },
+                Features = new
+                {
+                    TicketGenerator = options.Features.TicketGenerator,
+                    TicketGeneratorIntervalSeconds = options.Features.TicketGeneratorIntervalSeconds,
+                    EmailNotifications = options.Features.EmailNotifications,
+                    KnowledgeBase = options.Features.KnowledgeBase
+                }
+            }
+        };
+        
+        return JsonSerializer.Serialize(configObject, new JsonSerializerOptions { WriteIndented = true });
+    }
+
+    private static bool AreEquivalent(MasalaOptions original, MasalaOptions bound)
+    {
+        return original.ConfigPath == bound.ConfigPath &&
+               original.Database.Provider == bound.Database.Provider &&
+               original.Database.ConnectionString == bound.Database.ConnectionString &&
+               original.Gerda.Enabled == bound.Gerda.Enabled &&
+               original.Gerda.ModelPath == bound.Gerda.ModelPath &&
+               original.Gerda.OpenAiApiKey == bound.Gerda.OpenAiApiKey &&
+               original.Gerda.OpenAiModel == bound.Gerda.OpenAiModel &&
+               original.Features.TicketGenerator == bound.Features.TicketGenerator &&
+               original.Features.TicketGeneratorIntervalSeconds == bound.Features.TicketGeneratorIntervalSeconds &&
+               original.Features.EmailNotifications == bound.Features.EmailNotifications &&
+               original.Features.KnowledgeBase == bound.Features.KnowledgeBase;
+    }
+
+
+    // Generators
+
+    private static Arbitrary<MasalaOptions> ValidMasalaOptionsGenerator()
+    {
+        var validProviders = new[] { "Sqlite", "SqlServer" };
+        
+        return Arb.From(
+            from configPath in Gen.Elements("./config", "/app/config", "config", "")
+            from provider in Gen.Elements(validProviders)
+            from connectionString in Arb.Generate<NonEmptyString>()
+            from gerdaEnabled in Arb.Generate<bool>()
+            from modelPath in Gen.Elements("./models", "/app/models", "models", "")
+            from openAiModel in Gen.Elements("gpt-4", "gpt-3.5-turbo", "gpt-4-turbo")
+            from ticketGenerator in Arb.Generate<bool>()
+            from interval in Gen.Choose(5, 3600)
+            from emailNotifications in Arb.Generate<bool>()
+            from knowledgeBase in Arb.Generate<bool>()
+            select new MasalaOptions
+            {
+                ConfigPath = configPath,
+                Database = new DatabaseOptions
+                {
+                    Provider = provider,
+                    ConnectionString = connectionString.Get
+                },
+                Gerda = new GerdaOptions
+                {
+                    Enabled = gerdaEnabled,
+                    ModelPath = modelPath,
+                    OpenAiModel = openAiModel
+                },
+                Features = new FeatureFlags
+                {
+                    TicketGenerator = ticketGenerator,
+                    TicketGeneratorIntervalSeconds = interval,
+                    EmailNotifications = emailNotifications,
+                    KnowledgeBase = knowledgeBase
+                }
+            });
+    }
+
+    private static Arbitrary<DatabaseOptions> ValidDatabaseOptionsGenerator()
+    {
+        var validProviders = new[] { "Sqlite", "SqlServer" };
+        
+        return Arb.From(
+            from provider in Gen.Elements(validProviders)
+            from connectionString in Arb.Generate<NonEmptyString>()
+            select new DatabaseOptions
+            {
+                Provider = provider,
+                ConnectionString = connectionString.Get
+            });
+    }
+
+    private static Arbitrary<FeatureFlags> ValidFeatureFlagsGenerator()
+    {
+        return Arb.From(
+            from ticketGenerator in Arb.Generate<bool>()
+            from interval in Gen.Choose(5, 3600)
+            from emailNotifications in Arb.Generate<bool>()
+            from knowledgeBase in Arb.Generate<bool>()
+            select new FeatureFlags
+            {
+                TicketGenerator = ticketGenerator,
+                TicketGeneratorIntervalSeconds = interval,
+                EmailNotifications = emailNotifications,
+                KnowledgeBase = knowledgeBase
+            });
+    }
+}

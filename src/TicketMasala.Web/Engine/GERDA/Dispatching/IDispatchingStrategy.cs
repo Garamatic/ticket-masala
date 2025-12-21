@@ -1,4 +1,5 @@
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
 using TicketMasala.Web.Engine.GERDA.Strategies;
 
 namespace TicketMasala.Web.Engine.GERDA.Dispatching;

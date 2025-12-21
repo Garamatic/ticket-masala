@@ -1,8 +1,9 @@
 using System.Collections.Concurrent;
 using System.Linq.Expressions;
 using System.Security.Claims;
-using TicketMasala.Web.Models;
-using TicketMasala.Web.Models.Configuration;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities.Configuration;
 
 namespace TicketMasala.Web.Engine.Compiler;
 

@@ -32,7 +32,7 @@ public class HomeController : Controller
             try
             {
                 var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                var isCustomer = User.IsInRole(TicketMasala.Web.Utilities.Constants.RoleCustomer);
+                var isCustomer = User.IsInRole(TicketMasala.Domain.Common.Constants.RoleCustomer);
 
                 var stats = await _ticketService.GetDashboardStatsAsync(userId, isCustomer);
                 ViewBag.ProjectCount = stats.ProjectCount;

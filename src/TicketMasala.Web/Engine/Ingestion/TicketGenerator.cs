@@ -1,10 +1,13 @@
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
 using TicketMasala.Web.Engine.GERDA.Tickets;
-using TicketMasala.Web.Utilities;
+using TicketMasala.Domain.Common;
 using TicketMasala.Web.Data;
+using TicketMasala.Domain.Entities; // ApplicationUser
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web;
+using TicketMasala.Web.Utilities;
 
 namespace TicketMasala.Web.Engine.Ingestion;
 

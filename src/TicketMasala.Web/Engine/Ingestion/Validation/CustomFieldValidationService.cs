@@ -1,5 +1,5 @@
 using System.Text.Json;
-using TicketMasala.Web.Models.Configuration;
+using TicketMasala.Domain.Entities.Configuration;
 using TicketMasala.Web.Engine.GERDA.Configuration;
 
 namespace TicketMasala.Web.Engine.Ingestion.Validation;

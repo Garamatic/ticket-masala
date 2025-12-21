@@ -1,4 +1,4 @@
-using TicketMasala.Web.Models.Configuration;
+using TicketMasala.Domain.Entities.Configuration;
 
 namespace TicketMasala.Web.Engine.GERDA.Configuration;
 

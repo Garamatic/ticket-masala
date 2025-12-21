@@ -1,4 +1,5 @@
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
 using TicketMasala.Web.ViewModels.Tickets;
 using TicketMasala.Web.Data;
 using Microsoft.EntityFrameworkCore;
@@ -22,6 +23,8 @@ public class EfCoreTicketRepository : ITicketRepository
 
     public async Task<Ticket?> GetByIdAsync(Guid id, bool includeRelations = true)
     {
+        // Note: Navigation properties removed from Domain models
+        // Relationships configured in MasalaDbContext.ConfigureUserRelationships()
         var query = _context.Tickets.AsQueryable();
 
         if (includeRelations)
@@ -29,8 +32,6 @@ public class EfCoreTicketRepository : ITicketRepository
             query = query
                 .Include(t => t.Customer)
                 .Include(t => t.Responsible)
-                .Include(t => t.ParentTicket)
-                .Include(t => t.SubTickets)
                 .Include(t => t.Project);
         }
 
@@ -39,14 +40,17 @@ public class EfCoreTicketRepository : ITicketRepository
 
     public async Task<IEnumerable<Ticket>> GetAllAsync(Guid? departmentId = null)
     {
-        var query = _context.Tickets
-            .Include(t => t.Customer)
-            .Include(t => t.Responsible)
-            .AsQueryable();
+        var query = _context.Tickets.AsQueryable();
 
         if (departmentId.HasValue)
         {
-            query = query.Where(t => t.Project != null && t.Project.DepartmentId == departmentId.Value);
+            // Join with Projects to filter by DepartmentId
+            query = query.Join(_context.Projects,
+                ticket => ticket.ProjectGuid,
+                project => project.Guid,
+                (ticket, project) => new { Ticket = ticket, Project = project })
+                .Where(x => x.Project.DepartmentId == departmentId.Value)
+                .Select(x => x.Ticket);
         }
 
         return await query.ToListAsync();
@@ -55,15 +59,18 @@ public class EfCoreTicketRepository : ITicketRepository
     public async Task<IEnumerable<Ticket>> GetUnassignedAsync(Guid? departmentId = null)
     {
         var query = _context.Tickets
-            .Include(t => t.Customer)
-            .Include(t => t.Project)
             .Where(t => t.ValidUntil == null)
             .Where(t => t.TicketStatus == Status.Pending ||
                        (t.TicketStatus == Status.Assigned && t.ResponsibleId == null));
 
         if (departmentId.HasValue)
         {
-            query = query.Where(t => t.Project != null && t.Project.DepartmentId == departmentId.Value);
+            query = query.Join(_context.Projects,
+                ticket => ticket.ProjectGuid,
+                project => project.Guid,
+                (ticket, project) => new { Ticket = ticket, Project = project })
+                .Where(x => x.Project.DepartmentId == departmentId.Value)
+                .Select(x => x.Ticket);
         }
 
         return await query.ToListAsync();
@@ -72,13 +79,16 @@ public class EfCoreTicketRepository : ITicketRepository
     public async Task<IEnumerable<Ticket>> GetByStatusAsync(Status status, Guid? departmentId = null)
     {
         var query = _context.Tickets
-            .Include(t => t.Customer)
-            .Include(t => t.Responsible)
             .Where(t => t.TicketStatus == status && t.ValidUntil == null);
 
         if (departmentId.HasValue)
         {
-            query = query.Where(t => t.Project != null && t.Project.DepartmentId == departmentId.Value);
+            query = query.Join(_context.Projects,
+                ticket => ticket.ProjectGuid,
+                project => project.Guid,
+                (ticket, project) => new { Ticket = ticket, Project = project })
+                .Where(x => x.Project.DepartmentId == departmentId.Value)
+                .Select(x => x.Ticket);
         }
 
         return await query.ToListAsync();
@@ -87,7 +97,6 @@ public class EfCoreTicketRepository : ITicketRepository
     public async Task<IEnumerable<Ticket>> GetByCustomerIdAsync(string customerId)
     {
         return await _context.Tickets
-            .Include(t => t.Responsible)
             .Where(t => t.CustomerId == customerId)
             .Where(t => t.ValidUntil == null)
             .ToListAsync();
@@ -96,7 +105,6 @@ public class EfCoreTicketRepository : ITicketRepository
     public async Task<IEnumerable<Ticket>> GetByResponsibleIdAsync(string responsibleId)
     {
         return await _context.Tickets
-            .Include(t => t.Customer)
             .Where(t => t.ResponsibleId == responsibleId)
             .Where(t => t.ValidUntil == null)
             .ToListAsync();
@@ -105,8 +113,6 @@ public class EfCoreTicketRepository : ITicketRepository
     public async Task<IEnumerable<Ticket>> GetByProjectGuidAsync(Guid projectGuid)
     {
         return await _context.Tickets
-            .Include(t => t.Customer)
-            .Include(t => t.Responsible)
             .Where(t => t.ProjectGuid == projectGuid)
             .Where(t => t.ValidUntil == null)
             .ToListAsync();
@@ -121,7 +127,12 @@ public class EfCoreTicketRepository : ITicketRepository
 
         if (departmentId.HasValue)
         {
-            query = query.Where(t => t.Project != null && t.Project.DepartmentId == departmentId.Value);
+            query = query.Join(_context.Projects,
+                ticket => ticket.ProjectGuid,
+                project => project.Guid,
+                (ticket, project) => new { Ticket = ticket, Project = project })
+                .Where(x => x.Project.DepartmentId == departmentId.Value)
+                .Select(x => x.Ticket);
         }
 
         return await query.ToListAsync();
@@ -130,14 +141,17 @@ public class EfCoreTicketRepository : ITicketRepository
     public async Task<IEnumerable<Ticket>> GetPendingOrAssignedAsync(Guid? departmentId = null)
     {
         var query = _context.Tickets
-            .Include(t => t.Customer)
-            .Include(t => t.Responsible)
             .Where(t => t.TicketStatus == Status.Pending || t.TicketStatus == Status.Assigned)
             .Where(t => t.ValidUntil == null);
 
         if (departmentId.HasValue)
         {
-            query = query.Where(t => t.Project != null && t.Project.DepartmentId == departmentId.Value);
+            query = query.Join(_context.Projects,
+                ticket => ticket.ProjectGuid,
+                project => project.Guid,
+                (ticket, project) => new { Ticket = ticket, Project = project })
+                .Where(x => x.Project.DepartmentId == departmentId.Value)
+                .Select(x => x.Ticket);
         }
 
         return await query.ToListAsync();
@@ -146,27 +160,33 @@ public class EfCoreTicketRepository : ITicketRepository
     public async Task<TicketSearchViewModel> SearchTicketsAsync(TicketSearchViewModel searchModel, Guid? departmentId = null)
     {
         var query = _context.Tickets
-            .Include(t => t.Customer)
-            .Include(t => t.Responsible)
-            .Include(t => t.Project)
             .Where(t => t.ValidUntil == null)
             .AsQueryable();
 
         // Apply Department Filter
         if (departmentId.HasValue)
         {
-            query = query.Where(t => t.Project != null && t.Project.DepartmentId == departmentId.Value);
+            query = query.Join(_context.Projects,
+                ticket => ticket.ProjectGuid,
+                project => project.Guid,
+                (ticket, project) => new { Ticket = ticket, Project = project })
+                .Where(x => x.Project.DepartmentId == departmentId.Value)
+                .Select(x => x.Ticket);
         }
 
         // Apply filters
         if (!string.IsNullOrWhiteSpace(searchModel.SearchTerm))
         {
             var term = searchModel.SearchTerm.ToLower();
-            query = query.Where(t =>
-                t.Description.ToLower().Contains(term) ||
-                (t.Customer != null && (t.Customer.FirstName.ToLower().Contains(term) || t.Customer.LastName.ToLower().Contains(term))) ||
-                (t.Project != null && t.Project.Name.ToLower().Contains(term))
-            );
+            // Join with Users and Projects for search
+            query = query
+                .Include(t => t.Customer)
+                .Include(t => t.Responsible)
+                .Include(t => t.Project)
+                .Where(t =>
+                    t.Description.ToLower().Contains(term) ||
+                    (t.Customer != null && (t.Customer.FirstName.ToLower().Contains(term) || t.Customer.LastName.ToLower().Contains(term))) ||
+                    (t.Project != null && t.Project.Name.ToLower().Contains(term)));
         }
 
         if (searchModel.Status.HasValue)
@@ -241,8 +261,6 @@ public class EfCoreTicketRepository : ITicketRepository
     public async Task<IEnumerable<Ticket>> GetActiveTicketsAsync()
     {
         return await _context.Tickets
-            .Include(t => t.Customer)
-            .Include(t => t.Responsible)
             .Where(t => t.TicketStatus != Status.Completed && t.TicketStatus != Status.Failed)
             .Where(t => t.ValidUntil == null)
             .ToListAsync();
@@ -251,8 +269,6 @@ public class EfCoreTicketRepository : ITicketRepository
     public async Task<IEnumerable<Ticket>> GetCompletedTicketsAsync()
     {
         return await _context.Tickets
-            .Include(t => t.Customer)
-            .Include(t => t.Responsible)
             .Where(t => t.TicketStatus == Status.Completed)
             .ToListAsync();
     }
@@ -287,7 +303,6 @@ public class EfCoreTicketRepository : ITicketRepository
     public async Task<IEnumerable<QualityReview>> GetQualityReviewsForTicketAsync(Guid ticketId)
     {
         return await _context.QualityReviews
-            .Include(r => r.Reviewer)
             .Where(r => r.TicketId == ticketId)
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();

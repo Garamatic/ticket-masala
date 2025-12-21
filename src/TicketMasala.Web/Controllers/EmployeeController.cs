@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TicketMasala.Web.Utilities;
+using TicketMasala.Domain.Common;
 
 namespace TicketMasala.Web.Controllers;
 

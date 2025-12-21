@@ -1,5 +1,6 @@
 using TicketMasala.Tests.TestHelpers;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
 using Xunit;
 
 namespace TicketMasala.Tests.IntegrationTests.Database;
@@ -36,7 +37,7 @@ public class EfCoreUserRepositoryIntegrationTests : IDisposable
         Assert.NotNull(result);
         Assert.Equal(employee.Id, result.Id);
         Assert.Equal(employee.Email, result.Email);
-        Assert.Equal(EmployeeType.Support, result.Level);
+        Assert.Equal(TicketMasala.Domain.Common.EmployeeType.Support, result.Level);
     }
 
     [Fact]
@@ -270,7 +271,7 @@ public class EfCoreUserRepositoryIntegrationTests : IDisposable
             LastName = "Agent",
             Phone = "555-9999",
             Team = "AI Support",
-            Level = EmployeeType.Support,
+            Level = TicketMasala.Domain.Common.EmployeeType.Support,
             Language = "NL,FR",
             Specializations = "[\"Tax Law\",\"Fraud Detection\"]",
             MaxCapacityPoints = 60,

@@ -8,7 +8,8 @@ using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.Engine.Ingestion;
 using TicketMasala.Web.Engine.Ingestion.Background;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.Observers;
 using Microsoft.AspNetCore.Http;
@@ -17,7 +18,7 @@ using System.Security.Claims;
 using TicketMasala.Web.Engine.Compiler;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.GERDA.Configuration;
-using TicketMasala.Web.Models.Configuration;
+using TicketMasala.Domain.Entities.Configuration;
 
 namespace TicketMasala.Tests.Services;
 
@@ -155,7 +156,7 @@ public class TicketServiceTests
         // Assert
         Assert.NotNull(ticket);
         Assert.Equal("Test ticket", ticket.Description);
-        Assert.Equal(Status.Pending, ticket.TicketStatus);
+        Assert.Equal(TicketMasala.Domain.Common.Status.Pending, ticket.TicketStatus);
         Assert.Null(ticket.ResponsibleId);
     }
 
@@ -185,7 +186,7 @@ public class TicketServiceTests
             LastName = "Employee",
             Phone = "987654321",
             Team = "Support",
-            Level = EmployeeType.Support
+            Level = TicketMasala.Domain.Common.EmployeeType.Support
         };
 
         context.Users.AddRange(customer, employee);
@@ -202,7 +203,7 @@ public class TicketServiceTests
 
         // Assert
         Assert.NotNull(ticket);
-        Assert.Equal(Status.Assigned, ticket.TicketStatus);
+        Assert.Equal(TicketMasala.Domain.Common.Status.Assigned, ticket.TicketStatus);
         Assert.Equal(employee.Id, ticket.ResponsibleId);
     }
 
@@ -251,7 +252,7 @@ public class TicketServiceTests
             Status = "New",
             Title = "Test Ticket",
             CustomFieldsJson = "{}",
-            TicketStatus = Status.Pending,
+            TicketStatus = TicketMasala.Domain.Common.Status.Pending,
             EstimatedEffortPoints = 5,
             PriorityScore = 10.5,
 
@@ -313,7 +314,7 @@ public class TicketServiceTests
             LastName = "Employee",
             Phone = "987654321",
             Team = "Support",
-            Level = EmployeeType.Support
+            Level = TicketMasala.Domain.Common.EmployeeType.Support
         };
 
         context.Users.AddRange(customer, employee);
@@ -325,7 +326,7 @@ public class TicketServiceTests
             Status = "New",
             Title = "Test Ticket",
             CustomFieldsJson = "{}",
-            TicketStatus = Status.Pending,
+            TicketStatus = TicketMasala.Domain.Common.Status.Pending,
             CustomerId = customer.Id
         };
 
@@ -341,7 +342,7 @@ public class TicketServiceTests
         var updatedTicket = await context.Tickets.FindAsync(ticket.Guid);
         Assert.NotNull(updatedTicket);
         Assert.Equal(employee.Id, updatedTicket.ResponsibleId);
-        Assert.Equal(Status.Assigned, updatedTicket.TicketStatus);
+        Assert.Equal(TicketMasala.Domain.Common.Status.Assigned, updatedTicket.TicketStatus);
         Assert.Contains("AI-Assigned", updatedTicket.GerdaTags);
     }
 
@@ -385,7 +386,7 @@ public class TicketServiceTests
             Status = "New",
             Title = "Test Ticket",
             CustomFieldsJson = "{}",
-            TicketStatus = Status.Pending,
+            TicketStatus = TicketMasala.Domain.Common.Status.Pending,
             CustomerId = customer.Id
         };
 
@@ -454,7 +455,7 @@ public class TicketServiceTests
                 LastName = "Johnson",
                 Phone = "333333333",
                 Team = "Support",
-                Level = EmployeeType.Support
+                Level = TicketMasala.Domain.Common.EmployeeType.Support
             },
             new Employee
             {
@@ -465,7 +466,7 @@ public class TicketServiceTests
                 LastName = "Williams",
                 Phone = "444444444",
                 Team = "Development",
-                Level = EmployeeType.ProjectManager
+                Level = TicketMasala.Domain.Common.EmployeeType.ProjectManager
             }
         );
         await context.SaveChangesAsync();

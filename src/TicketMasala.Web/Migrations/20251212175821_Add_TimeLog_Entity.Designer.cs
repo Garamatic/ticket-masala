@@ -148,7 +148,7 @@ namespace TicketMasala.Web.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.ApplicationUser", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("TEXT");
@@ -249,7 +249,7 @@ namespace TicketMasala.Web.Migrations
                     b.UseTphMappingStrategy();
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.AuditLogEntry", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.AuditLogEntry", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -286,7 +286,7 @@ namespace TicketMasala.Web.Migrations
                     b.ToTable("AuditLogs");
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.Document", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.Document", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -331,7 +331,7 @@ namespace TicketMasala.Web.Migrations
                     b.ToTable("Documents");
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.DomainConfigVersion", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.DomainConfigVersion", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -357,7 +357,7 @@ namespace TicketMasala.Web.Migrations
                     b.ToTable("DomainConfigVersion");
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.KnowledgeBaseArticle", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.KnowledgeBaseArticle", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -392,7 +392,7 @@ namespace TicketMasala.Web.Migrations
                     b.ToTable("KnowledgeBaseArticles");
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.Notification", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.Notification", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -429,7 +429,7 @@ namespace TicketMasala.Web.Migrations
                     b.ToTable("Notifications");
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.Project", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.Project", b =>
                 {
                     b.Property<Guid>("Guid")
                         .ValueGeneratedOnAdd()
@@ -485,7 +485,7 @@ namespace TicketMasala.Web.Migrations
                     b.ToTable("Projects");
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.ProjectTemplate", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.ProjectTemplate", b =>
                 {
                     b.Property<Guid>("Guid")
                         .ValueGeneratedOnAdd()
@@ -515,7 +515,7 @@ namespace TicketMasala.Web.Migrations
                     b.ToTable("ProjectTemplates");
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.QualityReview", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.QualityReview", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -558,7 +558,7 @@ namespace TicketMasala.Web.Migrations
                     b.ToTable("QualityReviews");
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.Resource", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.Resource", b =>
                 {
                     b.Property<Guid>("Guid")
                         .ValueGeneratedOnAdd()
@@ -587,7 +587,7 @@ namespace TicketMasala.Web.Migrations
                     b.ToTable("Resource");
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.SavedFilter", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.SavedFilter", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -632,7 +632,7 @@ namespace TicketMasala.Web.Migrations
                     b.ToTable("SavedFilters");
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.TemplateTicket", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.TemplateTicket", b =>
                 {
                     b.Property<Guid>("Guid")
                         .ValueGeneratedOnAdd()
@@ -671,7 +671,7 @@ namespace TicketMasala.Web.Migrations
                     b.ToTable("TemplateTickets");
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.Ticket", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.Ticket", b =>
                 {
                     b.Property<Guid>("Guid")
                         .ValueGeneratedOnAdd()
@@ -810,7 +810,7 @@ namespace TicketMasala.Web.Migrations
                     b.ToTable("Tickets", (string)null);
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.TicketComment", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.TicketComment", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -841,7 +841,7 @@ namespace TicketMasala.Web.Migrations
                     b.ToTable("TicketComments");
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.TimeLog", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.TimeLog", b =>
                 {
                     b.Property<Guid>("Guid")
                         .ValueGeneratedOnAdd()
@@ -883,9 +883,9 @@ namespace TicketMasala.Web.Migrations
                     b.ToTable("TimeLogs");
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.Employee", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.Employee", b =>
                 {
-                    b.HasBaseType("TicketMasala.Web.Models.ApplicationUser");
+                    b.HasBaseType("TicketMasala.Domain.Entities.ApplicationUser");
 
                     b.Property<string>("DepartmentId")
                         .HasMaxLength(50)
@@ -931,7 +931,7 @@ namespace TicketMasala.Web.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("TicketMasala.Web.Models.ApplicationUser", null)
+                    b.HasOne("TicketMasala.Domain.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -940,7 +940,7 @@ namespace TicketMasala.Web.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("TicketMasala.Web.Models.ApplicationUser", null)
+                    b.HasOne("TicketMasala.Domain.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -955,7 +955,7 @@ namespace TicketMasala.Web.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("TicketMasala.Web.Models.ApplicationUser", null)
+                    b.HasOne("TicketMasala.Domain.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -964,33 +964,33 @@ namespace TicketMasala.Web.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("TicketMasala.Web.Models.ApplicationUser", null)
+                    b.HasOne("TicketMasala.Domain.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.ApplicationUser", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.ApplicationUser", b =>
                 {
-                    b.HasOne("TicketMasala.Web.Models.Project", null)
+                    b.HasOne("TicketMasala.Domain.Entities.Project", null)
                         .WithMany("Customers")
                         .HasForeignKey("ProjectGuid");
 
-                    b.HasOne("TicketMasala.Web.Models.Ticket", null)
+                    b.HasOne("TicketMasala.Domain.Entities.Ticket", null)
                         .WithMany("Watchers")
                         .HasForeignKey("TicketGuid");
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.AuditLogEntry", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.AuditLogEntry", b =>
                 {
-                    b.HasOne("TicketMasala.Web.Models.Ticket", "Ticket")
+                    b.HasOne("TicketMasala.Domain.Entities.Ticket", "Ticket")
                         .WithMany()
                         .HasForeignKey("TicketId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("TicketMasala.Web.Models.ApplicationUser", "User")
+                    b.HasOne("TicketMasala.Domain.Entities.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId");
 
@@ -999,15 +999,15 @@ namespace TicketMasala.Web.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.Document", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.Document", b =>
                 {
-                    b.HasOne("TicketMasala.Web.Models.Ticket", "Ticket")
+                    b.HasOne("TicketMasala.Domain.Entities.Ticket", "Ticket")
                         .WithMany("Attachments")
                         .HasForeignKey("TicketId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("TicketMasala.Web.Models.ApplicationUser", "Uploader")
+                    b.HasOne("TicketMasala.Domain.Entities.ApplicationUser", "Uploader")
                         .WithMany()
                         .HasForeignKey("UploaderId");
 
@@ -1016,18 +1016,18 @@ namespace TicketMasala.Web.Migrations
                     b.Navigation("Uploader");
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.KnowledgeBaseArticle", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.KnowledgeBaseArticle", b =>
                 {
-                    b.HasOne("TicketMasala.Web.Models.ApplicationUser", "Author")
+                    b.HasOne("TicketMasala.Domain.Entities.ApplicationUser", "Author")
                         .WithMany()
                         .HasForeignKey("AuthorId");
 
                     b.Navigation("Author");
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.Notification", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.Notification", b =>
                 {
-                    b.HasOne("TicketMasala.Web.Models.ApplicationUser", "User")
+                    b.HasOne("TicketMasala.Domain.Entities.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1036,13 +1036,13 @@ namespace TicketMasala.Web.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.Project", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.Project", b =>
                 {
-                    b.HasOne("TicketMasala.Web.Models.ApplicationUser", "Customer")
+                    b.HasOne("TicketMasala.Domain.Entities.ApplicationUser", "Customer")
                         .WithMany()
                         .HasForeignKey("CustomerId");
 
-                    b.HasOne("TicketMasala.Web.Models.Employee", "ProjectManager")
+                    b.HasOne("TicketMasala.Domain.Entities.Employee", "ProjectManager")
                         .WithMany()
                         .HasForeignKey("ProjectManagerId");
 
@@ -1051,15 +1051,15 @@ namespace TicketMasala.Web.Migrations
                     b.Navigation("ProjectManager");
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.QualityReview", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.QualityReview", b =>
                 {
-                    b.HasOne("TicketMasala.Web.Models.ApplicationUser", "Reviewer")
+                    b.HasOne("TicketMasala.Domain.Entities.ApplicationUser", "Reviewer")
                         .WithMany()
                         .HasForeignKey("ReviewerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("TicketMasala.Web.Models.Ticket", "Ticket")
+                    b.HasOne("TicketMasala.Domain.Entities.Ticket", "Ticket")
                         .WithMany("QualityReviews")
                         .HasForeignKey("TicketId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1070,25 +1070,25 @@ namespace TicketMasala.Web.Migrations
                     b.Navigation("Ticket");
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.Resource", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.Resource", b =>
                 {
-                    b.HasOne("TicketMasala.Web.Models.Project", null)
+                    b.HasOne("TicketMasala.Domain.Entities.Project", null)
                         .WithMany("Resources")
                         .HasForeignKey("ProjectGuid");
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.SavedFilter", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.SavedFilter", b =>
                 {
-                    b.HasOne("TicketMasala.Web.Models.ApplicationUser", "User")
+                    b.HasOne("TicketMasala.Domain.Entities.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId");
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.TemplateTicket", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.TemplateTicket", b =>
                 {
-                    b.HasOne("TicketMasala.Web.Models.ProjectTemplate", "ProjectTemplate")
+                    b.HasOne("TicketMasala.Domain.Entities.ProjectTemplate", "ProjectTemplate")
                         .WithMany("Tickets")
                         .HasForeignKey("ProjectTemplateId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1097,25 +1097,25 @@ namespace TicketMasala.Web.Migrations
                     b.Navigation("ProjectTemplate");
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.Ticket", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.Ticket", b =>
                 {
-                    b.HasOne("TicketMasala.Web.Models.ApplicationUser", "Customer")
+                    b.HasOne("TicketMasala.Domain.Entities.ApplicationUser", "Customer")
                         .WithMany()
                         .HasForeignKey("CustomerId");
 
-                    b.HasOne("TicketMasala.Web.Models.Ticket", "ParentTicket")
+                    b.HasOne("TicketMasala.Domain.Entities.Ticket", "ParentTicket")
                         .WithMany("SubTickets")
                         .HasForeignKey("ParentTicketGuid");
 
-                    b.HasOne("TicketMasala.Web.Models.Project", "Project")
+                    b.HasOne("TicketMasala.Domain.Entities.Project", "Project")
                         .WithMany("Tasks")
                         .HasForeignKey("ProjectGuid");
 
-                    b.HasOne("TicketMasala.Web.Models.ApplicationUser", "Responsible")
+                    b.HasOne("TicketMasala.Domain.Entities.ApplicationUser", "Responsible")
                         .WithMany()
                         .HasForeignKey("ResponsibleId");
 
-                    b.HasOne("TicketMasala.Web.Models.KnowledgeBaseArticle", "SolvedByArticle")
+                    b.HasOne("TicketMasala.Domain.Entities.KnowledgeBaseArticle", "SolvedByArticle")
                         .WithMany()
                         .HasForeignKey("SolvedByArticleId");
 
@@ -1130,13 +1130,13 @@ namespace TicketMasala.Web.Migrations
                     b.Navigation("SolvedByArticle");
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.TicketComment", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.TicketComment", b =>
                 {
-                    b.HasOne("TicketMasala.Web.Models.ApplicationUser", "Author")
+                    b.HasOne("TicketMasala.Domain.Entities.ApplicationUser", "Author")
                         .WithMany()
                         .HasForeignKey("AuthorId");
 
-                    b.HasOne("TicketMasala.Web.Models.Ticket", "Ticket")
+                    b.HasOne("TicketMasala.Domain.Entities.Ticket", "Ticket")
                         .WithMany("Comments")
                         .HasForeignKey("TicketId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1147,15 +1147,15 @@ namespace TicketMasala.Web.Migrations
                     b.Navigation("Ticket");
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.TimeLog", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.TimeLog", b =>
                 {
-                    b.HasOne("TicketMasala.Web.Models.Ticket", "Ticket")
+                    b.HasOne("TicketMasala.Domain.Entities.Ticket", "Ticket")
                         .WithMany()
                         .HasForeignKey("TicketId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("TicketMasala.Web.Models.ApplicationUser", "User")
+                    b.HasOne("TicketMasala.Domain.Entities.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1166,7 +1166,7 @@ namespace TicketMasala.Web.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.Project", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.Project", b =>
                 {
                     b.Navigation("Customers");
 
@@ -1175,12 +1175,12 @@ namespace TicketMasala.Web.Migrations
                     b.Navigation("Tasks");
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.ProjectTemplate", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.ProjectTemplate", b =>
                 {
                     b.Navigation("Tickets");
                 });
 
-            modelBuilder.Entity("TicketMasala.Web.Models.Ticket", b =>
+            modelBuilder.Entity("TicketMasala.Domain.Entities.Ticket", b =>
                 {
                     b.Navigation("Attachments");
 

@@ -9,7 +9,7 @@ using Moq;
 using TicketMasala.Web.Controllers;
 using TicketMasala.Web.Engine.GERDA.Dispatching;
 using TicketMasala.Web.Engine.GERDA.Tickets;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.Projects;

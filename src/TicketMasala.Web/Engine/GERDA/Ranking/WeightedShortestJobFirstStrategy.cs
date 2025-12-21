@@ -1,5 +1,5 @@
 using TicketMasala.Web.Engine.GERDA.Models;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Engine.GERDA.Configuration;
 using TicketMasala.Web.Engine.Compiler;
 using System.Security.Claims;

@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Razor.TagHelpers;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Common;
 
 namespace TicketMasala.Web.TagHelpers;
 

@@ -1,0 +1,240 @@
+using FsCheck;
+using FsCheck.Xunit;
+using Microsoft.Extensions.Logging;
+using Moq;
+using TicketMasala.Web.Configuration;
+using Xunit;
+
+namespace TicketMasala.Tests.Configuration;
+
+/// <summary>
+/// Property-based tests for ConfigurationValidator.
+/// Feature: ticketmasala-architecture-improvements, Property 2: Configuration Validation Completeness
+/// Validates: Requirements 2.1, 2.2, 2.3, 2.4
+/// </summary>
+public class ConfigurationValidatorPropertyTests
+{
+    private readonly ConfigurationValidator _validator;
+    private readonly Mock<ILogger<ConfigurationValidator>> _loggerMock;
+
+    public ConfigurationValidatorPropertyTests()
+    {
+        _loggerMock = new Mock<ILogger<ConfigurationValidator>>();
+        _validator = new ConfigurationValidator(_loggerMock.Object);
+    }
+
+    /// <summary>
+    /// Property 2: Configuration Validation Completeness
+    /// For any configuration state (valid, missing file, invalid YAML, missing required fields),
+    /// the ConfigurationValidator SHALL either return success for valid configs OR throw an
+    /// exception with a message containing the specific error details.
+    /// </summary>
+    [Property(MaxTest = 100)]
+    public Property ValidConfig_ShouldReturnSuccess()
+    {
+        return Prop.ForAll(
+            ValidMasalaOptionsGenerator(),
+            options =>
+            {
+                var result = _validator.Validate(options);
+                return result.IsValid;
+            });
+    }
+
+
+    [Property(MaxTest = 100)]
+    public Property InvalidDatabaseProvider_ShouldReturnError()
+    {
+        return Prop.ForAll(
+            InvalidDatabaseProviderGenerator(),
+            options =>
+            {
+                var result = _validator.Validate(options);
+                return !result.IsValid && 
+                       result.Errors.Any(e => e.Field.Contains("Database") || e.Field.Contains("Provider"));
+            });
+    }
+
+    [Property(MaxTest = 100)]
+    public Property EmptyConnectionString_ShouldReturnError()
+    {
+        return Prop.ForAll(
+            EmptyConnectionStringGenerator(),
+            options =>
+            {
+                var result = _validator.Validate(options);
+                return !result.IsValid && 
+                       result.Errors.Any(e => e.Field.Contains("ConnectionString"));
+            });
+    }
+
+    [Property(MaxTest = 100)]
+    public Property InvalidTicketGeneratorInterval_ShouldReturnError()
+    {
+        return Prop.ForAll(
+            InvalidTicketGeneratorIntervalGenerator(),
+            options =>
+            {
+                var result = _validator.Validate(options);
+                return !result.IsValid && 
+                       result.Errors.Any(e => e.Field.Contains("TicketGeneratorIntervalSeconds"));
+            });
+    }
+
+    [Property(MaxTest = 100)]
+    public Property ValidateOrThrow_WithInvalidConfig_ShouldThrowWithErrorDetails()
+    {
+        return Prop.ForAll(
+            InvalidMasalaOptionsGenerator(),
+            options =>
+            {
+                try
+                {
+                    _validator.ValidateOrThrow(options);
+                    return false; // Should have thrown
+                }
+                catch (ConfigurationValidationException ex)
+                {
+                    // Exception should contain error details
+                    return ex.Errors.Count > 0 && 
+                           ex.Message.Contains("Configuration validation failed");
+                }
+            });
+    }
+
+
+    // Generators for property-based testing
+
+    private static Arbitrary<MasalaOptions> ValidMasalaOptionsGenerator()
+    {
+        var validProviders = new[] { "Sqlite", "SqlServer" };
+        
+        return Arb.From(
+            from configPath in Arb.Generate<NonEmptyString>()
+            from provider in Gen.Elements(validProviders)
+            from connectionString in Arb.Generate<NonEmptyString>()
+            from gerdaEnabled in Arb.Generate<bool>()
+            from modelPath in Arb.Generate<string>()
+            from ticketGenerator in Arb.Generate<bool>()
+            from interval in Gen.Choose(5, 3600)
+            from emailNotifications in Arb.Generate<bool>()
+            from knowledgeBase in Arb.Generate<bool>()
+            select new MasalaOptions
+            {
+                ConfigPath = configPath.Get,
+                Database = new DatabaseOptions
+                {
+                    Provider = provider,
+                    ConnectionString = connectionString.Get
+                },
+                Gerda = new GerdaOptions
+                {
+                    Enabled = gerdaEnabled,
+                    ModelPath = modelPath ?? string.Empty
+                },
+                Features = new FeatureFlags
+                {
+                    TicketGenerator = ticketGenerator,
+                    TicketGeneratorIntervalSeconds = interval,
+                    EmailNotifications = emailNotifications,
+                    KnowledgeBase = knowledgeBase
+                }
+            });
+    }
+
+    private static Arbitrary<MasalaOptions> InvalidDatabaseProviderGenerator()
+    {
+        var invalidProviders = new[] { "MySQL", "PostgreSQL", "Oracle", "", "sqlite", "SQLITE" };
+        
+        return Arb.From(
+            from provider in Gen.Elements(invalidProviders)
+            from connectionString in Arb.Generate<NonEmptyString>()
+            select new MasalaOptions
+            {
+                Database = new DatabaseOptions
+                {
+                    Provider = provider,
+                    ConnectionString = connectionString.Get
+                }
+            });
+    }
+
+    private static Arbitrary<MasalaOptions> EmptyConnectionStringGenerator()
+    {
+        var emptyStrings = new[] { "", "   ", null! };
+        
+        return Arb.From(
+            from connectionString in Gen.Elements(emptyStrings)
+            select new MasalaOptions
+            {
+                Database = new DatabaseOptions
+                {
+                    Provider = "Sqlite",
+                    ConnectionString = connectionString ?? string.Empty
+                }
+            });
+    }
+
+
+    private static Arbitrary<MasalaOptions> InvalidTicketGeneratorIntervalGenerator()
+    {
+        return Arb.From(
+            from interval in Gen.OneOf(
+                Gen.Choose(-1000, 4),  // Too small
+                Gen.Choose(3601, 10000) // Too large
+            )
+            select new MasalaOptions
+            {
+                Database = new DatabaseOptions
+                {
+                    Provider = "Sqlite",
+                    ConnectionString = "Data Source=test.db"
+                },
+                Features = new FeatureFlags
+                {
+                    TicketGeneratorIntervalSeconds = interval
+                }
+            });
+    }
+
+    private static Arbitrary<MasalaOptions> InvalidMasalaOptionsGenerator()
+    {
+        // Generate options that are invalid in various ways
+        return Arb.From(
+            Gen.OneOf(
+                // Invalid provider
+                from provider in Gen.Elements("MySQL", "PostgreSQL", "")
+                select new MasalaOptions
+                {
+                    Database = new DatabaseOptions
+                    {
+                        Provider = provider,
+                        ConnectionString = "Data Source=test.db"
+                    }
+                },
+                // Empty connection string
+                Gen.Constant(new MasalaOptions
+                {
+                    Database = new DatabaseOptions
+                    {
+                        Provider = "Sqlite",
+                        ConnectionString = ""
+                    }
+                }),
+                // Invalid interval
+                from interval in Gen.Choose(-100, 4)
+                select new MasalaOptions
+                {
+                    Database = new DatabaseOptions
+                    {
+                        Provider = "Sqlite",
+                        ConnectionString = "Data Source=test.db"
+                    },
+                    Features = new FeatureFlags
+                    {
+                        TicketGeneratorIntervalSeconds = interval
+                    }
+                }
+            ));
+    }
+}

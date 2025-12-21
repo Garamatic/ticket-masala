@@ -1,11 +1,13 @@
+using Asp.Versioning;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web.ViewModels.Projects;
 using TicketMasala.Web.ViewModels.Tickets;
-using TicketMasala.Web.Utilities;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Data;
 using System.Security.Claims;
 using TicketMasala.Web.Engine.Projects;
@@ -17,7 +19,8 @@ namespace TicketMasala.Web.Controllers.Api;
 /// REST API for Project management - designed for AI microservice integration
 /// </summary>
 [ApiController]
-[Route("api/v1/[controller]")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/projects")]
 [Authorize(Roles = Constants.RoleEmployee + "," + Constants.RoleAdmin)]
 [Produces("application/json")]
 public class ProjectsApiController : ControllerBase

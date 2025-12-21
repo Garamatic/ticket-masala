@@ -1,9 +1,11 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using TicketMasala.Web.ViewModels.Tickets;
 using TicketMasala.Web.ViewModels.Api;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Engine.Projects;
@@ -19,8 +21,9 @@ namespace TicketMasala.Web.Controllers.Api;
 /// Routes: /api/v1/tickets (legacy) and /api/v1/workitems (UEM canonical)
 /// </summary>
 [ApiController]
-[Route("api/v1/tickets")]
-[Route("api/v1/workitems")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/tickets")]
+[Route("api/v{version:apiVersion}/workitems")]
 [Produces("application/json")]
 public class TicketsApiController : ControllerBase
 {

@@ -1,5 +1,6 @@
 using System.Security.Claims;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
 
 namespace TicketMasala.Web.Engine.Compiler;
 

@@ -9,7 +9,7 @@ using TicketMasala.Web.Engine.GERDA.Anticipation;
 using TicketMasala.Web.Engine.GERDA.Dispatching;
 using TicketMasala.Web.Engine.GERDA.Ranking;
 using TicketMasala.Web.Engine.Ingestion;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.GERDA.Tickets;

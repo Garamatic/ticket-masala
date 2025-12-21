@@ -1,4 +1,4 @@
-namespace TicketMasala.Web.Models.Configuration;
+namespace TicketMasala.Domain.Entities.Configuration;
 
 /// <summary>
 /// Root configuration object loaded from masala_domains.yaml

@@ -7,11 +7,11 @@
     <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <span>Status: 
-                <span class="badge bg-@(Model.ReviewStatus == TicketMasala.Web.Models.ReviewStatus.Approved ? "success" : (Model.ReviewStatus == TicketMasala.Web.Models.ReviewStatus.Rejected ? "danger" : (Model.ReviewStatus == TicketMasala.Web.Models.ReviewStatus.Pending ? "warning" : "secondary")))">
+                <span class="badge bg-@(Model.ReviewStatus == TicketMasala.Domain.Common.ReviewStatus.Approved ? "success" : (Model.ReviewStatus == TicketMasala.Domain.Common.ReviewStatus.Rejected ? "danger" : (Model.ReviewStatus == TicketMasala.Domain.Common.ReviewStatus.Pending ? "warning" : "secondary")))">
                     @Model.ReviewStatus
                 </span>
             </span>
-            @if (Model.ReviewStatus == TicketMasala.Web.Models.ReviewStatus.None || Model.ReviewStatus == TicketMasala.Web.Models.ReviewStatus.Rejected)
+            @if (Model.ReviewStatus == TicketMasala.Domain.Common.ReviewStatus.None || Model.ReviewStatus == TicketMasala.Domain.Common.ReviewStatus.Rejected)
             {
                 <form asp-action="RequestReview" method="post" class="d-inline"
                       hx-post="@Url.Action("RequestReview", "Ticket")"
@@ -23,7 +23,7 @@
             }
         </div>
 
-        @if (Model.ReviewStatus == TicketMasala.Web.Models.ReviewStatus.Pending && (User.IsInRole("Admin") || User.IsInRole("Employee")))
+        @if (Model.ReviewStatus == TicketMasala.Domain.Common.ReviewStatus.Pending && (User.IsInRole("Admin") || User.IsInRole("Employee")))
         {
             <div class="border p-3 rounded bg-light mb-3">
                 <h6>Submit Review</h6>

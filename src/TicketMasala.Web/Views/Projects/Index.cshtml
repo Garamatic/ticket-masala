@@ -1,5 +1,7 @@
 @model List<TicketMasala.Web.ViewModels.Projects.ProjectTicketViewModel>
-@using TicketMasala.Web.Models
+@using TicketMasala.Domain.Entities
+@using TicketMasala.Domain.Common
+@using TicketMasala.Domain.Entities
 @using TicketMasala.Web.Resources
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResource> Localizer
@@ -19,7 +21,7 @@
         <p class="page-subtitle">@Localizer["Manage your projects and track progress"]</p>
     </div>
     <div class="page-actions">
-        @if (User.IsInRole(TicketMasala.Web.Utilities.Constants.RoleAdmin) || User.IsInRole(TicketMasala.Web.Utilities.Constants.RoleEmployee))
+        @if (User.IsInRole(TicketMasala.Domain.Common.Constants.RoleAdmin) || User.IsInRole(TicketMasala.Domain.Common.Constants.RoleEmployee))
         {
             <a asp-controller="Projects" asp-action="NewProject" class="btn btn-primary">
                 <i class="fas fa-plus me-2"></i>
@@ -145,7 +147,7 @@ else
         </div>
         <h3 class="empty-state-title">@Localizer["No projects yet"]</h3>
         <p class="empty-state-text">@Localizer["Get started by creating your first project."]</p>
-        @if (User.IsInRole(TicketMasala.Web.Utilities.Constants.RoleAdmin) || User.IsInRole(TicketMasala.Web.Utilities.Constants.RoleEmployee))
+        @if (User.IsInRole(TicketMasala.Domain.Common.Constants.RoleAdmin) || User.IsInRole(TicketMasala.Domain.Common.Constants.RoleEmployee))
         {
             <a asp-controller="Projects" asp-action="NewProject" class="btn btn-primary">
                 <i class="fas fa-plus me-2"></i>

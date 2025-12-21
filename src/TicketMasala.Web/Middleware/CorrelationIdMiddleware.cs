@@ -1,75 +1,50 @@
 namespace TicketMasala.Web.Middleware;
 
 /// <summary>
-/// Middleware that adds a correlation ID to each request for distributed tracing.
-/// The correlation ID is propagated via the X-Correlation-ID header and added to HttpContext.Items.
+/// Middleware that generates or propagates correlation IDs for request tracking.
 /// </summary>
 public class CorrelationIdMiddleware
 {
-    private readonly RequestDelegate _next;
-    private readonly ILogger<CorrelationIdMiddleware> _logger;
-    public const string CorrelationIdHeader = "X-Correlation-ID";
-    public const string CorrelationIdKey = "CorrelationId";
+    /// <summary>
+    /// The header name used for correlation ID.
+    /// </summary>
+    public const string HeaderName = "X-Correlation-Id";
 
-    public CorrelationIdMiddleware(RequestDelegate next, ILogger<CorrelationIdMiddleware> logger)
+    /// <summary>
+    /// The HttpContext.Items key used to store the correlation ID.
+    /// </summary>
+    public const string ContextKey = "CorrelationId";
+
+    private readonly RequestDelegate _next;
+
+    public CorrelationIdMiddleware(RequestDelegate next)
     {
         _next = next;
-        _logger = logger;
-    }
-
-    public async Task InvokeAsync(HttpContext context)
-    {
-        // Get or create correlation ID
-        var correlationId = context.Request.Headers[CorrelationIdHeader].FirstOrDefault()
-            ?? Guid.NewGuid().ToString("N")[..12]; // Short format for readability
-
-        // Store in HttpContext.Items for access throughout request
-        context.Items[CorrelationIdKey] = correlationId;
-
-        // Add to response headers
-        context.Response.OnStarting(() =>
-        {
-            context.Response.Headers[CorrelationIdHeader] = correlationId;
-            return Task.CompletedTask;
-        });
-
-        // Extract WorkItem ID (ticket) from route if available
-        string? workItemId = null;
-        if (context.Request.RouteValues.TryGetValue("id", out var id))
-        {
-            workItemId = id?.ToString();
-            context.Items["WorkItemId"] = workItemId;
-        }
-
-        // Log with correlation context using UEM property names
-        using (_logger.BeginScope(new Dictionary<string, object?>
-        {
-            ["CorrelationId"] = correlationId,
-            ["UserId"] = context.User?.Identity?.Name,
-            ["WorkItem.Id"] = workItemId,       // UEM: Ticket ID
-            ["WorkContainer.Id"] = context.Request.Query["projectId"].FirstOrDefault()  // UEM: Project ID
-        }))
-        {
-            await _next(context);
-        }
-    }
-}
-
-/// <summary>
-/// Extension methods for registering CorrelationIdMiddleware
-/// </summary>
-public static class CorrelationIdMiddlewareExtensions
-{
-    public static IApplicationBuilder UseCorrelationId(this IApplicationBuilder builder)
-    {
-        return builder.UseMiddleware<CorrelationIdMiddleware>();
     }
 
     /// <summary>
-    /// Gets the correlation ID from the current HttpContext
+    /// Processes the HTTP request and ensures a correlation ID is present.
     /// </summary>
-    public static string? GetCorrelationId(this HttpContext context)
+    /// <param name="context">The HTTP context.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    public async Task InvokeAsync(HttpContext context)
     {
-        return context.Items[CorrelationIdMiddleware.CorrelationIdKey]?.ToString();
+        // Try to get correlation ID from request header
+        var correlationId = context.Request.Headers[HeaderName].FirstOrDefault();
+
+        // Generate a new one if not provided
+        if (string.IsNullOrWhiteSpace(correlationId))
+        {
+            correlationId = Guid.NewGuid().ToString();
+        }
+
+        // Store in HttpContext.Items for access by other middleware/controllers
+        context.Items[ContextKey] = correlationId;
+
+        // Add to response headers
+        context.Response.Headers[HeaderName] = correlationId;
+
+        // Continue to next middleware
+        await _next(context);
     }
 }

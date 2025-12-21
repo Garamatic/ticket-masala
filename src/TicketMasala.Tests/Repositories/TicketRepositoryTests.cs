@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
 using TicketMasala.Web.Data;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.ViewModels.Tickets;
 using Xunit;
@@ -35,13 +35,13 @@ public class TicketRepositoryTests
         var customer = new ApplicationUser { Id = "cust1", FirstName = "John", LastName = "Doe", UserName = "john", Email = "john@example.com", Code = "C1", Phone = "555-1234" };
         _context.Users.Add(customer);
 
-        var t1 = new Ticket { Guid = Guid.NewGuid(), Title = "T1", Description = "Desc1", TicketStatus = Status.Pending, Customer = customer, DomainId = "IT" };
-        var t2 = new Ticket { Guid = Guid.NewGuid(), Title = "T2", Description = "Desc2", TicketStatus = Status.Completed, Customer = customer, DomainId = "IT" };
+        var t1 = new Ticket { Guid = Guid.NewGuid(), Title = "T1", Description = "Desc1", TicketStatus = TicketMasala.Domain.Common.Status.Pending, Customer = customer, DomainId = "IT" };
+        var t2 = new Ticket { Guid = Guid.NewGuid(), Title = "T2", Description = "Desc2", TicketStatus = TicketMasala.Domain.Common.Status.Completed, Customer = customer, DomainId = "IT" };
 
         _context.Tickets.AddRange(t1, t2);
         await _context.SaveChangesAsync();
 
-        var searchModel = new TicketSearchViewModel { Status = Status.Pending };
+        var searchModel = new TicketSearchViewModel { Status = TicketMasala.Domain.Common.Status.Pending };
 
         // Act
         var result = await _repository.SearchTicketsAsync(searchModel);
@@ -58,8 +58,8 @@ public class TicketRepositoryTests
         var customer = new ApplicationUser { Id = "cust1", FirstName = "John", LastName = "Doe", UserName = "john", Email = "john@example.com", Code = "C1", Phone = "555-1234" };
         _context.Users.Add(customer);
 
-        var t1 = new Ticket { Guid = Guid.NewGuid(), Title = "T1", Description = "Apple Problem", TicketStatus = Status.Pending, Customer = customer, DomainId = "IT" };
-        var t2 = new Ticket { Guid = Guid.NewGuid(), Title = "T2", Description = "Banana Issue", TicketStatus = Status.Pending, Customer = customer, DomainId = "IT" };
+        var t1 = new Ticket { Guid = Guid.NewGuid(), Title = "T1", Description = "Apple Problem", TicketStatus = TicketMasala.Domain.Common.Status.Pending, Customer = customer, DomainId = "IT" };
+        var t2 = new Ticket { Guid = Guid.NewGuid(), Title = "T2", Description = "Banana Issue", TicketStatus = TicketMasala.Domain.Common.Status.Pending, Customer = customer, DomainId = "IT" };
 
         _context.Tickets.AddRange(t1, t2);
         await _context.SaveChangesAsync();

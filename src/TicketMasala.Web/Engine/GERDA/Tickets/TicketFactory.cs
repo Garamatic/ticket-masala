@@ -1,6 +1,8 @@
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
 using TicketMasala.Web.Repositories;
-using TicketMasala.Web.Utilities;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities; // ApplicationUser, Employee
 
 namespace TicketMasala.Web.Engine.GERDA.Tickets;
 
@@ -27,7 +29,7 @@ public class TicketFactory : ITicketFactory
     /// </summary>
     public Ticket CreateWithDefaults()
     {
-        
+
         return new Ticket
         {
             Guid = Guid.NewGuid(),
@@ -35,7 +37,7 @@ public class TicketFactory : ITicketFactory
             Title = string.Empty, // Required, must be set by caller
             DomainId = "IT", // Required, can be overridden by caller
             Status = "New", // Required
-            TicketStatus = TicketMasala.Web.Models.Status.Pending,
+            TicketStatus = TicketMasala.Domain.Common.Status.Pending,
             CustomFieldsJson = "{}",
             CreationDate = DateTime.UtcNow,
             CompletionTarget = DateTime.UtcNow.AddDays(14),
@@ -65,7 +67,7 @@ public class TicketFactory : ITicketFactory
             Description = description,
             DomainId = "IT",
             Status = responsible != null ? "Assigned" : "New",
-            TicketStatus = responsible != null ? TicketMasala.Web.Models.Status.Assigned : TicketMasala.Web.Models.Status.Pending,
+            TicketStatus = responsible != null ? TicketMasala.Domain.Common.Status.Assigned : TicketMasala.Domain.Common.Status.Pending,
             CustomFieldsJson = "{}",
             CreatorGuid = Guid.Parse(customer.Id),
             CreationDate = DateTime.UtcNow,

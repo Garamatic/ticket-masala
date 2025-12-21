@@ -2,7 +2,8 @@ using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.GERDA.Models;
 using TicketMasala.Web.Engine.GERDA.Strategies;
 using TicketMasala.Web.Engine.GERDA.Configuration;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace TicketMasala.Web.Engine.GERDA.Ranking;

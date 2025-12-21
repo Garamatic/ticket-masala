@@ -1,6 +1,8 @@
 using TicketMasala.Web.Data;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
 using TicketMasala.Web.ViewModels.Projects;
+using TicketMasala.Domain.Entities; // ApplicationUser, Employee
 using TicketMasala.Web.ViewModels.Tickets;
 using TicketMasala.Web.ViewModels.Customers;
 using TicketMasala.Web.Repositories;
@@ -172,7 +174,7 @@ public class ProjectService : IProjectService
             };
 
             await _userManager.CreateAsync(customer);
-            await _userManager.AddToRoleAsync(customer, Utilities.Constants.RoleCustomer);
+            await _userManager.AddToRoleAsync(customer, Constants.RoleCustomer);
         }
         else
         {
@@ -314,7 +316,7 @@ public class ProjectService : IProjectService
         {
             var manager = await _context.Users.OfType<Employee>()
                 .FirstOrDefaultAsync(e => e.Id == viewModel.SelectedProjectManagerId);
-            
+
             if (manager != null)
             {
                 project.ProjectManager = manager;
@@ -565,7 +567,7 @@ public class ProjectService : IProjectService
         var employees = await _context.Users.OfType<Employee>()
         .Where(e => e.Level == EmployeeType.ProjectManager)
         .ToListAsync();
-    var items = employees.Select(e => new SelectListItem
+        var items = employees.Select(e => new SelectListItem
         {
             Value = e.Id,
             Text = $"{e.FirstName} {e.LastName}",

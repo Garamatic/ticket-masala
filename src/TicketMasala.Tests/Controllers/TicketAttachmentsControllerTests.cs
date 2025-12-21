@@ -8,7 +8,7 @@ using Moq;
 using System.Security.Claims;
 using TicketMasala.Web.Controllers;
 using TicketMasala.Web.Data;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Engine.Core;
 using Xunit;
 

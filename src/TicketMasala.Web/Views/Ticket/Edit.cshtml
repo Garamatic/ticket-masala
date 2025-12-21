@@ -1,5 +1,5 @@
 ﻿@model TicketMasala.Web.ViewModels.Tickets.EditTicketViewModel
-@using TicketMasala.Web.Models.Configuration
+@using TicketMasala.Domain.Entities.Configuration
 
 @{
     var entityLabels = ViewBag.EntityLabels as EntityLabels ?? new EntityLabels();
@@ -67,7 +67,7 @@
                     <div class="mb-3">
                         <label asp-for="TicketStatus" class="form-label">Status</label>
                         @{
-                            var statusList = ViewBag.ValidStatuses as SelectList ?? Html.GetEnumSelectList<TicketMasala.Web.Models.Status>();
+                            var statusList = ViewBag.ValidStatuses as SelectList ?? Html.GetEnumSelectList<TicketMasala.Domain.Common.Status>();
                         }
                         <select asp-for="TicketStatus" asp-items="statusList" class="form-select"></select>
                         <span asp-validation-for="TicketStatus" class="text-danger"></span>

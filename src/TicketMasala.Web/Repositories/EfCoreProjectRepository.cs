@@ -1,5 +1,8 @@
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
 using TicketMasala.Web.Data;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common; // ApplicationUser, Employee
 using Microsoft.EntityFrameworkCore;
 
 namespace TicketMasala.Web.Repositories;
@@ -20,15 +23,15 @@ public class EfCoreProjectRepository : IProjectRepository
 
     public async Task<Project?> GetByIdAsync(Guid id, bool includeRelations = true)
     {
+        // Note: Navigation properties removed from Domain models
+        // Relationships configured in MasalaDbContext.ConfigureUserRelationships()
         var query = _context.Projects.AsQueryable();
 
         if (includeRelations)
         {
             query = query
-                .Include(p => p.Tasks)
-                .Include(p => p.ProjectManager)
                 .Include(p => p.Customer)
-                .Include(p => p.Resources);
+                .Include(p => p.ProjectManager);
         }
 
         return await query.FirstOrDefaultAsync(p => p.Guid == id);
@@ -37,8 +40,6 @@ public class EfCoreProjectRepository : IProjectRepository
     public async Task<IEnumerable<Project>> GetAllAsync()
     {
         return await _context.Projects
-            .Include(p => p.Tasks)
-            .Include(p => p.ProjectManager)
             .Where(p => p.ValidUntil == null)
             .ToListAsync();
     }
@@ -46,8 +47,6 @@ public class EfCoreProjectRepository : IProjectRepository
     public async Task<IEnumerable<Project>> GetActiveProjectsAsync()
     {
         return await _context.Projects
-            .Include(p => p.Tasks)
-            .Include(p => p.ProjectManager)
             .Where(p => p.Status == Status.Pending || p.Status == Status.InProgress)
             .Where(p => p.ValidUntil == null)
             .ToListAsync();
@@ -56,8 +55,6 @@ public class EfCoreProjectRepository : IProjectRepository
     public async Task<IEnumerable<Project>> GetByCustomerIdAsync(string customerId)
     {
         return await _context.Projects
-            .Include(p => p.Tasks)
-            .Include(p => p.ProjectManager)
             .Where(p => p.CustomerId == customerId)
             .Where(p => p.ValidUntil == null)
             .ToListAsync();
@@ -66,7 +63,6 @@ public class EfCoreProjectRepository : IProjectRepository
     public async Task<Project?> GetRecommendedProjectForCustomerAsync(string customerId)
     {
         return await _context.Projects
-            .Include(p => p.Customer)
             .Where(p => p.CustomerId == customerId && p.ValidUntil == null)
             .Where(p => p.Status == Status.Pending || p.Status == Status.InProgress)
             .OrderByDescending(p => p.CreationDate)

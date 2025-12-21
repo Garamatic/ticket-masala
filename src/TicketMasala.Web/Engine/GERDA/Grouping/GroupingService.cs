@@ -1,9 +1,10 @@
 using TicketMasala.Web.Engine.GERDA.Models;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
 using TicketMasala.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using TicketMasala.Web.Utilities;
+using TicketMasala.Domain.Common;
 
 namespace TicketMasala.Web.Engine.GERDA.Grouping;
 

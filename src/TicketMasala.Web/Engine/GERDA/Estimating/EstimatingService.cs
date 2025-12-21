@@ -1,5 +1,5 @@
 using TicketMasala.Web.Engine.GERDA.Models;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,7 +7,7 @@ namespace TicketMasala.Web.Engine.GERDA.Estimating;
 
 using TicketMasala.Web.Engine.GERDA.Strategies;
 using TicketMasala.Web.Engine.GERDA.Configuration;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 /// <summary>

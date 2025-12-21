@@ -1,7 +1,7 @@
-namespace TicketMasala.Web.Engine.Core;
-
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Data;
+
+namespace TicketMasala.Web.Engine.Core;
 using Microsoft.EntityFrameworkCore;
 
 public class NotificationService : INotificationService

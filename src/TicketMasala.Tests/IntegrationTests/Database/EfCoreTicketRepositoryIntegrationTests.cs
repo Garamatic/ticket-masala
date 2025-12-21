@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Tests.TestHelpers;
-using TicketMasala.Web.Models;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
 using Xunit;
 
 namespace TicketMasala.Tests.IntegrationTests.Database;
@@ -36,7 +37,7 @@ public class EfCoreTicketRepositoryIntegrationTests : IDisposable
             DomainId = "IT",
             Status = "New",
             CustomFieldsJson = "{}",
-            TicketStatus = Status.Pending,
+            TicketStatus = TicketMasala.Domain.Common.Status.Pending,
             CustomerId = customer.Id,
             CreatorGuid = Guid.Parse(customer.Id)
         };
@@ -66,7 +67,7 @@ public class EfCoreTicketRepositoryIntegrationTests : IDisposable
             DomainId = "IT",
             Status = "New",
             CustomFieldsJson = "{}",
-            TicketStatus = Status.Pending,
+            TicketStatus = TicketMasala.Domain.Common.Status.Pending,
             CustomerId = customer.Id,
             CreatorGuid = Guid.Parse(customer.Id),
             EstimatedEffortPoints = 8,
@@ -144,7 +145,7 @@ public class EfCoreTicketRepositoryIntegrationTests : IDisposable
         // Arrange
         var ticket = await _fixture.SeedTestTicketAsync();
         ticket.Title = "Updated Title";
-        ticket.TicketStatus = Status.InProgress;
+        ticket.TicketStatus = TicketMasala.Domain.Common.Status.InProgress;
 
         // Act
         await _fixture.TicketRepository.UpdateAsync(ticket);
@@ -153,7 +154,7 @@ public class EfCoreTicketRepositoryIntegrationTests : IDisposable
         var fromDb = await _fixture.Context.Tickets.FindAsync(ticket.Guid);
         Assert.NotNull(fromDb);
         Assert.Equal("Updated Title", fromDb.Title);
-        Assert.Equal(Status.InProgress, fromDb.TicketStatus);
+        Assert.Equal(TicketMasala.Domain.Common.Status.InProgress, fromDb.TicketStatus);
     }
 
     [Fact]
@@ -165,7 +166,7 @@ public class EfCoreTicketRepositoryIntegrationTests : IDisposable
         var ticket = await _fixture.SeedTestTicketAsync(customer: customer);
 
         ticket.ResponsibleId = employee.Id;
-        ticket.TicketStatus = Status.Assigned;
+        ticket.TicketStatus = TicketMasala.Domain.Common.Status.Assigned;
 
         // Act
         await _fixture.TicketRepository.UpdateAsync(ticket);
@@ -177,7 +178,7 @@ public class EfCoreTicketRepositoryIntegrationTests : IDisposable
             .FirstAsync(t => t.Guid == ticket.Guid);
 
         Assert.Equal(employee.Id, fromDb.ResponsibleId);
-        Assert.Equal(Status.Assigned, fromDb.TicketStatus);
+        Assert.Equal(TicketMasala.Domain.Common.Status.Assigned, fromDb.TicketStatus);
     }
 
     #endregion
@@ -215,13 +216,13 @@ public class EfCoreTicketRepositoryIntegrationTests : IDisposable
     {
         // Arrange
         var customer = await _fixture.SeedTestCustomerAsync();
-        await _fixture.SeedTestTicketAsync(customer: customer, status: Status.Pending);
-        await _fixture.SeedTestTicketAsync(customer: customer, status: Status.Pending);
-        await _fixture.SeedTestTicketAsync(customer: customer, status: Status.Completed);
+        await _fixture.SeedTestTicketAsync(customer: customer, status: TicketMasala.Domain.Common.Status.Pending);
+        await _fixture.SeedTestTicketAsync(customer: customer, status: TicketMasala.Domain.Common.Status.Pending);
+        await _fixture.SeedTestTicketAsync(customer: customer, status: TicketMasala.Domain.Common.Status.Completed);
 
         // Act
-        var pendingTickets = await _fixture.TicketRepository.GetByStatusAsync(Status.Pending);
-        var completedTickets = await _fixture.TicketRepository.GetByStatusAsync(Status.Completed);
+        var pendingTickets = await _fixture.TicketRepository.GetByStatusAsync(TicketMasala.Domain.Common.Status.Pending);
+        var completedTickets = await _fixture.TicketRepository.GetByStatusAsync(TicketMasala.Domain.Common.Status.Completed);
 
         // Assert
         Assert.Equal(2, pendingTickets.Count());
@@ -285,11 +286,11 @@ public class EfCoreTicketRepositoryIntegrationTests : IDisposable
     {
         // Arrange
         var customer = await _fixture.SeedTestCustomerAsync();
-        await _fixture.SeedTestTicketAsync(customer: customer, status: Status.Pending);
-        await _fixture.SeedTestTicketAsync(customer: customer, status: Status.InProgress);
-        await _fixture.SeedTestTicketAsync(customer: customer, status: Status.Assigned);
-        await _fixture.SeedTestTicketAsync(customer: customer, status: Status.Completed);
-        await _fixture.SeedTestTicketAsync(customer: customer, status: Status.Failed);
+        await _fixture.SeedTestTicketAsync(customer: customer, status: TicketMasala.Domain.Common.Status.Pending);
+        await _fixture.SeedTestTicketAsync(customer: customer, status: TicketMasala.Domain.Common.Status.InProgress);
+        await _fixture.SeedTestTicketAsync(customer: customer, status: TicketMasala.Domain.Common.Status.Assigned);
+        await _fixture.SeedTestTicketAsync(customer: customer, status: TicketMasala.Domain.Common.Status.Completed);
+        await _fixture.SeedTestTicketAsync(customer: customer, status: TicketMasala.Domain.Common.Status.Failed);
 
         // Act
         var activeTickets = await _fixture.TicketRepository.GetActiveTicketsAsync();

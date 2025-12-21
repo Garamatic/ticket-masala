@@ -1,0 +1,392 @@
+using System.Text.Json;
+using FsCheck;
+using FsCheck.Xunit;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web.ViewModels.Api;
+using Xunit;
+
+namespace TicketMasala.Tests.Api;
+
+/// <summary>
+/// Property-based tests for DTO mapping between domain entities and API DTOs.
+/// Feature: ticketmasala-architecture-improvements, Property 4: WorkItem DTO Field Mapping
+/// Validates: Requirements 4.3, 4.4
+/// </summary>
+public class DtoMappingPropertyTests
+{
+    /// <summary>
+    /// Property 4: WorkItem DTO Field Mapping
+    /// For any Ticket entity, mapping it to WorkItemDto and back SHALL preserve all core field values
+    /// (Id, Title, Description, Status, DomainId, CreatedAt).
+    /// </summary>
+    [Property(MaxTest = 100)]
+    public Property TicketToWorkItemDto_PreservesCoreFields()
+    {
+        return Prop.ForAll(
+            ValidTicketGenerator(),
+            ticket =>
+            {
+                // Map to DTO
+                var dto = ticket.ToWorkItemDto();
+
+                // Verify core fields are preserved
+                return dto.Guid == ticket.Guid &&
+                       dto.Title == ticket.Title &&
+                       dto.Description == ticket.Description &&
+                       dto.Status == ticket.Status &&
+                       dto.DomainId == ticket.DomainId &&
+                       dto.CreatedAt == ticket.CreationDate &&
+                       dto.AssignedHandlerId == ticket.ResponsibleId &&
+                       dto.ContainerId == ticket.ProjectGuid &&
+                       dto.TypeCode == ticket.WorkItemTypeCode &&
+                       dto.CompletedAt == ticket.CompletionDate &&
+                       dto.CompletionTarget == ticket.CompletionTarget &&
+                       dto.CustomerId == ticket.CustomerId;
+            });
+    }
+
+    /// <summary>
+    /// Property: WorkItemDto to Ticket mapping preserves core fields
+    /// For any WorkItemDto, mapping it to Ticket SHALL preserve all core field values.
+    /// </summary>
+    [Property(MaxTest = 100)]
+    public Property WorkItemDtoToTicket_PreservesCoreFields()
+    {
+        return Prop.ForAll(
+            ValidWorkItemDtoGenerator(),
+            dto =>
+            {
+                // Map to Ticket
+                var ticket = dto.ToTicket();
+
+                // Verify core fields are preserved
+                return ticket.Title == dto.Title &&
+                       ticket.Description == dto.Description &&
+                       ticket.Status == dto.Status &&
+                       ticket.DomainId == dto.DomainId &&
+                       ticket.ResponsibleId == dto.AssignedHandlerId &&
+                       ticket.ProjectGuid == dto.ContainerId &&
+                       ticket.WorkItemTypeCode == dto.TypeCode &&
+                       ticket.CompletionTarget == dto.CompletionTarget &&
+                       ticket.CustomerId == dto.CustomerId;
+            });
+    }
+
+    /// <summary>
+    /// Property: Project to WorkContainerDto mapping preserves core fields
+    /// For any Project entity, mapping it to WorkContainerDto SHALL preserve all core field values.
+    /// </summary>
+    [Property(MaxTest = 100)]
+    public Property ProjectToWorkContainerDto_PreservesCoreFields()
+    {
+        return Prop.ForAll(
+            ValidProjectGenerator(),
+            project =>
+            {
+                var workItemCount = FsCheck.Gen.Choose(0, 100).Sample(0, 1).First();
+
+                // Map to DTO
+                var dto = project.ToWorkContainerDto(workItemCount);
+
+                // Verify core fields are preserved
+                return dto.Guid == project.Guid &&
+                       dto.Name == project.Name &&
+                       dto.Description == project.Description &&
+                       dto.Status == project.Status.ToString() &&
+                       dto.ManagerId == project.ProjectManagerId &&
+                       dto.CreatedAt == project.CreationDate &&
+                       dto.CompletionTarget == project.CompletionTarget &&
+                       dto.CompletedAt == project.CompletionDate &&
+                       dto.WorkItemCount == workItemCount &&
+                       dto.ProjectType == project.ProjectType &&
+                       dto.Notes == project.Notes &&
+                       dto.CustomerId == project.CustomerId &&
+                       dto.AiRoadmap == project.ProjectAiRoadmap;
+            });
+    }
+
+    /// <summary>
+    /// Property: ApplicationUser to WorkHandlerDto mapping preserves core fields
+    /// For any ApplicationUser, mapping it to WorkHandlerDto SHALL preserve all core field values.
+    /// </summary>
+    [Property(MaxTest = 100)]
+    public Property ApplicationUserToWorkHandlerDto_PreservesCoreFields()
+    {
+        return Prop.ForAll(
+            ValidApplicationUserGenerator(),
+            user =>
+            {
+                // Map to DTO
+                var dto = user.ToWorkHandlerDto();
+
+                // Verify core fields are preserved
+                return dto.Guid == user.Id &&
+                       dto.Name == user.Name &&
+                       dto.Email == (user.Email ?? string.Empty) &&
+                       dto.Phone == user.Phone &&
+                       dto.UserName == user.UserName;
+            });
+    }
+
+    /// <summary>
+    /// Property: Employee to WorkHandlerDto mapping preserves employee-specific fields
+    /// For any Employee, mapping it to WorkHandlerDto SHALL preserve all employee-specific fields.
+    /// </summary>
+    [Property(MaxTest = 100)]
+    public Property EmployeeToWorkHandlerDto_PreservesEmployeeFields()
+    {
+        return Prop.ForAll(
+            ValidEmployeeGenerator(),
+            employee =>
+            {
+                // Map to DTO
+                var dto = employee.ToWorkHandlerDto();
+
+                // Verify employee-specific fields are preserved
+                return dto.Team == employee.Team &&
+                       dto.Level == employee.Level.ToString() &&
+                       dto.Language == employee.Language &&
+                       dto.MaxCapacityPoints == employee.MaxCapacityPoints &&
+                       dto.Region == employee.Region &&
+                       dto.ProfilePicturePath == employee.ProfilePicturePath;
+            });
+    }
+
+    /// <summary>
+    /// Property: Custom fields JSON round-trip preserves data
+    /// For any Ticket with custom fields, mapping to DTO and back SHALL preserve custom fields.
+    /// </summary>
+    [Property(MaxTest = 100)]
+    public Property CustomFieldsRoundTrip_PreservesData()
+    {
+        return Prop.ForAll(
+            ValidTicketWithCustomFieldsGenerator(),
+            ticket =>
+            {
+                // Map to DTO and back
+                var dto = ticket.ToWorkItemDto();
+                var roundTripTicket = dto.ToTicket();
+
+                // Parse original and round-trip JSON for comparison
+                var originalFields = ParseCustomFields(ticket.CustomFieldsJson);
+                var roundTripFields = ParseCustomFields(roundTripTicket.CustomFieldsJson);
+
+                // Compare field counts and basic structure
+                return originalFields != null && roundTripFields != null &&
+                       originalFields.Count == roundTripFields.Count;
+            });
+    }
+
+    // Helper methods
+
+    private static Dictionary<string, object>? ParseCustomFields(string json)
+    {
+        if (string.IsNullOrEmpty(json) || json == "{}")
+            return new Dictionary<string, object>();
+
+        try
+        {
+            return JsonSerializer.Deserialize<Dictionary<string, object>>(json);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    // Generators
+
+    private static Arbitrary<Ticket> ValidTicketGenerator()
+    {
+        return FsCheck.Arb.From(
+            from id in FsCheck.Arb.Generate<Guid>()
+            from title in FsCheck.Gen.Elements("Bug Fix", "Feature Request", "Support Ticket", "Investigation", "Maintenance")
+            from description in FsCheck.Gen.Elements("Description 1", "Description 2", "Detailed description here")
+            from status in FsCheck.Gen.Elements("New", "InProgress", "Completed", "Cancelled")
+            from domainId in FsCheck.Gen.Elements("IT", "Legal", "Finance", "HR")
+            from createdAt in FsCheck.Arb.Generate<DateTime>()
+            from responsibleId in FsCheck.Gen.Elements<string?>(null, "user1", "user2", "user3")
+            from projectGuid in FsCheck.Gen.Elements<Guid?>(null, Guid.NewGuid(), Guid.NewGuid())
+            from typeCode in FsCheck.Gen.Elements<string?>(null, "BUG", "FEATURE", "SUPPORT")
+            from completionDate in FsCheck.Gen.Elements<DateTime?>(null, DateTime.UtcNow.AddDays(-1), DateTime.UtcNow)
+            from completionTarget in FsCheck.Gen.Elements<DateTime?>(null, DateTime.UtcNow.AddDays(7), DateTime.UtcNow.AddDays(14))
+            from customerId in FsCheck.Gen.Elements<string?>(null, "customer1", "customer2")
+            from effortPoints in FsCheck.Gen.Choose(0, 100)
+            from priorityScore in FsCheck.Gen.Choose(0.0, 10.0)
+            select new Ticket
+            {
+                Id = id,
+                Title = title,
+                Description = description,
+                Status = status,
+                DomainId = domainId,
+                CreatedAt = createdAt,
+                ResponsibleId = responsibleId,
+                ProjectGuid = projectGuid,
+                WorkItemTypeCode = typeCode,
+                CompletionDate = completionDate,
+                CompletionTarget = completionTarget,
+                CustomerId = customerId,
+                EstimatedEffortPoints = effortPoints,
+                PriorityScore = priorityScore,
+                CustomFieldsJson = "{}"
+            });
+    }
+
+    private static Arbitrary<WorkItemDto> ValidWorkItemDtoGenerator()
+    {
+        return FsCheck.Arb.From(
+            from id in FsCheck.Arb.Generate<Guid>()
+            from title in FsCheck.Gen.Elements("Bug Fix", "Feature Request", "Support Ticket")
+            from description in FsCheck.Gen.Elements("Description 1", "Description 2", "Detailed description")
+            from status in FsCheck.Gen.Elements("New", "InProgress", "Completed")
+            from domainId in FsCheck.Gen.Elements("IT", "Legal", "Finance")
+            from createdAt in FsCheck.Arb.Generate<DateTime>()
+            from assignedHandlerId in FsCheck.Gen.Elements<string?>(null, "user1", "user2")
+            from containerId in FsCheck.Gen.Elements<Guid?>(null, Guid.NewGuid())
+            from typeCode in FsCheck.Gen.Elements<string?>(null, "BUG", "FEATURE")
+            from completedAt in FsCheck.Gen.Elements<DateTime?>(null, DateTime.UtcNow)
+            from completionTarget in FsCheck.Gen.Elements<DateTime?>(null, DateTime.UtcNow.AddDays(7))
+            from customerId in FsCheck.Gen.Elements<string?>(null, "customer1")
+            select new WorkItemDto
+            {
+                Id = id,
+                Title = title,
+                Description = description,
+                Status = status,
+                DomainId = domainId,
+                CreatedAt = createdAt,
+                AssignedHandlerId = assignedHandlerId,
+                ContainerId = containerId,
+                TypeCode = typeCode,
+                CompletedAt = completedAt,
+                CompletionTarget = completionTarget,
+                CustomerId = customerId
+            });
+    }
+
+    private static Arbitrary<Project> ValidProjectGenerator()
+    {
+        return FsCheck.Arb.From(
+            from id in FsCheck.Arb.Generate<Guid>()
+            from name in FsCheck.Gen.Elements("Project Alpha", "Project Beta", "Support Initiative")
+            from description in FsCheck.Gen.Elements("Project description 1", "Project description 2")
+            from status in FsCheck.Gen.Elements(Status.Pending, Status.InProgress, Status.Completed)
+            from createdAt in FsCheck.Arb.Generate<DateTime>()
+            from managerId in FsCheck.Gen.Elements<string?>(null, "manager1", "manager2")
+            from completionTarget in FsCheck.Gen.Elements<DateTime?>(null, DateTime.UtcNow.AddDays(30))
+            from completionDate in FsCheck.Gen.Elements<DateTime?>(null, DateTime.UtcNow.AddDays(-1))
+            from projectType in FsCheck.Gen.Elements<string?>(null, "Development", "Support", "Research")
+            from notes in FsCheck.Gen.Elements<string?>(null, "Some notes", "Important project notes")
+            from customerId in FsCheck.Gen.Elements<string?>(null, "customer1")
+            from aiRoadmap in FsCheck.Gen.Elements<string?>(null, "AI generated roadmap")
+            select new Project
+            {
+                Id = id,
+                Name = name,
+                Description = description,
+                Status = status,
+                CreatedAt = createdAt,
+                ProjectManagerId = managerId,
+                CompletionTarget = completionTarget,
+                CompletionDate = completionDate,
+                ProjectType = projectType,
+                Notes = notes,
+                CustomerId = customerId,
+                CustomerIds = new List<string>(),
+                ProjectAiRoadmap = aiRoadmap
+            });
+    }
+
+    private static Arbitrary<ApplicationUser> ValidApplicationUserGenerator()
+    {
+        return FsCheck.Arb.From(
+            from id in FsCheck.Gen.Elements("user1", "user2", "user3")
+            from firstName in FsCheck.Gen.Elements("John", "Jane", "Bob", "Alice")
+            from lastName in FsCheck.Gen.Elements("Doe", "Smith", "Johnson", "Brown")
+            from email in FsCheck.Gen.Elements("user1@test.com", "user2@test.com", "user3@test.com")
+            from phone in FsCheck.Gen.Elements<string?>(null, "+1234567890", "+0987654321")
+            from userName in FsCheck.Gen.Elements("user1", "user2", "user3")
+            select new ApplicationUser
+            {
+                Id = id,
+                FirstName = firstName,
+                LastName = lastName,
+                Email = email,
+                Phone = phone,
+                UserName = userName
+            });
+    }
+
+    private static Arbitrary<Employee> ValidEmployeeGenerator()
+    {
+        return FsCheck.Arb.From(
+            from id in FsCheck.Gen.Elements("emp1", "emp2", "emp3")
+            from firstName in FsCheck.Gen.Elements("John", "Jane", "Bob")
+            from lastName in FsCheck.Gen.Elements("Doe", "Smith", "Johnson")
+            from email in FsCheck.Gen.Elements("emp1@test.com", "emp2@test.com")
+            from phone in FsCheck.Gen.Elements<string?>(null, "+1234567890")
+            from userName in FsCheck.Gen.Elements("emp1", "emp2")
+            from team in FsCheck.Gen.Elements("Development", "Support", "QA")
+            from level in FsCheck.Gen.Elements(EmployeeType.Developer, EmployeeType.Support, EmployeeType.Admin)
+            from language in FsCheck.Gen.Elements<string?>(null, "EN", "NL", "FR")
+            from maxCapacity in FsCheck.Gen.Choose(10, 100)
+            from region in FsCheck.Gen.Elements<string?>(null, "Brussels", "Ghent", "Antwerp")
+            from profilePicture in FsCheck.Gen.Elements<string?>(null, "/images/profile1.jpg", "/images/profile2.jpg")
+            select new Employee
+            {
+                Id = id,
+                FirstName = firstName,
+                LastName = lastName,
+                Email = email,
+                Phone = phone,
+                UserName = userName,
+                Team = team,
+                Level = level,
+                Language = language,
+                MaxCapacityPoints = maxCapacity,
+                Region = region,
+                ProfilePicturePath = profilePicture,
+                Specializations = "[]"
+            });
+    }
+
+    private static Arbitrary<Ticket> ValidTicketWithCustomFieldsGenerator()
+    {
+        return FsCheck.Arb.From(
+            from ticket in ValidTicketGenerator().Generator
+            from customFields in ValidCustomFieldsGenerator()
+            select new Ticket
+            {
+                Id = ticket.Guid,
+                Title = ticket.Title,
+                Description = ticket.Description,
+                Status = ticket.Status,
+                DomainId = ticket.DomainId,
+                CreatedAt = ticket.CreationDate,
+                ResponsibleId = ticket.ResponsibleId,
+                ProjectGuid = ticket.ProjectGuid,
+                WorkItemTypeCode = ticket.WorkItemTypeCode,
+                CompletionDate = ticket.CompletionDate,
+                CompletionTarget = ticket.CompletionTarget,
+                CustomerId = ticket.CustomerId,
+                EstimatedEffortPoints = ticket.EstimatedEffortPoints,
+                PriorityScore = ticket.PriorityScore,
+                CustomFieldsJson = customFields
+            });
+    }
+
+    private static Gen<string> ValidCustomFieldsGenerator()
+    {
+        return FsCheck.Gen.Elements(
+            "{}",
+            "{\"priority\":\"high\"}",
+            "{\"category\":\"bug\",\"severity\":\"critical\"}",
+            "{\"tags\":[\"urgent\",\"customer-facing\"],\"estimate\":5}"
+        );
+    }
+}

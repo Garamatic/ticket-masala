@@ -1,9 +1,9 @@
-using TicketMasala.Web.Models;
-using TicketMasala.Web.Models.Configuration;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Entities.Configuration;
 using TicketMasala.Web.Engine.GERDA.Features;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
-using Customer = TicketMasala.Web.Models.ApplicationUser;
+using Customer = TicketMasala.Domain.Entities.ApplicationUser;
 
 namespace TicketMasala.Tests.Services.GERDA.Features;
 
@@ -23,7 +23,7 @@ public class DynamicFeatureExtractorTests
         var ticket = new Ticket
         {
             CustomFieldsJson = "{\"soil_ph\": 7.0}",
-            TicketStatus = Status.Pending,
+            TicketStatus = TicketMasala.Domain.Common.Status.Pending,
             Description = "Test Ticket",
             Customer = new ApplicationUser { Id = "C1", FirstName = "Test", LastName = "Customer", Email = "test@example.com", Phone = "1234567890", UserName = "test@example.com" }
         };
@@ -61,7 +61,7 @@ public class DynamicFeatureExtractorTests
         var ticket = new Ticket
         {
             CustomFieldsJson = "{\"zone\": \"Z1\"}",
-            TicketStatus = Status.Pending,
+            TicketStatus = TicketMasala.Domain.Common.Status.Pending,
             Description = "Test Ticket",
             Customer = new ApplicationUser { Id = "C1", FirstName = "Test", LastName = "Customer", Email = "test@example.com", Phone = "1234567890", UserName = "test@example.com" }
         };
@@ -98,7 +98,7 @@ public class DynamicFeatureExtractorTests
         var ticket = new Ticket
         {
             CustomFieldsJson = "{\"zone\": \"Z2\"}",
-            TicketStatus = Status.Pending,
+            TicketStatus = TicketMasala.Domain.Common.Status.Pending,
             Description = "Test Ticket",
             Customer = new ApplicationUser { Id = "C1", FirstName = "Test", LastName = "Customer", Email = "test@example.com", Phone = "1234567890", UserName = "test@example.com" }
         };

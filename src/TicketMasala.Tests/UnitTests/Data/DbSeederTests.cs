@@ -4,8 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
 using TicketMasala.Web.Data;
-using TicketMasala.Web.Models;
-using TicketMasala.Web.Utilities;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Common;
 using Xunit;
 
 namespace TicketMasala.Tests.UnitTests.Data;

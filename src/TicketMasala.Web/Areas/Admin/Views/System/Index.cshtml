@@ -1,0 +1,111 @@
+@model TicketMasala.Web.Areas.Admin.Controllers.SystemHealthViewModel
+@{
+    ViewData["Title"] = "System Health";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-heart-pulse me-2"></i>System Health
+        </h1>
+        <a asp-area="Admin" asp-controller="Admin" asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+        </a>
+    </div>
+
+    <!-- System Info -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    @if (Model.DatabaseStatus == "Healthy")
+                    {
+                        <i class="bi bi-check-circle-fill text-success fs-1 mb-2"></i>
+                    }
+                    else
+                    {
+                        <i class="bi bi-x-circle-fill text-danger fs-1 mb-2"></i>
+                    }
+                    <h6 class="text-muted">Database</h6>
+                    <span class="badge bg-@(Model.DatabaseStatus == "Healthy" ? "success" : "danger")">@Model.DatabaseStatus</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-globe text-primary fs-1 mb-2"></i>
+                    <h6 class="text-muted">Environment</h6>
+                    <span class="badge bg-info">@Model.Environment</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-clock text-warning fs-1 mb-2"></i>
+                    <h6 class="text-muted">Server Time (UTC)</h6>
+                    <span>@Model.ServerTime.ToString("HH:mm:ss")</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-cpu text-secondary fs-1 mb-2"></i>
+                    <h6 class="text-muted">.NET Version</h6>
+                    <span>@Model.DotNetVersion</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Health Checks -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent">
+            <h5 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Health Checks</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Check</th>
+                            <th>Status</th>
+                            <th>Description</th>
+                            <th>Duration</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var check in Model.HealthChecks)
+                        {
+                            var statusColor = check.Status switch
+                            {
+                                "Healthy" => "success",
+                                "Degraded" => "warning",
+                                "Unhealthy" => "danger",
+                                _ => "secondary"
+                            };
+                            <tr>
+                                <td><strong>@check.Name</strong></td>
+                                <td><span class="badge bg-@statusColor">@check.Status</span></td>
+                                <td>@check.Description</td>
+                                <td>
+                                    @if (check.Duration.TotalMilliseconds > 0)
+                                    {
+                                        <span>@check.Duration.TotalMilliseconds.ToString("F2") ms</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

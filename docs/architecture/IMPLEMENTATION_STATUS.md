@@ -40,8 +40,8 @@
 
 **Testing Required:**
 - [x] Test adapter conversion (Unit Tests)
-- [x] Test plugin loading with adapter
-- [x] Verify services register correctly
+- [x] Test plugin loading with adapter (Integration Tests)
+- [x] Verify services register correctly (Integration Tests)
 
 ---
 

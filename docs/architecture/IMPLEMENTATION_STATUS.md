@@ -19,9 +19,9 @@
 - SQLite interceptor remains safe (checks connection type at runtime)
 
 **Testing Required:**
-- [ ] Test with SQLite (default)
+- [x] Test with SQLite (default)
 - [ ] Test with SQL Server
-- [ ] Test computed column queries
+- [x] Test computed column queries (Unit Tests)
 - [ ] Verify indexes work correctly
 
 ---
@@ -39,9 +39,9 @@
 **Note:** The adapter enables interoperability with various plugin-based systems and frameworks
 
 **Testing Required:**
-- [ ] Test adapter conversion
-- [ ] Test plugin loading with adapter
-- [ ] Verify services register correctly
+- [x] Test adapter conversion (Unit Tests)
+- [x] Test plugin loading with adapter
+- [x] Verify services register correctly
 
 ---
 

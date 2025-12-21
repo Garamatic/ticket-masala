@@ -59,8 +59,8 @@
 - [x] Update all namespace references (~169 files)
 - [x] Update Razor views
 - [x] Build and test
-- [x] Update tests project references (N/A - tests not present/modified yet)
-- [x] Remove old Models directory (To be done manually/verified)
+- [x] Update tests project references
+- [x] Remove old Models directory
 
 ---
 

@@ -104,6 +104,20 @@ public class MasalaDbContext : IdentityDbContext<ApplicationUser, IdentityRole, 
             .HasForeignKey(p => p.CustomerId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // Project -> Customers (Stakeholders)
+        modelBuilder.Entity<Project>()
+            .HasMany(p => p.Customers)
+            .WithOne()
+            .HasForeignKey("StakeholderProjectId")
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Project -> Resources (Employees)
+        modelBuilder.Entity<Project>()
+            .HasMany(p => p.Resources)
+            .WithOne()
+            .HasForeignKey("ResourceProjectId")
+            .OnDelete(DeleteBehavior.SetNull);
+
         // Explicitly configure Ticket -> Project relationship (Tasks)
         modelBuilder.Entity<Ticket>()
             .HasOne(t => t.Project)

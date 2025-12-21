@@ -16,7 +16,7 @@ namespace TicketMasala.Web.Migrations
             // 1. Create the Virtual Table
             migrationBuilder.Sql(@"
                 CREATE VIRTUAL TABLE IF NOT EXISTS Tickets_Search USING fts5(
-                    Id UNINDEXED,
+                    Guid UNINDEXED,
                     Description,
                     CustomFieldsJson,
                     content='Tickets',
@@ -27,33 +27,33 @@ namespace TicketMasala.Web.Migrations
             // 2. Create Triggers to Sync INSERTs
             migrationBuilder.Sql(@"
                 CREATE TRIGGER IF NOT EXISTS Tickets_AI AFTER INSERT ON Tickets BEGIN
-                    INSERT INTO Tickets_Search(rowid, Id, Description, CustomFieldsJson) 
-                    VALUES (new.RowId, new.Id, new.Description, new.CustomFieldsJson);
+                    INSERT INTO Tickets_Search(rowid, Guid, Description, CustomFieldsJson) 
+                    VALUES (new.RowId, new.Guid, new.Description, new.CustomFieldsJson);
                 END;
             ");
 
             // 3. Create Triggers to Sync DELETEs
             migrationBuilder.Sql(@"
                 CREATE TRIGGER IF NOT EXISTS Tickets_AD AFTER DELETE ON Tickets BEGIN
-                    INSERT INTO Tickets_Search(Tickets_Search, rowid, Id, Description, CustomFieldsJson) 
-                    VALUES('delete', old.RowId, old.Id, old.Description, old.CustomFieldsJson);
+                    INSERT INTO Tickets_Search(Tickets_Search, rowid, Guid, Description, CustomFieldsJson) 
+                    VALUES('delete', old.RowId, old.Guid, old.Description, old.CustomFieldsJson);
                 END;
             ");
 
             // 4. Create Triggers to Sync UPDATEs
             migrationBuilder.Sql(@"
                 CREATE TRIGGER IF NOT EXISTS Tickets_AU AFTER UPDATE ON Tickets BEGIN
-                    INSERT INTO Tickets_Search(Tickets_Search, rowid, Id, Description, CustomFieldsJson) 
-                    VALUES('delete', old.RowId, old.Id, old.Description, old.CustomFieldsJson);
-                    INSERT INTO Tickets_Search(rowid, Id, Description, CustomFieldsJson) 
-                    VALUES (new.RowId, new.Id, new.Description, new.CustomFieldsJson);
+                    INSERT INTO Tickets_Search(Tickets_Search, rowid, Guid, Description, CustomFieldsJson) 
+                    VALUES('delete', old.RowId, old.Guid, old.Description, old.CustomFieldsJson);
+                    INSERT INTO Tickets_Search(rowid, Guid, Description, CustomFieldsJson) 
+                    VALUES (new.RowId, new.Guid, new.Description, new.CustomFieldsJson);
                 END;
             ");
 
             // 5. Initial Population (Backfill)
             migrationBuilder.Sql(@"
-                INSERT INTO Tickets_Search(rowid, Id, Description, CustomFieldsJson)
-                SELECT RowId, Id, Description, CustomFieldsJson FROM Tickets;
+                INSERT INTO Tickets_Search(rowid, Guid, Description, CustomFieldsJson)
+                SELECT RowId, Guid, Description, CustomFieldsJson FROM Tickets;
             ");
         }
 

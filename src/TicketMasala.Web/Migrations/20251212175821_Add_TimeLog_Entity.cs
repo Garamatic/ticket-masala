@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -11,6 +11,26 @@ namespace TicketMasala.Web.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.Sql("DROP TABLE IF EXISTS \"AspNetRoles\";");
+            migrationBuilder.Sql("DROP TABLE IF EXISTS \"DomainConfigVersion\";");
+            migrationBuilder.Sql("DROP TABLE IF EXISTS \"ProjectTemplates\";");
+            migrationBuilder.Sql("DROP TABLE IF EXISTS \"AspNetRoleClaims\";");
+            migrationBuilder.Sql("DROP TABLE IF EXISTS \"TemplateTickets\";");
+            migrationBuilder.Sql("DROP TABLE IF EXISTS \"AspNetUserClaims\";");
+            migrationBuilder.Sql("DROP TABLE IF EXISTS \"AspNetUserLogins\";");
+            migrationBuilder.Sql("DROP TABLE IF EXISTS \"AspNetUserRoles\";");
+            migrationBuilder.Sql("DROP TABLE IF EXISTS \"AspNetUsers\";");
+            migrationBuilder.Sql("DROP TABLE IF EXISTS \"AspNetUserTokens\";");
+            migrationBuilder.Sql("DROP TABLE IF EXISTS \"KnowledgeBaseArticles\";");
+            migrationBuilder.Sql("DROP TABLE IF EXISTS \"Notifications\";");
+            migrationBuilder.Sql("DROP TABLE IF EXISTS \"Projects\";");
+            migrationBuilder.Sql("DROP TABLE IF EXISTS \"SavedFilters\";");
+            migrationBuilder.Sql("DROP TABLE IF EXISTS \"Resource\";");
+            migrationBuilder.Sql("DROP TRIGGER IF EXISTS Tickets_AI;");
+            migrationBuilder.Sql("DROP TRIGGER IF EXISTS Tickets_AD;");
+            migrationBuilder.Sql("DROP TRIGGER IF EXISTS Tickets_AU;");
+            migrationBuilder.Sql("DROP TABLE IF EXISTS Tickets_Search;");
+            migrationBuilder.Sql("DROP TABLE IF EXISTS \"Tickets\";");
             migrationBuilder.CreateTable(
                 name: "AspNetRoles",
                 columns: table => new

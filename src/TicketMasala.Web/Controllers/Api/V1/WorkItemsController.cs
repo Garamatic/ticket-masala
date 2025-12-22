@@ -1,15 +1,18 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Asp.Versioning;
 using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.ViewModels.Api;
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.Extensions;
+using System.Security.Claims;
 
 namespace TicketMasala.Web.Controllers.Api.V1;
 
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/work-items")]
 [ApiController]
+[Authorize]
 public class WorkItemsController : ControllerBase
 {
     private readonly ITicketService _ticketService;
@@ -74,17 +77,23 @@ public class WorkItemsController : ControllerBase
 
         try
         {
-            // Use Service for Create to ensure business rules/observers run
-            // Note: Service requires CustomerId. If missing in DTO, we might need a default or error.
-            if (string.IsNullOrEmpty(workItem.CustomerId))
+            // Resolve CustomerId
+            string? customerId = workItem.CustomerId;
+            if (string.IsNullOrEmpty(customerId))
             {
-                // Try to fallback or error? API usually requires valid state.
-                // Let's assume valid request for now or check validation.
+                // Try to get from authenticated user
+                customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             }
 
+            if (string.IsNullOrEmpty(customerId))
+            {
+                return BadRequest(new ApiErrorResponse { Error = "VALIDATION_ERROR", Message = "CustomerId is required and could not be determined from context." });
+            }
+
+            // Use Service for Create to ensure business rules/observers run
             var ticket = await _ticketService.CreateTicketAsync(
                 workItem.Description,
-                workItem.CustomerId ?? "UNKNOWN", // Safety fallback, though likely to fail if not found
+                customerId,
                 workItem.AssignedHandlerId,
                 workItem.ContainerId,
                 workItem.CompletionTarget

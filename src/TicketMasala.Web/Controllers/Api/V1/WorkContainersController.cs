@@ -41,11 +41,19 @@ public class WorkContainersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(Guid id)
     {
-        var project = await _projectRepository.GetByIdAsync(id, includeRelations: true);
-        if (project == null)
-            return NotFound();
+        try
+        {
+            var project = await _projectRepository.GetByIdAsync(id, includeRelations: true);
+            if (project == null)
+                return NotFound();
 
-        return Ok(project.ToWorkContainerDto(project.Tasks?.Count ?? 0));
+            return Ok(project.ToWorkContainerDto(project.Tasks?.Count ?? 0));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving work container {Id}", id);
+            return NotFound();
+        }
     }
 
     [HttpPost]

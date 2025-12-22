@@ -11,6 +11,6 @@ public class UserViewModel
     public string? Phone { get; set; }
     public required string Roles { get; set; } // Comma separated
     public required string Type { get; set; } // Employee or Customer
-    
+
     public string FullName => $"{FirstName} {LastName}";
 }

@@ -36,6 +36,9 @@ public static class GerdaServiceCollectionExtensions
         // Rule Compiler (global)
         services.AddSingleton<RuleCompilerService>();
 
+        // Configuration Watcher
+        services.AddHostedService<Engine.GERDA.Configuration.ConfigurationWatcherService>();
+
         if (!File.Exists(gerdaConfigPath))
         {
             Console.WriteLine($"Note: GERDA config not found at {gerdaConfigPath}");

@@ -168,6 +168,7 @@ public class TicketsApiController : ControllerBase
     /// </summary>
     [HttpGet]
     [Authorize]
+    [Obsolete("Use /api/v1/work-items endpoints instead")]
     public async Task<ActionResult<IEnumerable<TicketViewModel>>> GetAll()
     {
         var tickets = await _ticketService.GetAllTicketsAsync();
@@ -179,6 +180,7 @@ public class TicketsApiController : ControllerBase
     /// </summary>
     [HttpGet("{id:guid}")]
     [Authorize]
+    [Obsolete("Use /api/v1/work-items endpoints instead")]
     public async Task<ActionResult<TicketDetailsViewModel>> GetById(Guid id)
     {
         var ticket = await _ticketService.GetTicketDetailsAsync(id);

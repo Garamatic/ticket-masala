@@ -17,11 +17,7 @@ WORKDIR /app
 
 # Create standard mount points and tenant directories
 RUN mkdir -p /app/inputs/config /app/inputs/data /app/keys \
-    /app/tenants/default/config /app/tenants/default/data /app/tenants/default/theme \
-    /app/tenants/government/config /app/tenants/government/data /app/tenants/government/theme \
-    /app/tenants/healthcare/config /app/tenants/healthcare/data /app/tenants/healthcare/theme \
-    /app/tenants/helpdesk/config /app/tenants/helpdesk/data /app/tenants/helpdesk/theme \
-    /app/tenants/landscaping/config /app/tenants/landscaping/data /app/tenants/landscaping/theme \
+    /app/tenants/_template/config /app/tenants/_template/data /app/tenants/_template/theme \
     /app/wwwroot/tenant-theme
 
 # Create a non-root user for security
@@ -31,15 +27,8 @@ RUN groupadd --system --gid 1001 masala && \
 # Copy the binary from build stage (do this as root, then chown)
 COPY --from=build /app/publish .
 
-# Copy all tenant configurations and themes
-COPY --chown=masala:masala tenants/default/ /app/tenants/default/
-COPY --chown=masala:masala tenants/government/ /app/tenants/government/
-COPY --chown=masala:masala tenants/healthcare/ /app/tenants/healthcare/
-COPY --chown=masala:masala tenants/helpdesk/ /app/tenants/helpdesk/
-COPY --chown=masala:masala tenants/landscaping/ /app/tenants/landscaping/
-
-# Copy default configuration for backward compatibility
-COPY --chown=masala:masala tenants/default/config/ /app/inputs/config/
+# Copy template tenant configurations and themes
+COPY --chown=masala:masala tenants/_template/ /app/tenants/_template/
 
 # Client files are served dynamically from tenant directories
 

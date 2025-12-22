@@ -16,7 +16,7 @@ public class ApplicationUsersController : Controller
     private readonly ILogger<ApplicationUsersController> _logger;
 
     public ApplicationUsersController(
-        UserManager<ApplicationUser> userManager, 
+        UserManager<ApplicationUser> userManager,
         RoleManager<IdentityRole> roleManager,
         ILogger<ApplicationUsersController> logger)
     {
@@ -136,7 +136,7 @@ public class ApplicationUsersController : Controller
         if (user == null) return NotFound();
 
         var roles = await _userManager.GetRolesAsync(user);
-        
+
         var model = new UserEditViewModel
         {
             Id = user.Id,

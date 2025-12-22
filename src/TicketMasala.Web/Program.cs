@@ -22,6 +22,11 @@ var builder = WebApplication.CreateBuilder(args);
 // ============================================
 builder.Services.AddMasalaConfiguration(builder.Configuration);
 
+// Validate configuration on startup
+using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+var logger = loggerFactory.CreateLogger("Startup");
+builder.Services.ValidateMasalaConfiguration(builder.Configuration, logger);
+
 // ============================================
 // TENANT PLUGIN SYSTEM
 // ============================================

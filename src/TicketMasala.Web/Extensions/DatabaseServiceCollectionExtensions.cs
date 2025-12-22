@@ -65,7 +65,7 @@ public static class DatabaseServiceCollectionExtensions
         }
 
         Console.WriteLine($"Using SQLite Provider with connection: {connectionString}");
-        options.UseSqlite(connectionString);
+        options.UseSqlite(connectionString, b => b.MigrationsAssembly("TicketMasala.Web"));
         options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
     }
 
@@ -74,6 +74,7 @@ public static class DatabaseServiceCollectionExtensions
         Console.WriteLine($"Using SQL Server Provider");
         options.UseSqlServer(connectionString, sqlServerOptions =>
         {
+            sqlServerOptions.MigrationsAssembly("TicketMasala.Web");
             sqlServerOptions.EnableRetryOnFailure(
                 maxRetryCount: 5,
                 maxRetryDelay: TimeSpan.FromSeconds(10),

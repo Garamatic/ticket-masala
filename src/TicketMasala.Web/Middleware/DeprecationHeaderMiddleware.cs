@@ -27,7 +27,7 @@ public class DeprecationHeaderMiddleware
             // Standard Deprecation header (draft-ietf-httpapi-deprecation-header)
             // Value can be a date or boolean "true"
             context.Response.Headers["Deprecation"] = "true";
-            
+
             // Link header pointing to the new resource
             // Format: <https://api.example.com/v1/work-items>; rel="alternate"
             context.Response.Headers["Link"] = $"<{newRoute}>; rel=\"alternate\"";

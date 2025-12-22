@@ -32,8 +32,8 @@ public class GlobalExceptionHandler : IExceptionHandler
         var correlationId = httpContext.Items[CorrelationIdMiddleware.ContextKey]?.ToString();
 
         // Log the exception with correlation ID
-        _logger.LogError(exception, 
-            "Unhandled exception occurred. CorrelationId: {CorrelationId}", 
+        _logger.LogError(exception,
+            "Unhandled exception occurred. CorrelationId: {CorrelationId}",
             correlationId);
 
         // Map exception to error response

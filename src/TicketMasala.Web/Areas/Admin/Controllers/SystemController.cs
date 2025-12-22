@@ -3,11 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using TicketMasala.Web.Data;
+using TicketMasala.Web.Engine.GERDA.Configuration;
 
 namespace TicketMasala.Web.Areas.Admin.Controllers;
 
 /// <summary>
-/// System Controller - Health checks and diagnostics.
+/// System Controller - Health checks, diagnostics, and configuration management.
 /// </summary>
 [Area("Admin")]
 [Authorize(Roles = "Admin")]
@@ -16,14 +17,17 @@ public class SystemController : Controller
     private readonly MasalaDbContext _context;
     private readonly ILogger<SystemController> _logger;
     private readonly HealthCheckService? _healthCheckService;
+    private readonly IDomainConfigurationService _domainConfigurationService;
 
     public SystemController(
         MasalaDbContext context,
         ILogger<SystemController> logger,
+        IDomainConfigurationService domainConfigurationService,
         HealthCheckService? healthCheckService = null)
     {
         _context = context;
         _logger = logger;
+        _domainConfigurationService = domainConfigurationService;
         _healthCheckService = healthCheckService;
     }
 
@@ -39,6 +43,24 @@ public class SystemController : Controller
         };
 
         return View(viewModel);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult ReloadConfiguration()
+    {
+        try
+        {
+            _domainConfigurationService.ReloadConfiguration();
+            TempData["SuccessMessage"] = "Configuration reloaded successfully.";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to reload configuration");
+            TempData["ErrorMessage"] = "Failed to reload configuration: " + ex.Message;
+        }
+
+        return RedirectToAction(nameof(Index));
     }
 
     private async Task<string> CheckDatabaseAsync()

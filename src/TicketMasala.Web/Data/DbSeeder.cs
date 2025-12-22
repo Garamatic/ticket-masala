@@ -70,15 +70,21 @@ public class DbSeeder
         {
             _logger.LogInformation("========== DATABASE SEEDING STARTED ==========");
 
-            // Ensure database is created
-            _logger.LogInformation("Ensuring database exists (SQLite EnsureCreated)...");
-            var created = await _context.Database.EnsureCreatedAsync();
-            _logger.LogInformation("EnsureCreatedAsync result: {Created}", created);
+            _logger.LogInformation("Applying pending database migrations...");
+            if (_context.Database.IsRelational())
+            {
+                await _context.Database.MigrateAsync();
+                _logger.LogInformation("Database migrations applied");
+            }
+            else
+            {
+                _logger.LogInformation("Non-relational provider detected; skipping migrations");
+            }
 
             // Verify tables exist
             if (!await CheckTablesExistAsync())
             {
-                _logger.LogError("CRITICAL: Tables still don't exist after EnsureCreatedAsync!");
+                _logger.LogError("CRITICAL: Tables still don't exist after applying migrations!");
                 throw new Exception("Failed to create database tables");
             }
 

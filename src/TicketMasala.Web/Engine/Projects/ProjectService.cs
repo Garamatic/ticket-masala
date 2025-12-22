@@ -88,7 +88,6 @@ public class ProjectService : IProjectService
                 .ThenInclude(t => t.Customer)
             .Include(p => p.Customer)
             .Include(p => p.ProjectManager)
-            .Include(p => p.Resources)
             .Where(p => p.Guid == projectGuid && p.ValidUntil == null)
             .FirstOrDefaultAsync();
 

@@ -21,17 +21,17 @@ public class RequestLoggingMiddleware
     {
         var sw = Stopwatch.StartNew();
         var request = context.Request;
-        
+
         // Log start of request (debug level to avoid noise)
         _logger.LogDebug("Request started: {Method} {Path}", request.Method, request.Path);
 
         try
         {
             await _next(context);
-            
+
             sw.Stop();
             var statusCode = context.Response.StatusCode;
-            
+
             // Log warning for 4xx errors (except 404 which is common) or slow requests (> 500ms)
             if (statusCode >= 400 && statusCode != 404)
             {
@@ -51,7 +51,7 @@ public class RequestLoggingMiddleware
                     "Request completed: {Method} {Path} responded {StatusCode} in {Elapsed:0.000}ms",
                     request.Method, request.Path, statusCode, sw.Elapsed.TotalMilliseconds);
             }
-            
+
             // Specifically log 499 (Client Closed Request) if it happens (though usually it shows as cancellation)
             if (statusCode == 499)
             {
@@ -65,14 +65,14 @@ public class RequestLoggingMiddleware
             _logger.LogWarning(
                 "Request cancelled (499 Client Closed): {Method} {Path} cancelled after {Elapsed:0.000}ms",
                 request.Method, request.Path, sw.Elapsed.TotalMilliseconds);
-            
+
             // Re-throw to let the framework handle the response (or middleware higher up)
             throw;
         }
         catch (Exception ex)
         {
             sw.Stop();
-            _logger.LogError(ex, 
+            _logger.LogError(ex,
                 "Request failed with exception: {Method} {Path} failed in {Elapsed:0.000}ms",
                 request.Method, request.Path, sw.Elapsed.TotalMilliseconds);
             throw;

@@ -48,7 +48,7 @@ public class DispatchBacklogService : IDispatchBacklogService
         // Note: In a real high-scale scenario, we would paginate at the DB level (Repository).
         // For now, fetching all pending is acceptable as backlog size is managed.
         var allTickets = (await _ticketRepository.GetAllAsync()).ToList();
-        
+
         var pendingTickets = allTickets
             .Where(t => t.TicketStatus == Status.Pending ||
                        (t.TicketStatus == Status.Assigned && t.ResponsibleId == null))
@@ -111,45 +111,45 @@ public class DispatchBacklogService : IDispatchBacklogService
         // 7. Get Recommendations for current page
         if (_dispatchingService.IsEnabled)
         {
-             // Create lookup for efficiency
-             var employeeMap = employees.ToDictionary(e => e.Id);
+            // Create lookup for efficiency
+            var employeeMap = employees.ToDictionary(e => e.Id);
 
-             foreach (var info in ticketDispatchInfos)
-             {
-                 try 
-                 {
-                     var recommendations = await _dispatchingService.GetTopRecommendedAgentsAsync(info.Guid, 3);
-                     if (recommendations != null && recommendations.Any())
-                     {
-                         info.RecommendedAgents = recommendations
-                             .Select(r => 
-                             {
-                                 if (!employeeMap.TryGetValue(r.AgentId, out var agent)) return null;
-                                 
-                                 var workload = agentWorkloads.GetValueOrDefault(r.AgentId, (0, 0));
-                                 
-                                 return new AgentRecommendation
-                                 {
-                                     AgentId = r.AgentId,
-                                     AgentName = $"{agent.FirstName} {agent.LastName}",
-                                     Score = r.Score,
-                                     Team = agent.Team,
-                                     CurrentWorkload = workload.Item1,
-                                     MaxCapacity = 10,
-                                     Language = agent.Language,
-                                     Region = agent.Region
-                                 };
-                             })
-                             .Where(r => r != null)
-                             .Cast<AgentRecommendation>() // Help compiler
-                             .ToList();
-                     }
-                 }
-                 catch (Exception ex)
-                 {
-                     _logger.LogWarning(ex, "Failed to get GERDA recommendations for ticket {TicketId}", info.Guid);
-                 }
-             }
+            foreach (var info in ticketDispatchInfos)
+            {
+                try
+                {
+                    var recommendations = await _dispatchingService.GetTopRecommendedAgentsAsync(info.Guid, 3);
+                    if (recommendations != null && recommendations.Any())
+                    {
+                        info.RecommendedAgents = recommendations
+                            .Select(r =>
+                            {
+                                if (!employeeMap.TryGetValue(r.AgentId, out var agent)) return null;
+
+                                var workload = agentWorkloads.GetValueOrDefault(r.AgentId, (0, 0));
+
+                                return new AgentRecommendation
+                                {
+                                    AgentId = r.AgentId,
+                                    AgentName = $"{agent.FirstName} {agent.LastName}",
+                                    Score = r.Score,
+                                    Team = agent.Team,
+                                    CurrentWorkload = workload.Item1,
+                                    MaxCapacity = 10,
+                                    Language = agent.Language,
+                                    Region = agent.Region
+                                };
+                            })
+                            .Where(r => r != null)
+                            .Cast<AgentRecommendation>() // Help compiler
+                            .ToList();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to get GERDA recommendations for ticket {TicketId}", info.Guid);
+                }
+            }
         }
 
         // 8. Build Agent Infos

@@ -61,6 +61,45 @@
         </div>
     </div>
 
+    <!-- Configuration -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Configuration</h5>
+                </div>
+                <div class="card-body">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            @TempData["ErrorMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="mb-1">GERDA Configuration</h6>
+                            <p class="text-muted mb-0 small">Reload domain rules and settings from <code>masala_config.json</code></p>
+                        </div>
+                        <form asp-action="ReloadConfiguration" method="post">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-arrow-clockwise me-1"></i>Reload Configuration
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Health Checks -->
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-transparent">

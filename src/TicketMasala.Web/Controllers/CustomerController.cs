@@ -44,7 +44,7 @@ public class CustomerController : Controller
             foreach (var user in users)
             {
                 var projects = (await _projectRepository.GetByCustomerIdAsync(user.Id)).ToList();
-                
+
                 string role = "Customer";
                 if (user is Employee employee)
                 {

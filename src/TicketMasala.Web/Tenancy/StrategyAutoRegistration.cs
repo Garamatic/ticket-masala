@@ -21,7 +21,7 @@ public static class StrategyAutoRegistration
             RegisterStrategiesFromAssembly(services, assembly);
         }
     }
-    
+
     /// <summary>
     /// Scan a single assembly for strategy implementations.
     /// </summary>
@@ -29,7 +29,7 @@ public static class StrategyAutoRegistration
     {
         var types = assembly.GetTypes()
             .Where(t => !t.IsInterface && !t.IsAbstract);
-        
+
         foreach (var type in types)
         {
             // Register ranking strategies
@@ -41,7 +41,7 @@ public static class StrategyAutoRegistration
                     Console.WriteLine($"[Tenancy] Registered ranking strategy: {type.Name}");
                 }
             }
-            
+
             // Register dispatching strategies
             if (typeof(IDispatchingStrategy).IsAssignableFrom(type))
             {
@@ -51,7 +51,7 @@ public static class StrategyAutoRegistration
                     Console.WriteLine($"[Tenancy] Registered dispatching strategy: {type.Name}");
                 }
             }
-            
+
             // Register estimating strategies
             if (typeof(IEstimatingStrategy).IsAssignableFrom(type))
             {
@@ -63,17 +63,17 @@ public static class StrategyAutoRegistration
             }
         }
     }
-    
+
     /// <summary>
     /// Check if a specific implementation is already registered.
     /// </summary>
     private static bool IsAlreadyRegistered(IServiceCollection services, Type serviceType, Type implementationType)
     {
-        return services.Any(s => 
-            s.ServiceType == serviceType && 
+        return services.Any(s =>
+            s.ServiceType == serviceType &&
             s.ImplementationType == implementationType);
     }
-    
+
     /// <summary>
     /// Scan plugin assemblies that were loaded by TenantPluginLoader.
     /// </summary>
@@ -83,7 +83,7 @@ public static class StrategyAutoRegistration
         var pluginAssemblies = TenantPluginLoader.LoadedPlugins
             .Select(p => p.GetType().Assembly)
             .Distinct();
-        
+
         foreach (var assembly in pluginAssemblies)
         {
             RegisterStrategiesFromAssembly(services, assembly);

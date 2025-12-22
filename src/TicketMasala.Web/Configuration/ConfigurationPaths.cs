@@ -7,7 +7,7 @@ namespace TicketMasala.Web.Configuration;
 public static class ConfigurationPaths
 {
     private static string? _configBasePath;
-    
+
     /// <summary>
     /// Gets the base configuration directory path.
     /// Resolution order:
@@ -19,7 +19,7 @@ public static class ConfigurationPaths
     {
         if (_configBasePath != null)
             return _configBasePath;
-            
+
         // Check environment variable first (Pro deployment override)
         var envPath = Environment.GetEnvironmentVariable("MASALA_CONFIG_PATH");
         if (!string.IsNullOrEmpty(envPath) && Directory.Exists(envPath))
@@ -27,19 +27,19 @@ public static class ConfigurationPaths
             _configBasePath = envPath;
             return _configBasePath;
         }
-        
+
         // Docker container default
         if (Directory.Exists("/app/config"))
         {
             _configBasePath = "/app/config";
             return _configBasePath;
         }
-        
+
         // Development fallback
         _configBasePath = Path.Combine(contentRootPath, "..", "..", "config");
         return _configBasePath;
     }
-    
+
     /// <summary>
     /// Gets the full path to a configuration file.
     /// </summary>
@@ -48,7 +48,7 @@ public static class ConfigurationPaths
         var basePath = GetConfigBasePath(contentRootPath);
         return Path.Combine(basePath, fileName);
     }
-    
+
     /// <summary>
     /// Resets the cached config path (useful for testing).
     /// </summary>

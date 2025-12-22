@@ -138,7 +138,7 @@ public class ConfigurationValidator : IConfigurationValidator
         return errors;
     }
 
-    private IEnumerable<ValidationError> ValidateFeatureFlags(FeatureFlags options)
+    private IEnumerable<ValidationError> ValidateFeatureFlags(FeatureOptions options)
     {
         var errors = new List<ValidationError>();
         var context = new System.ComponentModel.DataAnnotations.ValidationContext(options);

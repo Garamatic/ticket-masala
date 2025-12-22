@@ -112,7 +112,7 @@ public class ConfigurationValidationException : Exception
         Errors = errors.ToList().AsReadOnly();
     }
 
-    public ConfigurationValidationException(string message) 
+    public ConfigurationValidationException(string message)
         : base(message)
     {
         Errors = new List<ValidationError> { new("Configuration", message) }.AsReadOnly();
@@ -123,7 +123,7 @@ public class ConfigurationValidationException : Exception
         var errorList = errors.ToList();
         if (errorList.Count == 1)
             return $"Configuration validation failed: {errorList[0]}";
-        
+
         return $"Configuration validation failed with {errorList.Count} errors:\n" +
                string.Join("\n", errorList.Select(e => $"  - {e}"));
     }

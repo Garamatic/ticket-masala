@@ -3,6 +3,9 @@ site_description: AI-powered workflow management platform
 site_author: Ticket Masala Team
 site_url: https://yourusername.github.io/ticket-masala/
 
+# Documentation source directory (current directory, not a 'docs' subdirectory)
+docs_dir: .
+
 repo_name: ticket-masala
 repo_url: https://github.com/yourusername/ticket-masala
 edit_uri: edit/main/docs/

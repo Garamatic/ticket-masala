@@ -1,163 +1,111 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TicketMasala.Domain.Entities;
-using TicketMasala.Web.Data;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using TicketMasala.Domain.Common;
+using TicketMasala.Web.Engine.Core;
+using TicketMasala.Web.Engine.GERDA;
+using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.ViewModels.Portal;
-using TicketMasala.Web.Repositories;
-using TicketMasala.Web.Configuration;
-using TicketMasala.Web.Engine.GERDA.Configuration;
-using Microsoft.EntityFrameworkCore;
+using TicketMasala.Web.ViewModels.Tickets;
+using System.Security.Claims;
+using PortalCreateTicketViewModel = TicketMasala.Web.ViewModels.Portal.CreateTicketViewModel;
 
 namespace TicketMasala.Web.Controllers;
 
-/// <summary>
-/// API controller for handling public portal submissions from customer-facing portals.
-/// Supports anonymous ticket creation for demo purposes.
-/// </summary>
-[ApiController]
-[Route("api/[controller]")]
-public class PortalController : ControllerBase
+[Authorize(Roles = Constants.RoleCustomer)]
+public class PortalController : Controller
 {
-    private readonly MasalaDbContext _context;
-    private readonly ITicketRepository _ticketRepository;
-    private readonly IUserRepository _userRepository;
-    private readonly IProjectRepository _projectRepository;
-    private readonly IDomainConfigurationService _domainConfig;
+    private readonly ITicketService _ticketService;
+    private readonly IProjectService _projectService;
+    private readonly IGerdaService _gerdaService;
     private readonly ILogger<PortalController> _logger;
-    private readonly IWebHostEnvironment _environment;
 
     public PortalController(
-        MasalaDbContext context,
-        ITicketRepository ticketRepository,
-        IUserRepository userRepository,
-        IProjectRepository projectRepository,
-        IDomainConfigurationService domainConfig,
-        ILogger<PortalController> logger,
-        IWebHostEnvironment environment)
+        ITicketService ticketService,
+        IProjectService projectService,
+        IGerdaService gerdaService,
+        ILogger<PortalController> logger)
     {
-        _context = context;
-        _ticketRepository = ticketRepository;
-        _userRepository = userRepository;
-        _projectRepository = projectRepository;
-        _domainConfig = domainConfig;
+        _ticketService = ticketService;
+        _projectService = projectService;
+        _gerdaService = gerdaService;
         _logger = logger;
-        _environment = environment;
     }
 
-    /// <summary>
-    /// Submit a new ticket from a customer portal.
-    /// Supports file uploads, geolocation, and custom fields.
-    /// </summary>
-    [HttpPost("submit")]
-    [Consumes("multipart/form-data")]
-    public async Task<ActionResult<PortalSubmissionResponse>> Submit(
-        [FromForm] PortalSubmissionViewModel model)
+    public async Task<IActionResult> Index()
     {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        // Show recent tickets for this customer
+        var searchModel = new TicketSearchViewModel
+        {
+            CustomerId = userId,
+            Page = 1,
+            PageSize = 10
+        };
+
+        var result = await _ticketService.SearchTicketsAsync(searchModel);
+
+        return View(result);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> CreateTicket()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        var model = new PortalCreateTicketViewModel
+        {
+            Projects = await GetCustomerProjectsSelectList(userId!)
+        };
+
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateTicket(PortalCreateTicketViewModel model)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (!ModelState.IsValid)
+        {
+            model.Projects = await GetCustomerProjectsSelectList(userId!);
+            return View(model);
+        }
+
         try
         {
-            _logger.LogInformation("Portal submission received: {Description}", model.Description);
+            // Create ticket - Customer is implicitly the Creator and CustomerId
+            var fullDescription = $"subject: {model.Title}\n\n{model.Description}";
 
-            // Find or create customer
-            ApplicationUser? customer = null;
-            if (!string.IsNullOrEmpty(model.CustomerEmail))
-            {
-                customer = await _userRepository.GetUserByEmailAsync(model.CustomerEmail);
-                
-                // Create customer if doesn't exist (for demo purposes)
-                if (customer == null)
-                {
-                    customer = new ApplicationUser
-                    {
-                        UserName = model.CustomerEmail,
-                        Email = model.CustomerEmail,
-                        FirstName = model.CustomerName?.Split(' ').FirstOrDefault() ?? "Portal",
-                        LastName = model.CustomerName?.Split(' ').Skip(1).FirstOrDefault() ?? "User",
-                        PhoneNumber = model.CustomerPhone,
-                        EmailConfirmed = true
-                    };
+            var ticket = await _ticketService.CreateTicketAsync(
+                fullDescription,
+                userId!,
+                responsibleId: null,
+                projectGuid: model.ProjectGuid,
+                completionTarget: null
+            );
 
-                    var result = await _userRepository.CreateCustomerAsync(customer, "Portal@123");
-                    if (!result)
-                    {
-                        return BadRequest(new PortalSubmissionResponse
-                        {
-                            Success = false,
-                            Message = "Failed to create customer account"
-                        });
-                    }
-                }
-            }
+            // Trigger GERDA processing
+            _logger.LogInformation("Processing customer portal ticket {TicketGuid} with GERDA AI", ticket.Guid);
+            await _gerdaService.ProcessTicketAsync(ticket.Guid);
 
-            // Create the ticket
-            var ticket = new Ticket
-            {
-                Description = model.Description,
-                Status = TicketStatus.New,
-                Type = TicketType.Task,
-                CustomerId = customer?.Id,
-                PriorityScore = model.PriorityScore ?? 5,
-                GerdaTags = model.Tags,
-                CompletionTargetDate = DateTime.UtcNow.AddDays(7) // Default SLA
-            };
-
-            // Handle geolocation
-            if (model.Latitude.HasValue && model.Longitude.HasValue)
-            {
-                ticket.GerdaTags = string.IsNullOrEmpty(ticket.GerdaTags)
-                    ? $"Geo:{model.Latitude},{model.Longitude}"
-                    : $"{ticket.GerdaTags},Geo:{model.Latitude},{model.Longitude}";
-            }
-
-            // Handle file upload
-            if (model.Attachment != null && model.Attachment.Length > 0)
-            {
-                var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "portal");
-                Directory.CreateDirectory(uploadsFolder);
-
-                var uniqueFileName = $"{Guid.NewGuid()}_{model.Attachment.FileName}";
-                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    await model.Attachment.CopyToAsync(fileStream);
-                }
-
-                // Store file reference in tags for now
-                ticket.GerdaTags = string.IsNullOrEmpty(ticket.GerdaTags)
-                    ? $"Attachment:{uniqueFileName}"
-                    : $"{ticket.GerdaTags},Attachment:{uniqueFileName}";
-            }
-
-            // Save to database
-            await _context.Tickets.AddAsync(ticket);
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation("Portal ticket created: {TicketGuid}", ticket.Guid);
-
-            return Ok(new PortalSubmissionResponse
-            {
-                Success = true,
-                Message = "Your request has been submitted successfully",
-                TicketGuid = ticket.Guid,
-                TicketNumber = $"#{ticket.Id}"
-            });
+            TempData["Success"] = "Ticket created successfully!";
+            return RedirectToAction(nameof(Index));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing portal submission");
-            return StatusCode(500, new PortalSubmissionResponse
-            {
-                Success = false,
-                Message = "An error occurred while processing your request. Please try again."
-            });
+            _logger.LogError(ex, "Error creating ticket from portal");
+            ModelState.AddModelError("", "An error occurred while creating the ticket. Please try again.");
+            model.Projects = await GetCustomerProjectsSelectList(userId!);
+            return View(model);
         }
     }
 
-    /// <summary>
-    /// Health check endpoint for portals
-    /// </summary>
-    [HttpGet("health")]
-    public IActionResult Health()
+    private async Task<IEnumerable<SelectListItem>> GetCustomerProjectsSelectList(string userId)
     {
-        return Ok(new { status = "healthy", timestamp = DateTime.UtcNow });
+        return await _ticketService.GetProjectSelectListAsync();
     }
 }

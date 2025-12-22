@@ -8,6 +8,8 @@ public class PortalSubmissionViewModel
     [StringLength(500, MinimumLength = 10)]
     public string Description { get; set; } = string.Empty;
 
+    public string? Subject { get; set; }
+
     [EmailAddress]
     public string? CustomerEmail { get; set; }
 

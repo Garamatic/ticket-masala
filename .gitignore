@@ -1,0 +1,16 @@
+# Standard build artifacts
+obj/
+bin/
+
+# OS generated files
+.DS_Store
+
+# Node.js
+node_modules/
+dist/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.bak

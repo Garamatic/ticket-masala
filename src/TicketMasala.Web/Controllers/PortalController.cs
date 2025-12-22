@@ -9,7 +9,8 @@ using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.ViewModels.Portal;
 using TicketMasala.Web.ViewModels.Tickets;
 using System.Security.Claims;
-using PortalCreateTicketViewModel = TicketMasala.Web.ViewModels.Portal.CreateTicketViewModel;
+
+
 
 namespace TicketMasala.Web.Controllers;
 
@@ -55,7 +56,7 @@ public class PortalController : Controller
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        var model = new PortalCreateTicketViewModel
+        var model = new InternalCreateTicketViewModel
         {
             Projects = await GetCustomerProjectsSelectList(userId!)
         };
@@ -65,7 +66,7 @@ public class PortalController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateTicket(PortalCreateTicketViewModel model)
+    public async Task<IActionResult> CreateTicket(InternalCreateTicketViewModel model)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 

@@ -1,6 +1,7 @@
 using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity; // Added for UserManager
 
 namespace TicketMasala.Web.Repositories;
 
@@ -10,11 +11,16 @@ namespace TicketMasala.Web.Repositories;
 public class EfCoreUserRepository : IUserRepository
 {
     private readonly MasalaDbContext _context;
+    private readonly UserManager<ApplicationUser> _userManager; // Added
     private readonly ILogger<EfCoreUserRepository> _logger;
 
-    public EfCoreUserRepository(MasalaDbContext context, ILogger<EfCoreUserRepository> logger)
+    public EfCoreUserRepository(
+        MasalaDbContext context,
+        UserManager<ApplicationUser> userManager, // Added
+        ILogger<EfCoreUserRepository> logger)
     {
         _context = context;
+        _userManager = userManager; // Added
         _logger = logger;
     }
 
@@ -106,4 +112,34 @@ public class EfCoreUserRepository : IUserRepository
         }
     }
 
+    public async Task<bool> CreateCustomerAsync(ApplicationUser customer, string password)
+    {
+        try
+        {
+            var result = await _userManager.CreateAsync(customer, password);
+            if (!result.Succeeded)
+            {
+                _logger.LogError("Failed to create customer {Email}: {Errors}", customer.Email, string.Join(", ", result.Errors.Select(e => e.Description)));
+                return false;
+            }
+
+            // Assign to customer role
+            result = await _userManager.AddToRoleAsync(customer, Constants.RoleCustomer);
+            if (!result.Succeeded)
+            {
+                _logger.LogError("Failed to add customer {Email} to role {Role}: {Errors}", customer.Email, Constants.RoleCustomer, string.Join(", ", result.Errors.Select(e => e.Description)));
+                // Attempt to delete user if role assignment fails to prevent orphaned accounts
+                await _userManager.DeleteAsync(customer);
+                return false;
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating customer {Email}", customer.Email);
+            return false;
+        }
+    }
 }
+

@@ -17,6 +17,7 @@ public interface IUserRepository
     Task<IEnumerable<ApplicationUser>> GetAllCustomersAsync();
     Task<bool> UpdateCustomerAsync(ApplicationUser customer);
     Task<bool> DeleteCustomerAsync(string id);
+    Task<bool> CreateCustomerAsync(ApplicationUser customer, string password);
 
     // General user operations
     Task<ApplicationUser?> GetUserByIdAsync(string id);

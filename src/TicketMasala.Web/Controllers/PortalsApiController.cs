@@ -6,6 +6,7 @@ using TicketMasala.Web.Repositories;
 using TicketMasala.Web.Configuration;
 using TicketMasala.Web.Engine.GERDA.Configuration;
 using Microsoft.EntityFrameworkCore;
+using TicketMasala.Domain.Common; // Added
 
 namespace TicketMasala.Web.Controllers;
 
@@ -91,12 +92,12 @@ public class PortalsApiController : ControllerBase
             var ticket = new Ticket
             {
                 Description = model.Description,
-                Status = TicketStatus.New,
-                Type = TicketType.Task,
+                Status = "New", // Using string for status
+                WorkItemTypeCode = model.WorkItemType, // Setting WorkItemTypeCode from model
                 CustomerId = customer?.Id,
                 PriorityScore = model.PriorityScore ?? 5,
                 GerdaTags = model.Tags,
-                CompletionTargetDate = DateTime.UtcNow.AddDays(7) // Default SLA
+                CompletionTarget = DateTime.UtcNow.AddDays(7) // Using the correct property name
             };
 
             // Handle geolocation
@@ -138,7 +139,7 @@ public class PortalsApiController : ControllerBase
                 Success = true,
                 Message = "Your request has been submitted successfully",
                 TicketGuid = ticket.Guid,
-                TicketNumber = $"#{ticket.Id}"
+                TicketNumber = $"#{ticket.Guid}" // Using Guid instead of non-existent Id
             });
         }
         catch (Exception ex)

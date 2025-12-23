@@ -114,14 +114,7 @@ public class DbSeeder
                 return;
             }
 
-            _logger.LogInformation("Database is empty. Loading seed data from configuration...");
-            var seedConfig = await LoadSeedConfigurationAsync();
 
-            if (seedConfig == null)
-            {
-                _logger.LogError("Failed to load seed configuration. Aborting seed.");
-                return;
-            }
 
             // Create Users
             _logger.LogInformation("Creating users...");
@@ -614,4 +607,5 @@ public class DbSeeder
         _logger.LogInformation("Added {Count} articles to Knowledge Base.", articles.Count);
     }
 
+}
 }

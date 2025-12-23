@@ -1,3 +1,18 @@
+
+Here is the **"Enterprise Edition"** of your README.
+
+### **Major Changes Made:**
+
+1. **The "Hook":** Changed "Ticket management" to **"Polymorphic Workflow Engine."**
+2. **Visuals:** Added a Mermaid.js diagram code (GitHub renders this automatically) to show the architecture.
+3. **The "Desgoffe/Liberty" Narrative:** Explicitly explained the multi-instance strategy.
+4. **Cleanliness:** Collapsed the massive "Test Accounts" table into a dropdown `<details>` tag.
+
+---
+
+### **Copy/Paste this into `README.md**`
+
+```markdown
 # Ticket Masala 🌶️
 
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
@@ -88,7 +103,7 @@ No external database required. The app initializes a local SQLite instance on fi
 
 ```bash
 # Clone the repository
-git clone https://github.com/garamatic/ticket-masala.git
+git clone [https://github.com/garamatic/ticket-masala.git](https://github.com/garamatic/ticket-masala.git)
 cd ticket-masala
 
 # Build

@@ -59,6 +59,8 @@ public class SeedWorkItem
     public string? CustomerEmail { get; set; } // For unassigned items
 }
 
+public class SeedComment
+{
     public string Body { get; set; } = string.Empty;
     public string? AuthorEmail { get; set; } // Use email to look up ID
     public int CreatedDaysAgo { get; set; }

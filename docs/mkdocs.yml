@@ -158,6 +158,14 @@ nav:
     
     - Project Management:
       - Roadmap: en/project-management/roadmap_v3.md
+    
+    - Deployment:
+      - Strategy: en/deployment/STRATEGY.md
+      - Ecosystem Pipeline: en/deployment/ECOSYSTEM.md
+      - Docker Guide: en/deployment/DOCKER_GUIDE.md
+      - CI/CD: en/deployment/CI_CD.md
+      - Fly.io: en/deployment/FLY_IO.md
+      - Linux Workstation: en/deployment/LINUX_WORKSTATION_PILOT.md
   
   - Nederlands:
     - Overzicht: nl/README.md
@@ -180,3 +188,7 @@ nav:
     - Projectbeheer:
       - Roadmap: nl/project-management/ROADMAP.md
       - Implementatiefasen: nl/project-management/IMPLEMENTATION_PHASES.md
+
+    - Ontwerp & Strategie:
+      - Design Specificatie: nl/design/design-spec.md
+      - Thema Strategie: nl/design/themes.md

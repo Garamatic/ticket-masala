@@ -24,7 +24,7 @@ public class TicketViewModel
     public Guid? ProjectGuid { get; set; }
     public List<SubTicketInfo> SubTickets { get; set; } = new List<SubTicketInfo> { };
     public string? GerdaTags { get; set; }
-
+    public TicketMasala.Domain.Services.AiExplanation? Explanation { get; set; }
 }
 
 public class SubTicketInfo

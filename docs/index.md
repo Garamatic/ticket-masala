@@ -8,7 +8,7 @@
 
 <div class="grid cards" markdown>
 
--   :material-clock-fast:{ .lg .middle } __Getting Started__
+- :material-clock-fast:{ .lg .middle } **Getting Started**
 
     ---
 
@@ -16,7 +16,7 @@
 
     [:octicons-arrow-right-24: Development Guide](en/guides/DEVELOPMENT.md)
 
--   :fontawesome-solid-brain:{ .lg .middle } __Architecture__
+- :fontawesome-solid-brain:{ .lg .middle } **Architecture**
 
     ---
 
@@ -24,7 +24,7 @@
 
     [:octicons-arrow-right-24: Architecture Overview](en/architecture/SUMMARY.md)
 
--   :material-book-open-variant:{ .lg .middle } __API Reference__
+- :material-book-open-variant:{ .lg .middle } **API Reference**
 
     ---
 
@@ -32,13 +32,21 @@
 
     [:octicons-arrow-right-24: API Documentation](en/api/API_REFERENCE.md)
 
--   :material-test-tube:{ .lg .middle } __Testing__
+- :material-test-tube:{ .lg .middle } **Testing**
 
     ---
 
     Learn about our testing strategy and quality assurance practices.
 
     [:octicons-arrow-right-24: Testing Guide](en/guides/TESTING.md)
+
+- :material-rocket-launch:{ .lg .middle } **Deployment**
+
+    ---
+
+    Deploy the Ticket Masala ecosystem using our automated pipeline.
+
+    [:octicons-arrow-right-24: Ecosystem Guide](en/deployment/ECOSYSTEM.md)
 
 </div>
 
@@ -69,5 +77,6 @@
 2. [Configure your domain](en/guides/CONFIGURATION.md)
 3. [Explore the architecture](en/architecture/SUMMARY.md)
 4. [Build and test](en/guides/TESTING.md)
+5. [Deploy to production](en/deployment/ECOSYSTEM.md)
 
 For the Dutch documentation, visit the [Nederlandse sectie](nl/README.md).

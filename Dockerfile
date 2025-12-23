@@ -12,42 +12,40 @@ COPY . .
 WORKDIR "/src/src/TicketMasala.Web"
 RUN dotnet publish "TicketMasala.Web.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-# STAGE 2: Runtime (The "Lite" Image)
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
-LABEL maintainer="Garamatic <support@garamatic.com>"
-LABEL version="1.0"
-LABEL description="Ticket Masala Web Application"
-
+# STAGE 2: Prepare Layout (Since Chiseled has no shell/mkdir)
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS prepare
 WORKDIR /app
+COPY --from=build /app/publish .
 
-# Create standard mount points and tenant directories
+# Create directory structure
 RUN mkdir -p /app/inputs/config /app/inputs/data /app/keys \
     /app/tenants/_template/config /app/tenants/_template/data /app/tenants/_template/theme \
     /app/wwwroot/tenant-theme
 
-# Create a non-root user for security
-RUN groupadd --system --gid 1001 masala && \
-    useradd --system --uid 1001 --gid masala --shell /bin/sh masala
+# Copy templates
+COPY tenants/_template/ /app/tenants/_template/
 
-# Copy the binary from build stage (do this as root, then chown)
-COPY --from=build /app/publish .
+# Set permissions for the 'app' user (UID 1654 in Chiseled)
+RUN chown -R 1654:1654 /app
 
-# Copy template tenant configurations and themes
-COPY --chown=masala:masala tenants/_template/ /app/tenants/_template/
+# STAGE 3: Runtime (Standard Ubuntu Noble - Includes ICU & Shell)
+FROM mcr.microsoft.com/dotnet/nightly/aspnet:10.0-noble AS final
+WORKDIR /app
 
-# Set proper permissions
-RUN chown -R masala:masala /app
-
-USER masala
+# Copy everything from the prepare stage with correct permissions
+COPY --from=prepare --chown=1654:1654 /app .
 
 # ENVIRONMENT DEFAULTS
 ENV MASALA_CONFIG_PATH="/app/inputs/config"
 ENV MASALA_DB_PATH="/app/inputs/data/masala.db"
 ENV ASPNETCORE_URLS="http://+:8080"
 
-# Expose volumes for persistence and configuration
-VOLUME ["/app/inputs/config", "/app/inputs/data", "/app/keys"]
+# Expose volumes (Note: Chiseled cannot create these at runtime, they must bind mount to existing dirs)
+# In Fly.io, we mount volumes here.
 
 EXPOSE 8080
+
+# Use the built-in app user
+# USER 1654
 
 ENTRYPOINT ["dotnet", "TicketMasala.Web.dll"]

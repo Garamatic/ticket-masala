@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Localization;
 using WebOptimizer;
+using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,6 +62,7 @@ builder.Services.AddBackgroundServices();
 // ============================================
 var configBasePath = TicketMasala.Web.Configuration.ConfigurationPaths.GetConfigBasePath(builder.Environment.ContentRootPath);
 builder.Services.AddGerdaServices(builder.Environment, configBasePath);
+builder.Services.AddScoped<TicketMasala.Domain.Services.IExplainabilityService, TicketMasala.Web.Engine.GERDA.Explainability.ExplainabilityService>();
 
 // ============================================
 // INFRASTRUCTURE & SECURITY
@@ -88,6 +90,8 @@ app.UseMasalaCore(app.Environment);
 app.UseAuthentication();
 app.UseAuthorization();
 
+
+app.MapMetrics(); // Prometheus metrics
 app.MapMasalaEndpoints();
 
 // ============================================

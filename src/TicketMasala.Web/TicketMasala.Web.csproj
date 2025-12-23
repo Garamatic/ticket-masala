@@ -62,5 +62,6 @@
     <PackageReference Include="Scriban" Version="6.5.2" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
+    <PackageReference Include="prometheus-net.AspNetCore" Version="8.2.1" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,75 @@
+/* Custom styling for Ticket Masala docs */
+
+/* Add "Back to Main Site" link in header */
+.md-header__button.md-logo {
+    position: relative;
+}
+
+/* Custom header link */
+.md-header__topic {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Back to main site button */
+.back-to-main {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(76, 175, 80, 0.1);
+    border: 1px solid rgba(76, 175, 80, 0.3);
+    border-radius: 4px;
+    color: #4CAF50;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    margin-left: auto;
+}
+
+.back-to-main:hover {
+    background: rgba(76, 175, 80, 0.2);
+    border-color: #4CAF50;
+    transform: translateY(-1px);
+}
+
+.back-to-main svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Match Ticket Masala color scheme */
+:root {
+    --md-primary-fg-color: #4CAF50;
+    --md-primary-fg-color--light: #66BB6A;
+    --md-primary-fg-color--dark: #388E3C;
+    --md-accent-fg-color: #7B2CBF;
+}
+
+/* Enhance code blocks */
+.md-typeset code {
+    background-color: rgba(76, 175, 80, 0.1);
+    border: 1px solid rgba(76, 175, 80, 0.2);
+}
+
+/* Style admonitions to match theme */
+.md-typeset .admonition {
+    border-left: 4px solid var(--md-primary-fg-color);
+}
+
+/* Mobile responsive back button */
+@media screen and (max-width: 76.1875em) {
+    .back-to-main {
+        position: fixed;
+        bottom: 1rem;
+        right: 1rem;
+        z-index: 100;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .back-to-main span {
+        display: none;
+    }
+}

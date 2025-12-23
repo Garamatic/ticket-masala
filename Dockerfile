@@ -14,6 +14,10 @@ RUN dotnet publish "TicketMasala.Web.csproj" -c Release -o /app/publish /p:UseAp
 
 # STAGE 2: Runtime (The "Lite" Image)
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+LABEL maintainer="Garamatic <support@garamatic.com>"
+LABEL version="1.0"
+LABEL description="Ticket Masala Web Application"
+
 WORKDIR /app
 
 # Create standard mount points and tenant directories
@@ -31,12 +35,7 @@ COPY --from=build /app/publish .
 # Copy template tenant configurations and themes
 COPY --chown=masala:masala tenants/_template/ /app/tenants/_template/
 
-# Client files are served dynamically from tenant directories
-
 # Set proper permissions
-RUN chown -R masala:masala /app/inputs /app/keys /app/tenants /app/wwwroot
-
-# Ensure the app files are owned by the non-root user, then switch user
 RUN chown -R masala:masala /app
 
 USER masala
@@ -45,6 +44,9 @@ USER masala
 ENV MASALA_CONFIG_PATH="/app/inputs/config"
 ENV MASALA_DB_PATH="/app/inputs/data/masala.db"
 ENV ASPNETCORE_URLS="http://+:8080"
+
+# Expose volumes for persistence and configuration
+VOLUME ["/app/inputs/config", "/app/inputs/data", "/app/keys"]
 
 EXPOSE 8080
 

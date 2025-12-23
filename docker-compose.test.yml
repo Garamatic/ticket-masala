@@ -1,0 +1,9 @@
+services:
+  ticket-masala:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    volumes:
+      - ./temp-data:/app/inputs/data

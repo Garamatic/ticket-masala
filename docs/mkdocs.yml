@@ -1,10 +1,13 @@
 site_name: Ticket Masala Documentation
 site_description: AI-powered workflow management platform
 site_author: Ticket Masala Team
-site_url: https://yourusername.github.io/ticket-masala/
+site_url: https://masala-doc.fly.dev/
 
 # Documentation source directory (current directory, not a 'docs' subdirectory)
 docs_dir: .
+
+# Explicitly set site_dir to avoid conflict
+site_dir: ../site
 
 repo_name: ticket-masala
 repo_url: https://github.com/yourusername/ticket-masala
@@ -113,8 +116,15 @@ extra:
       link: https://github.com/yourusername/ticket-masala
       name: GitHub Repository
   
+  # Back to main site link
+  homepage: https://ticket-masala.fly.dev
+  
   version:
     provider: mike
+  
+  # Announcement banner
+  announcement:
+    text: '← <a href="https://ticket-masala.fly.dev" style="color: #4CAF50; font-weight: 500;">Back to Main Site</a>'
 
 nav:
   - Home: index.md

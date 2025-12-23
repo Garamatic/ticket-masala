@@ -146,6 +146,7 @@ nav:
       - Observers: en/architecture/OBSERVERS.md
       - Middleware: en/architecture/MIDDLEWARE.md
       - Extensions: en/architecture/EXTENSIONS.md
+      - Security: en/architecture/SECURITY.md
       - GERDA AI:
         - Overview: en/architecture/gerda-ai/GERDA_MODULES.md
     

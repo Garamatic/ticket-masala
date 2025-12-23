@@ -48,6 +48,48 @@ See [ADR-001](ADR-001-uem-terminology.md) for full rationale.
 
 ---
 
+## Request Lifecycle
+
+Understanding how a request flows through the system:
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gatekeeper
+    participant Resolver as Tenant Resolver
+    participant Controller
+    participant Service
+    participant GERDA
+    participant Repository
+    participant DB as Database
+
+    Client->>Gatekeeper: HTTP Request
+    Gatekeeper->>Gatekeeper: Validate API Key
+    Gatekeeper->>Resolver: Forward Request
+    Resolver->>Resolver: Extract Tenant Context<br/>(subdomain/header)
+    Resolver->>Controller: Request + TenantId
+    Controller->>Service: Business Logic Call
+    Service->>Repository: Query/Command
+    Repository->>DB: EF Core Query
+    DB-->>Repository: Data
+    Repository-->>Service: Entity
+    Service->>GERDA: AI Processing (async)
+    GERDA-->>Service: Recommendations
+    Service-->>Controller: DTO
+    Controller-->>Client: JSON Response
+```
+
+**Key Steps:**
+
+1. **Gatekeeper**: API authentication and rate limiting
+2. **Tenant Resolver**: Extracts tenant context from subdomain or header
+3. **Controller**: Routes to appropriate service
+4. **Service**: Executes business logic
+5. **GERDA**: AI processing (non-blocking via observers)
+6. **Repository**: Data access abstraction
+
+---
+
 ## Detailed Design
 
 ### Modular Monolith

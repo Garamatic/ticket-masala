@@ -59,6 +59,8 @@ public class DashboardStats
     public int NewProjectsThisWeek { get; set; }
     public int CompletedToday { get; set; }
     public int DueSoon { get; set; }
+    public int HighRiskCount { get; set; }
+    public int SentimentWarningCount { get; set; }
 }
 
 public class TicketService : ITicketService, ITicketQueryService, ITicketCommandService
@@ -955,6 +957,15 @@ public class TicketService : ITicketService, ITicketQueryService, ITicketCommand
             var totalTickets = await ticketQuery.CountAsync();
             var completedTickets = await ticketQuery.Where(t => t.TicketStatus == Status.Completed).CountAsync();
             stats.CompletionRate = totalTickets > 0 ? (int)((double)completedTickets / totalTickets * 100) : 0;
+
+            // AI Insights
+            stats.HighRiskCount = await ticketQuery
+                .Where(t => t.GerdaTags != null && (t.GerdaTags.Contains("Risk:Critical") || t.GerdaTags.Contains("Risk:High") || t.GerdaTags.Contains("Compliance:Violation")))
+                .CountAsync();
+
+            stats.SentimentWarningCount = await ticketQuery
+                .Where(t => t.GerdaTags != null && t.GerdaTags.Contains("Sentiment:Negative"))
+                .CountAsync();
         }
         catch (Exception ex)
         {

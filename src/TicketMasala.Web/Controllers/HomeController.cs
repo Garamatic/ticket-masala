@@ -45,6 +45,8 @@ public class HomeController : Controller
             ViewBag.NewProjectsThisWeek = stats.NewProjectsThisWeek;
             ViewBag.CompletedToday = stats.CompletedToday;
             ViewBag.DueSoon = stats.DueSoon;
+            ViewBag.HighRiskCount = stats.HighRiskCount;
+            ViewBag.SentimentWarningCount = stats.SentimentWarningCount;
 
             // Fetch Recent Activity
             ViewBag.RecentActivity = await _ticketService.GetRecentActivityAsync(userId, 3);

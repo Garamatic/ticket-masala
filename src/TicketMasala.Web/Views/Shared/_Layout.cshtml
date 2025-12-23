@@ -12,6 +12,11 @@
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
     var hideSidebar = ViewData["HideSidebar"] as bool? == true;
+
+    // Tenant Theme Logic
+    var themePath = env.WebRootPath != null ? System.IO.Path.Combine(env.WebRootPath, "tenant-theme", "style.css") : null;
+    var logoFileSystemPath = env.WebRootPath != null ? System.IO.Path.Combine(env.WebRootPath, "tenant-theme", "logo.png") : null;
+    var logoUrl = (logoFileSystemPath != null && System.IO.File.Exists(logoFileSystemPath)) ? "~/tenant-theme/logo.png" : "~/images/logo.png";
 }
 <!DOCTYPE html>
 <html lang="@System.Globalization.CultureInfo.CurrentUICulture.Name">
@@ -41,11 +46,7 @@
     <link rel="stylesheet" href="~/css/theme.css" asp-append-version="true" />
     
     @* Load tenant-specific theme if available *@
-    @{
-        var themePath = env.WebRootPath != null ? System.IO.Path.Combine(env.WebRootPath, "tenant-theme", "style.css") : null;
-        var logoFileSystemPath = env.WebRootPath != null ? System.IO.Path.Combine(env.WebRootPath, "tenant-theme", "logo.png") : null;
-        var logoUrl = (logoFileSystemPath != null && System.IO.File.Exists(logoFileSystemPath)) ? "~/tenant-theme/logo.png" : "~/images/logo.png";
-    }
+    @* Load tenant-specific theme if available *@
     @if (themePath != null && System.IO.File.Exists(themePath))
     {
         <link rel="stylesheet" href="~/tenant-theme/style.css" asp-append-version="true" />
@@ -60,7 +61,7 @@
         {
             <aside class="app-sidebar" id="sidebar">
                 <div class="navbar-brand">
-                    <img class="navbar-logo" src="@logoUrl" alt="Ticket Masala" />
+                    <img class="navbar-logo" src="@Url.Content(logoUrl)" alt="Ticket Masala" />
                 </div>
                 
                 <nav class="sidebar-nav" aria-label="Main navigation">

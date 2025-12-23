@@ -23,7 +23,7 @@ public class TicketViewModel
     public Guid? ParentTicketGuid { get; set; }
     public Guid? ProjectGuid { get; set; }
     public List<SubTicketInfo> SubTickets { get; set; } = new List<SubTicketInfo> { };
-
+    public string? GerdaTags { get; set; }
 
 }
 

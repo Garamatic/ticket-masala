@@ -11,6 +11,7 @@ public class SeedConfig
     public List<SeedUser> Customers { get; set; } = new();
     public List<SeedWorkContainer> WorkContainers { get; set; } = new();
     public List<SeedWorkItem> UnassignedWorkItems { get; set; } = new();
+    public List<SeedKBArticle> KnowledgeBaseArticles { get; set; } = new();
 }
 
 public class SeedUser
@@ -58,9 +59,16 @@ public class SeedWorkItem
     public string? CustomerEmail { get; set; } // For unassigned items
 }
 
-public class SeedComment
-{
     public string Body { get; set; } = string.Empty;
     public string? AuthorEmail { get; set; } // Use email to look up ID
+    public int CreatedDaysAgo { get; set; }
+}
+
+public class SeedKBArticle
+{
+    public string Title { get; set; } = string.Empty;
+    public string Content { get; set; } = string.Empty;
+    public string Tags { get; set; } = string.Empty;
+    public string? AuthorEmail { get; set; }
     public int CreatedDaysAgo { get; set; }
 }

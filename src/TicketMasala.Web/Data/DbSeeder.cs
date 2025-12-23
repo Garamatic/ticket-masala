@@ -95,7 +95,18 @@ public class DbSeeder
 
             // Create Project Templates and Knowledge Base (Always run these)
             await CreateProjectTemplates();
-            await SeedKnowledgeBaseAsync();
+            
+            _logger.LogInformation("Database is empty. Loading seed data from configuration...");
+            var seedConfig = await LoadSeedConfigurationAsync();
+
+            if (seedConfig == null)
+            {
+                _logger.LogError("Failed to load seed configuration. Aborting seed.");
+                return;
+            }
+
+            // Seed KB (Now aware of config)
+            await SeedKnowledgeBaseAsync(seedConfig);
 
             if (userCount > 0)
             {
@@ -464,7 +475,7 @@ public class DbSeeder
         }
     }
 
-    private async Task SeedKnowledgeBaseAsync()
+    private async Task SeedKnowledgeBaseAsync(SeedConfig config)
     {
         if (await _context.KnowledgeBaseArticles.AnyAsync())
         {
@@ -477,7 +488,38 @@ public class DbSeeder
         var adminUser = await _userManager.FindByEmailAsync("admin@ticketmasala.com");
         var authorId = adminUser?.Id;
 
-        var articles = new List<KnowledgeBaseArticle>
+        var articles = new List<KnowledgeBaseArticle>();
+
+        // 1. Prefer Tenant-Specific Articles from Config
+        if (config.KnowledgeBaseArticles != null && config.KnowledgeBaseArticles.Any())
+        {
+            _logger.LogInformation("Loading {Count} tenant-specific articles from seed configuration.", config.KnowledgeBaseArticles.Count);
+            foreach (var seedArticle in config.KnowledgeBaseArticles)
+            {
+                // Try to find specific author, fallback to admin
+                var articleAuthorId = authorId;
+                if (!string.IsNullOrEmpty(seedArticle.AuthorEmail))
+                {
+                    var specificAuthor = await _userManager.FindByEmailAsync(seedArticle.AuthorEmail);
+                    if (specificAuthor != null) articleAuthorId = specificAuthor.Id;
+                }
+
+                articles.Add(new KnowledgeBaseArticle
+                {
+                    Id = Guid.NewGuid(),
+                    Title = seedArticle.Title,
+                    Content = seedArticle.Content,
+                    Tags = seedArticle.Tags,
+                    AuthorId = articleAuthorId,
+                    CreatedAt = DateTime.UtcNow.AddDays(-seedArticle.CreatedDaysAgo)
+                });
+            }
+        }
+        else 
+        {
+            // 2. Fallback to Generic Articles
+            _logger.LogInformation("No tenant-specific articles found. Loading generic Knowledge Base.");
+            articles = new List<KnowledgeBaseArticle>
             {
                 new KnowledgeBaseArticle
                 {

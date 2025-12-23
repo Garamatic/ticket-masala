@@ -192,7 +192,8 @@ public class TicketService : ITicketService, ITicketQueryService, ITicketCommand
                 : "Not Assigned",
             CustomerName = t.Customer != null
                 ? $"{t.Customer.FirstName} {t.Customer.LastName}"
-                : "Unknown"
+                : "Unknown",
+            GerdaTags = t.GerdaTags
         }).ToList();
     }
 
@@ -998,7 +999,8 @@ public class TicketService : ITicketService, ITicketQueryService, ITicketCommand
                 : "Unassigned",
             CustomerName = t.Customer != null
                 ? $"{t.Customer.FirstName} {t.Customer.LastName}"
-                : "Unknown"
+                : "Unknown",
+            GerdaTags = t.GerdaTags
         }).ToList();
     }
 }

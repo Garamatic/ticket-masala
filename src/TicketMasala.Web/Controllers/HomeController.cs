@@ -27,36 +27,39 @@ public class HomeController : Controller
     public async Task<IActionResult> Index()
     {
         // If user is authenticated, fetch dynamic stats
-        if (User.Identity?.IsAuthenticated == true)
+        if (User.Identity?.IsAuthenticated != true)
         {
-            try
-            {
-                var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                var isCustomer = User.IsInRole(TicketMasala.Domain.Common.Constants.RoleCustomer);
-
-                var stats = await _ticketService.GetDashboardStatsAsync(userId, isCustomer);
-                ViewBag.ProjectCount = stats.ProjectCount;
-                ViewBag.ActiveTicketCount = stats.ActiveTicketCount;
-                ViewBag.PendingTaskCount = stats.PendingTaskCount;
-                ViewBag.CompletionRate = stats.CompletionRate;
-                ViewBag.NewProjectsThisWeek = stats.NewProjectsThisWeek;
-                ViewBag.CompletedToday = stats.CompletedToday;
-                ViewBag.DueSoon = stats.DueSoon;
-
-                // Fetch Recent Activity
-                ViewBag.RecentActivity = await _ticketService.GetRecentActivityAsync(userId, 3);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to fetch dashboard stats");
-                // Fallback to defaults
-                ViewBag.ProjectCount = 0;
-                ViewBag.ActiveTicketCount = 0;
-                ViewBag.PendingTaskCount = 0;
-                ViewBag.CompletionRate = 0;
-                ViewBag.RecentActivity = new List<TicketMasala.Web.ViewModels.Tickets.TicketViewModel>();
-            }
+            return RedirectToPage("/Account/Login", new { area = "Identity" });
         }
+
+        try
+        {
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var isCustomer = User.IsInRole(TicketMasala.Domain.Common.Constants.RoleCustomer);
+
+            var stats = await _ticketService.GetDashboardStatsAsync(userId, isCustomer);
+            ViewBag.ProjectCount = stats.ProjectCount;
+            ViewBag.ActiveTicketCount = stats.ActiveTicketCount;
+            ViewBag.PendingTaskCount = stats.PendingTaskCount;
+            ViewBag.CompletionRate = stats.CompletionRate;
+            ViewBag.NewProjectsThisWeek = stats.NewProjectsThisWeek;
+            ViewBag.CompletedToday = stats.CompletedToday;
+            ViewBag.DueSoon = stats.DueSoon;
+
+            // Fetch Recent Activity
+            ViewBag.RecentActivity = await _ticketService.GetRecentActivityAsync(userId, 3);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to fetch dashboard stats");
+            // Fallback to defaults
+            ViewBag.ProjectCount = 0;
+            ViewBag.ActiveTicketCount = 0;
+            ViewBag.PendingTaskCount = 0;
+            ViewBag.CompletionRate = 0;
+            ViewBag.RecentActivity = new List<TicketMasala.Web.ViewModels.Tickets.TicketViewModel>();
+        }
+
         return View();
     }
 

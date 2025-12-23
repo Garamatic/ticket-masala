@@ -43,6 +43,8 @@
     @* Load tenant-specific theme if available *@
     @{
         var themePath = env.WebRootPath != null ? System.IO.Path.Combine(env.WebRootPath, "tenant-theme", "style.css") : null;
+        var logoFileSystemPath = env.WebRootPath != null ? System.IO.Path.Combine(env.WebRootPath, "tenant-theme", "logo.png") : null;
+        var logoUrl = (logoFileSystemPath != null && System.IO.File.Exists(logoFileSystemPath)) ? "~/tenant-theme/logo.png" : "~/images/logo.png";
     }
     @if (themePath != null && System.IO.File.Exists(themePath))
     {
@@ -58,7 +60,7 @@
         {
             <aside class="app-sidebar" id="sidebar">
                 <div class="navbar-brand">
-                    <img class="navbar-logo" src="~/images/logo.png" alt="Ticket Masala" />
+                    <img class="navbar-logo" src="@logoUrl" alt="Ticket Masala" />
                 </div>
                 
                 <nav class="sidebar-nav" aria-label="Main navigation">
@@ -271,8 +273,19 @@
                         {
                             <div class="dropdown ms-2">
                                 <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 text-dark text-decoration-none" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
-                                        @(UserManager.GetUserName(User)?.Substring(0, 1).ToUpper() ?? "U")
+                                    <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center overflow-hidden" style="width: 32px; height: 32px;">
+                                        @{
+                                            var currentUser = await UserManager.GetUserAsync(User);
+                                            var avatarUrl = (currentUser as TicketMasala.Domain.Entities.Employee)?.ProfilePicturePath;
+                                            if (!string.IsNullOrEmpty(avatarUrl))
+                                            {
+                                                <img src="@avatarUrl" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;" />
+                                            }
+                                            else
+                                            {
+                                                @(currentUser?.UserName?.Substring(0, 1).ToUpper() ?? "U")
+                                            }
+                                        }
                                     </div>
                                     <span class="d-none d-lg-inline fw-medium small">@Localizer["Account"]</span>
                                 </a>

@@ -11,6 +11,9 @@
     ViewData["Title"] = Localizer["Sign In"];
     Layout = null; // Use custom full-page layout for login
     var themePath = env.WebRootPath != null ? System.IO.Path.Combine(env.WebRootPath, "tenant-theme", "style.css") : null;
+    
+    var logoFileSystemPath = env.WebRootPath != null ? System.IO.Path.Combine(env.WebRootPath, "tenant-theme", "logo.png") : null;
+    var logoUrl = (logoFileSystemPath != null && System.IO.File.Exists(logoFileSystemPath)) ? "~/tenant-theme/logo.png" : "~/images/logo.png";
 }
 
 <!DOCTYPE html>
@@ -348,7 +351,7 @@
         <!-- Left Branding Panel -->
         <div class="login-branding">
             <div class="branding-content">
-                <img src="~/images/logo.png" alt="Ticket Masala" class="branding-logo" />
+                <img src="@logoUrl" alt="Ticket Masala" class="branding-logo" />
                 <h1 class="branding-title">Ticket Masala</h1>
                 <p class="branding-tagline">@Localizer["Spice up your project management with intelligent ticket handling"]</p>
                 
@@ -378,7 +381,7 @@
             <div class="login-card">
                 <!-- Mobile Logo -->
                 <div class="mobile-logo">
-                    <img src="~/images/logo.png" alt="Ticket Masala" />
+                    <img src="@logoUrl" alt="Ticket Masala" />
                 </div>
 
                 <div class="login-header">

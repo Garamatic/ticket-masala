@@ -87,7 +87,7 @@ public class LoginModel : PageModel
         public bool RememberMe { get; set; }
     }
 
-    public async Task OnGetAsync(string returnUrl = null)
+    public async Task<IActionResult> OnGetAsync(string returnUrl = null, string demoEmail = null, string demoPassword = null, bool autoLogin = false)
     {
         if (!string.IsNullOrEmpty(ErrorMessage))
         {
@@ -102,6 +102,28 @@ public class LoginModel : PageModel
         ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
         ReturnUrl = returnUrl;
+
+        // DEMO: Auto-Login Logic
+        if (!string.IsNullOrEmpty(demoEmail))
+        {
+            Input = new InputModel
+            {
+                Email = demoEmail,
+                Password = demoPassword ?? "Admin123!" // Default demo password fallback
+            };
+
+            if (autoLogin)
+            {
+                var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, isPersistent: true, lockoutOnFailure: false);
+                if (result.Succeeded)
+                {
+                    _logger.LogInformation("Demo User automatically logged in.");
+                    return LocalRedirect(returnUrl);
+                }
+            }
+        }
+        
+        return Page();
     }
 
     public async Task<IActionResult> OnPostAsync(string returnUrl = null)

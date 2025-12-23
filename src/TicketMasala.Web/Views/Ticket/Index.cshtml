@@ -212,7 +212,41 @@
                                     <span class="badge bg-secondary">@ticket.TicketStatus</span>
                                     @if (!User.IsInRole("Customer"))
                                     {
-                                        <span class="text-muted ms-1">@ticket.Customer?.FirstName ?? "—" @(ticket.Customer?.LastName ?? "")</span>
+                                    <span class="text-muted ms-1">@ticket.Customer?.FirstName ?? "—" @(ticket.Customer?.LastName ?? "")</span>
+                                    }
+                                </div>
+                                <div class="mt-1">
+                                    @if (!string.IsNullOrEmpty(ticket.GerdaTags))
+                                    {
+                                        foreach (var tag in ticket.GerdaTags.Split(','))
+                                        {
+                                            var t = tag.Trim();
+                                            var badgeClass = "bg-light text-secondary border";
+                                            var icon = "";
+
+                                            if (t.Contains("Critical") || t.Contains("Negative") || t.Contains("Urgent") || t.Contains("Blocker")) 
+                                            { 
+                                                badgeClass = "bg-danger text-white"; 
+                                                icon = "<i class='fas fa-exclamation-circle me-1'></i>";
+                                            }
+                                            else if (t.Contains("Winter") || t.Contains("Infra")) 
+                                            { 
+                                                badgeClass = "bg-info text-white"; 
+                                                icon = "<i class='fas fa-snowflake me-1'></i>";
+                                            }
+                                            else if (t.Contains("Login") || t.Contains("Bug")) 
+                                            { 
+                                                badgeClass = "bg-warning text-dark"; 
+                                                icon = "<i class='fas fa-bug me-1'></i>";
+                                            }
+                                            else if (t.Contains("Policy") || t.Contains("Compliance"))
+                                            {
+                                                badgeClass = "bg-dark text-white";
+                                                icon = "<i class='fas fa-balance-scale me-1'></i>";
+                                            }
+
+                                            <span class="badge @badgeClass rounded-pill fw-normal" style="font-size: 0.75rem;">@Html.Raw(icon)@t</span>
+                                        }
                                     }
                                 </div>
                             </td>

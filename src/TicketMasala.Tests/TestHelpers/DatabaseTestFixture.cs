@@ -52,7 +52,7 @@ public class DatabaseTestFixture : IDisposable
             Mock.Of<ILogger<EfCoreProjectRepository>>());
 
         var userStoreMock = new Mock<IUserStore<ApplicationUser>>();
-        var userManagerMock = new Mock<UserManager<ApplicationUser>>(userStoreMock.Object, null, null, null, null, null, null, null, null);
+        var userManagerMock = new Mock<UserManager<ApplicationUser>>(userStoreMock.Object, null!, null!, null!, null!, null!, null!, null!, null!);
 
         UserRepository = new EfCoreUserRepository(
             Context,

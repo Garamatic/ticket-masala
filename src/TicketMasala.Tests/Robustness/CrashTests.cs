@@ -56,8 +56,8 @@ namespace TicketMasala.Tests.Robustness
         {
             // Arrange
             var store = new Mock<IUserStore<ApplicationUser>>();
-            var userManager = new Mock<UserManager<ApplicationUser>>(store.Object, null, null, null, null, null, null, null, null);
-            var roleManager = new Mock<RoleManager<IdentityRole>>(new Mock<IRoleStore<IdentityRole>>().Object, null, null, null, null);
+            var userManager = new Mock<UserManager<ApplicationUser>>(store.Object, null!, null!, null!, null!, null!, null!, null!, null!);
+            var roleManager = new Mock<RoleManager<IdentityRole>>(new Mock<IRoleStore<IdentityRole>>().Object, null!, null!, null!, null!);
             var logger = new Mock<ILogger<ApplicationUsersController>>();
 
             var controller = new ApplicationUsersController(userManager.Object, roleManager.Object, logger.Object);
@@ -66,7 +66,7 @@ namespace TicketMasala.Tests.Robustness
             // But if we construct the model manually with nulls...
             var model = new UserCreateViewModel
             {
-                Role = null, // Unexpected null
+                Role = null!, // Unexpected null
                 Email = "crash@test.com",
                 FirstName = "Crash",
                 LastName = "Test",
@@ -121,7 +121,7 @@ namespace TicketMasala.Tests.Robustness
             try
             {
                 // Create signature: Create(string description, string customerId, string? responsibleId, Guid? projectGuid, DateTime? completionTarget, string? domainId, string? workItemTypeCode)
-                await controller.Create(null, null, null, null, null, null, null);
+                await controller.Create(null!, null!, null, null, null, null, null);
             }
             catch (NullReferenceException)
             {
@@ -191,10 +191,10 @@ namespace TicketMasala.Tests.Robustness
         {
             // Arrange
             var store = new Mock<IUserStore<ApplicationUser>>();
-            var userManager = new Mock<UserManager<ApplicationUser>>(store.Object, null, null, null, null, null, null, null, null);
-            userManager.Setup(u => u.FindByIdAsync(It.IsAny<string>())).ReturnsAsync((ApplicationUser)null);
+            var userManager = new Mock<UserManager<ApplicationUser>>(store.Object, null!, null!, null!, null!, null!, null!, null!, null!);
+            userManager.Setup(u => u.FindByIdAsync(It.IsAny<string>())).ReturnsAsync((ApplicationUser?)null);
 
-            var roleManager = new Mock<RoleManager<IdentityRole>>(new Mock<IRoleStore<IdentityRole>>().Object, null, null, null, null);
+            var roleManager = new Mock<RoleManager<IdentityRole>>(new Mock<IRoleStore<IdentityRole>>().Object, null!, null!, null!, null!);
             var logger = new Mock<ILogger<ApplicationUsersController>>();
 
             var controller = new ApplicationUsersController(userManager.Object, roleManager.Object, logger.Object);
@@ -203,7 +203,7 @@ namespace TicketMasala.Tests.Robustness
             var result = await controller.Edit("non-existent-id");
 
             // Assert
-            Assert.IsType<NotFoundResult>(result);
+            var notFoundResult = Assert.IsType<NotFoundResult>(result);
         }
     }
 }

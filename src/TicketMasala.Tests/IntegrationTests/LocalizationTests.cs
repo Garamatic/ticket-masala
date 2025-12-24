@@ -2,7 +2,10 @@ using TicketMasala.Web;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Http;
 
 using TicketMasala.Tests.TestHelpers;
 
@@ -17,6 +20,8 @@ public class LocalizationTests : IClassFixture<IntegrationTestFactory<Program>>
         _factory = factory;
     }
 
+
+
     [Theory]
     [InlineData("fr", "Commencer gratuitement")]
     [InlineData("nl", "Gratis aan de slag")]
@@ -25,7 +30,8 @@ public class LocalizationTests : IClassFixture<IntegrationTestFactory<Program>>
         // Arrange
         var client = _factory.WithWebHostBuilder(builder =>
         {
-            builder.ConfigureServices(services =>
+            builder.UseEnvironment("Testing");
+            builder.ConfigureTestServices(services =>
             {
                 services.Configure<RequestLocalizationOptions>(options =>
                 {
@@ -62,7 +68,8 @@ public class LocalizationTests : IClassFixture<IntegrationTestFactory<Program>>
         // Arrange
         var client = _factory.WithWebHostBuilder(builder =>
         {
-            builder.ConfigureServices(services =>
+            builder.UseEnvironment("Testing");
+            builder.ConfigureTestServices(services =>
             {
                 services.Configure<RequestLocalizationOptions>(options =>
                 {
@@ -86,6 +93,8 @@ public class LocalizationTests : IClassFixture<IntegrationTestFactory<Program>>
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadAsStringAsync();
 
+
+
         Assert.Contains($"<html lang=\"{culture}\">", content);
         Assert.Contains(expectedText, content);
     }
@@ -96,7 +105,8 @@ public class LocalizationTests : IClassFixture<IntegrationTestFactory<Program>>
         // Arrange
         var client = _factory.WithWebHostBuilder(builder =>
         {
-            builder.ConfigureServices(services =>
+            builder.UseEnvironment("Testing");
+            builder.ConfigureTestServices(services =>
             {
                 services.Configure<RequestLocalizationOptions>(options =>
                 {

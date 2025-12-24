@@ -1,0 +1,14 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  TicketMasala.Domain -> /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Domain/bin/Debug/net10.0/TicketMasala.Domain.dll
+  TicketMasala.Web -> /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/bin/Debug/net10.0/TicketMasala.Web.dll
+/home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Tests/Middleware/CorrelationIdMiddlewareTests.cs(25,25): warning CS8604: Possible null reference argument for parameter 'collection' in 'void Assert.NotEmpty(IEnumerable collection)'. [/home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Tests/TicketMasala.Tests.csproj]
+  TicketMasala.Tests -> /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Tests/bin/Debug/net10.0/TicketMasala.Tests.dll
+
+Build succeeded.
+
+/home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Tests/Middleware/CorrelationIdMiddlewareTests.cs(25,25): warning CS8604: Possible null reference argument for parameter 'collection' in 'void Assert.NotEmpty(IEnumerable collection)'. [/home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Tests/TicketMasala.Tests.csproj]
+    1 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.54

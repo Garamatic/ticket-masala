@@ -66,6 +66,13 @@ public class AuthenticatedRouteTests : IClassFixture<CustomWebApplicationFactory
                 })
                 .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", options => { });
 
+                // Mock IDomainUiService (consumed by _Layout.cshtml)
+                var mockDomainUi = new Moq.Mock<TicketMasala.Web.Engine.GERDA.Configuration.IDomainUiService>();
+                mockDomainUi.Setup(x => x.GetLabel(Moq.It.IsAny<string>(), Moq.It.IsAny<string>())).Returns((string k, string d) => k);
+                mockDomainUi.Setup(x => x.GetIcon(Moq.It.IsAny<string>(), Moq.It.IsAny<string>())).Returns("bi-box");
+                mockDomainUi.Setup(x => x.GetDomainCssClass(Moq.It.IsAny<string>())).Returns("theme-default");
+                services.AddSingleton(mockDomainUi.Object);
+
                 // Seed test user
                 var sp = services.BuildServiceProvider(new ServiceProviderOptions
                 {

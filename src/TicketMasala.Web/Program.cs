@@ -29,6 +29,17 @@ var logger = loggerFactory.CreateLogger("Startup");
 builder.Services.ValidateMasalaConfiguration(builder.Configuration, logger);
 
 // ============================================
+// LOCALIZATION CONFIGURATION
+// ============================================
+builder.Services.Configure<RequestLocalizationOptions>(options =>
+{
+    var supportedCultures = new[] { "en", "nl", "fr" };
+    options.SetDefaultCulture("en");
+    options.AddSupportedCultures(supportedCultures);
+    options.AddSupportedUICultures(supportedCultures);
+});
+
+// ============================================
 // TENANT PLUGIN SYSTEM
 // ============================================
 var pluginPath = Environment.GetEnvironmentVariable("MASALA_PLUGINS_PATH");

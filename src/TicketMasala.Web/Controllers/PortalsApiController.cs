@@ -18,7 +18,7 @@ namespace TicketMasala.Web.Controllers;
 [Route("api/[controller]")]
 public class PortalsApiController : ControllerBase
 {
-    private readonly MasalaDbContext _context;
+
     private readonly ITicketRepository _ticketRepository;
     private readonly IUserRepository _userRepository;
     private readonly IProjectRepository _projectRepository;
@@ -27,7 +27,7 @@ public class PortalsApiController : ControllerBase
     private readonly IWebHostEnvironment _environment;
 
     public PortalsApiController(
-        MasalaDbContext context,
+
         ITicketRepository ticketRepository,
         IUserRepository userRepository,
         IProjectRepository projectRepository,
@@ -35,7 +35,7 @@ public class PortalsApiController : ControllerBase
         ILogger<PortalsApiController> logger,
         IWebHostEnvironment environment)
     {
-        _context = context;
+
         _ticketRepository = ticketRepository;
         _userRepository = userRepository;
         _projectRepository = projectRepository;
@@ -62,7 +62,7 @@ public class PortalsApiController : ControllerBase
             if (!string.IsNullOrEmpty(model.CustomerEmail))
             {
                 customer = await _userRepository.GetUserByEmailAsync(model.CustomerEmail);
-                
+
                 // Create customer if doesn't exist (for demo purposes)
                 if (customer == null)
                 {
@@ -129,8 +129,8 @@ public class PortalsApiController : ControllerBase
             }
 
             // Save to database
-            await _context.Tickets.AddAsync(ticket);
-            await _context.SaveChangesAsync();
+            await _ticketRepository.AddAsync(ticket);
+
 
             _logger.LogInformation("Portal ticket created: {TicketGuid}", ticket.Guid);
 

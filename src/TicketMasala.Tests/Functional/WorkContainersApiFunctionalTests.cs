@@ -11,11 +11,13 @@ public class WorkContainersApiFunctionalTests : IClassFixture<WebApplicationFact
 {
     private readonly WebApplicationFactory<Program> _factory;
     private readonly HttpClient _client;
+    private readonly Xunit.Abstractions.ITestOutputHelper _output;
 
-    public WorkContainersApiFunctionalTests(WebApplicationFactory<Program> factory)
+    public WorkContainersApiFunctionalTests(WebApplicationFactory<Program> factory, Xunit.Abstractions.ITestOutputHelper output)
     {
         _factory = factory;
         _client = _factory.CreateClient();
+        _output = output;
     }
 
     [Fact]
@@ -28,6 +30,11 @@ public class WorkContainersApiFunctionalTests : IClassFixture<WebApplicationFact
         var response = await _client.GetAsync("/api/v1/work-containers");
 
         // Assert
+        if (!response.IsSuccessStatusCode)
+        {
+            var contentStr = await response.Content.ReadAsStringAsync();
+            _output.WriteLine($"Server Error Response: {contentStr}");
+        }
         response.EnsureSuccessStatusCode(); // Status Code 200-299
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 

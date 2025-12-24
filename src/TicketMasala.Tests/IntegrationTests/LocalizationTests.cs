@@ -1,14 +1,18 @@
 using TicketMasala.Web;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+
+using TicketMasala.Tests.TestHelpers;
 
 namespace TicketMasala.Tests.IntegrationTests;
 
-public class LocalizationTests : IClassFixture<WebApplicationFactory<Program>>
+public class LocalizationTests : IClassFixture<IntegrationTestFactory<Program>>
 {
-    private readonly WebApplicationFactory<Program> _factory;
+    private readonly IntegrationTestFactory<Program> _factory;
 
-    public LocalizationTests(WebApplicationFactory<Program> factory)
+    public LocalizationTests(IntegrationTestFactory<Program> factory)
     {
         _factory = factory;
     }
@@ -19,7 +23,22 @@ public class LocalizationTests : IClassFixture<WebApplicationFactory<Program>>
     public async Task Homepage_WithQueryString_ReturnsLocalizedContent(string culture, string expectedText)
     {
         // Arrange
-        var client = _factory.CreateClient();
+        var client = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                services.Configure<RequestLocalizationOptions>(options =>
+                {
+                    var supportedCultures = new[] { "en", "nl", "fr" };
+                    options.SetDefaultCulture("en");
+                    options.AddSupportedCultures(supportedCultures);
+                    options.AddSupportedUICultures(supportedCultures);
+
+                    options.RequestCultureProviders.Clear();
+                    options.RequestCultureProviders.Add(new Microsoft.AspNetCore.Localization.QueryStringRequestCultureProvider());
+                });
+            });
+        }).CreateClient();
 
         // Act
         var response = await client.GetAsync($"/?culture={culture}");
@@ -41,7 +60,23 @@ public class LocalizationTests : IClassFixture<WebApplicationFactory<Program>>
     public async Task Homepage_WithAcceptLanguageHeader_ReturnsLocalizedContent(string culture, string expectedText)
     {
         // Arrange
-        var client = _factory.CreateClient();
+        var client = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                services.Configure<RequestLocalizationOptions>(options =>
+                {
+                    var supportedCultures = new[] { "en", "nl", "fr" };
+                    options.SetDefaultCulture("en");
+                    options.AddSupportedCultures(supportedCultures);
+                    options.AddSupportedUICultures(supportedCultures);
+
+                    // Force specific providers for testing to avoid ambiguity
+                    options.RequestCultureProviders.Clear();
+                    options.RequestCultureProviders.Add(new Microsoft.AspNetCore.Localization.AcceptLanguageHeaderRequestCultureProvider());
+                });
+            });
+        }).CreateClient();
         client.DefaultRequestHeaders.Add("Accept-Language", culture);
 
         // Act
@@ -59,7 +94,19 @@ public class LocalizationTests : IClassFixture<WebApplicationFactory<Program>>
     public async Task SetCulture_Controller_RedirectsAndSetsCookie()
     {
         // Arrange
-        var client = _factory.CreateClient(new WebApplicationFactoryClientOptions
+        var client = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                services.Configure<RequestLocalizationOptions>(options =>
+                {
+                    var supportedCultures = new[] { "en", "nl", "fr" };
+                    options.SetDefaultCulture("en");
+                    options.AddSupportedCultures(supportedCultures);
+                    options.AddSupportedUICultures(supportedCultures);
+                });
+            });
+        }).CreateClient(new WebApplicationFactoryClientOptions
         {
             AllowAutoRedirect = false
         });

@@ -1,4 +1,5 @@
 using Microsoft.Data.Sqlite;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -50,8 +51,12 @@ public class DatabaseTestFixture : IDisposable
             Context,
             Mock.Of<ILogger<EfCoreProjectRepository>>());
 
+        var userStoreMock = new Mock<IUserStore<ApplicationUser>>();
+        var userManagerMock = new Mock<UserManager<ApplicationUser>>(userStoreMock.Object, null, null, null, null, null, null, null, null);
+
         UserRepository = new EfCoreUserRepository(
             Context,
+            userManagerMock.Object,
             Mock.Of<ILogger<EfCoreUserRepository>>());
     }
 

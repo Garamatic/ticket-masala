@@ -47,6 +47,7 @@ public static class GerdaServiceCollectionExtensions
             // Register NoOp services to prevent DI failures
             services.AddScoped<IDispatchingService, NoOpDispatchingService>();
             services.AddScoped<IGerdaService, NoOpGerdaService>();
+            services.AddScoped<IEstimatingService, NoOpEstimatingService>();
             return services;
         }
 

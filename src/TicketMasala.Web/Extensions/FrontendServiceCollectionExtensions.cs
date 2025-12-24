@@ -8,6 +8,15 @@ public static class FrontendServiceCollectionExtensions
     public static IServiceCollection AddMasalaFrontend(this IServiceCollection services)
     {
         services.AddLocalization();
+        
+        services.Configure<RequestLocalizationOptions>(options =>
+        {
+            var supportedCultures = new[] { "en", "fr", "nl" };
+            options.SetDefaultCulture(supportedCultures[0]);
+            options.AddSupportedCultures(supportedCultures);
+            options.AddSupportedUICultures(supportedCultures);
+            options.RequestCultureProviders.Insert(0, new Microsoft.AspNetCore.Localization.CookieRequestCultureProvider());
+        });
 
         services.AddWebOptimizer(pipeline =>
         {

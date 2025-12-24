@@ -55,6 +55,9 @@ public static class CoreServiceCollectionExtensions
         // DbSeeder
         services.AddScoped<DbSeeder>();
 
+        // Ingestion
+        services.AddScoped<IEmailTicketProcessor, EmailTicketProcessor>();
+
         return services;
     }
 

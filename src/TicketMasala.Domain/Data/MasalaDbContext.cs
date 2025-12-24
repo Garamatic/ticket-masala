@@ -72,6 +72,15 @@ public class MasalaDbContext : IdentityDbContext<ApplicationUser, IdentityRole, 
             entity.HasIndex(e => e.Hash).IsUnique();
         });
 
+        // 5. Project Configuration
+        modelBuilder.Entity<Project>(entity =>
+        {
+            entity.Property(e => e.CustomerIds)
+                .HasConversion(
+                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                    v => System.Text.Json.JsonSerializer.Deserialize<List<string>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<string>());
+        });
+
         // 5. Configure navigation properties for ApplicationUser relationships
         // These are configured here since ApplicationUser is in Domain project
         ConfigureUserRelationships(modelBuilder);

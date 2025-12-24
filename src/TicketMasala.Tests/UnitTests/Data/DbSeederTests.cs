@@ -11,16 +11,29 @@ using Xunit;
 
 namespace TicketMasala.Tests.UnitTests.Data;
 
-public class DbSeederTests
+public class DbSeederTests : IDisposable
 {
     private readonly Mock<UserManager<ApplicationUser>> _mockUserManager;
     private readonly Mock<RoleManager<IdentityRole>> _mockRoleManager;
     private readonly Mock<ILogger<DbSeeder>> _mockLogger;
     private readonly Mock<IWebHostEnvironment> _mockEnvironment;
     private readonly MasalaDbContext _context;
+    private readonly string _tempConfigPath;
 
     public DbSeederTests()
     {
+        // Setup Temporary Config Directory
+        _tempConfigPath = Path.Combine(Path.GetTempPath(), "ticket_masala_unit_test_" + Guid.NewGuid());
+        Directory.CreateDirectory(_tempConfigPath);
+        
+        // Create dummy seed_data.json
+        var dummySeedData = "{ \"Admins\": [], \"Employees\": [], \"Customers\": [], \"WorkContainers\": [], \"UnassignedWorkItems\": [] }";
+        File.WriteAllText(Path.Combine(_tempConfigPath, "seed_data.json"), dummySeedData);
+
+        // Set Env Var for Config Path
+        Environment.SetEnvironmentVariable("MASALA_CONFIG_PATH", _tempConfigPath);
+        TicketMasala.Web.Configuration.ConfigurationPaths.ResetCache();
+
         // Setup InMemory Database
         var options = new DbContextOptionsBuilder<MasalaDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -39,6 +52,16 @@ public class DbSeederTests
 
         // Setup Environment defaults
         _mockEnvironment.Setup(e => e.ContentRootPath).Returns(Directory.GetCurrentDirectory());
+    }
+
+    public void Dispose()
+    {
+        if (Directory.Exists(_tempConfigPath))
+        {
+            try { Directory.Delete(_tempConfigPath, true); } catch { }
+        }
+        Environment.SetEnvironmentVariable("MASALA_CONFIG_PATH", null);
+        TicketMasala.Web.Configuration.ConfigurationPaths.ResetCache();
     }
 
     [Fact]
@@ -70,25 +93,11 @@ public class DbSeederTests
         await seeder.SeedAsync();
 
         // Assert
-        // Verify CreateProjectTemplates was called (it runs before user check? No, looks like it runs after EnsureCreated but BEFORE user check return?)
-        // Let's check the code order in DbSeeder.
-        // It runs EnsureRoles, then checks users.
-        // Wait, line 99: Create Project Templates is called.
-        // Line 103: if (userCount > 0) return.
-
-        // So Templates SHOULD be created even if users exist? 
-        // Logic in DbSeeder:
-        // 99: Create Project Templates
-        // 101: await CreateProjectTemplates();
-        // 103: if (userCount > 0) ... return;
-
-        // So templates are created regardless. 
+        // Verify CreateProjectTemplates was called
         var templateCount = await _context.ProjectTemplates.CountAsync();
         Assert.True(templateCount > 0, "Templates should be created");
 
         // Users should NOT increase (beyond the 1 we added)
-        // Check if LoadSeedConfigurationAsync was called? We can't verify private method easily, 
-        // but we can verify side effects (no new users).
         var userCount = await _context.Users.CountAsync();
         Assert.Equal(1, userCount);
 
@@ -125,11 +134,6 @@ public class DbSeederTests
             .ReturnsAsync(IdentityResult.Success);
 
         // Act
-        // This will likely fail at LoadSeedConfigurationAsync if the file is missing in pure unit test env.
-        // We need to ensure we can load or mock the file loading.
-        // Since LoadSeedConfigurationAsync reads a FILE, verification is tricky in unit test.
-        // But we can rely on "Create Project Templates" part passing.
-
         await seeder.SeedAsync();
 
         // Assert

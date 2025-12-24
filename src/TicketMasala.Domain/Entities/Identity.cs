@@ -50,12 +50,6 @@ public class Employee : ApplicationUser
     public EmployeeType Level { get; set; }
 
     // GERDA AI Fields
-    /// <summary>
-    /// Primary language(s) spoken by the agent (e.g., "NL", "FR", "EN" or "NL,FR")
-    /// Used for language-based ticket matching in Dispatching service
-    /// </summary>
-    [SafeStringLength(50, ErrorMessage = "Language cannot exceed 50 characters")]
-    public string? Language { get; set; }
 
     /// <summary>
     /// JSON array of specializations/expertise areas (e.g., ["Tax Law", "Fraud Detection"])
@@ -72,13 +66,6 @@ public class Employee : ApplicationUser
     /// </summary>
     [Range(1, 200, ErrorMessage = "Max capacity must be between 1 and 200 points")]
     public int MaxCapacityPoints { get; set; } = 40;
-
-    /// <summary>
-    /// Geographic region or office location (e.g., "Brussels HQ", "Ghent Office")
-    /// Used for geographic affinity matching in Dispatching service
-    /// </summary>
-    [SafeStringLength(100, ErrorMessage = "Region cannot exceed 100 characters")]
-    public string? Region { get; set; }
 
     [PersonalData]
     public string? ProfilePicturePath { get; set; }

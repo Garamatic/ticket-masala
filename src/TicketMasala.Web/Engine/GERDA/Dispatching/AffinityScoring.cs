@@ -100,8 +100,18 @@ public static class AffinityScoring
 
         // For now, we don't have customer language in the model
         // So we return neutral score
-        // TODO: Add Language field to ApplicationUser model
-        return 3.0;
+        if (customer == null || string.IsNullOrWhiteSpace(agent.Language) || string.IsNullOrWhiteSpace(customer.Language))
+            return 3.0; // Neutral if no data
+
+        // Check for exact match
+        if (agent.Language.Equals(customer.Language, StringComparison.OrdinalIgnoreCase))
+            return 5.0;
+
+        // Check for partial match (e.g. "NL,FR" contains "NL")
+        if (agent.Language.Contains(customer.Language, StringComparison.OrdinalIgnoreCase))
+            return 4.5;
+
+        return 1.0;
     }
 
     /// <summary>
@@ -115,8 +125,14 @@ public static class AffinityScoring
 
         // For now, we don't have customer region in the model
         // So we return neutral score
-        // TODO: Add Region field to ApplicationUser model
-        return 3.0;
+        if (customer == null || string.IsNullOrWhiteSpace(agent.Region) || string.IsNullOrWhiteSpace(customer.Region))
+            return 3.0; // Neutral if no data
+
+        // Check for exact match
+        if (agent.Region.Equals(customer.Region, StringComparison.OrdinalIgnoreCase))
+            return 5.0;
+
+        return 2.0;
     }
 
     /// <summary>

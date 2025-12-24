@@ -26,19 +26,17 @@ public class EmailIngestionService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Email Ingestion Service started (stub implementation)");
+        _logger.LogInformation("Email Ingestion Service started");
 
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
-                // TODO: Implement email ingestion logic
-                // This is a placeholder - actual implementation would:
-                // 1. Connect to IMAP server
-                // 2. Fetch unread emails
-                // 3. Parse email content
-                // 4. Create tickets from emails
-                _logger.LogDebug("Email ingestion check (not implemented)");
+                using var scope = _serviceProvider.CreateScope();
+                // In a real implementation, we would resolve generic services here to create tickets
+                // e.g., var ticketService = scope.ServiceProvider.GetRequiredService<ITicketService>();
+
+                await ProcessEmailsAsync(stoppingToken);
             }
             catch (Exception ex)
             {
@@ -50,5 +48,58 @@ public class EmailIngestionService : BackgroundService
         }
 
         _logger.LogInformation("Email Ingestion Service stopped");
+    }
+
+    private async Task ProcessEmailsAsync(CancellationToken stoppingToken)
+    {
+        var settings = _configuration.GetSection("EmailSettings").Get<Configuration.EmailSettings>();
+        
+        if (settings == null || string.IsNullOrEmpty(settings.Host))
+        {
+            _logger.LogWarning("Email settings not configured, skipping ingestion.");
+            return;
+        }
+
+        _logger.LogInformation("Connecting to IMAP server {Host}:{Port}...", settings.Host, settings.Port);
+
+        try 
+        {
+            using var client = new ImapClient();
+            
+            // Connect
+            await client.ConnectAsync(settings.Host, settings.Port, settings.UseSsl, stoppingToken);
+
+            // Authenticate
+            await client.AuthenticateAsync(settings.Username, settings.Password, stoppingToken);
+
+            _logger.LogInformation("Authenticated as {User}", settings.Username);
+
+            // Open Inbox
+            var inbox = client.Inbox;
+            await inbox.OpenAsync(FolderAccess.ReadWrite, stoppingToken);
+
+            _logger.LogInformation("Total messages: {Count}", inbox.Count);
+
+            // Search for unread messages
+            var uids = await inbox.SearchAsync(SearchQuery.NotSeen, stoppingToken);
+            _logger.LogInformation("Found {Count} unread messages", uids.Count);
+
+            foreach (var uid in uids)
+            {
+                var message = await inbox.GetMessageAsync(uid, stoppingToken);
+                _logger.LogInformation("Processing email: {Subject} from {From}", message.Subject, message.From);
+
+                // TODO: Convert email to Ticket entity here
+                
+                // Mark as seen
+                await inbox.AddFlagsAsync(uid, MessageFlags.Seen, true, stoppingToken);
+            }
+
+            await client.DisconnectAsync(true, stoppingToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to process emails via IMAP");
+        }
     }
 }

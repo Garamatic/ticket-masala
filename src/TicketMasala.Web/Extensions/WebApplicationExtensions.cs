@@ -26,13 +26,7 @@ public static class WebApplicationExtensions
         app.UseForwardedHeaders();
 
         // Localization
-        var supportedCultures = new[] { "en", "fr", "nl" };
-        var localizationOptions = new RequestLocalizationOptions()
-            .SetDefaultCulture(supportedCultures[0])
-            .AddSupportedCultures(supportedCultures)
-            .AddSupportedUICultures(supportedCultures);
-        localizationOptions.RequestCultureProviders.Insert(0, new CookieRequestCultureProvider());
-        app.UseRequestLocalization(localizationOptions);
+        app.UseRequestLocalization();
 
         // Environment-specific
         if (env.IsDevelopment())

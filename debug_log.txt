@@ -1,0 +1,457 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  TicketMasala.Domain -> /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Domain/bin/Debug/net10.0/TicketMasala.Domain.dll
+  TicketMasala.Web -> /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/bin/Debug/net10.0/TicketMasala.Web.dll
+  TicketMasala.Tests -> /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Tests/bin/Debug/net10.0/TicketMasala.Tests.dll
+Test run for /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Tests/bin/Debug/net10.0/TicketMasala.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.1-dev (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+/home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Tests/bin/Debug/net10.0/TicketMasala.Tests.dll
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.0.0+e341b939fe (64-bit .NET 10.0.0)
+[xUnit.net 00:00:00.04]   Discovering: TicketMasala.Tests
+[xUnit.net 00:00:00.07]   Discovered:  TicketMasala.Tests
+[xUnit.net 00:00:00.08]   Starting:    TicketMasala.Tests
+info: TicketMasala.Web.Configuration.ConfigurationValidator[0]
+      Configuration validation successful
+info: Startup[0]
+      Masala configuration validated successfully
+[Tenancy] Plugin path not found or empty: 
+Loading configuration from: /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/../../config
+Note: GERDA config not found at /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/../../config/masala_config.json
+Application will run with basic ticketing functionality
+info: Program[0]
+      Checking if Masala database seeding is needed...
+Using SQLite Provider with connection: Data Source=app.db
+info: TicketMasala.Web.Data.DbSeeder[0]
+      ========== DATABASE SEEDING STARTED ==========
+info: TicketMasala.Web.Data.DbSeeder[0]
+      Applying pending database migrations...
+warn: Microsoft.EntityFrameworkCore.Model.Validation[10620]
+      The property 'Project.CustomerIds' is a collection or enumeration type with a value converter but with no value comparer. Set a value comparer to ensure the collection/enumeration elements are compared correctly.
+warn: Microsoft.EntityFrameworkCore.Model.Validation[10625]
+      The foreign key property 'AuditLogEntry.UserId1' was created in shadow state because a conflicting property with the simple name 'UserId' exists in the entity type, but is either not mapped, is already used for another relationship, or is incompatible with the associated primary key type. See https://aka.ms/efcore-relationships for information on mapping relationships in EF Core.
+warn: Microsoft.EntityFrameworkCore.Model.Validation[10625]
+      The foreign key property 'KnowledgeBaseArticle.AuthorId1' was created in shadow state because a conflicting property with the simple name 'AuthorId' exists in the entity type, but is either not mapped, is already used for another relationship, or is incompatible with the associated primary key type. See https://aka.ms/efcore-relationships for information on mapping relationships in EF Core.
+warn: Microsoft.EntityFrameworkCore.Model.Validation[10625]
+      The foreign key property 'QualityReview.ReviewerId1' was created in shadow state because a conflicting property with the simple name 'ReviewerId' exists in the entity type, but is either not mapped, is already used for another relationship, or is incompatible with the associated primary key type. See https://aka.ms/efcore-relationships for information on mapping relationships in EF Core.
+info: Microsoft.EntityFrameworkCore.Migrations[20411]
+      Acquiring an exclusive lock for migration application. See https://aka.ms/efcore-docs-migrations-lock for more information if this takes too long.
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*) FROM "sqlite_master" WHERE "name" = '__EFMigrationsLock' AND "type" = 'table';
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      INSERT OR IGNORE INTO "__EFMigrationsLock"("Id", "Timestamp") VALUES(1, '2025-12-24 15:50:00.9873081+00:00');
+      SELECT changes();
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
+          "MigrationId" TEXT NOT NULL CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY,
+          "ProductVersion" TEXT NOT NULL
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*) FROM "sqlite_master" WHERE "name" = '__EFMigrationsHistory' AND "type" = 'table';
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "MigrationId", "ProductVersion"
+      FROM "__EFMigrationsHistory"
+      ORDER BY "MigrationId";
+info: Microsoft.EntityFrameworkCore.Migrations[20402]
+      Applying migration '20251212175821_Add_TimeLog_Entity'.
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      DROP TABLE IF EXISTS "AspNetRoles";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      DROP TABLE IF EXISTS "DomainConfigVersion";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      DROP TABLE IF EXISTS "ProjectTemplates";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      DROP TABLE IF EXISTS "AspNetRoleClaims";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      DROP TABLE IF EXISTS "TemplateTickets";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      DROP TABLE IF EXISTS "AspNetUserClaims";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      DROP TABLE IF EXISTS "AspNetUserLogins";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      DROP TABLE IF EXISTS "AspNetUserRoles";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      DROP TABLE IF EXISTS "AspNetUsers";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      DROP TABLE IF EXISTS "AspNetUserTokens";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      DROP TABLE IF EXISTS "KnowledgeBaseArticles";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      DROP TABLE IF EXISTS "Notifications";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      DROP TABLE IF EXISTS "Projects";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      DROP TABLE IF EXISTS "SavedFilters";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      DROP TABLE IF EXISTS "Resource";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      DROP TRIGGER IF EXISTS Tickets_AI;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      DROP TRIGGER IF EXISTS Tickets_AD;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      DROP TRIGGER IF EXISTS Tickets_AU;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      DROP TABLE IF EXISTS Tickets_Search;
+fail: Microsoft.EntityFrameworkCore.Database.Command[20102]
+      Failed executing DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      DROP TABLE IF EXISTS "Tickets";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      DELETE FROM "__EFMigrationsLock";
+fail: TicketMasala.Web.Data.DbSeeder[0]
+      ========== ERROR DURING DATABASE SEEDING ==========
+      Microsoft.Data.Sqlite.SqliteException (0x80004005): SQLite Error 1: 'no such table: main.AspNetUsers'.
+         at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+         at Microsoft.Data.Sqlite.SqliteCommand.PrepareAndEnumerateStatements()+MoveNext()
+         at Microsoft.Data.Sqlite.SqliteCommand.GetStatements()+MoveNext()
+         at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader()
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteNonQuery()
+         at System.Data.Common.DbCommand.ExecuteNonQueryAsync(CancellationToken cancellationToken)
+      --- End of stack trace from previous location ---
+         at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteNonQueryAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteNonQueryAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteNonQueryAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Migrations.Internal.MigrationCommandExecutor.ExecuteAsync(IReadOnlyList`1 migrationCommands, IRelationalConnection connection, MigrationExecutionState executionState, Boolean beginTransaction, Boolean commitTransaction, Nullable`1 isolationLevel, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Migrations.Internal.MigrationCommandExecutor.ExecuteAsync(IReadOnlyList`1 migrationCommands, IRelationalConnection connection, MigrationExecutionState executionState, Boolean beginTransaction, Boolean commitTransaction, Nullable`1 isolationLevel, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Migrations.Internal.MigrationCommandExecutor.ExecuteNonQueryAsync(IReadOnlyList`1 migrationCommands, IRelationalConnection connection, MigrationExecutionState executionState, Boolean commitTransaction, Nullable`1 isolationLevel, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.MigrateImplementationAsync(DbContext context, String targetMigration, MigrationExecutionState state, Boolean useTransaction, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.MigrateImplementationAsync(DbContext context, String targetMigration, MigrationExecutionState state, Boolean useTransaction, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.<>c.<<MigrateAsync>b__22_1>d.MoveNext()
+      --- End of stack trace from previous location ---
+         at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.MigrateAsync(String targetMigration, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.MigrateAsync(String targetMigration, CancellationToken cancellationToken)
+         at TicketMasala.Web.Data.DbSeeder.SeedAsync() in /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/Data/DbSeeder.cs:line 76
+fail: Program[0]
+      Error seeding Masala database
+      Microsoft.Data.Sqlite.SqliteException (0x80004005): SQLite Error 1: 'no such table: main.AspNetUsers'.
+         at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+         at Microsoft.Data.Sqlite.SqliteCommand.PrepareAndEnumerateStatements()+MoveNext()
+         at Microsoft.Data.Sqlite.SqliteCommand.GetStatements()+MoveNext()
+         at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader()
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteNonQuery()
+         at System.Data.Common.DbCommand.ExecuteNonQueryAsync(CancellationToken cancellationToken)
+      --- End of stack trace from previous location ---
+         at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteNonQueryAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteNonQueryAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteNonQueryAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Migrations.Internal.MigrationCommandExecutor.ExecuteAsync(IReadOnlyList`1 migrationCommands, IRelationalConnection connection, MigrationExecutionState executionState, Boolean beginTransaction, Boolean commitTransaction, Nullable`1 isolationLevel, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Migrations.Internal.MigrationCommandExecutor.ExecuteAsync(IReadOnlyList`1 migrationCommands, IRelationalConnection connection, MigrationExecutionState executionState, Boolean beginTransaction, Boolean commitTransaction, Nullable`1 isolationLevel, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Migrations.Internal.MigrationCommandExecutor.ExecuteNonQueryAsync(IReadOnlyList`1 migrationCommands, IRelationalConnection connection, MigrationExecutionState executionState, Boolean commitTransaction, Nullable`1 isolationLevel, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.MigrateImplementationAsync(DbContext context, String targetMigration, MigrationExecutionState state, Boolean useTransaction, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.MigrateImplementationAsync(DbContext context, String targetMigration, MigrationExecutionState state, Boolean useTransaction, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.<>c.<<MigrateAsync>b__22_1>d.MoveNext()
+      --- End of stack trace from previous location ---
+         at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.MigrateAsync(String targetMigration, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.MigrateAsync(String targetMigration, CancellationToken cancellationToken)
+         at TicketMasala.Web.Data.DbSeeder.SeedAsync() in /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/Data/DbSeeder.cs:line 76
+         at TicketMasala.Web.Extensions.WebApplicationExtensions.InitializeMasalaCoreAsync(WebApplication app) in /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/Extensions/WebApplicationExtensions.cs:line 157
+info: TicketMasala.Web.Engine.Compiler.RuleCompilerService[0]
+      Compiling rules for hot reload...
+info: TicketMasala.Web.Engine.Compiler.RuleCompilerService[0]
+      Successfully swapped 0 compiled rule delegates in 0ms.
+info: TicketMasala.Web.Engine.GERDA.Configuration.DomainConfigurationService[0]
+      Loaded domain configuration version 2163be016a020470a1b972764014da761f142eb01f3a0c49cbb05e68a595c4c4 with 2 domains
+info: TicketMasala.Web.Engine.GERDA.Configuration.DomainConfigurationService[0]
+      File watcher enabled for /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/../../config/masala_domains.yaml
+info: Program[0]
+      Strategy factory not registered; skipping validation.
+Using SQLite Provider with connection: Data Source=app.db
+info: TicketMasala.Web.Engine.Ingestion.EmailIngestionService[0]
+      Email Ingestion Service started
+info: TicketMasala.Web.Engine.Ingestion.Background.QueuedHostedService[0]
+      Queued Hosted Service is running.
+warn: TicketMasala.Web.Engine.GERDA.Configuration.ConfigurationWatcherService[0]
+      Configuration file /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/../../config/masala_config.json not found. Watcher disabled.
+info: TicketMasala.Web.Engine.Ingestion.TicketGeneratorService[0]
+      Ticket Generator started. Interval: 00:00:30
+warn: TicketMasala.Web.Engine.Ingestion.EmailIngestionService[0]
+      Email settings not configured, skipping ingestion.
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]
+      Failed to determine the https port for redirect.
+fail: Microsoft.EntityFrameworkCore.Database.Command[20102]
+      Failed executing DbCommand (0ms) [Parameters=[@hash='?' (Size = 64)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "DomainConfigVersions" AS "d"
+          WHERE "d"."Hash" = @hash)
+fail: Microsoft.EntityFrameworkCore.Query[10100]
+      An exception occurred while iterating over the results of a query for context type 'TicketMasala.Domain.Data.MasalaDbContext'.
+      Microsoft.Data.Sqlite.SqliteException (0x80004005): SQLite Error 1: 'no such table: DomainConfigVersions'.
+         at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+         at Microsoft.Data.Sqlite.SqliteCommand.PrepareAndEnumerateStatements()+MoveNext()
+         at Microsoft.Data.Sqlite.SqliteCommand.GetStatements()+MoveNext()
+         at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+      Microsoft.Data.Sqlite.SqliteException (0x80004005): SQLite Error 1: 'no such table: DomainConfigVersions'.
+         at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+         at Microsoft.Data.Sqlite.SqliteCommand.PrepareAndEnumerateStatements()+MoveNext()
+         at Microsoft.Data.Sqlite.SqliteCommand.GetStatements()+MoveNext()
+         at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+fail: TicketMasala.Web.Engine.GERDA.Configuration.DomainConfigurationService[0]
+      Failed to capture configuration snapshot
+      Microsoft.Data.Sqlite.SqliteException (0x80004005): SQLite Error 1: 'no such table: DomainConfigVersions'.
+         at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+         at Microsoft.Data.Sqlite.SqliteCommand.PrepareAndEnumerateStatements()+MoveNext()
+         at Microsoft.Data.Sqlite.SqliteCommand.GetStatements()+MoveNext()
+         at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+         at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+         at TicketMasala.Web.Engine.GERDA.Configuration.DomainConfigurationService.CaptureConfigSnapshotAsync(String hash, String yaml) in /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/Engine/GERDA/Configuration/DomainConfigurationService.cs:line 154
+Using SQLite Provider with connection: Data Source=app.db
+fail: Microsoft.EntityFrameworkCore.Database.Command[20102]
+      Failed executing DbCommand (0ms) [Parameters=[@id='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Guid", "p"."CompletionDate", "p"."CompletionTarget", "p"."CreationDate", "p"."CreatorGuid", "p"."CustomerId", "p"."CustomerIds", "p"."DepartmentId", "p"."Description", "p"."Name", "p"."Notes", "p"."ProjectAiRoadmap", "p"."ProjectManagerId", "p"."ProjectType", "p"."Status", "p"."ValidUntil", "a"."Id", "a"."AccessFailedCount", "a"."Code", "a"."ConcurrencyStamp", "a"."Discriminator", "a"."Email", "a"."EmailConfirmed", "a"."FirstName", "a"."Language", "a"."LastName", "a"."LockoutEnabled", "a"."LockoutEnd", "a"."NormalizedEmail", "a"."NormalizedUserName", "a"."PasswordHash", "a"."Phone", "a"."PhoneNumber", "a"."PhoneNumberConfirmed", "a"."Region", "a"."SecurityStamp", "a"."StakeholderProjectId", "a"."TwoFactorEnabled", "a"."UserName", "a"."DepartmentId", "a"."Level", "a"."MaxCapacityPoints", "a"."ProfilePicturePath", "a"."ResourceProjectId", "a"."Specializations", "a"."Team", "a1"."Id", "a1"."AccessFailedCount", "a1"."Code", "a1"."ConcurrencyStamp", "a1"."Discriminator", "a1"."Email", "a1"."EmailConfirmed", "a1"."FirstName", "a1"."Language", "a1"."LastName", "a1"."LockoutEnabled", "a1"."LockoutEnd", "a1"."NormalizedEmail", "a1"."NormalizedUserName", "a1"."PasswordHash", "a1"."Phone", "a1"."PhoneNumber", "a1"."PhoneNumberConfirmed", "a1"."Region", "a1"."SecurityStamp", "a1"."StakeholderProjectId", "a1"."TwoFactorEnabled", "a1"."UserName", "a1"."DepartmentId", "a1"."Level", "a1"."MaxCapacityPoints", "a1"."ProfilePicturePath", "a1"."ResourceProjectId", "a1"."Specializations", "a1"."Team"
+      FROM "Projects" AS "p"
+      LEFT JOIN "AspNetUsers" AS "a" ON "p"."CustomerId" = "a"."Id"
+      LEFT JOIN (
+          SELECT "a0"."Id", "a0"."AccessFailedCount", "a0"."Code", "a0"."ConcurrencyStamp", "a0"."Discriminator", "a0"."Email", "a0"."EmailConfirmed", "a0"."FirstName", "a0"."Language", "a0"."LastName", "a0"."LockoutEnabled", "a0"."LockoutEnd", "a0"."NormalizedEmail", "a0"."NormalizedUserName", "a0"."PasswordHash", "a0"."Phone", "a0"."PhoneNumber", "a0"."PhoneNumberConfirmed", "a0"."Region", "a0"."SecurityStamp", "a0"."StakeholderProjectId", "a0"."TwoFactorEnabled", "a0"."UserName", "a0"."DepartmentId", "a0"."Level", "a0"."MaxCapacityPoints", "a0"."ProfilePicturePath", "a0"."ResourceProjectId", "a0"."Specializations", "a0"."Team"
+          FROM "AspNetUsers" AS "a0"
+          WHERE "a0"."Discriminator" = 'Employee'
+      ) AS "a1" ON "p"."ProjectManagerId" = "a1"."Id"
+      WHERE "p"."Guid" = @id
+      LIMIT 1
+fail: Microsoft.EntityFrameworkCore.Query[10100]
+      An exception occurred while iterating over the results of a query for context type 'TicketMasala.Domain.Data.MasalaDbContext'.
+      Microsoft.Data.Sqlite.SqliteException (0x80004005): SQLite Error 1: 'no such column: a0.StakeholderProjectId'.
+         at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+         at Microsoft.Data.Sqlite.SqliteCommand.PrepareAndEnumerateStatements()+MoveNext()
+         at Microsoft.Data.Sqlite.SqliteCommand.GetStatements()+MoveNext()
+         at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+      Microsoft.Data.Sqlite.SqliteException (0x80004005): SQLite Error 1: 'no such column: a0.StakeholderProjectId'.
+         at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+         at Microsoft.Data.Sqlite.SqliteCommand.PrepareAndEnumerateStatements()+MoveNext()
+         at Microsoft.Data.Sqlite.SqliteCommand.GetStatements()+MoveNext()
+         at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+fail: TicketMasala.Web.Controllers.Api.V1.WorkContainersController[0]
+      Error retrieving work container 55f5c825-0180-4e9c-b9c9-a046128fe250
+      Microsoft.Data.Sqlite.SqliteException (0x80004005): SQLite Error 1: 'no such column: a0.StakeholderProjectId'.
+         at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+         at Microsoft.Data.Sqlite.SqliteCommand.PrepareAndEnumerateStatements()+MoveNext()
+         at Microsoft.Data.Sqlite.SqliteCommand.GetStatements()+MoveNext()
+         at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+         at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+         at TicketMasala.Web.Repositories.EfCoreProjectRepository.GetByIdAsync(Guid id, Boolean includeRelations) in /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/Repositories/EfCoreProjectRepository.cs:line 35
+         at TicketMasala.Web.Controllers.Api.V1.WorkContainersController.GetById(Guid id) in /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/Controllers/Api/V1/WorkContainersController.cs:line 46
+info: TicketMasala.Web.Middleware.RequestLoggingMiddleware[0]
+      Request completed: GET /api/v1/work-containers/55f5c825-0180-4e9c-b9c9-a046128fe250 responded 404 in 161.171ms
+Using SQLite Provider with connection: Data Source=app.db
+fail: Microsoft.EntityFrameworkCore.Database.Command[20102]
+      Failed executing DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "p"."Guid", "p"."CompletionDate", "p"."CompletionTarget", "p"."CreationDate", "p"."CreatorGuid", "p"."CustomerId", "p"."CustomerIds", "p"."DepartmentId", "p"."Description", "p"."Name", "p"."Notes", "p"."ProjectAiRoadmap", "p"."ProjectManagerId", "p"."ProjectType", "p"."Status", "p"."ValidUntil"
+      FROM "Projects" AS "p"
+      WHERE "p"."ValidUntil" IS NULL
+fail: Microsoft.EntityFrameworkCore.Query[10100]
+      An exception occurred while iterating over the results of a query for context type 'TicketMasala.Domain.Data.MasalaDbContext'.
+      Microsoft.Data.Sqlite.SqliteException (0x80004005): SQLite Error 1: 'no such column: p.CustomerIds'.
+         at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+         at Microsoft.Data.Sqlite.SqliteCommand.PrepareAndEnumerateStatements()+MoveNext()
+         at Microsoft.Data.Sqlite.SqliteCommand.GetStatements()+MoveNext()
+         at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+      Microsoft.Data.Sqlite.SqliteException (0x80004005): SQLite Error 1: 'no such column: p.CustomerIds'.
+         at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+         at Microsoft.Data.Sqlite.SqliteCommand.PrepareAndEnumerateStatements()+MoveNext()
+         at Microsoft.Data.Sqlite.SqliteCommand.GetStatements()+MoveNext()
+         at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+fail: TicketMasala.Web.Middleware.RequestLoggingMiddleware[0]
+      Request failed with exception: GET /api/v1/work-containers failed in 17.109ms
+      Microsoft.Data.Sqlite.SqliteException (0x80004005): SQLite Error 1: 'no such column: p.CustomerIds'.
+         at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+         at Microsoft.Data.Sqlite.SqliteCommand.PrepareAndEnumerateStatements()+MoveNext()
+         at Microsoft.Data.Sqlite.SqliteCommand.GetStatements()+MoveNext()
+         at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+         at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+         at TicketMasala.Web.Repositories.EfCoreProjectRepository.GetAllAsync() in /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/Repositories/EfCoreProjectRepository.cs:line 40
+         at TicketMasala.Web.Controllers.Api.V1.WorkContainersController.GetAll() in /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/Controllers/Api/V1/WorkContainersController.cs:line 35
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeInnerFilterAsync()
+      --- End of stack trace from previous location ---
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeNextResourceFilter>g__Awaited|25_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Rethrow(ResourceExecutedContextSealed context)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.InvokeFilterPipelineAsync()
+      --- End of stack trace from previous location ---
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+         at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+         at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+         at TicketMasala.Web.Middleware.DeprecationHeaderMiddleware.InvokeAsync(HttpContext context) in /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/Middleware/DeprecationHeaderMiddleware.cs:line 39
+         at TicketMasala.Web.Middleware.RequestLoggingMiddleware.InvokeAsync(HttpContext context) in /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/Middleware/RequestLoggingMiddleware.cs:line 30
+fail: Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddleware[1]
+      An unhandled exception has occurred while executing the request.
+      Microsoft.Data.Sqlite.SqliteException (0x80004005): SQLite Error 1: 'no such column: p.CustomerIds'.
+         at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+         at Microsoft.Data.Sqlite.SqliteCommand.PrepareAndEnumerateStatements()+MoveNext()
+         at Microsoft.Data.Sqlite.SqliteCommand.GetStatements()+MoveNext()
+         at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+         at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+         at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+         at TicketMasala.Web.Repositories.EfCoreProjectRepository.GetAllAsync() in /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/Repositories/EfCoreProjectRepository.cs:line 40
+         at TicketMasala.Web.Controllers.Api.V1.WorkContainersController.GetAll() in /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/Controllers/Api/V1/WorkContainersController.cs:line 35
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeInnerFilterAsync()
+      --- End of stack trace from previous location ---
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeNextResourceFilter>g__Awaited|25_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Rethrow(ResourceExecutedContextSealed context)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.InvokeFilterPipelineAsync()
+      --- End of stack trace from previous location ---
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+         at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+         at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+         at TicketMasala.Web.Middleware.DeprecationHeaderMiddleware.InvokeAsync(HttpContext context) in /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/Middleware/DeprecationHeaderMiddleware.cs:line 39
+         at TicketMasala.Web.Middleware.RequestLoggingMiddleware.InvokeAsync(HttpContext context) in /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/Middleware/RequestLoggingMiddleware.cs:line 30
+         at TicketMasala.Web.Middleware.SecurityHeadersMiddleware.InvokeAsync(HttpContext context) in /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/Middleware/SecurityHeadersMiddleware.cs:line 46
+         at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+         at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+         at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)
+[xUnit.net 00:00:01.18]       System.Net.Http.HttpRequestException : Response status code does not indicate success: 500 (Internal Server Error).
+[xUnit.net 00:00:01.18]       Stack Trace:
+[xUnit.net 00:00:01.18]            at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+[xUnit.net 00:00:01.18]         /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Tests/Functional/WorkContainersApiFunctionalTests.cs(38,0): at TicketMasala.Tests.Functional.WorkContainersApiFunctionalTests.Get_All_WorkContainers_Returns_Success_And_Json()
+[xUnit.net 00:00:01.18]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:01.18]       Output:
+[xUnit.net 00:00:01.18]         Server Error Response: {"type":"https://tools.ietf.org/html/rfc9110#section-15.6.1","title":"Microsoft.Data.Sqlite.SqliteException","status":500,"detail":"SQLite Error 1: 'no such column: p.CustomerIds'.","exception":{"details":"Microsoft.Data.Sqlite.SqliteException (0x80004005): SQLite Error 1: 'no such column: p.CustomerIds'.\n   at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)\n   at Microsoft.Data.Sqlite.SqliteCommand.PrepareAndEnumerateStatements()+MoveNext()\n   at Microsoft.Data.Sqlite.SqliteCommand.GetStatements()+MoveNext()\n   at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()\n   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)\n   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)\n   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)\n   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)\n   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)\n   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)\n   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()\n   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)\n   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)\n   at TicketMasala.Web.Repositories.EfCoreProjectRepository.GetAllAsync() in /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/Repositories/EfCoreProjectRepository.cs:line 40\n   at TicketMasala.Web.Controllers.Api.V1.WorkContainersController.GetAll() in /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/Controllers/Api/V1/WorkContainersController.cs:line 35\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeInnerFilterAsync()\n--- End of stack trace from previous location ---\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeNextResourceFilter>g__Awaited|25_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Rethrow(ResourceExecutedContextSealed context)\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.InvokeFilterPipelineAsync()\n--- End of stack trace from previous location ---\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)\n   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)\n   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)\n   at TicketMasala.Web.Middleware.DeprecationHeaderMiddleware.InvokeAsync(HttpContext context) in /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/Middleware/DeprecationHeaderMiddleware.cs:line 39\n   at TicketMasala.Web.Middleware.RequestLoggingMiddleware.InvokeAsync(HttpContext context) in /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/Middleware/RequestLoggingMiddleware.cs:line 30\n   at TicketMasala.Web.Middleware.SecurityHeadersMiddleware.InvokeAsync(HttpContext context) in /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/Middleware/SecurityHeadersMiddleware.cs:line 46\n   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)\n   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)\n   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)","headers":{"Host":["localhost"]},"path":"/api/v1/work-containers","endpoint":"TicketMasala.Web.Controllers.Api.V1.WorkContainersController.GetAll (TicketMasala.Web)","routeValues":{"action":"GetAll","controller":"WorkContainers","version":"1"}},"traceId":"00-9b6589cc53095afee22ff6929174c344-695ee0878e06cc24-00"}
+Using SQLite Provider with connection: Data Source=app.db
+warn: TicketMasala.Web.Middleware.RequestLoggingMiddleware[0]
+      Request completed with error: POST /api/v1/work-containers responded 400 in 26.258ms
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...
+info: TicketMasala.Web.Engine.Ingestion.Background.QueuedHostedService[0]
+      Queued Hosted Service is stopping.
+info: TicketMasala.Web.Engine.Ingestion.Background.QueuedHostedService[0]
+      Queued Hosted Service is stopping.
+[xUnit.net 00:00:01.23]   Finished:    TicketMasala.Tests
+  Passed TicketMasala.Tests.Functional.WorkContainersApiFunctionalTests.Get_NonExistent_WorkContainer_Returns_NotFound [1 s]
+  Failed TicketMasala.Tests.Functional.WorkContainersApiFunctionalTests.Get_All_WorkContainers_Returns_Success_And_Json [32 ms]
+  Error Message:
+   System.Net.Http.HttpRequestException : Response status code does not indicate success: 500 (Internal Server Error).
+  Stack Trace:
+     at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at TicketMasala.Tests.Functional.WorkContainersApiFunctionalTests.Get_All_WorkContainers_Returns_Success_And_Json() in /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Tests/Functional/WorkContainersApiFunctionalTests.cs:line 38
+--- End of stack trace from previous location ---
+  Standard Output Messages:
+ Server Error Response: {"type":"https://tools.ietf.org/html/rfc9110#section-15.6.1","title":"Microsoft.Data.Sqlite.SqliteException","status":500,"detail":"SQLite Error 1: 'no such column: p.CustomerIds'.","exception":{"details":"Microsoft.Data.Sqlite.SqliteException (0x80004005): SQLite Error 1: 'no such column: p.CustomerIds'.\n   at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)\n   at Microsoft.Data.Sqlite.SqliteCommand.PrepareAndEnumerateStatements()+MoveNext()\n   at Microsoft.Data.Sqlite.SqliteCommand.GetStatements()+MoveNext()\n   at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()\n   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)\n   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)\n   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)\n   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)\n   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)\n   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)\n   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()\n   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)\n   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)\n   at TicketMasala.Web.Repositories.EfCoreProjectRepository.GetAllAsync() in /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/Repositories/EfCoreProjectRepository.cs:line 40\n   at TicketMasala.Web.Controllers.Api.V1.WorkContainersController.GetAll() in /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/Controllers/Api/V1/WorkContainersController.cs:line 35\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeInnerFilterAsync()\n--- End of stack trace from previous location ---\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeNextResourceFilter>g__Awaited|25_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Rethrow(ResourceExecutedContextSealed context)\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.InvokeFilterPipelineAsync()\n--- End of stack trace from previous location ---\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)\n   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)\n   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)\n   at TicketMasala.Web.Middleware.DeprecationHeaderMiddleware.InvokeAsync(HttpContext context) in /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/Middleware/DeprecationHeaderMiddleware.cs:line 39\n   at TicketMasala.Web.Middleware.RequestLoggingMiddleware.InvokeAsync(HttpContext context) in /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/Middleware/RequestLoggingMiddleware.cs:line 30\n   at TicketMasala.Web.Middleware.SecurityHeadersMiddleware.InvokeAsync(HttpContext context) in /home/juan/coding/garamatic/ticket-masala/src/TicketMasala.Web/Middleware/SecurityHeadersMiddleware.cs:line 46\n   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)\n   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)\n   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)","headers":{"Host":["localhost"]},"path":"/api/v1/work-containers","endpoint":"TicketMasala.Web.Controllers.Api.V1.WorkContainersController.GetAll (TicketMasala.Web)","routeValues":{"action":"GetAll","controller":"WorkContainers","version":"1"}},"traceId":"00-9b6589cc53095afee22ff6929174c344-695ee0878e06cc24-00"}
+
+
+  Passed TicketMasala.Tests.Functional.WorkContainersApiFunctionalTests.Create_WorkContainer_Validates_Required_Fields [37 ms]
+
+Total tests: 3
+     Passed: 2
+     Failed: 1
+ Total time: 1.5544 Seconds

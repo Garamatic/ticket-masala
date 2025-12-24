@@ -53,7 +53,7 @@ public class EmailIngestionService : BackgroundService
     private async Task ProcessEmailsAsync(CancellationToken stoppingToken)
     {
         var settings = _configuration.GetSection("EmailSettings").Get<Configuration.EmailSettings>();
-        
+
         if (settings == null || string.IsNullOrEmpty(settings.Host))
         {
             _logger.LogWarning("Email settings not configured, skipping ingestion.");
@@ -62,10 +62,10 @@ public class EmailIngestionService : BackgroundService
 
         _logger.LogInformation("Connecting to IMAP server {Host}:{Port}...", settings.Host, settings.Port);
 
-        try 
+        try
         {
             using var client = new ImapClient();
-            
+
             // Connect
             await client.ConnectAsync(settings.Host, settings.Port, settings.UseSsl, stoppingToken);
 
@@ -78,21 +78,38 @@ public class EmailIngestionService : BackgroundService
             var inbox = client.Inbox;
             await inbox.OpenAsync(FolderAccess.ReadWrite, stoppingToken);
 
-            _logger.LogInformation("Total messages: {Count}", inbox.Count);
-
             // Search for unread messages
             var uids = await inbox.SearchAsync(SearchQuery.NotSeen, stoppingToken);
             _logger.LogInformation("Found {Count} unread messages", uids.Count);
+
+            if (uids.Count == 0) return;
+
+            // Create scope for DB Context and Processor
+            using var scope = _serviceProvider.CreateScope();
+            // Note: We need to ensure IEmailTicketProcessor is registered in DI
+            var processor = scope.ServiceProvider.GetRequiredService<IEmailTicketProcessor>();
 
             foreach (var uid in uids)
             {
                 var message = await inbox.GetMessageAsync(uid, stoppingToken);
                 _logger.LogInformation("Processing email: {Subject} from {From}", message.Subject, message.From);
 
-                // TODO: Convert email to Ticket entity here
-                
-                // Mark as seen
-                await inbox.AddFlagsAsync(uid, MessageFlags.Seen, true, stoppingToken);
+                var emailContent = new EmailContent(
+                    message.Subject,
+                    message.TextBody ?? message.HtmlBody ?? "",
+                    message.From.ToString());
+
+                try
+                {
+                    await processor.ProcessEmailAsync(emailContent, stoppingToken);
+
+                    // Mark as seen only if successful
+                    await inbox.AddFlagsAsync(uid, MessageFlags.Seen, true, stoppingToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to process email {Subject}", message.Subject);
+                }
             }
 
             await client.DisconnectAsync(true, stoppingToken);

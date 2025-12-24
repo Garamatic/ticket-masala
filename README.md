@@ -1,4 +1,4 @@
-# Ticket Masala 🌶️
+# Ticket Masala
 
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
 ![.NET](https://img.shields.io/badge/.NET-10.0%20%7C%2010.0%20Preview-512BD4)
@@ -13,13 +13,13 @@
 
 ---
 
-## 🧠 The Concept (Project Atom)
+## The Concept
 
 Ticket Masala is not just a ticketing system; it is a **Configuration-Driven Multi-Instance Platform**.
 
 Instead of building separate applications for different departments (HR, IT, Government), Ticket Masala uses a single **Modular Monolith** core that injects different "Personalities" at runtime.
 
-### 🏗️ Architecture
+### Architecture
 
 The system supports **Physical Isolation** (for security) and **Logical Partitioning** (for efficiency).
 
@@ -28,9 +28,9 @@ graph TD
     Config[YAML Configuration] -->|Injects Strategy| Core[Ticket Masala Core]
     
     subgraph "The Ecosystem"
-        Core -->|Tenant: Desgoffe| NodeA[🏛️ Node A: Gov Tech]
-        Core -->|Tenant: Whitman| NodeB[🏭 Node B: Infra]
-        Core -->|Tenant: Liberty| NodeC[💻 Node C: SaaS]
+        Core -->|Tenant: Desgoffe| NodeA[Node A: Gov Tech]
+        Core -->|Tenant: Whitman| NodeB[Node B: Infra]
+        Core -->|Tenant: Liberty| NodeC[Node C: SaaS]
     end
 
     NodeA -->|Strategy| Strict[Strict Validation & Hierarchy]
@@ -40,7 +40,7 @@ graph TD
 
 ---
 
-## 🎯 Key Features
+## Key Features
 
 ### 1. Polymorphic Workflow Engine
 
@@ -65,7 +65,7 @@ The system behaves differently based on the active domain:
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 * **Core:** .NET 10
 * **Web Framework:** ASP.NET Core MVC with **HTMX** for high-performance interactivity.
@@ -75,7 +75,7 @@ The system behaves differently based on the active domain:
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -110,7 +110,7 @@ docker-compose up --build
 
 ---
 
-## 🔐 Demo Accounts (Seeded)
+## Demo Accounts (Seeded)
 
 <details>
 <summary><strong>Click to expand User List</strong></summary>
@@ -134,21 +134,21 @@ A **Modular Monolith** designed for separation of concerns:
 ```
 src/
 ├── TicketMasala.Web/
-│   ├── Engine/                # 🧠 THE BRAIN
+│   ├── Engine/                # THE BRAIN
 │   │   ├── GERDA/             # AI & Heuristics Logic
 │   │   ├── Tenants/           # Tenant Resolution Strategy
 │   │   └── Workflows/         # State Machines (Gov vs Tech)
 │   ├── Controllers/           # MVC Endpoints
 │   └── Views/                 # Razor Pages (Polymorphic UI)
 ├── config/
-│   ├── masala_domains.yaml    # ⚙️ The "Brain Transplant" Config
+│   ├── masala_domains.yaml    # The "Brain Transplant" Config
 │   └── seed_data.json         # Mock Data
 
 ```
 
 ---
 
-## 📚 Documentation
+## Documentation
 
 * **Architectural Deep Dive:** [masala-doc.fly.dev](https://masala-doc.fly.dev)
 * **Live Ecosystem Demo:** [ticket-masala.fly.dev](https://ticket-masala.fly.dev)
@@ -156,7 +156,7 @@ src/
 
 ---
 
-## 👥 The Team
+## The Team
 
 **Engineered by Garamatic Industries** (Student Team):
 

@@ -2,6 +2,7 @@ using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
 using TicketMasala.Web.ViewModels.Tickets;
 using TicketMasala.Web.Data;
+using TicketMasala.Web.Repositories.Specifications;
 using Microsoft.EntityFrameworkCore;
 
 namespace TicketMasala.Web.Repositories;
@@ -40,65 +41,34 @@ public class EfCoreTicketRepository : ITicketRepository
 
     public async Task<IEnumerable<Ticket>> GetAllAsync(Guid? departmentId = null)
     {
-        var query = _context.Tickets.AsQueryable();
-
-        if (departmentId.HasValue)
-        {
-            // Join with Projects to filter by DepartmentId
-            query = query.Join(_context.Projects,
-                ticket => ticket.ProjectGuid,
-                project => project.Guid,
-                (ticket, project) => new { Ticket = ticket, Project = project })
-                .Where(x => x.Project.DepartmentId == departmentId.Value)
-                .Select(x => x.Ticket);
-        }
-
-        return await query.ToListAsync();
+        return await _context.Tickets
+            .FilterByDepartment(departmentId, _context.Projects)
+            .ToListAsync();
     }
 
     public async Task<IEnumerable<Ticket>> GetUnassignedAsync(Guid? departmentId = null)
     {
-        var query = _context.Tickets
-            .Where(t => t.ValidUntil == null)
-            .Where(t => t.TicketStatus == Status.Pending ||
-                       (t.TicketStatus == Status.Assigned && t.ResponsibleId == null));
-
-        if (departmentId.HasValue)
-        {
-            query = query.Join(_context.Projects,
-                ticket => ticket.ProjectGuid,
-                project => project.Guid,
-                (ticket, project) => new { Ticket = ticket, Project = project })
-                .Where(x => x.Project.DepartmentId == departmentId.Value)
-                .Select(x => x.Ticket);
-        }
-
-        return await query.ToListAsync();
+        return await _context.Tickets
+            .FilterValid()
+            .FilterUnassigned()
+            .FilterByDepartment(departmentId, _context.Projects)
+            .ToListAsync();
     }
 
     public async Task<IEnumerable<Ticket>> GetByStatusAsync(Status status, Guid? departmentId = null)
     {
-        var query = _context.Tickets
-            .Where(t => t.TicketStatus == status && t.ValidUntil == null);
-
-        if (departmentId.HasValue)
-        {
-            query = query.Join(_context.Projects,
-                ticket => ticket.ProjectGuid,
-                project => project.Guid,
-                (ticket, project) => new { Ticket = ticket, Project = project })
-                .Where(x => x.Project.DepartmentId == departmentId.Value)
-                .Select(x => x.Ticket);
-        }
-
-        return await query.ToListAsync();
+        return await _context.Tickets
+            .FilterByStatus(status)
+            .FilterValid()
+            .FilterByDepartment(departmentId, _context.Projects)
+            .ToListAsync();
     }
 
     public async Task<IEnumerable<Ticket>> GetByCustomerIdAsync(string customerId)
     {
         return await _context.Tickets
             .Where(t => t.CustomerId == customerId)
-            .Where(t => t.ValidUntil == null)
+            .FilterValid()
             .ToListAsync();
     }
 
@@ -106,7 +76,7 @@ public class EfCoreTicketRepository : ITicketRepository
     {
         return await _context.Tickets
             .Where(t => t.ResponsibleId == responsibleId)
-            .Where(t => t.ValidUntil == null)
+            .FilterValid()
             .ToListAsync();
     }
 
@@ -114,65 +84,33 @@ public class EfCoreTicketRepository : ITicketRepository
     {
         return await _context.Tickets
             .Where(t => t.ProjectGuid == projectGuid)
-            .Where(t => t.ValidUntil == null)
+            .FilterValid()
             .ToListAsync();
     }
 
     public async Task<IEnumerable<Ticket>> GetRecentAsync(int timeWindowMinutes, Guid? departmentId = null)
     {
-        var cutoffTime = DateTime.UtcNow.AddMinutes(-timeWindowMinutes);
-        var query = _context.Tickets
-            .Where(t => t.CreationDate >= cutoffTime)
-            .Where(t => t.ValidUntil == null);
-
-        if (departmentId.HasValue)
-        {
-            query = query.Join(_context.Projects,
-                ticket => ticket.ProjectGuid,
-                project => project.Guid,
-                (ticket, project) => new { Ticket = ticket, Project = project })
-                .Where(x => x.Project.DepartmentId == departmentId.Value)
-                .Select(x => x.Ticket);
-        }
-
-        return await query.ToListAsync();
+        return await _context.Tickets
+            .FilterRecent(timeWindowMinutes)
+            .FilterValid()
+            .FilterByDepartment(departmentId, _context.Projects)
+            .ToListAsync();
     }
 
     public async Task<IEnumerable<Ticket>> GetPendingOrAssignedAsync(Guid? departmentId = null)
     {
-        var query = _context.Tickets
-            .Where(t => t.TicketStatus == Status.Pending || t.TicketStatus == Status.Assigned)
-            .Where(t => t.ValidUntil == null);
-
-        if (departmentId.HasValue)
-        {
-            query = query.Join(_context.Projects,
-                ticket => ticket.ProjectGuid,
-                project => project.Guid,
-                (ticket, project) => new { Ticket = ticket, Project = project })
-                .Where(x => x.Project.DepartmentId == departmentId.Value)
-                .Select(x => x.Ticket);
-        }
-
-        return await query.ToListAsync();
+        return await _context.Tickets
+            .FilterPendingOrAssigned()
+            .FilterValid()
+            .FilterByDepartment(departmentId, _context.Projects)
+            .ToListAsync();
     }
 
     public async Task<TicketSearchViewModel> SearchTicketsAsync(TicketSearchViewModel searchModel, Guid? departmentId = null)
     {
         var query = _context.Tickets
-            .Where(t => t.ValidUntil == null)
-            .AsQueryable();
-
-        // Apply Department Filter
-        if (departmentId.HasValue)
-        {
-            query = query.Join(_context.Projects,
-                ticket => ticket.ProjectGuid,
-                project => project.Guid,
-                (ticket, project) => new { Ticket = ticket, Project = project })
-                .Where(x => x.Project.DepartmentId == departmentId.Value)
-                .Select(x => x.Ticket);
-        }
+            .FilterValid()
+            .FilterByDepartment(departmentId, _context.Projects);
 
         // Apply filters
         if (!string.IsNullOrWhiteSpace(searchModel.SearchTerm))

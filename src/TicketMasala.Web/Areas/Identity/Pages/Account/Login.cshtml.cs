@@ -102,6 +102,17 @@ public class LoginModel : PageModel
         ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
         ReturnUrl = returnUrl;
+        
+        // Environment-based Auto-Login (for Cloud Deploys)
+        var envEmail = Environment.GetEnvironmentVariable("MASALA_AUTOLOGIN_EMAIL");
+        var envPassword = Environment.GetEnvironmentVariable("MASALA_AUTOLOGIN_PASSWORD");
+
+        if (string.IsNullOrEmpty(demoEmail) && !string.IsNullOrEmpty(envEmail) && !string.IsNullOrEmpty(envPassword))
+        {
+            demoEmail = envEmail;
+            demoPassword = envPassword;
+            autoLogin = true;
+        }
 
         // DEMO: Auto-Login Logic
         if (!string.IsNullOrEmpty(demoEmail))
@@ -117,8 +128,12 @@ public class LoginModel : PageModel
                 var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, isPersistent: true, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("Demo User automatically logged in.");
+                    _logger.LogInformation("Automatic login successful for: {Email}", Input.Email);
                     return LocalRedirect(returnUrl);
+                }
+                else
+                {
+                    _logger.LogWarning("Automatic login failed for: {Email}", Input.Email);
                 }
             }
         }

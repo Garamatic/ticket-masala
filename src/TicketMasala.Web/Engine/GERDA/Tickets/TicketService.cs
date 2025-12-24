@@ -6,6 +6,7 @@ using TicketMasala.Web.Data;
 using TicketMasala.Web.ViewModels.Projects;
 using TicketMasala.Web.ViewModels.GERDA;
 using TicketMasala.Web.Repositories;
+using TicketMasala.Web.Repositories.Queries;
 using TicketMasala.Web.Observers;
 using TicketMasala.Web.Engine.Core;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -732,19 +733,40 @@ public class TicketService : ITicketService, ITicketQueryService, ITicketCommand
         var departmentId = await GetCurrentUserDepartmentIdAsync();
 
         // If user is a customer, restrict to their own tickets
-        // This is a safety check, though the controller should also enforce this via the view
-        var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var userId = GetCurrentUserId();
         if (!string.IsNullOrEmpty(userId))
         {
             var user = await _userRepository.GetUserByIdAsync(userId);
-            // Check if user is a customer (not an Employee)
             if (user != null && user is not Employee)
             {
                 searchModel.CustomerId = userId;
             }
         }
 
-        return await _ticketRepository.SearchTicketsAsync(searchModel, departmentId);
+        // Map ViewModel to Query Object
+        var query = new TicketSearchQuery
+        {
+            SearchTerm = searchModel.SearchTerm,
+            Status = searchModel.Status,
+            TicketType = searchModel.TicketType,
+            ResponsibleId = searchModel.ResponsibleId,
+            ProjectId = searchModel.ProjectId,
+            CustomerId = searchModel.CustomerId,
+            DateFrom = searchModel.DateFrom,
+            DateTo = searchModel.DateTo,
+            DepartmentId = departmentId,
+            Page = searchModel.Page,
+            PageSize = searchModel.PageSize
+        };
+
+        // Execute search via repository
+        var (results, totalItems) = await _ticketRepository.SearchAsync(query);
+
+        // Map results back to ViewModel
+        searchModel.Results = results.ToList();
+        searchModel.TotalItems = totalItems;
+
+        return searchModel;
     }
 
     public async Task BatchAssignToAgentAsync(List<Guid> ticketIds, string agentId)

@@ -1,5 +1,6 @@
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Web.Repositories.Queries;
 
 namespace TicketMasala.Web.ViewModels.Tickets;
 
@@ -37,5 +38,5 @@ public class TicketSearchViewModel
     public List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> Projects { get; set; } = new();
 
     // Results
-    public List<Ticket> Results { get; set; } = new();
+    public List<TicketSearchResultDto> Results { get; set; } = new();
 }

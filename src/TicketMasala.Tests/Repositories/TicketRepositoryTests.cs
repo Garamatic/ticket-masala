@@ -9,6 +9,7 @@ using TicketMasala.Domain.Data;
 using TicketMasala.Web.Data;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Repositories;
+using TicketMasala.Web.Repositories.Queries;
 using TicketMasala.Web.ViewModels.Tickets;
 using Xunit;
 
@@ -30,7 +31,7 @@ public class TicketRepositoryTests
     }
 
     [Fact]
-    public async Task SearchTicketsAsync_FiltersByStatus()
+    public async Task SearchAsync_FiltersByStatus()
     {
         // Arrange
         var customer = new ApplicationUser { Id = "cust1", FirstName = "John", LastName = "Doe", UserName = "john", Email = "john@example.com", Code = "C1", Phone = "555-1234" };
@@ -42,18 +43,19 @@ public class TicketRepositoryTests
         _context.Tickets.AddRange(t1, t2);
         await _context.SaveChangesAsync();
 
-        var searchModel = new TicketSearchViewModel { Status = TicketMasala.Domain.Common.Status.Pending };
+        var query = new TicketSearchQuery { Status = TicketMasala.Domain.Common.Status.Pending };
 
         // Act
-        var result = await _repository.SearchTicketsAsync(searchModel);
+        var (results, totalItems) = await _repository.SearchAsync(query);
 
         // Assert
-        Assert.Single(result.Results);
-        Assert.Equal("Desc1", result.Results.First().Description);
+        Assert.Single(results);
+        Assert.Equal("Desc1", results.First().Description);
+        Assert.Equal(1, totalItems);
     }
 
     [Fact]
-    public async Task SearchTicketsAsync_FiltersBySearchTerm()
+    public async Task SearchAsync_FiltersBySearchTerm()
     {
         // Arrange
         var customer = new ApplicationUser { Id = "cust1", FirstName = "John", LastName = "Doe", UserName = "john", Email = "john@example.com", Code = "C1", Phone = "555-1234" };
@@ -65,13 +67,14 @@ public class TicketRepositoryTests
         _context.Tickets.AddRange(t1, t2);
         await _context.SaveChangesAsync();
 
-        var searchModel = new TicketSearchViewModel { SearchTerm = "Apple" };
+        var query = new TicketSearchQuery { SearchTerm = "Apple" };
 
         // Act
-        var result = await _repository.SearchTicketsAsync(searchModel);
+        var (results, totalItems) = await _repository.SearchAsync(query);
 
         // Assert
-        Assert.Single(result.Results);
-        Assert.Equal("Apple Problem", result.Results.First().Description);
+        Assert.Single(results);
+        Assert.Equal("Apple Problem", results.First().Description);
+        Assert.Equal(1, totalItems);
     }
 }

@@ -1,6 +1,6 @@
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
-using TicketMasala.Web.ViewModels.Tickets;
+using TicketMasala.Web.Repositories.Queries;
 
 namespace TicketMasala.Web.Repositories;
 
@@ -21,7 +21,7 @@ public interface ITicketRepository
     Task<IEnumerable<Ticket>> GetByProjectGuidAsync(Guid projectGuid);
     Task<IEnumerable<Ticket>> GetRecentAsync(int timeWindowMinutes, Guid? departmentId = null);
     Task<IEnumerable<Ticket>> GetPendingOrAssignedAsync(Guid? departmentId = null);
-    Task<TicketSearchViewModel> SearchTicketsAsync(TicketSearchViewModel searchModel, Guid? departmentId = null);
+    Task<(IEnumerable<TicketSearchResultDto> Results, int TotalItems)> SearchAsync(TicketSearchQuery query);
 
     // Write operations
     Task<Ticket> AddAsync(Ticket ticket);

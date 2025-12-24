@@ -14,6 +14,8 @@ primary_region = 'ams'
   ASPNETCORE_URLS = "http://+:8080"
   MASALA_CONFIG_PATH = "/app/inputs/config"
   MASALA_DB_PATH = "/app/inputs/data/masala.db"
+  MASALA_AUTOLOGIN_EMAIL = "admin@ticketmasala.com"
+  MASALA_AUTOLOGIN_PASSWORD = "Admin123!"
 
 [http_service]
   internal_port = 8080

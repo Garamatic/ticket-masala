@@ -1,7 +1,7 @@
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
-using TicketMasala.Web.ViewModels.Tickets;
 using TicketMasala.Web.Data;
+using TicketMasala.Web.Repositories.Queries;
 using TicketMasala.Web.Repositories.Specifications;
 using Microsoft.EntityFrameworkCore;
 
@@ -106,18 +106,18 @@ public class EfCoreTicketRepository : ITicketRepository
             .ToListAsync();
     }
 
-    public async Task<TicketSearchViewModel> SearchTicketsAsync(TicketSearchViewModel searchModel, Guid? departmentId = null)
+    public async Task<(IEnumerable<TicketSearchResultDto> Results, int TotalItems)> SearchAsync(TicketSearchQuery query)
     {
-        var query = _context.Tickets
+        var dbQuery = _context.Tickets
             .FilterValid()
-            .FilterByDepartment(departmentId, _context.Projects);
+            .FilterByDepartment(query.DepartmentId, _context.Projects);
 
         // Apply filters
-        if (!string.IsNullOrWhiteSpace(searchModel.SearchTerm))
+        if (!string.IsNullOrWhiteSpace(query.SearchTerm))
         {
-            var term = searchModel.SearchTerm.ToLower();
+            var term = query.SearchTerm.ToLower();
             // Join with Users and Projects for search
-            query = query
+            dbQuery = dbQuery
                 .Include(t => t.Customer)
                 .Include(t => t.Responsible)
                 .Include(t => t.Project)
@@ -127,47 +127,66 @@ public class EfCoreTicketRepository : ITicketRepository
                     (t.Project != null && t.Project.Name.ToLower().Contains(term)));
         }
 
-        if (searchModel.Status.HasValue)
+        if (query.Status.HasValue)
         {
-            query = query.Where(t => t.TicketStatus == searchModel.Status.Value);
+            dbQuery = dbQuery.Where(t => t.TicketStatus == query.Status.Value);
         }
 
-        if (searchModel.TicketType.HasValue)
+        if (query.TicketType.HasValue)
         {
-            query = query.Where(t => t.TicketType == searchModel.TicketType.Value);
+            dbQuery = dbQuery.Where(t => t.TicketType == query.TicketType.Value);
         }
 
-        if (!string.IsNullOrWhiteSpace(searchModel.ResponsibleId))
+        if (!string.IsNullOrWhiteSpace(query.ResponsibleId))
         {
-            query = query.Where(t => t.ResponsibleId == searchModel.ResponsibleId);
+            dbQuery = dbQuery.Where(t => t.ResponsibleId == query.ResponsibleId);
         }
 
-        if (!string.IsNullOrWhiteSpace(searchModel.CustomerId))
+        if (!string.IsNullOrWhiteSpace(query.CustomerId))
         {
-            query = query.Where(t => t.CustomerId == searchModel.CustomerId);
+            dbQuery = dbQuery.Where(t => t.CustomerId == query.CustomerId);
         }
 
-        if (searchModel.DateFrom.HasValue)
+        if (query.DateFrom.HasValue)
         {
-            query = query.Where(t => t.CreationDate >= searchModel.DateFrom.Value);
+            dbQuery = dbQuery.Where(t => t.CreationDate >= query.DateFrom.Value);
         }
 
-        if (searchModel.DateTo.HasValue)
+        if (query.DateTo.HasValue)
         {
-            query = query.Where(t => t.CreationDate <= searchModel.DateTo.Value);
+            dbQuery = dbQuery.Where(t => t.CreationDate <= query.DateTo.Value);
+        }
+
+        if (query.ProjectId.HasValue)
+        {
+            dbQuery = dbQuery.Where(t => t.ProjectGuid == query.ProjectId.Value);
         }
 
         // Count total items before pagination
-        searchModel.TotalItems = await query.CountAsync();
+        var totalItems = await dbQuery.CountAsync();
 
-        // Apply pagination
-        searchModel.Results = await query
+        // Apply pagination and projection to DTO
+        var results = await dbQuery
             .OrderByDescending(t => t.CreationDate)
-            .Skip((searchModel.Page - 1) * searchModel.PageSize)
-            .Take(searchModel.PageSize)
+            .Skip((query.Page - 1) * query.PageSize)
+            .Take(query.PageSize)
+            .Select(t => new TicketSearchResultDto
+            {
+                Guid = t.Guid,
+                Title = t.Title ?? string.Empty,
+                Description = t.Description,
+                TicketStatus = t.TicketStatus,
+                CreationDate = t.CreationDate,
+                CompletionTarget = t.CompletionTarget,
+                CustomerName = t.Customer != null ? t.Customer.FirstName + " " + t.Customer.LastName : "Unknown",
+                ResponsibleName = t.Responsible != null ? t.Responsible.FirstName + " " + t.Responsible.LastName : "Not Assigned",
+                ProjectName = t.Project != null ? t.Project.Name : null,
+                ProjectGuid = t.ProjectGuid,
+                GerdaTags = t.GerdaTags
+            })
             .ToListAsync();
 
-        return searchModel;
+        return (results, totalItems);
     }
 
     public async Task<Ticket> AddAsync(Ticket ticket)

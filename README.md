@@ -160,10 +160,10 @@ src/
 
 **Engineered by Garamatic Industries** (Student Team):
 
-* **Charlotte Schröer:** *Pixel Alchemist (Frontend Architecture)*
+* **Charlotte Schröer:** *Pixel Perfectionist (Frontend Architecture)*
 * **Maarten Görtz:** *C# Centurion (Core Logic)*
 * **Wito De Schrijver:** *Guardian of the Zeros (Security & Infra)*
-* **Juan Benjumea:** *Polyglot Powerhouse (Integration)*
+* **Juan Benjumea:** *Architecture & Integration*
 
 ---
 

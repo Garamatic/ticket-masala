@@ -19,6 +19,12 @@ public class ApplicationUser : IdentityUser
 
     public string? Phone { get; set; }
 
+    [SafeStringLength(50)]
+    public string? Language { get; set; }
+
+    [SafeStringLength(100)]
+    public string? Region { get; set; }
+
 
     [ProtectedPersonalData]
     [DisplayName("Name")]

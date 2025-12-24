@@ -91,12 +91,20 @@ public class DbSeeder
             await EnsureRolesExistAsync();
 
             var userCount = await _context.Users.CountAsync();
-            _logger.LogInformation("Current user count in database: {UserCount}", userCount);
+            var kbCount = await _context.KnowledgeBaseArticles.CountAsync();
+            _logger.LogInformation("Current user count: {UserCount}, KB articles: {KbCount}", userCount, kbCount);
 
             // Create Project Templates and Knowledge Base (Always run these)
             await CreateProjectTemplates();
+
+            // Optimization: If DB is fully seeded, skip config load
+            if (userCount > 0 && kbCount > 0)
+            {
+                _logger.LogWarning("Database fully seeded (Users: {UserCount}, KB: {KbCount}). Skipping seed.", userCount, kbCount);
+                return;
+            }
             
-            _logger.LogInformation("Database is empty. Loading seed data from configuration...");
+            _logger.LogInformation("Database not full. Loading seed data from configuration...");
             var seedConfig = await LoadSeedConfigurationAsync();
 
             if (seedConfig == null)

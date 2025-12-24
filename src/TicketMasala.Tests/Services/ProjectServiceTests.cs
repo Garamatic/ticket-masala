@@ -54,7 +54,7 @@ public class ProjectServiceTests
     {
         var store = new Mock<IUserStore<ApplicationUser>>();
         var mockUserManager = new Mock<UserManager<ApplicationUser>>(
-            store.Object, null, null, null, null, null, null, null, null);
+            store.Object, null!, null!, null!, null!, null!, null!, null!, null!);
         return mockUserManager;
     }
 

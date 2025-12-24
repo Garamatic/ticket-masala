@@ -22,7 +22,7 @@ public class CorrelationIdMiddlewareTests
 
         Assert.NotNull(itemCorrelationId);
         Assert.NotNull(headerCorrelationId);
-        Assert.NotEmpty(itemCorrelationId.ToString());
+        Assert.NotEmpty(itemCorrelationId!.ToString()!);
         Assert.Equal(itemCorrelationId.ToString(), headerCorrelationId);
     }
 

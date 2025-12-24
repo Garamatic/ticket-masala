@@ -25,7 +25,7 @@ public class DbSeederTests : IDisposable
         // Setup Temporary Config Directory
         _tempConfigPath = Path.Combine(Path.GetTempPath(), "ticket_masala_unit_test_" + Guid.NewGuid());
         Directory.CreateDirectory(_tempConfigPath);
-        
+
         // Create dummy seed_data.json
         var dummySeedData = "{ \"Admins\": [], \"Employees\": [], \"Customers\": [], \"WorkContainers\": [], \"UnassignedWorkItems\": [] }";
         File.WriteAllText(Path.Combine(_tempConfigPath, "seed_data.json"), dummySeedData);
@@ -42,10 +42,10 @@ public class DbSeederTests : IDisposable
 
         // Setup Mocks
         var userStore = new Mock<IUserStore<ApplicationUser>>();
-        _mockUserManager = new Mock<UserManager<ApplicationUser>>(userStore.Object, null, null, null, null, null, null, null, null);
+        _mockUserManager = new Mock<UserManager<ApplicationUser>>(userStore.Object, null!, null!, null!, null!, null!, null!, null!, null!);
 
         var roleStore = new Mock<IRoleStore<IdentityRole>>();
-        _mockRoleManager = new Mock<RoleManager<IdentityRole>>(roleStore.Object, null, null, null, null);
+        _mockRoleManager = new Mock<RoleManager<IdentityRole>>(roleStore.Object, null!, null!, null!, null!);
 
         _mockLogger = new Mock<ILogger<DbSeeder>>();
         _mockEnvironment = new Mock<IWebHostEnvironment>();
@@ -77,6 +77,8 @@ public class DbSeederTests : IDisposable
             LastName = "User",
             Phone = "555-5555"
         });
+        // Seed KB to trigger Full Seed Optimization
+        _context.KnowledgeBaseArticles.Add(new KnowledgeBaseArticle { Id = Guid.NewGuid(), Title = "Test", Content = "Test", CreatedAt = DateTime.UtcNow });
         await _context.SaveChangesAsync();
 
         _mockRoleManager.Setup(r => r.RoleExistsAsync(It.IsAny<string>())).ReturnsAsync(true); // Assume roles exist to skip creation logic
@@ -106,9 +108,9 @@ public class DbSeederTests : IDisposable
             x => x.Log(
                 LogLevel.Warning,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Skipping user/project seed")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Database fully seeded")),
                 It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
     }
 
@@ -126,7 +128,7 @@ public class DbSeederTests : IDisposable
 
         _mockRoleManager.Setup(r => r.RoleExistsAsync(It.IsAny<string>())).ReturnsAsync(false);
         _mockRoleManager.Setup(r => r.CreateAsync(It.IsAny<IdentityRole>())).ReturnsAsync(IdentityResult.Success);
-        
+
         // Setup UserManager to handle CreateAsync calls (prevents NullReferenceException)
         _mockUserManager.Setup(u => u.CreateAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
             .ReturnsAsync(IdentityResult.Success);

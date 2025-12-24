@@ -32,49 +32,110 @@ Laatst bijgewerkt: 9 december 2025
 
 ### Afgerond (Opsomming)
 
-- Rolgebaseerde Authenticatie (Sprint 1-2)
-- Gebruikersbeheer & Klantenbeheer (Sprint 2)
-- Project & Ticket CRUD (Sprint 1-3)
-- REST API & Deployment (Sprint 3)
-- Zoeken & Filteren (Sprint 4)
-- ML.NET Integratie (Sprint 4)
-- Reacties, Batch, Notificaties (Sprint 5)
-- Manager Dashboard & Audittrail (Sprint 5)
-- UI Vertalingen (Sprint 5)
+- **Sprint 1: Foundation** (Core CRUD & Grid)
+- **Sprint 2: Governance** (RBAC & User Mgmt)
+- **Sprint 3: Connectivity** (REST API & Cloud)
+- **Sprint 4: Intelligence** (FTS5 & ML.NET)
+- **Sprint 5: Operations** (Batch & Dashboards)
+- **Sprint 6: Oplevering** (Portals & AI)
+- **Sprint 7: Ecosystem** (Gatekeeper & DevOps)
 
-### Resterend Werk (Sprint 6 Focus)
+### Resterend Werk (Sprint 7 Focus: Ecosystem & Scale)
 
-De focus ligt nu op het klantenportaal en de finale afwerking.
+Na de initiële deadline van 21 december verschuift de focus naar systeem-robuustheid, multi-domain schaalbaarheid en devops automatisering.
 
 | Prioriteit | Onderdeel | Status | Eigenaar | Opmerkingen |
 |------------|-----------|--------|----------|-------------|
-| **Hoog** | Klantenportaal: Data isolatie | Bezig | Maarten | Klant ziet enkel eigen data |
-| **Hoog** | Klantenportaal: Tickets aanmaken | Te doen | Wito | Self-service functionaliteit |
-| **Hoog** | Documentatie & Demo | Te doen | Allen | Slides, script, readme |
-| **Middel** | Workflow statussen | Te doen | Wito | Configureren overgangen |
-| **Middel** | Dashboard statistieken | Te doen | Charlotte | Widget op startpagina |
-| **Middel** | Parent-Child UI | Deels | Charlotte | Backend gereed |
-| **Laag** | GERDA Visualisaties | Te doen | Juan | Backlog & Forecast tonen |
+| **Hoog** | **Configuration Versioning** | Afgerond | Juan | Onveranderlijke config snapshots |
+| **Hoog** | **Ingestion Gatekeeper** | Afgerond | Juan | Schaalbare webhook-ingestie API |
+| **Middel** | **UI Branding & Domains** | Afgerond | Juan | Dynamische thema's per domein |
+| **Middel** | **CI/CD Automatisering** | Afgerond | Juan | Docker builds & GitHub Actions |
+| **Middel** | **Admin Panel** | Afgerond | Juan | Beheer van rollen, data & config |
 
 ---
 
-## 3. Sprint 6 Detail (8 dec - 21 dec)
+## 3. Sprint History
 
-Doel: Klantenportaal, workflow afwerking en oplevering.
-Dit is de laatste sprint voor de deadline.
+### Sprint 1: Foundation (29 Sep - 12 Okt)
+*Focus: Core infrastructure and basic ticket lifecycle.*
 
-### Takenlijst
+- **Oplevering:** Functioneel systeem met basis CRUD voor Projecten en Tickets.
+- **Taken:**
+    - [x] Initial project setup (.NET 8 MVC)
+    - [x] Database schema design & SQLite initialization
+    - [x] Unified Entity Model (UEM) terminology mapping
+    - [x] Basic Ticket & Project creation flows
+    - [x] Sidebar layout and navigation structure
 
-| ID | Omschrijving | Punten | Wie | Status |
-|----|--------------|--------|-----|--------|
-| S6-1 | Data isolatie klanten | 5 | Maarten | Bezig |
-| S6-2 | Ticket aanmaken (klant) | 3 | Wito | Te doen |
-| S6-3 | Dashboard statistieken | 3 | Charlotte | Te doen |
-| S6-4 | Parent-child UI | 2 | Charlotte | Te doen |
-| S6-5 | Workflow statussen | 3 | Wito | Te doen |
-| S6-6 | GERDA Metrics (Visualisatie) | 2 | Juan | Te doen |
-| S6-7 | Bugfixes en afwerking | 5 | Allen | Bezig |
-| S6-8 | Documentatie en demo | 3 | Allen | Te doen |
+### Sprint 2: Identity & Governance (13 Okt - 26 Okt)
+*Focus: Security, RBAC and user lifecycle.*
+
+- **Oplevering:** Beveiligd platform met rol-gebaseerde toegang.
+- **Taken:**
+    - [x] Identity integration (Admin, Employee, Customer roles)
+    - [x] User management dashboard for Admins
+    - [x] Customer management and isolation foundations
+    - [x] Access control decorators on controllers
+    - [x] Password reset and account lock-out logic
+
+### Sprint 3: Connectivity (27 Okt - 9 Nov)
+*Focus: API foundations and early cloud presence.*
+
+- **Oplevering:** Publieke API en geautomatiseerde deployment pipeline.
+- **Taken:**
+    - [x] REST API endpoints for Ticket integration
+    - [x] Swagger/OpenAPI documentation (Swashbuckle)
+    - [x] Initial Fly.io deployment config
+    - [x] YAML-based Domain Configuration loader (v1)
+    - [x] Structured Logging (Serilog) and Correlation IDs
+
+### Sprint 4: Intelligence (10 Nov - 23 Nov)
+*Focus: Search, AI classification and prioritization.*
+
+- **Oplevering:** Zoekfunctionaliteit en eerste GERDA AI componenten.
+- **Taken:**
+    - [x] Full-Text Search (SQLite FTS5) integration
+    - [x] ML.NET integration for automatic ticket classification
+    - [x] GERDA Priority scoring (WSJF implementation)
+    - [x] Advanced filtering UI (Status, Priority, Assignee)
+    - [x] Model Persistence service (Save/Load ML models)
+
+### Sprint 5: Operations (24 Nov - 7 Dec)
+*Focus: Collaboration and business monitoring.*
+
+- **Oplevering:** Volledige operationele suite met audits en dashboards.
+- **Taken:**
+    - [x] Ticket Comments & Internal Notes
+    - [x] Batch Operations (Bulk Assignments & Closures)
+    - [x] Manager Dashboard (Stats widgets & Trends)
+    - [x] Centralized Audit Trail (History tracking)
+    - [x] Multi-language UI support (i18n)
+
+### Sprint 6: Oplevering (8 Dec - 21 Dec)
+*Focus: Klantenportaal en finale deadline.*
+
+- **Oplevering:** Het systeem is succesvol gedemonstreerd met functionele klantenportalen en GERDA AI routing.
+- **Taken:**
+    - [x] Klantenportaal: Data isolatie & Invoer
+    - [x] Workflow status configuratie (Expression Trees)
+    - [x] GERDA Metrics & Performance Dashboards
+    - [x] Demo scenarios & Presentation prep
+
+---
+
+## 4. Current Planning: Sprint 7 (22 Dec - 4 Jan) 
+*Doel: Schaalbaarheid, Branding en Ecosysteem.*
+
+| ID | Omschrijving | Punten | Status |
+|----|--------------|--------|--------|
+| S7-1 | Config Versioning (SHA256 & DB Snapshots) | 5 | |
+| S7-2 | Scalable Ingestion (Gatekeeper API + Scriban) | 8 | |
+| S7-3 | Multi-Domain UI (Labels, Icons, CSS Themes) | 5 | |
+| S7-4 | DevOps: Chiseled Docker Images & GHA | 3 | |
+| S7-5 | Admin Readiness (Access, Roles, Data flows) | 3 | |
+| S7-6 | Monitoring: Prometheus & Grafana stack | 5 | 🚧 |
+
+---
 
 ### Prioriteiten
 

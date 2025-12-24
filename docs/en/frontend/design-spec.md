@@ -106,10 +106,10 @@ Feature blokken zijn geen zwevende vlakken, maar dossiers.
 
 ## 5. Do's & Don'ts voor de Devs
 
-* **✅ DO:** Laat witruimte (of zwartruimte) ademen. Precisie vereist ruimte.
-* **✅ DO:** Lijn alles pixel-perfect uit op het grid. Asymmetrie mag, maar rommel niet.
-* **❌ DON'T:** Gebruik geen andere felle kleuren (geen neon blauw of roze). Groen is de enige "pop".
-* **❌ DON'T:** Gebruik geen cursieve (italic) teksten, tenzij voor quotes. Hou het rechtop en feitelijk.
+* **DO:** Laat witruimte (of zwartruimte) ademen. Precisie vereist ruimte.
+* **DO:** Lijn alles pixel-perfect uit op het grid. Asymmetrie mag, maar rommel niet.
+* **DON'T:** Gebruik geen andere felle kleuren (geen neon blauw of roze). Groen is de enige "pop".
+* **DON'T:** Gebruik geen cursieve (italic) teksten, tenzij voor quotes. Hou het rechtop en feitelijk.
 
 ---
 

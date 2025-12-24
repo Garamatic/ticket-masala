@@ -7,9 +7,9 @@ As your UI/UX Director, I am marking this specification as APPROVED for Implemen
 
     ✨ Visual Harmony: The new gradient (--gradient-dispatch) anchoring on Tech Blue (#4C5AF5) into Deep Slate makes the application feel cohesive and "engineered," rather than decorative.
 
-    🧠 Cognitive Load: The "Pulsing" vs. "Outlined" distinction for badges allows a user to scan the dashboard and immediately distinguish "Active Processing" from "Waiting in Queue" without reading text.
+    Cognitive Load: The "Pulsing" vs. "Outlined" distinction for badges allows a user to scan the dashboard and immediately distinguish "Active Processing" from "Waiting in Queue" without reading text.
 
-🛠️ Implementation: The DispatchBacklog View
+Implementation: The DispatchBacklog View
 
 Since you have defined the system, I will now perform Function A (Component Factory) to generate the Razor View that strictly adheres to these v5 constraints (Razor + HTMX + Semantic CSS).
 

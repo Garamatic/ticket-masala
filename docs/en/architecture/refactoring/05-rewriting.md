@@ -14,7 +14,7 @@ Historical Context Breaks Git history and external documentation/training materi
 Refactoring Risk High risk of introducing subtle bugs in complex GERDA logic (e.g., in a deep Expression Tree compiler helper) due to a find-and-replace error. Contain the change to the Public API boundary.
 
 Directive: Treat Ticket and Project as the internal, implementation-specific aliases for WorkItem and WorkContainer. The external configuration (YAML) and Public API should use the canonical WorkItem terminology.
-💡 Implications for Views and Public API
+Implications for Views and Public API
 
 The renaming should be confined to the Views and the Public API Contract to maintain conceptual clarity for external integrators and users, without impacting the high-performance core.
 

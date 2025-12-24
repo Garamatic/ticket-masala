@@ -43,7 +43,7 @@ APP_PATH="./deploy/linux-pilot/TicketMasala.Web"
 # For a pilot, maybe keep the 2.7M rows you already loaded?
 if [ "$1" == "--reset" ]; then
     rm "$DB_PATH"
-    echo "⚠️ Database wiped. Re-seeding..."
+    echo "Database wiped. Re-seeding..."
     $APP_PATH --seed "/home/$USER/downloads/huge_backlog.csv" --db "$DB_PATH"
 fi
 
@@ -52,7 +52,7 @@ fi
 ulimit -n 65535
 
 # 4. Launch the Engine
-echo "🚀 Launching Ticket Masala Pilot on Port 5000..."
+echo "Launching Ticket Masala Pilot on Port 5000..."
 # Kestrel Configuration for High Performance
 export Kestrel__Endpoints__Http__Url="http://localhost:5000"
 export ConnectionStrings__MasalaDb="Data Source=$DB_PATH;Cache=Shared"

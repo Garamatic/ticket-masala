@@ -283,10 +283,10 @@ public interface IProjectService
 
 | Source | Implementation | Status |
 |--------|----------------|--------|
-| **CSV Import** | `CsvImportService` | ✅ Active |
-| **Email** | `EmailIngestionService` | ✅ Active |
-| **External API** | `Api/TicketsController` | ✅ Active |
-| **Background Generator** | `TicketGeneratorService` | ✅ Active (demo/testing) |
+| **CSV Import** | `CsvImportService` | Active |
+| **Email** | `EmailIngestionService` | Active |
+| **External API** | `Api/TicketsController` | Active |
+| **Background Generator** | `TicketGeneratorService` | Active (demo/testing) |
 
 ### 9.2 Validation Pipeline
 
@@ -320,7 +320,7 @@ Observers react to entity lifecycle events without coupling to UI:
 
 ## 12. Development Status
 
-### ✅ Completed (v2 Baseline)
+### Completed (v2 Baseline)
 
 - [x] Configuration Engine (YAML → Objects)
 - [x] Hybrid Data Model (JSON Custom Fields)

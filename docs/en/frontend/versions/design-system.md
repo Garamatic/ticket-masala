@@ -126,7 +126,7 @@ A comprehensive design system for building consistent, professional, and on-bran
 
 ---
 
-## ⚡ Transitions
+## Transitions
 
 | Token | Duration | Usage |
 |-------|----------|-------|
@@ -168,7 +168,7 @@ A comprehensive design system for building consistent, professional, and on-bran
 
 ---
 
-## ✅ Success States
+## Success States
 
 | Token | Hex | Usage |
 |-------|-----|-------|

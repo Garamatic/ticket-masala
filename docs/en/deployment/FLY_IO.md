@@ -27,7 +27,7 @@ The `fly.toml` configures:
 
 ### Critical Cost Warning
 
-⚠️ **DO NOT use external uptime monitors** (UptimeRobot, Pingdom, etc.)
+**DO NOT use external uptime monitors** (UptimeRobot, Pingdom, etc.)
 
 These services will ping your app constantly, preventing it from sleeping and causing 24/7 billing at ~$13/month. The internal Fly.io health check is configured correctly and won't prevent auto-stop.
 

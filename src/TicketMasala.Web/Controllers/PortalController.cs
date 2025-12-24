@@ -107,6 +107,6 @@ public class PortalController : Controller
 
     private async Task<IEnumerable<SelectListItem>> GetCustomerProjectsSelectList(string userId)
     {
-        return await _ticketService.GetProjectSelectListAsync();
+        return await _ticketService.GetCustomerProjectSelectListAsync(userId);
     }
 }

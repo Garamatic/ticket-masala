@@ -30,6 +30,7 @@ public class MasalaDbContext : IdentityDbContext<ApplicationUser, IdentityRole, 
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<AuditLogEntry> AuditLogs { get; set; }
     public DbSet<TimeLog> TimeLogs { get; set; }
+    public DbSet<DomainConfigVersion> DomainConfigVersions { get; set; }
 
     public MasalaDbContext(DbContextOptions<MasalaDbContext> options) : base(options) { }
 

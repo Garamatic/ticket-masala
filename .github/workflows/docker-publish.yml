@@ -39,7 +39,7 @@ jobs:
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=sha
 
-      - name: Build and push Docker image
+      - name: Build and push Ticket Masala image
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -47,7 +47,17 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
-      cache-to: type=gha,mode=max
+          cache-to: type=gha,mode=max
+
+      - name: Build and push Gatekeeper API image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: src/GatekeeperApi/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/garamatic/gatekeeper-api:latest,${{ env.REGISTRY }}/garamatic/gatekeeper-api:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   deploy:
     needs: build-and-push
@@ -67,5 +77,10 @@ jobs:
             echo "🚀 Deploying to $tenant..."
             flyctl deploy --app ticket-masala-api-$tenant --image ghcr.io/garamatic/ticket-masala:latest --region ams --yes
           done
+
+      - name: Deploy Gatekeeper API
+        run: |
+          echo "🚀 Deploying Gatekeeper..."
+          flyctl deploy --app ticket-masala-gatekeeper --image ghcr.io/garamatic/gatekeeper-api:latest --region ams --yes
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

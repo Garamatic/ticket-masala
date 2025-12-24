@@ -55,11 +55,11 @@ GERDA is an AI-powered operations cockpit that transforms manual ticket distribu
 
 | Component    | Status            | Technology                  |
 |--------------|-------------------|-----------------------------|
-| G - Grouping | ✅ **Implemented** | Rule-based LINQ             |
-| E - Estimating | ✅ **Implemented** | Category lookup + keyword matching |
-| R - Ranking  | ✅ **Implemented** | WSJF algorithm              |
-| D - Dispatching | ✅ **Implemented** | ML.NET Matrix Factorization |
-| A - Anticipation | ✅ **Implemented** | ML.NET Time Series SSA      |
+| G - Grouping | **Implemented** | Rule-based LINQ             |
+| E - Estimating | **Implemented** | Category lookup + keyword matching |
+| R - Ranking  | **Implemented** | WSJF algorithm              |
+| D - Dispatching | **Implemented** | ML.NET Matrix Factorization |
+| A - Anticipation | **Implemented** | ML.NET Time Series SSA      |
 
 ---
 

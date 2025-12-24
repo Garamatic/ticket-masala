@@ -43,9 +43,9 @@ This document tracks the progress of the Configuration Extensibility project (`f
 
 **Goal:** Implement "Snapshot Strategy" to prevent rule changes from breaking existing tickets.
 
-- [ ] **Data Model:** Create `DomainConfigVersion` entity.
-- [ ] **Versioning:** Store `ConfigVersionId` on Ticket creation.
-- [ ] **Rule Engine:** Update service to request rules by Version ID.
+- [x] **Data Model:** Create `DomainConfigVersion` entity.
+- [x] **Versioning:** Store `ConfigVersionId` on Ticket creation.
+- [x] **Rule Engine:** Update service to request rules by Version ID.
 
 ## �🟢 Phase 5: Performance Optimization (Rule Compiler) (Completed)
 
@@ -68,24 +68,24 @@ This document tracks the progress of the Configuration Extensibility project (`f
 - [x] **Feature Extractor:** Implement `IFeatureExtractor` to convert Ticket/JSON to `float[]`.
 - [x] **Integration:** Update Strategies to use extracted features for inference.
 
-## 🟡 Phase 7: UI Localization & Branding
+## � Phase 7: UI Localization & Branding (Completed)
 
 **Goal:** Domain-aware UI labels and theming.
 
-- [ ] **UI Localization Service:** Replace hardcoded "Ticket" labels with config lookups.
-- [ ] **Domain Switcher:** Add domain switcher to layout for multi-domain deployments.
-- [ ] **Domain Styles:** Add domain-specific icons and color themes support.
+- [x] **UI Localization Service:** Replace hardcoded "Ticket" labels with config lookups.
+- [x] **Domain Switcher:** Add domain switcher to layout for multi-domain deployments.
+- [x] **Domain Styles:** Add domain-specific icons and color themes support.
 
-## 🟡 Phase 8: Scalable Ingestion (Gatekeeper)
+## � Phase 8: Scalable Ingestion (Gatekeeper) (Completed)
 
 **Goal:** Decouple ingestion to handle high throughput (IoT/Webhooks) and long-running syncs (ERP). Adopt **Event Driven Architecture** for intake.
 
 **Decision:** Use **Scriban** for template rendering (Mapper).
 
-- [ ] **Gatekeeper API:** Create separate Minimal API project for accepting webhooks.
-- [ ] **Message Bus:** Implement simple producer/consumer (`System.Threading.Channels`).
-- [ ] **Digestion Worker:** Create `BackgroundService` to process queue items.
-- [ ] **Ingestion Mapping:** Detailed `ingestion` configuration in `masala_domains.yaml` using Scriban templates.
+- [x] **Gatekeeper API:** Create separate Minimal API project for accepting webhooks.
+- [x] **Message Bus:** Implement simple producer/consumer (`System.Threading.Channels`).
+- [x] **Digestion Worker:** Create `BackgroundService` to process queue items.
+- [x] **Ingestion Mapping:** Detailed `ingestion` configuration in `masala_domains.yaml` using Scriban templates.
 
 ---
 **Status Legend:**

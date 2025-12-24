@@ -5,9 +5,9 @@ This guide explains how to set up automatic deployment to Fly.io when you push t
 ## Overview
 
 The GitHub Actions workflow (`.github/workflows/fly-deploy.yml`) automatically:
-1. ✅ Runs your test suite
-2. ✅ Deploys to Fly.io (if tests pass)
-3. ✅ Provides deployment logs and status
+1. Runs your test suite
+2. Deploys to Fly.io (if tests pass)
+3. Provides deployment logs and status
 
 ## One-Time Setup
 
@@ -177,9 +177,9 @@ The workflow won't run for this commit.
 
 ## Next Steps
 
-- ✅ Push your code to start automatic deployments!
+- Push your code to start automatic deployments!
 - 📊 Add a CI/CD badge to your README (optional)
-- 🔍 Set up deployment notifications in Slack/Discord (optional)
+- Set up deployment notifications in Slack/Discord (optional)
 - 🌿 Configure preview deployments for pull requests (optional)
 
 ## Questions?

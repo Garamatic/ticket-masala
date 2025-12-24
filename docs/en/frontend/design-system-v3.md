@@ -33,7 +33,7 @@ Kopieer dit volledige `:root` blok over je oude versie heen.
     --bg-surface: #212529;        /* Cards, Sidebars, Panels */
     --bg-surface-elevated: #2C3036; /* Modals, Dropdowns */
 
-    /* --- 🏗️ STRUCTURE (The Grid) --- */
+    /* --- STRUCTURE (The Grid) --- */
     /* Zichtbare lijnen zijn cruciaal voor de "Technical" look */
     --border-structural: #3F414D; /* Strong borders (Grid lines) */
     --border-subtle: #2A2D35;     /* Subtle dividers */

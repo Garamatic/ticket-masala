@@ -84,6 +84,21 @@ public interface IDomainConfigurationService
     IntegrationConfig GetIntegrations(string domainId);
 
     /// <summary>
+    /// Gets the current configuration's version ID (hash).
+    /// </summary>
+    string GetCurrentConfigVersionId();
+
+    /// <summary>
+    /// Gets a specific domain configuration by its version ID.
+    /// </summary>
+    DomainConfig? GetDomainByVersion(string domainId, string versionId);
+
+    /// <summary>
+    /// Gets valid transitions for a domain and state using a specific configuration version.
+    /// </summary>
+    IEnumerable<string> GetValidTransitionsByVersion(string domainId, string currentState, string versionId);
+
+    /// <summary>
     /// Reloads the configuration from disk (if hot-reload is enabled).
     /// </summary>
     void ReloadConfiguration();

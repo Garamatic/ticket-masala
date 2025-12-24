@@ -2,7 +2,22 @@
 
 All notable changes to the Ticket Masala project will be documented in this file.
 
-## [Unreleased] - 2025-12-06
+## [3.1.0] - 2025-12-24
+### Added
+- **Configuration Versioning**: Immutable snapshots of domain configuration stored in database with SHA256 hashing.
+- **Scalable Ingestion (Gatekeeper)**: High-performance ingestion API with Scriban templating and background queuing.
+- **Multi-Domain Branding**: Domain-specific UI elements (labels, icons, CSS themes) controlled via configuration.
+- **DevOps Optimization**: Migration to .NET 10 Chiseled images for minimal attack surface and faster deployments.
+- **Monitoring Stack**: Prometheus `/metrics` export and integrated Grafana dashboard configuration.
+
+## [3.0.0] - 2025-12-21
+### Added
+- **Customer Portal**: Dedicated self-service portal with strict data isolation per customer.
+- **GERDA AI Enhancements**: Capacity forecasting, visual dispatch recommendations, and team performance metrics.
+- **Workflow Engine**: Finalized logic for state transitions and rule-based assignment.
+- **Production Deployment**: Automated CI/CD pipelines targeting Fly.io.
+
+## [2.1.0] - 2025-12-06
 
 ### Added
 

@@ -182,6 +182,8 @@ public static class WebApplicationBuilderExtensions
 
         builder.Services.AddSingleton<TicketMasala.Web.Engine.GERDA.Configuration.IDomainConfigurationService,
             TicketMasala.Web.Engine.GERDA.Configuration.DomainConfigurationService>();
+        builder.Services.AddScoped<TicketMasala.Web.Engine.GERDA.Configuration.IDomainUiService,
+            TicketMasala.Web.Engine.GERDA.Configuration.DomainUiService>();
 
         if (File.Exists(gerdaConfigPath))
         {

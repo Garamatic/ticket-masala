@@ -2,6 +2,10 @@ using TicketMasala.Domain.Configuration;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using TicketMasala.Web.Engine.Compiler;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Hosting;
 
 namespace TicketMasala.Web.Engine.GERDA.Configuration;
 
@@ -14,20 +18,27 @@ public class DomainConfigurationService : IDomainConfigurationService, IDisposab
     private readonly ILogger<DomainConfigurationService> _logger;
     private readonly IWebHostEnvironment _environment;
     private readonly RuleCompilerService _ruleCompiler;
+    private readonly IServiceScopeFactory _scopeFactory;
     private MasalaDomainsConfig _config;
     private readonly object _configLock = new();
     private readonly string _configFilePath;
     private DateTime _lastLoadTime;
     private FileSystemWatcher? _fileWatcher;
+    private string _currentConfigHash = string.Empty;
+
+    // Cache for versioned configurations to avoid constant DB hits
+    private readonly Dictionary<string, MasalaDomainsConfig> _versionConfigs = new();
 
     public DomainConfigurationService(
         ILogger<DomainConfigurationService> logger,
         IWebHostEnvironment environment,
-        RuleCompilerService ruleCompiler)
+        RuleCompilerService ruleCompiler,
+        IServiceScopeFactory scopeFactory)
     {
         _logger = logger;
         _environment = environment;
         _ruleCompiler = ruleCompiler;
+        _scopeFactory = scopeFactory;
 
         // Use centralized configuration path resolution
         _configFilePath = TicketMasala.Web.Configuration.ConfigurationPaths.GetConfigFilePath(
@@ -90,6 +101,9 @@ public class DomainConfigurationService : IDomainConfigurationService, IDisposab
 
                 var yaml = File.ReadAllText(_configFilePath);
 
+                // Compute hash to check for changes and versioning
+                var hash = ComputeHash(yaml);
+
                 var deserializer = new DeserializerBuilder()
                     .WithNamingConvention(UnderscoredNamingConvention.Instance)
                     .IgnoreUnmatchedProperties()
@@ -100,21 +114,64 @@ public class DomainConfigurationService : IDomainConfigurationService, IDisposab
                 // HOT RELOAD LOGIC:
                 // 1. Update local config object
                 _config = newConfig;
+                _currentConfigHash = hash;
                 _lastLoadTime = DateTime.UtcNow;
 
                 // 2. Push new config to Rule Compiler for atomic swap
                 _ruleCompiler.ReplaceRuleCache(_config);
 
+                // 3. Persist version snapshot asynchronously
+                _ = Task.Run(() => CaptureConfigSnapshotAsync(hash, yaml));
+
                 _logger.LogInformation(
-                    "Loaded domain configuration with {Count} domains: {Domains}",
-                    _config.Domains.Count,
-                    string.Join(", ", _config.Domains.Keys));
+                    "Loaded domain configuration version {Hash} with {Count} domains",
+                    hash,
+                    _config.Domains.Count);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to load domain configuration from {Path}", _configFilePath);
                 // Keep existing config on error
             }
+        }
+    }
+
+    private string ComputeHash(string input)
+    {
+        using var sha256 = System.Security.Cryptography.SHA256.Create();
+        var bytes = System.Text.Encoding.UTF8.GetBytes(input);
+        var hashBytes = sha256.ComputeHash(bytes);
+        return Convert.ToHexString(hashBytes).ToLowerInvariant();
+    }
+
+    private async Task CaptureConfigSnapshotAsync(string hash, string yaml)
+    {
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<MasalaDbContext>();
+
+            var existing = await context.DomainConfigVersions
+                .AnyAsync(v => v.Hash == hash);
+
+            if (!existing)
+            {
+                var version = new DomainConfigVersion
+                {
+                    Id = Guid.NewGuid(),
+                    Hash = hash,
+                    CreatedAt = DateTime.UtcNow,
+                    ConfigurationJson = System.Text.Json.JsonSerializer.Serialize(_config)
+                };
+
+                context.DomainConfigVersions.Add(version);
+                await context.SaveChangesAsync();
+                _logger.LogInformation("Saved new configuration snapshot {Hash} to database", hash);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to capture configuration snapshot");
         }
     }
 
@@ -272,6 +329,67 @@ public class DomainConfigurationService : IDomainConfigurationService, IDisposab
         {
             _logger.LogWarning("Configuration reload is disabled");
         }
+    }
+
+    public string GetCurrentConfigVersionId() => _currentConfigHash;
+
+    public DomainConfig? GetDomainByVersion(string domainId, string versionId)
+    {
+        var config = GetConfigByVersion(versionId);
+        return config?.Domains.TryGetValue(domainId, out var domain) == true ? domain : null;
+    }
+
+    public IEnumerable<string> GetValidTransitionsByVersion(string domainId, string currentState, string versionId)
+    {
+        var domain = GetDomainByVersion(domainId, versionId);
+        if (domain?.Workflow.Transitions.TryGetValue(currentState, out var transitions) == true)
+        {
+            return transitions;
+        }
+        return Enumerable.Empty<string>();
+    }
+
+    private MasalaDomainsConfig? GetConfigByVersion(string versionId)
+    {
+        if (string.IsNullOrEmpty(versionId)) return _config;
+        if (versionId == _currentConfigHash) return _config;
+
+        lock (_configLock)
+        {
+            if (_versionConfigs.TryGetValue(versionId, out var cached))
+            {
+                return cached;
+            }
+        }
+
+        // Load from DB
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<MasalaDbContext>();
+
+            var version = context.DomainConfigVersions.AsNoTracking()
+                .FirstOrDefault(v => v.Hash == versionId);
+
+            if (version != null)
+            {
+                var config = System.Text.Json.JsonSerializer.Deserialize<MasalaDomainsConfig>(version.ConfigurationJson);
+                if (config != null)
+                {
+                    lock (_configLock)
+                    {
+                        _versionConfigs[versionId] = config;
+                    }
+                    return config;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error loading config version {VersionId}", versionId);
+        }
+
+        return null;
     }
 
 }

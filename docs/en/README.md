@@ -8,6 +8,9 @@ Welcome to the Ticket Masala documentation! This document provides a comprehensi
 
 Ticket Masala is a modular monolith application designed to streamline IT ticketing workflows with AI-powered automation. The project leverages modern .NET technologies and a configuration-driven architecture to ensure scalability and adaptability across various domains.
 
+> [!TIP]
+> **New to the project?** Read the **[System Overview & Capabilities](SYSTEM_OVERVIEW.md)** for a deep dive into our architectural innovations, AI engines, and core features.
+
 ### Key Features
 
 - **AI Augmentation**: GERDA AI pipeline for ticket grouping, ranking, and dispatching.

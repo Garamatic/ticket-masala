@@ -131,34 +131,48 @@ nav:
   
   - English:
     - Overview: en/README.md
+    - System Overview: en/SYSTEM_OVERVIEW.md
     - Getting Started:
-      - Development Setup: en/guides/DEVELOPMENT.md
-      - Configuration: en/guides/CONFIGURATION.md
-      - Testing: en/guides/TESTING.md
-      - Troubleshooting: en/guides/TROUBLESHOOTING.md
+      - Development Setup: en/guides/development.md
+      - Configuration: en/guides/configuration.md
+      - Testing: en/guides/testing.md
+      - Troubleshooting: en/guides/troubleshooting.md
     
+    - Core Capabilities:
+      - Overview: en/capabilities/README.md
+      - Multi-Domain Configuration: en/capabilities/01-multi-domain-configuration.md
+      - SAP Snapshot Sync: en/capabilities/02-sap-snapshot-sync.md
+      - Enrichment Pipeline: en/capabilities/03-enrichment-pipeline.md
+      - Knowledge Base: en/capabilities/04-knowledge-base-twitter-style.md
+      - GERDA Dispatch Engine: en/capabilities/05-gerda-dispatch-engine.md
+      - Privacy & Governance: en/capabilities/06-privacy-governance.md
+
     - Architecture:
+      - Architecture Blueprint: en/architecture/ARCHITECTURE_BLUEPRINT.md
       - Summary: en/architecture/SUMMARY.md
       - Detailed Design: en/architecture/DETAILED.md
-      - Controllers: en/architecture/CONTROLLERS.md
-      - Domain Model: en/architecture/DOMAIN_MODEL.md
-      - Repositories: en/architecture/REPOSITORIES.md
-      - Observers: en/architecture/OBSERVERS.md
-      - Middleware: en/architecture/MIDDLEWARE.md
-      - Extensions: en/architecture/EXTENSIONS.md
-      - Security: en/architecture/SECURITY.md
       - GERDA AI:
         - Overview: en/architecture/gerda-ai/GERDA_MODULES.md
     
     - Guides:
-      - Tenants vs Domains: en/guides/TENANTS_VS_DOMAINS.md
-      - Gatekeeper API: en/guides/GATEKEEPER_API.md
+      - Tenants vs Domains: en/guides/tenants-vs-domains.md
+      - Gatekeeper API: en/guides/gatekeeper-api.md
+      - Data Seeding: en/guides/data-seeding.md
     
+    - Technical Specification:
+      - Competitive Positioning: en/technical_docs/competitive-positioning.md
+      - Technical Analysis: en/technical_docs/technical-analysis.md
+      - Business Requirements: en/technical_docs/business-requirements.md
+      - Functional Requirements: en/technical_docs/functional-requirements.md
+      - User Stories: en/technical_docs/user-stories.md
+
     - API Reference:
       - REST API: en/api/API_REFERENCE.md
     
     - Project Management:
       - Roadmap: en/project-management/roadmap_v3.md
+      - Sprint Planning: en/project-management/sprint_planning.md
+      - Changelog: en/project-management/CHANGELOG.md
     
     - Deployment:
       - Strategy: en/deployment/STRATEGY.md
@@ -170,6 +184,7 @@ nav:
   
   - Nederlands:
     - Overzicht: nl/README.md
+    - Systeemoversicht: nl/SYSTEM_OVERVIEW.md
     - Aan de slag:
       - Ontwikkeling: nl/guides/DEVELOPMENT.md
       - Configuratie: nl/guides/CONFIGURATION.md
@@ -177,6 +192,7 @@ nav:
       - Probleemoplossing: nl/guides/TROUBLESHOOTING.md
     
     - Architectuur:
+      - Architectuur Blueprint: en/architecture/ARCHITECTURE_BLUEPRINT.md
       - Samenvatting: nl/architecture/SUMMARY.md
       - Gedetailleerd: nl/architecture/DETAILED.md
       - GERDA AI:

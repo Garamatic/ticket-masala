@@ -5,6 +5,8 @@
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 @inject IWebHostEnvironment env
+@inject TicketMasala.Web.Engine.GERDA.Configuration.IDomainUiService DomainUi
+@inject TicketMasala.Web.Engine.GERDA.Configuration.IDomainConfigurationService DomainConfig
 
 @{
     var title = ViewData["Title"] ?? "Ticket Masala";
@@ -17,6 +19,13 @@
     var themePath = env.WebRootPath != null ? System.IO.Path.Combine(env.WebRootPath, "tenant-theme", "style.css") : null;
     var logoFileSystemPath = env.WebRootPath != null ? System.IO.Path.Combine(env.WebRootPath, "tenant-theme", "logo.png") : null;
     var logoUrl = (logoFileSystemPath != null && System.IO.File.Exists(logoFileSystemPath)) ? "~/tenant-theme/logo.png" : "~/images/logo.png";
+
+    // Domain UI Logic
+    var currentDomainId = DomainUi.GetCurrentDomainId();
+    var domainLabel = DomainUi.GetLabel("DomainName", currentDomainId);
+    var domainIcon = DomainUi.GetIcon("DomainIcon", currentDomainId);
+    var domainCss = DomainUi.GetDomainCssClass(currentDomainId);
+    var allDomains = DomainConfig.GetAllDomains();
 }
 <!DOCTYPE html>
 <html lang="@System.Globalization.CultureInfo.CurrentUICulture.Name">
@@ -54,7 +63,7 @@
     
     @RenderSection("Styles", required: false)
 </head>
-<body hx-boost="true">
+<body hx-boost="true" class="@domainCss">
     <div class="app-wrapper">
         <!-- Sidebar Navigation -->
         @if (!hideSidebar)
@@ -255,7 +264,33 @@
                         <button id="themeToggle" class="btn btn-ghost btn-icon rounded-circle" aria-label="Toggle dark mode" data-bs-toggle="tooltip" title="@Localizer["Toggle theme"]">
                             <i class="fas fa-moon" id="themeIcon"></i>
                         </button>
-                        
+
+                        <!-- Domain Selector -->
+                        <div class="dropdown">
+                            <button class="btn btn-ghost btn-icon rounded-circle" type="button" id="domainDropdownLanding" data-bs-toggle="dropdown" aria-expanded="false" title="@Localizer["Switch Domain"]">
+                                <i class="bi @domainIcon"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg" aria-labelledby="domainDropdownLanding">
+                                <li><h6 class="dropdown-header">@Localizer["Switch Domain"]</h6></li>
+                                @foreach (var domain in allDomains)
+                                {
+                                    <li>
+                                        <form asp-controller="Domain" asp-action="SetDomain" method="post">
+                                            <input type="hidden" name="domainId" value="@domain.Key" />
+                                            <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                                            <button type="submit" class="dropdown-item d-flex align-items-center justify-content-between">
+                                                <span>@domain.Value.Ui.Label</span>
+                                                @if (domain.Key == currentDomainId)
+                                                {
+                                                    <i class="fas fa-check text-success small"></i>
+                                                }
+                                            </button>
+                                        </form>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+
                         <!-- Language Selector -->
                         <div class="dropdown">
                             <button class="btn btn-ghost btn-icon rounded-circle" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="@Localizer["Select Language"]">
@@ -354,6 +389,33 @@
                                 <i class="fas fa-moon" id="themeIcon"></i>
                             </button>
                             
+                            <!-- Domain Selector -->
+                            <div class="dropdown">
+                                <button class="btn btn-outline-primary btn-sm d-flex align-items-center gap-2" type="button" id="domainDropdownAuth" data-bs-toggle="dropdown" aria-expanded="false" title="@Localizer["Switch Domain"]">
+                                    <i class="bi @domainIcon"></i>
+                                    <span class="d-none d-md-inline">@domainLabel</span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg" aria-labelledby="domainDropdownAuth">
+                                    <li><h6 class="dropdown-header">@Localizer["Switch Domain"]</h6></li>
+                                    @foreach (var domain in allDomains)
+                                    {
+                                        <li>
+                                            <form asp-controller="Domain" asp-action="SetDomain" method="post">
+                                                <input type="hidden" name="domainId" value="@domain.Key" />
+                                                <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                                                <button type="submit" class="dropdown-item d-flex align-items-center justify-content-between">
+                                                    <span>@domain.Value.Ui.Label</span>
+                                                    @if (domain.Key == currentDomainId)
+                                                    {
+                                                        <i class="fas fa-check text-success small"></i>
+                                                    }
+                                                </button>
+                                            </form>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+
                             <!-- Language Selector -->
                             <div class="dropdown">
                                 <button class="btn btn-ghost btn-icon rounded-circle" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="@Localizer["Select Language"]">

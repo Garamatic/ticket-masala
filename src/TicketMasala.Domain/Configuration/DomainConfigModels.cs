@@ -24,6 +24,17 @@ public class DomainConfig
     public Dictionary<string, string> AiPrompts { get; set; } = new();
     public Dictionary<string, GerdaModelConfig> AiModels { get; set; } = new();
     public IntegrationConfig Integrations { get; set; } = new();
+    public DomainUiConfig Ui { get; set; } = new();
+}
+
+/// <summary>
+/// UI/Branding configuration for a domain
+/// </summary>
+public class DomainUiConfig
+{
+    public string Label { get; set; } = string.Empty;
+    public string Icon { get; set; } = "bi-grid";
+    public string CssClass { get; set; } = "theme-default";
 }
 
 /// <summary>

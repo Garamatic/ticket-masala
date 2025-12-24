@@ -58,7 +58,7 @@ Instead, we adopt a **layered terminology strategy**:
 
 ## Implementation Summary
 
-### Already Implemented ✅
+### Already Implemented
 
 - Views read labels from `masala_domains.yaml` via `entityLabels.WorkItem`
 - `ExternalTicketRequest` DTO exists (to be aliased/renamed)

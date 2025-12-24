@@ -1,0 +1,41 @@
+{
+    "Admins": [
+        {
+            "UserName": "admin@ticketmasala.com",
+            "Email": "admin@ticketmasala.com",
+            "FirstName": "System",
+            "LastName": "Administrator",
+            "Phone": "+1234567890",
+            "Code": "ADM001"
+        }
+    ],
+    "Employees": [
+        {
+            "UserName": "agent@ticketmasala.com",
+            "Email": "agent@ticketmasala.com",
+            "FirstName": "Support",
+            "LastName": "Agent",
+            "Phone": "+1987654321",
+            "Code": "EMP001",
+            "Team": "Support",
+            "Level": "Support",
+            "Language": "English",
+            "Specializations": "General",
+            "MaxCapacityPoints": 100,
+            "Region": "Global"
+        }
+    ],
+    "Customers": [
+        {
+            "UserName": "customer@example.com",
+            "Email": "customer@example.com",
+            "FirstName": "Test",
+            "LastName": "Customer",
+            "Phone": "+1122334455",
+            "Code": "CUST001"
+        }
+    ],
+    "WorkContainers": [],
+    "UnassignedWorkItems": [],
+    "KnowledgeBaseArticles": []
+}

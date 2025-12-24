@@ -13,8 +13,8 @@ public class RuleEngineService : IRuleEngineService
     private readonly RuleCompilerService _compiler;
     private readonly ILogger<RuleEngineService> _logger;
 
-    // Cache: (DomainId, FromState, ToState) -> Compiled Delegate
-    private readonly Dictionary<(string, string, string), Func<Ticket, ClaimsPrincipal, bool>> _ruleCache = new();
+    // Cache: (DomainId, FromState, ToState, VersionId) -> Compiled Delegate
+    private readonly Dictionary<(string, string, string, string), Func<Ticket, ClaimsPrincipal, bool>> _ruleCache = new();
     private readonly object _cacheLock = new();
 
     public RuleEngineService(
@@ -32,23 +32,34 @@ public class RuleEngineService : IRuleEngineService
         var domainId = ticket.DomainId ?? _domainConfig.GetDefaultDomainId();
         var currentStatus = ticket.TicketStatus.ToString();
         var targetStatusStr = targetStatus.ToString();
+        var versionId = ticket.ConfigVersionId;
 
         // 1. Basic Workflow Transition Check
-        var validTransitions = _domainConfig.GetValidTransitions(domainId, currentStatus);
+        IEnumerable<string> validTransitions;
+        if (!string.IsNullOrEmpty(versionId))
+        {
+            validTransitions = _domainConfig.GetValidTransitionsByVersion(domainId, currentStatus, versionId);
+        }
+        else
+        {
+            validTransitions = _domainConfig.GetValidTransitions(domainId, currentStatus);
+        }
+
         if (!validTransitions.Contains(targetStatusStr, StringComparer.OrdinalIgnoreCase))
         {
-            _logger.LogWarning("Invalid transition attempt from {From} to {To} for ticket {Guid}", currentStatus, targetStatusStr, ticket.Guid);
+            _logger.LogWarning("Invalid transition attempt from {From} to {To} for ticket {Guid} (Version: {Version})",
+                currentStatus, targetStatusStr, ticket.Guid, versionId ?? "Latest");
             return false;
         }
 
         // 2. Advanced Rule Check utilizing Compiled Delegates
-        var ruleDelegate = GetOrCompileRule(domainId, currentStatus, targetStatusStr);
+        var ruleDelegate = GetOrCompileRule(domainId, currentStatus, targetStatusStr, versionId);
         return ruleDelegate(ticket, user);
     }
 
-    private Func<Ticket, ClaimsPrincipal, bool> GetOrCompileRule(string domainId, string from, string to)
+    private Func<Ticket, ClaimsPrincipal, bool> GetOrCompileRule(string domainId, string from, string to, string? versionId)
     {
-        var key = (domainId, from, to);
+        var key = (domainId, from, to, versionId ?? "Latest");
 
         // Fast path: Check cache
         lock (_cacheLock)
@@ -60,7 +71,16 @@ public class RuleEngineService : IRuleEngineService
         }
 
         // Slow path: Compile
-        var domain = _domainConfig.GetDomain(domainId);
+        DomainConfig? domain;
+        if (!string.IsNullOrEmpty(versionId))
+        {
+            domain = _domainConfig.GetDomainByVersion(domainId, versionId);
+        }
+        else
+        {
+            domain = _domainConfig.GetDomain(domainId);
+        }
+
         var rules = domain?.Workflow.TransitionRules?
             .Where(r => r.From.Equals(from, StringComparison.OrdinalIgnoreCase) &&
                         r.To.Equals(to, StringComparison.OrdinalIgnoreCase))
@@ -74,7 +94,8 @@ public class RuleEngineService : IRuleEngineService
             _ruleCache[key] = compiledFunc;
         }
 
-        _logger.LogInformation("Compiled access rule for {Domain}: {From}->{To}", domainId, from, to);
+        _logger.LogInformation("Compiled access rule for {Domain} version {Version}: {From}->{To}",
+            domainId, versionId ?? "Latest", from, to);
         return compiledFunc;
     }
 
@@ -82,7 +103,17 @@ public class RuleEngineService : IRuleEngineService
     {
         var domainId = ticket.DomainId ?? _domainConfig.GetDefaultDomainId();
         var currentStatus = ticket.TicketStatus.ToString();
-        var validTransitions = _domainConfig.GetValidTransitions(domainId, currentStatus);
+        var versionId = ticket.ConfigVersionId;
+
+        IEnumerable<string> validTransitions;
+        if (!string.IsNullOrEmpty(versionId))
+        {
+            validTransitions = _domainConfig.GetValidTransitionsByVersion(domainId, currentStatus, versionId);
+        }
+        else
+        {
+            validTransitions = _domainConfig.GetValidTransitions(domainId, currentStatus);
+        }
 
         var validStates = new List<Status>();
 

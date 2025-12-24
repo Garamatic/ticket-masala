@@ -19,7 +19,7 @@ This is a robust, professional palette. The decision to move from "Masala Orange
 
     Harmonize the Gradient: Instead of introducing purple, use your Primary Blue (#4C5AF5) fading into a darker Slate (#1E293B) or the Logo Green. This reinforces the brand identity defined in the top section.
 
-🚀 Action Plan: Integrating into the Agent
+Action Plan: Integrating into the Agent
 
 To make this effective, we need to update Section II (A) of your prompt and provide the actual CSS implementation.
 1. The CSS Implementation (Put this in wwwroot/css/design-system.css)

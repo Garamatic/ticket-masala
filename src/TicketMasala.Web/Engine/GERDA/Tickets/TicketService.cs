@@ -23,6 +23,7 @@ public interface ITicketService
     Task<List<SelectListItem>> GetCustomerSelectListAsync();
     Task<List<SelectListItem>> GetEmployeeSelectListAsync();
     Task<List<SelectListItem>> GetProjectSelectListAsync();
+    Task<List<SelectListItem>> GetCustomerProjectSelectListAsync(string customerId);
     Task<Guid?> GetCurrentUserDepartmentIdAsync();
     Task<Ticket> CreateTicketAsync(string description, string customerId, string? responsibleId, Guid? projectGuid, DateTime? completionTarget);
     Task<TicketDetailsViewModel?> GetTicketDetailsAsync(Guid ticketGuid);
@@ -175,6 +176,21 @@ public class TicketService : ITicketService, ITicketQueryService, ITicketCommand
     }
 
     /// <summary>
+    /// Get project dropdown list filtered by customer
+    /// </summary>
+    public async Task<List<SelectListItem>> GetCustomerProjectSelectListAsync(string customerId)
+    {
+        var projects = await _projectRepository.GetActiveProjectsAsync();
+        return projects
+            .Where(p => p.CustomerId == customerId || p.Customers.Any(c => c.Id == customerId))
+            .Select(p => new SelectListItem
+            {
+                Value = p.Guid.ToString(),
+                Text = p.Name
+            }).ToList();
+    }
+
+    /// <summary>
     /// Get all tickets with customer and responsible information
     /// </summary>
     public async Task<IEnumerable<TicketViewModel>> GetAllTicketsAsync()
@@ -222,6 +238,9 @@ public class TicketService : ITicketService, ITicketQueryService, ITicketCommand
             responsible = await _userRepository.GetEmployeeByIdAsync(responsibleId);
         }
 
+        var currentConfigVersion = _domainConfig.GetCurrentConfigVersionId();
+        var defaultDomainId = _domainConfig.GetDefaultDomainId();
+
         var ticket = new Ticket
         {
             Description = description,
@@ -229,8 +248,9 @@ public class TicketService : ITicketService, ITicketQueryService, ITicketCommand
             CustomerId = customerId,
             Responsible = responsible,
             Status = responsible != null ? "Assigned" : "New",
-            Title = "New Ticket", // Required property
-            DomainId = "IT", // Required property
+            Title = description.Length > 50 ? description.Substring(0, 47) + "..." : description,
+            DomainId = defaultDomainId,
+            ConfigVersionId = currentConfigVersion,
             TicketStatus = responsible != null ? TicketMasala.Domain.Common.Status.Assigned : TicketMasala.Domain.Common.Status.Pending,
             CompletionTarget = completionTarget ?? DateTime.UtcNow.AddDays(14),
             CreatorGuid = Guid.Parse(customer.Id),

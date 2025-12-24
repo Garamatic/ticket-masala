@@ -1,4 +1,5 @@
 using TicketMasala.Web.Data;
+using TicketMasala.Web.Data.Seeding;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.Ingestion;
 using TicketMasala.Web.Engine.Ingestion.Background;
@@ -52,7 +53,13 @@ public static class CoreServiceCollectionExtensions
         services.AddScoped<IAuditService, AuditService>();
         services.AddScoped<ITicketImportService, TicketImportService>();
 
-        // DbSeeder
+        // Seed Strategies (Strategy Pattern - executed in registration order)
+        services.AddScoped<ISeedStrategy, RoleSeedStrategy>();
+        services.AddScoped<ISeedStrategy, UserSeedStrategy>();
+        services.AddScoped<ISeedStrategy, ProjectSeedStrategy>();
+        services.AddScoped<ISeedStrategy, KnowledgeBaseSeedStrategy>();
+
+        // DbSeeder (orchestrator)
         services.AddScoped<DbSeeder>();
 
         // Ingestion

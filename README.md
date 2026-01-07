@@ -26,7 +26,7 @@ The system supports **Physical Isolation** (for security) and **Logical Partitio
 ```mermaid
 graph TD
     Config[YAML Configuration] -->|Injects Strategy| Core[Ticket Masala Core]
-    
+
     subgraph "The Ecosystem"
         Core -->|Tenant: Desgoffe| NodeA[Node A: Gov Tech]
         Core -->|Tenant: Whitman| NodeB[Node B: Infra]
@@ -46,32 +46,32 @@ graph TD
 
 The system behaves differently based on the active domain:
 
-* **Government Mode (Desgoffe):** Enforces strict hierarchy, formal language, and bureaucratic steps (e.g., "Mayor's Stamp" approval).
-* **Tech Mode (Liberty):** Enables agile workflows, git-style commits, and rapid iteration.
+- **Government Mode (Desgoffe):** Enforces strict hierarchy, formal language, and bureaucratic steps (e.g., "Mayor's Stamp" approval).
+- **Tech Mode (Liberty):** Enables agile workflows, git-style commits, and rapid iteration.
 
 ### 2. GERDA (Heuristic Inference Engine)
 
-*Not just a chatbot.* GERDA is an embedded heuristic agent that:
+_Not just a chatbot._ GERDA is an embedded heuristic agent that:
 
-* **Triages Tickets:** Analyzes sentiment and complexity to route tickets to the correct "Hemisphere" (e.g., Support vs. DevOps).
-* **Estimates Effort:** Uses historical data to predict resolution time.
-* **Enforces Compliance:** Automatically flags requests that violate domain-specific rules (e.g., GDPR violations in the Tax domain).
+- **Triages Tickets:** Analyzes sentiment and complexity to route tickets to the correct "Hemisphere" (e.g., Support vs. DevOps).
+- **Estimates Effort:** Uses historical data to predict resolution time.
+- **Enforces Compliance:** Automatically flags requests that violate domain-specific rules (e.g., GDPR violations in the Tax domain).
 
 ### 3. Data Sovereignty & Security
 
-* **Federated Deployment:** Supports air-gapped deployment for high-security environments.
-* **SQLite WAL Mode:** Optimized for single-file deployment with high concurrent read performance.
-* **Role-Based Access Control (RBAC):** Granular permissions down to the field level.
+- **Federated Deployment:** Supports air-gapped deployment for high-security environments.
+- **SQLite WAL Mode:** Optimized for single-file deployment with high concurrent read performance.
+- **Role-Based Access Control (RBAC):** Granular permissions down to the field level.
 
 ---
 
 ## Technology Stack
 
-* **Core:** .NET 10
-* **Web Framework:** ASP.NET Core MVC with **HTMX** for high-performance interactivity.
-* **Database:** Entity Framework Core + SQLite (Write-Ahead Logging enabled).
-* **AI/ML:** Local Heuristic Engine (GERDA).
-* **Containerization:** Docker & Fly.io.
+- **Core:** .NET 10
+- **Web Framework:** ASP.NET Core MVC with **HTMX** for high-performance interactivity.
+- **Database:** Entity Framework Core + SQLite (Write-Ahead Logging enabled).
+- **AI/ML:** Local Heuristic Engine (GERDA).
+- **Containerization:** Docker & Fly.io.
 
 ---
 
@@ -79,8 +79,8 @@ The system behaves differently based on the active domain:
 
 ### Prerequisites
 
-* .NET 10.0 SDK
-* Docker (Optional)
+- .NET 10.0 SDK
+- Docker (Optional)
 
 ### Option 1: Local Development
 
@@ -105,8 +105,12 @@ Access the portal at `http://localhost:5054`.
 
 ```bash
 docker-compose up --build
-
 ```
+
+### Developer Resources
+
+- **API Documentation:** Access the Swagger UI at `http://localhost:5054/swagger`
+- **Deployment Guide:** See `docs/deployment_guide.md` for production setup.
 
 ---
 
@@ -115,13 +119,13 @@ docker-compose up --build
 <details>
 <summary><strong>Click to expand User List</strong></summary>
 
-| Role | Domain | Email | Password | Context |
-| --- | --- | --- | --- | --- |
-| **The Bureaucrat** | Desgoffe | `gustave@desgoffe.gov` | `Admin123!` | Mayor. Can stamp permits. Strict view. |
-| **The Citizen** | Desgoffe | `jean.dupont@email.com` | `Customer123!` | Can only file complaints. No dashboard. |
-| **The DevOps Lead** | Liberty | `arthur@liberty.tech` | `Employee123!` | Sees PRs, Bugs, and CI/CD pipelines. |
-| **The Support Rep** | Liberty | `sarah@liberty.tech` | `Employee123!` | Sees Customer Tickets and SLAs. |
-| **The Foreman** | Whitman | `jack@whitman.infra` | `Employee123!` | High contrast UI. Big buttons. |
+| Role                | Domain   | Email                   | Password       | Context                                 |
+| ------------------- | -------- | ----------------------- | -------------- | --------------------------------------- |
+| **The Bureaucrat**  | Desgoffe | `gustave@desgoffe.gov`  | `Admin123!`    | Mayor. Can stamp permits. Strict view.  |
+| **The Citizen**     | Desgoffe | `jean.dupont@email.com` | `Customer123!` | Can only file complaints. No dashboard. |
+| **The DevOps Lead** | Liberty  | `arthur@liberty.tech`   | `Employee123!` | Sees PRs, Bugs, and CI/CD pipelines.    |
+| **The Support Rep** | Liberty  | `sarah@liberty.tech`    | `Employee123!` | Sees Customer Tickets and SLAs.         |
+| **The Foreman**     | Whitman  | `jack@whitman.infra`    | `Employee123!` | High contrast UI. Big buttons.          |
 
 </details>
 
@@ -150,9 +154,9 @@ src/
 
 ## Documentation
 
-* **Architectural Deep Dive:** [masala-doc.fly.dev](https://masala-doc.fly.dev)
-* **Live Ecosystem Demo:** [ticket-masala.fly.dev](https://ticket-masala.fly.dev)
-* **Garamatic Industries (Vendor):** [garamatic-web.fly.dev](https://www.google.com/search?q=https://garamatic-web.fly.dev)
+- **Architectural Deep Dive:** [masala-doc.fly.dev](https://masala-doc.fly.dev)
+- **Live Ecosystem Demo:** [ticket-masala.fly.dev](https://ticket-masala.fly.dev)
+- **Garamatic Industries (Vendor):** [garamatic-web.fly.dev](https://www.google.com/search?q=https://garamatic-web.fly.dev)
 
 ---
 
@@ -160,11 +164,11 @@ src/
 
 **Engineered by Garamatic Industries** (Student Team):
 
-* **Charlotte Schröer:** *Pixel Perfectionist (Frontend Architecture)*
-* **Maarten Görtz:** *C# Centurion (Core Logic)*
-* **Wito De Schrijver:** *Guardian of the Zeros (Security & Infra)*
-* **Juan Benjumea:** *Architecture & Integration*
+- **Charlotte Schröer:** _Pixel Perfectionist (Frontend Architecture)_
+- **Maarten Görtz:** _C# Centurion (Core Logic)_
+- **Wito De Schrijver:** _Guardian of the Zeros (Security & Infra)_
+- **Juan Benjumea:** _Architecture & Integration_
 
 ---
 
-*Educational Project for Applied CS (2025-2026). Incorporates architectural patterns for Project Atom.*
+_Educational Project for Applied CS (2025-2026). Incorporates architectural patterns for Project Atom._

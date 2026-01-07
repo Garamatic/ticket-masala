@@ -49,25 +49,25 @@
 
 <!-- Statistics Overview -->
 <div class="stats-grid mb-4">
-    <div class="stat-card primary">
+    <div class="stat-card primary" data-bs-toggle="tooltip" title="@Localizer["Total number of tickets currently waiting for assignment"]">
         <i class="fas fa-ticket-alt stat-card-icon"></i>
         <div class="stat-card-title">@Localizer["Unassigned Tickets"]</div>
         <div class="stat-card-value">@Model.Statistics.TotalUnassignedTickets</div>
         <div class="stat-card-change">@Localizer["Awaiting triage"]</div>
     </div>
-    <div class="stat-card accent">
+    <div class="stat-card accent" data-bs-toggle="tooltip" title="@Localizer["Tickets where GERDA has identified a suitable agent match"]">
         <i class="fas fa-magic stat-card-icon"></i>
         <div class="stat-card-title">@Localizer["With AI Recommendations"]</div>
         <div class="stat-card-value">@Model.Statistics.TicketsWithAgentRecommendation</div>
         <div class="stat-card-change">@Localizer["Ready for auto-assign"]</div>
     </div>
-    <div class="stat-card success">
+    <div class="stat-card success" data-bs-toggle="tooltip" title="@Localizer["Number of agents currently logged in and accepting tickets"]">
         <i class="fas fa-users stat-card-icon"></i>
         <div class="stat-card-title">@Localizer["Available Agents"]</div>
         <div class="stat-card-value">@Model.Statistics.TotalAvailableAgents</div>
         <div class="stat-card-change">@Localizer["Online now"]</div>
     </div>
-    <div class="stat-card danger">
+    <div class="stat-card danger" data-bs-toggle="tooltip" title="@Localizer["Tickets that have been in the backlog for more than 24 hours"]">
         <i class="fas fa-clock stat-card-icon"></i>
         <div class="stat-card-title">@Localizer["Tickets > 24h Old"]</div>
         <div class="stat-card-value text-white">@Model.Statistics.TicketsOlderThan24Hours</div>

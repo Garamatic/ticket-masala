@@ -40,6 +40,17 @@
         <p class="page-subtitle">AI-powered ticket assignment and workload balancing</p>
     </div>
     <div class="page-actions">
+        @if (Model.LastModelTrainingTime.HasValue)
+        {
+            <small class="text-muted me-3">
+                <i class="fas fa-clock me-1"></i>
+                @Localizer["Model"]: @Model.LastModelTrainingTime.Value.ToLocalTime().ToString("g")
+            </small>
+        }
+        <button class="btn btn-outline-warning me-2" onclick="retrainModel()">
+            <i class="fas fa-brain me-2"></i>
+            @Localizer["Retrain Model"]
+        </button>
         <button class="btn btn-outline-primary" onclick="location.reload()">
             <i class="fas fa-sync-alt me-2"></i>
             Refresh
@@ -263,6 +274,15 @@
                                                         <span> | <i class="fas fa-language"></i> @agent.Language</span>
                                                     }
                                                 </small>
+                                                @if (agent.Reasons.Any())
+                                                {
+                                                    <div class="mt-1">
+                                                        @foreach (var reason in agent.Reasons)
+                                                        {
+                                                            <span class="badge bg-light text-dark border me-1" style="font-size: 0.75rem;">@reason</span>
+                                                        }
+                                                    </div>
+                                                }
                                             </div>
                                             <div class="text-end">
                                                 <span class="score-badge @(agent.Score >= 70 ? "score-high" : agent.Score >= 40 ? "score-medium" : "score-low")">
@@ -532,6 +552,44 @@
         }
     });
 
+    function retrainModel() {
+        if (!confirm('@Localizer["Are you sure you want to manually trigger the dispatch model retraining? This may take a few moments."]')) {
+            return;
+        }
+
+        const btn = event.currentTarget;
+        const originalContent = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> @Localizer["Training..."]';
+
+        // Get Anti-Forgery Token
+        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+        fetch('@Url.Action("RetrainDispatchModel", "Manager")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': token
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('@Localizer["An error occurred while triggering model retraining."]');
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalContent;
+        });
+    }
+
     let selectedTickets = new Set();
 
     function updateSelectedCount() {
@@ -555,6 +613,32 @@
             cb.checked = checkbox.checked;
         });
         updateSelectedCount();
+    }
+
+    async function retrainModel() {
+        if (!confirm('@Localizer["Are you sure you want to retrain the dispatching model? This happens in the background."]')) {
+            return;
+        }
+
+        try {
+            const response = await fetch('@Url.Action("RetrainDispatchModel", "Manager")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                }
+            });
+
+            if (response.ok) {
+                alert('@Localizer["Model retraining initiated in the background."]');
+                location.reload();
+            } else {
+                alert('@Localizer["Failed to initiate model retraining."]');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('@Localizer["An error occurred."]');
+        }
     }
 
     async function assignTicketToAgent(ticketGuid, agentId, agentName) {

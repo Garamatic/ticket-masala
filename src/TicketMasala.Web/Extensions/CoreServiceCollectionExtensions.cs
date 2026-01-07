@@ -30,6 +30,10 @@ public static class CoreServiceCollectionExtensions
         // Metrics
         services.AddScoped<IMetricsService, MetricsService>();
 
+        // PII Scrubber
+        services.AddScoped<Engine.Security.IPiiScrubberService,
+            Engine.Security.PiiScrubberService>();
+
         // Ticket Service (implements ITicketService, ITicketQueryService, ITicketCommandService)
         services.AddScoped<TicketService>();
         services.AddScoped<ITicketService>(sp => sp.GetRequiredService<TicketService>());
@@ -77,10 +81,14 @@ public static class CoreServiceCollectionExtensions
         services.AddSingleton<IBackgroundTaskQueue>(ctx => new BackgroundQueue(100));
         services.AddSingleton(System.Threading.Channels.Channel.CreateUnbounded<ViewModels.Ingestion.IngestionWorkItem>());
 
+        // Enrichment Queue
+        services.AddSingleton<Engine.Enrichment.IEnrichmentQueue, Engine.Enrichment.EnrichmentQueue>();
+
         // Hosted Services
         services.AddHostedService<EmailIngestionService>();
         services.AddHostedService<QueuedHostedService>();
         services.AddHostedService<TicketGeneratorService>();
+        services.AddHostedService<Engine.Enrichment.EnrichmentBackgroundService>();
 
         // Ticket Generator
         services.AddScoped<ITicketGenerator, TicketGenerator>();

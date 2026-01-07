@@ -14,6 +14,7 @@ public class GerdaDispatchViewModel
     public DispatchStatistics Statistics { get; set; } = new();
     public List<ProjectOption> Projects { get; set; } = new();
     public List<TicketDispatchInfo> UnassignedTickets { get; set; } = new();
+    public DateTime? LastModelTrainingTime { get; set; }
 
     // Pagination
     public int CurrentPage { get; set; } = 1;
@@ -76,6 +77,7 @@ public class AgentRecommendation
     public string? Specializations { get; set; }
     public string? Language { get; set; }
     public string? Region { get; set; }
+    public List<string> Reasons { get; set; } = new();
 
     public string WorkloadDisplay => $"{CurrentWorkload}/{MaxCapacity}";
     public int WorkloadPercentage => MaxCapacity > 0 ? (int)((CurrentWorkload / (double)MaxCapacity) * 100) : 0;

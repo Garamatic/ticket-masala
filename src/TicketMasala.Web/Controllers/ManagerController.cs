@@ -342,6 +342,32 @@ public class ManagerController : Controller
     }
 
     /// <summary>
+    /// Manually trigger retraining of the GERDA dispatching model
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RetrainDispatchModel()
+    {
+        try
+        {
+            if (_dispatchingService?.IsEnabled != true)
+            {
+                return Json(new { success = false, message = "GERDA Dispatching is disabled" });
+            }
+
+            _logger.LogInformation("Manually triggering dispatch model retraining...");
+            await _dispatchingService.RetrainModelAsync();
+            
+            return Json(new { success = true, message = "Model retraining triggered successfully." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retraining dispatch model");
+            return Json(new { success = false, message = "Error retraining model: " + ex.Message });
+        }
+    }
+
+    /// <summary>
     /// Manually trigger random ticket generation
     /// </summary>
     [HttpPost]

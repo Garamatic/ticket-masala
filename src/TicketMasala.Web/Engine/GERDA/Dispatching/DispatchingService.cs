@@ -39,6 +39,25 @@ public class DispatchingService : IDispatchingService
 
     public bool IsEnabled => _config.GerdaAI.IsEnabled && _config.GerdaAI.Dispatching.IsEnabled;
 
+    public DateTime? LastModelTrainingTime
+    {
+        get
+        {
+            try
+            {
+                var defaultDomainId = _domainConfigService.GetDefaultDomainId();
+                var domainConfig = _domainConfigService.GetDomain(defaultDomainId);
+                var strategyName = domainConfig?.AiStrategies.Dispatching ?? "MatrixFactorization";
+                var strategy = _strategyFactory.GetStrategy<IDispatchingStrategy, List<DispatchResult>>(strategyName);
+                return strategy.LastTrained;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+    }
+
     public async Task<string?> GetRecommendedAgentAsync(Guid ticketGuid)
     {
         if (!IsEnabled)
@@ -73,11 +92,11 @@ public class DispatchingService : IDispatchingService
         return bestAgent;
     }
 
-    public async Task<List<(string AgentId, double Score)>> GetTopRecommendedAgentsAsync(Guid ticketGuid, int count = 3)
+    public async Task<List<DispatchResult>> GetTopRecommendedAgentsAsync(Guid ticketGuid, int count = 3)
     {
         if (!IsEnabled)
         {
-            return new List<(string, double)>();
+            return new List<DispatchResult>();
         }
 
         var ticket = await _context.Tickets
@@ -85,7 +104,7 @@ public class DispatchingService : IDispatchingService
 
         if (ticket == null)
         {
-            return new List<(string, double)>();
+            return new List<DispatchResult>();
         }
 
         // Determine Domain and Strategy
@@ -95,13 +114,13 @@ public class DispatchingService : IDispatchingService
 
         try
         {
-            var strategy = _strategyFactory.GetStrategy<IDispatchingStrategy, List<(string AgentId, double Score)>>(strategyName);
+            var strategy = _strategyFactory.GetStrategy<IDispatchingStrategy, List<DispatchResult>>(strategyName);
             return await strategy.GetRecommendedAgentsAsync(ticket, count);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to execute dispatching strategy {StrategyName} for ticket {TicketGuid}", strategyName, ticketGuid);
-            return new List<(string, double)>();
+            return new List<DispatchResult>();
         }
     }
 
@@ -143,22 +162,32 @@ public class DispatchingService : IDispatchingService
             return;
         }
 
-        // Retrain strategy for default domain (primary)
-        // In the future: Iterate all domains and retrain all loaded strategies?
-        // For now, defaulting to "MatrixFactorization" strategy explicitly or default domain's.
-
         try
         {
             var defaultDomainId = _domainConfigService.GetDefaultDomainId();
             var domainConfig = _domainConfigService.GetDomain(defaultDomainId);
             var strategyName = domainConfig?.AiStrategies.Dispatching ?? "MatrixFactorization";
-
-            var strategy = _strategyFactory.GetStrategy<IDispatchingStrategy, List<(string AgentId, double Score)>>(strategyName);
-            await strategy.RetrainModelAsync();
+            var strategy = _strategyFactory.GetStrategy<IDispatchingStrategy, List<DispatchResult>>(strategyName);
+            
+            // Fire and forget background task
+            _ = Task.Run(async () => 
+            {
+                try 
+                {
+                    await strategy.RetrainModelAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Background model retraining failed");
+                }
+            });
+            
+            await Task.CompletedTask;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to retrain dispatching model");
+            _logger.LogError(ex, "Failed to initiate model retraining");
+            throw;
         }
     }
 

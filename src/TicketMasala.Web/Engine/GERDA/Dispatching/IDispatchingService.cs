@@ -16,7 +16,7 @@ public interface IDispatchingService
     /// <summary>
     /// Get top N recommended agents for a ticket
     /// </summary>
-    Task<List<(string AgentId, double Score)>> GetTopRecommendedAgentsAsync(Guid ticketGuid, int count = 3);
+    Task<List<DispatchResult>> GetTopRecommendedAgentsAsync(Guid ticketGuid, int count = 3);
 
     /// <summary>
     /// Auto-dispatch a ticket to the best available agent
@@ -41,4 +41,8 @@ public interface IDispatchingService
     /// </summary>
     bool IsEnabled { get; }
 
+    /// <summary>
+    /// Get the last time the model was trained
+    /// </summary>
+    DateTime? LastModelTrainingTime { get; }
 }

@@ -16,6 +16,8 @@ public static class RepositoryServiceCollectionExtensions
         services.AddScoped<ITicketRepository, EfCoreTicketRepository>();
         services.AddScoped<IProjectRepository, EfCoreProjectRepository>();
         services.AddScoped<IUserRepository, EfCoreUserRepository>();
+        services.AddScoped<IKnowledgeBaseRepository, EfCoreKnowledgeBaseRepository>();
+        services.AddScoped<IKnowledgeSnippetRepository, EfCoreKnowledgeSnippetRepository>();
         services.AddScoped<IUnitOfWork, EfCoreUnitOfWork>();
 
         return services;

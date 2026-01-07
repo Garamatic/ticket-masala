@@ -54,7 +54,7 @@ public static class AffinityScoring
         return pastInteractionScore + expertiseScore + languageScore + geographyScore;
     }
 
-    private static double CalculateExpertiseScore(Ticket ticket, Employee agent)
+    public static double CalculateExpertiseScore(Ticket ticket, Employee agent)
     {
         // ... Legacy Logic kept for fallback ...
         if (string.IsNullOrWhiteSpace(agent.Specializations))
@@ -93,7 +93,7 @@ public static class AffinityScoring
     /// Calculate language match score (0-5 scale)
     /// Perfect match = 5.0, Partial match = 3.5, No match = 1.0
     /// </summary>
-    private static double CalculateLanguageScore(Employee agent, ApplicationUser? customer)
+    public static double CalculateLanguageScore(Employee agent, ApplicationUser? customer)
     {
         if (customer == null || string.IsNullOrWhiteSpace(agent.Language))
             return 3.0; // Neutral if no data
@@ -118,7 +118,7 @@ public static class AffinityScoring
     /// Calculate geography match score (0-5 scale)
     /// Same region = 5.0, Different region = 2.0
     /// </summary>
-    private static double CalculateGeographyScore(Employee agent, ApplicationUser? customer)
+    public static double CalculateGeographyScore(Employee agent, ApplicationUser? customer)
     {
         if (customer == null || string.IsNullOrWhiteSpace(agent.Region))
             return 3.0; // Neutral if no data
@@ -139,7 +139,7 @@ public static class AffinityScoring
     /// Extract category from ticket description (keyword matching)
     /// Returns standardized category name for matching against specializations
     /// </summary>
-    private static string ExtractCategoryFromTicket(Ticket ticket)
+    public static string ExtractCategoryFromTicket(Ticket ticket)
     {
         var description = ticket.Description?.ToLower() ?? "";
 

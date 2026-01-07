@@ -141,6 +141,8 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddScoped<TicketMasala.Web.Engine.Ingestion.Validation.ICustomFieldValidationService,
             TicketMasala.Web.Engine.Ingestion.Validation.CustomFieldValidationService>();
         builder.Services.AddScoped<IRuleEngineService, RuleEngineService>();
+        builder.Services.AddScoped<TicketMasala.Web.Engine.Security.IPiiScrubberService, 
+            TicketMasala.Web.Engine.Security.PiiScrubberService>();
         builder.Services.AddScoped<IMetricsService, MetricsService>();
 
         // TicketService implements all three interfaces

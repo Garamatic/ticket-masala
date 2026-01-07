@@ -19,6 +19,9 @@ public class KnowledgeBaseArticle
 
     public string Tags { get; set; } = string.Empty; // Comma separated tags
 
+    public int UsageCount { get; set; } = 0;
+    public bool IsVerified { get; set; } = false;
+
     public string? AuthorId { get; set; }
     public virtual ApplicationUser? Author { get; set; }
 

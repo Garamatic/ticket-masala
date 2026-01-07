@@ -11,6 +11,7 @@ using TicketMasala.Web.Observers;
 using TicketMasala.Web.Engine.Core;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using TicketMasala.Web.Engine.Security;
 
 namespace TicketMasala.Web.Engine.GERDA.Tickets;
 
@@ -82,6 +83,7 @@ public class TicketService : ITicketService, ITicketQueryService, ITicketCommand
     private readonly Domain.TicketDispatchService _ticketDispatchService;
     private readonly Domain.TicketReportingService _ticketReportingService;
     private readonly Domain.TicketNotificationService _ticketNotificationService;
+    private readonly IPiiScrubberService _piiScrubber;
 
     public TicketService(
         MasalaDbContext context,
@@ -98,7 +100,8 @@ public class TicketService : ITicketService, ITicketQueryService, ITicketCommand
         ILogger<TicketService> logger,
         Domain.TicketDispatchService ticketDispatchService,
         Domain.TicketReportingService ticketReportingService,
-        Domain.TicketNotificationService ticketNotificationService)
+        Domain.TicketNotificationService ticketNotificationService,
+        IPiiScrubberService piiScrubber)
     {
         _context = context;
         _ticketRepository = ticketRepository;
@@ -115,6 +118,7 @@ public class TicketService : ITicketService, ITicketQueryService, ITicketCommand
         _ticketDispatchService = ticketDispatchService;
         _ticketReportingService = ticketReportingService;
         _ticketNotificationService = ticketNotificationService;
+        _piiScrubber = piiScrubber;
     }
 
     private string? GetCurrentUserId()
@@ -227,6 +231,9 @@ public class TicketService : ITicketService, ITicketQueryService, ITicketCommand
         Guid? projectGuid,
         DateTime? completionTarget)
     {
+        // PII Scrubbing
+        description = _piiScrubber.Scrub(description);
+
         var customer = await _userRepository.GetCustomerByIdAsync(customerId);
         if (customer == null)
         {
@@ -457,6 +464,9 @@ public class TicketService : ITicketService, ITicketQueryService, ITicketCommand
     {
         try
         {
+            // PII Scrubbing
+            ticket.Description = _piiScrubber.Scrub(ticket.Description);
+
             // Validate Transition Rules
             var entry = _context.Entry(ticket);
             if (entry.State == EntityState.Modified)

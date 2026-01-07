@@ -38,7 +38,12 @@ public class ConfigureSwaggerOptions : IConfigureOptions<SwaggerGenOptions>
         {
             Title = "Ticket Masala API",
             Version = description.ApiVersion.ToString(),
-            Description = "Configuration-driven work management API. Valid DomainId values are sourced from masala_domains.yaml configuration."
+            Description = "Ticket Masala is a polymorphic work management system powered by GERDA AI.\n\n" +
+                          "Key Features:\n" +
+                          "- **Polymorphic Workflow Engine**: Handles heterogeneous work items (Tickets, EHT Campaigns, etc.)\n" +
+                          "- **GERDA AI**: Intelligent dispatching and workload forecasting\n" +
+                          "- **Multi-Tenancy**: Domain-driven configuration via `masala_domains.yaml`\n\n" +
+                          "This API documentation exposes all endpoints available to the frontend and external integrations."
         };
 
         if (description.IsDeprecated)

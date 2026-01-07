@@ -999,3 +999,31 @@ a:hover {
     --color-success-border: #28a745;
     /* Selected ticket border */
 }
+/* Level 5 Spacing (3rem / 48px) */
+.mt-5 {
+    margin-top: var(--spacing-2xl) !important;
+}
+
+.mb-5 {
+    margin-bottom: var(--spacing-2xl) !important;
+}
+
+.ms-5, .ml-5 {
+    margin-left: var(--spacing-2xl) !important;
+}
+
+.me-5, .mr-5 {
+    margin-right: var(--spacing-2xl) !important;
+}
+
+.p-5 {
+    padding: var(--spacing-2xl) !important;
+}
+
+.pt-5 {
+    padding-top: var(--spacing-2xl) !important;
+}
+
+.pb-5 {
+    padding-bottom: var(--spacing-2xl) !important;
+}

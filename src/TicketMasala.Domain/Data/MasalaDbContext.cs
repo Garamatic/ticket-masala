@@ -21,6 +21,7 @@ public class MasalaDbContext : IdentityDbContext<ApplicationUser, IdentityRole, 
     public DbSet<ApplicationUser> Customers { get; set; }
     public DbSet<Employee> Employees { get; set; }
     public DbSet<KnowledgeBaseArticle> KnowledgeBaseArticles { get; set; }
+    public DbSet<KnowledgeBaseSnippet> KnowledgeBaseSnippets { get; set; }
     public DbSet<ProjectTemplate> ProjectTemplates { get; set; }
     public DbSet<TemplateTicket> TemplateTickets { get; set; }
     public DbSet<SavedFilter> SavedFilters { get; set; }

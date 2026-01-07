@@ -199,7 +199,7 @@ public static class WebApplicationExtensions
                         strategyFactory.GetStrategy<TicketMasala.Web.Engine.GERDA.Estimating.IEstimatingStrategy, int>(estimatingName);
 
                         var dispatchingName = domain.AiStrategies?.Dispatching ?? "MatrixFactorization";
-                        strategyFactory.GetStrategy<TicketMasala.Web.Engine.GERDA.Dispatching.IDispatchingStrategy, List<(string AgentId, double Score)>>(dispatchingName);
+                        strategyFactory.GetStrategy<TicketMasala.Web.Engine.GERDA.Dispatching.IDispatchingStrategy, List<TicketMasala.Web.Engine.GERDA.Dispatching.DispatchResult>>(dispatchingName);
 
                         logger.LogInformation("Domain '{Domain}' strategies validated.", domain.DisplayName);
                     }

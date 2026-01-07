@@ -371,6 +371,9 @@ namespace TicketMasala.Web.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Tags")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -383,6 +386,9 @@ namespace TicketMasala.Web.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("UsageCount")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AuthorId");
@@ -390,6 +396,40 @@ namespace TicketMasala.Web.Migrations
                     b.HasIndex("AuthorId1");
 
                     b.ToTable("KnowledgeBaseArticles");
+                });
+
+            modelBuilder.Entity("TicketMasala.Domain.Entities.KnowledgeBaseSnippet", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AuthorId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Tags")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UsageCount")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
+
+                    b.ToTable("KnowledgeBaseSnippets");
                 });
 
             modelBuilder.Entity("TicketMasala.Domain.Entities.Notification", b =>
@@ -981,6 +1021,15 @@ namespace TicketMasala.Web.Migrations
                     b.HasOne("TicketMasala.Domain.Entities.ApplicationUser", "Author")
                         .WithMany()
                         .HasForeignKey("AuthorId1");
+
+                    b.Navigation("Author");
+                });
+
+            modelBuilder.Entity("TicketMasala.Domain.Entities.KnowledgeBaseSnippet", b =>
+                {
+                    b.HasOne("TicketMasala.Domain.Entities.ApplicationUser", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId");
 
                     b.Navigation("Author");
                 });

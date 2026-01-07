@@ -4,8 +4,9 @@ using TicketMasala.Web.Engine.GERDA.Strategies;
 
 namespace TicketMasala.Web.Engine.GERDA.Dispatching;
 
-public interface IDispatchingStrategy : IStrategy<List<(string AgentId, double Score)>>
+public interface IDispatchingStrategy : IStrategy<List<DispatchResult>>
 {
-    Task<List<(string AgentId, double Score)>> GetRecommendedAgentsAsync(Ticket ticket, int count);
+    Task<List<DispatchResult>> GetRecommendedAgentsAsync(Ticket ticket, int count);
     Task RetrainModelAsync();
+    DateTime? LastTrained { get; }
 }

@@ -3,39 +3,36 @@ using TicketMasala.Domain.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TicketMasala.Web.Data;
+using TicketMasala.Web.Repositories;
 
 namespace TicketMasala.Web.Controllers;
 
 [Authorize]
 public class KnowledgeBaseController : Controller
 {
-    private readonly MasalaDbContext _context;
+    private readonly IKnowledgeBaseRepository _repository;
     private readonly ILogger<KnowledgeBaseController> _logger;
 
-    public KnowledgeBaseController(MasalaDbContext context, ILogger<KnowledgeBaseController> logger)
+    public KnowledgeBaseController(IKnowledgeBaseRepository repository, ILogger<KnowledgeBaseController> logger)
     {
-        _context = context;
+        _repository = repository;
         _logger = logger;
     }
 
     // GET: KnowledgeBase
     public async Task<IActionResult> Index(string searchTerm)
     {
-        var query = _context.KnowledgeBaseArticles
-            .Include(a => a.Author)
-            .AsQueryable();
-
-        if (!string.IsNullOrWhiteSpace(searchTerm))
+        IEnumerable<KnowledgeBaseArticle> articles;
+        
+        if (string.IsNullOrWhiteSpace(searchTerm))
         {
-            var term = searchTerm.ToLower();
-            query = query.Where(a =>
-                a.Title.ToLower().Contains(term) ||
-                a.Tags.ToLower().Contains(term) ||
-                a.Content.ToLower().Contains(term));
+            articles = await _repository.GetAllAsync();
+        }
+        else
+        {
+            articles = await _repository.SearchAsync(searchTerm);
         }
 
-        var articles = await query.OrderByDescending(a => a.CreatedAt).ToListAsync();
         ViewData["SearchTerm"] = searchTerm;
         return View(articles);
     }
@@ -45,11 +42,11 @@ public class KnowledgeBaseController : Controller
     {
         if (id == null) return NotFound();
 
-        var article = await _context.KnowledgeBaseArticles
-            .Include(a => a.Author)
-            .FirstOrDefaultAsync(m => m.Id == id);
-
+        var article = await _repository.GetByIdAsync(id.Value);
         if (article == null) return NotFound();
+
+        // Increment MasalaRank Usage Count
+        await _repository.IncrementUsageCountAsync(id.Value);
 
         return View(article);
     }
@@ -72,9 +69,12 @@ public class KnowledgeBaseController : Controller
             article.Id = Guid.NewGuid();
             article.CreatedAt = DateTime.UtcNow;
             article.AuthorId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            
+            // Set default MasalaRank values
+            article.UsageCount = 0;
+            article.IsVerified = false;
 
-            _context.Add(article);
-            await _context.SaveChangesAsync();
+            await _repository.AddAsync(article);
             return RedirectToAction(nameof(Index));
         }
         return View(article);
@@ -86,7 +86,7 @@ public class KnowledgeBaseController : Controller
     {
         if (id == null) return NotFound();
 
-        var article = await _context.KnowledgeBaseArticles.FindAsync(id);
+        var article = await _repository.GetByIdAsync(id.Value);
         if (article == null) return NotFound();
 
         return View(article);
@@ -96,7 +96,7 @@ public class KnowledgeBaseController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Roles = "Admin,Employee")]
-    public async Task<IActionResult> Edit(Guid id, [Bind("Id,Title,Content,Tags,CreatedAt,AuthorId")] KnowledgeBaseArticle article)
+    public async Task<IActionResult> Edit(Guid id, [Bind("Id,Title,Content,Tags,CreatedAt,AuthorId,UsageCount,IsVerified")] KnowledgeBaseArticle article)
     {
         if (id != article.Id) return NotFound();
 
@@ -105,21 +105,15 @@ public class KnowledgeBaseController : Controller
             try
             {
                 article.UpdatedAt = DateTime.UtcNow;
-                _context.Update(article);
-                await _context.SaveChangesAsync();
+                await _repository.UpdateAsync(article);
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!ArticleExists(article.Id)) return NotFound();
+                if (!await _repository.ExistsAsync(article.Id)) return NotFound();
                 else throw;
             }
             return RedirectToAction(nameof(Index));
         }
         return View(article);
-    }
-
-    private bool ArticleExists(Guid id)
-    {
-        return _context.KnowledgeBaseArticles.Any(e => e.Id == id);
     }
 }

@@ -11,8 +11,8 @@ using TicketMasala.Domain.Data;
 namespace TicketMasala.Web.Migrations
 {
     [DbContext(typeof(MasalaDbContext))]
-    [Migration("20251221165302_FixProjectUserRelationships")]
-    partial class FixProjectUserRelationships
+    [Migration("20260107210812_AddFts5Search")]
+    partial class AddFts5Search
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -180,6 +180,10 @@ namespace TicketMasala.Web.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Language")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -209,6 +213,10 @@ namespace TicketMasala.Web.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Region")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("TEXT");
@@ -344,7 +352,7 @@ namespace TicketMasala.Web.Migrations
                     b.HasIndex("Hash")
                         .IsUnique();
 
-                    b.ToTable("DomainConfigVersion");
+                    b.ToTable("DomainConfigVersions");
                 });
 
             modelBuilder.Entity("TicketMasala.Domain.Entities.KnowledgeBaseArticle", b =>
@@ -366,6 +374,9 @@ namespace TicketMasala.Web.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Tags")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -377,6 +388,9 @@ namespace TicketMasala.Web.Migrations
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("UsageCount")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -444,7 +458,7 @@ namespace TicketMasala.Web.Migrations
                     b.Property<string>("CustomerId")
                         .HasColumnType("TEXT");
 
-                    b.PrimitiveCollection<string>("CustomerIds")
+                    b.Property<string>("CustomerIds")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -860,10 +874,6 @@ namespace TicketMasala.Web.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Language")
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("Level")
                         .HasColumnType("INTEGER");
 
@@ -871,10 +881,6 @@ namespace TicketMasala.Web.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("ProfilePicturePath")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Region")
-                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("ResourceProjectId")

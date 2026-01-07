@@ -8,9 +8,10 @@ namespace TicketMasala.Web.Engine.GERDA.Dispatching
     {
         public bool IsEnabled => false;
         public Task<string?> GetRecommendedAgentAsync(Guid ticketGuid) => Task.FromResult<string?>(null);
-        public Task<List<(string AgentId, double Score)>> GetTopRecommendedAgentsAsync(Guid ticketGuid, int count = 3) => Task.FromResult(new List<(string, double)>());
+        public Task<List<DispatchResult>> GetTopRecommendedAgentsAsync(Guid ticketGuid, int count = 3) => Task.FromResult(new List<DispatchResult>());
         public Task<bool> AutoDispatchTicketAsync(Guid ticketGuid) => Task.FromResult(false);
         public Task RetrainModelAsync() => Task.CompletedTask;
         public Task<string?> GetRecommendedProjectManagerAsync(Guid ticketGuid) => Task.FromResult<string?>(null);
+        public DateTime? LastModelTrainingTime => null;
     }
 }

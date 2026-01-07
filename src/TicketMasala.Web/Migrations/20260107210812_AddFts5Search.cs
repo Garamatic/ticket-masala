@@ -1,13 +1,10 @@
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
-using TicketMasala.Web.Data;
 
 #nullable disable
 
 namespace TicketMasala.Web.Migrations
 {
-    [DbContext(typeof(MasalaDbContext))]
-    [Migration("20251207080500_AddFts5Search")]
+    /// <inheritdoc />
     public partial class AddFts5Search : Migration
     {
         /// <inheritdoc />

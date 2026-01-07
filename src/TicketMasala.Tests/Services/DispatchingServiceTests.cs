@@ -51,9 +51,9 @@ public class DispatchingServiceTests
         // Mock fallback strategy
         var mockStrategy = new Mock<IDispatchingStrategy>();
         mockStrategy.Setup(x => x.GetRecommendedAgentsAsync(It.IsAny<Ticket>(), It.IsAny<int>()))
-            .ReturnsAsync(new List<(string, double)> { ("emp1", 1.0) });
+            .ReturnsAsync(new List<DispatchResult> { new DispatchResult("emp1", 1.0) });
 
-        strategyFactory.Setup(x => x.GetStrategy<IDispatchingStrategy, List<(string, double)>>(It.IsAny<string>()))
+        strategyFactory.Setup(x => x.GetStrategy<IDispatchingStrategy, List<DispatchResult>>(It.IsAny<string>()))
             .Returns(mockStrategy.Object);
 
         var service = new DispatchingService(context, _config, strategyFactory.Object, domainConfig.Object, _mockLogger.Object);
@@ -123,9 +123,9 @@ public class DispatchingServiceTests
         // Mock fallback strategy
         var mockStrategy = new Mock<IDispatchingStrategy>();
         mockStrategy.Setup(x => x.GetRecommendedAgentsAsync(It.IsAny<Ticket>(), It.IsAny<int>()))
-            .ReturnsAsync(new List<(string, double)> { ("free", 1.0) });
+            .ReturnsAsync(new List<DispatchResult> { new DispatchResult("free", 1.0) });
 
-        strategyFactory.Setup(x => x.GetStrategy<IDispatchingStrategy, List<(string, double)>>(It.IsAny<string>()))
+        strategyFactory.Setup(x => x.GetStrategy<IDispatchingStrategy, List<DispatchResult>>(It.IsAny<string>()))
             .Returns(mockStrategy.Object);
 
         var service = new DispatchingService(context, _config, strategyFactory.Object, domainConfig.Object, _mockLogger.Object);
@@ -198,5 +198,29 @@ public class DispatchingServiceTests
 
         // Assert
         Assert.Equal(freeEmployee.Id, result);
+    }
+
+    [Fact]
+    public void LastModelTrainingTime_ReturnsStrategyValue()
+    {
+        // Arrange
+        using var context = new MasalaDbContext(_dbOptions);
+        var strategyFactory = new Mock<IStrategyFactory>();
+        var domainConfig = new Mock<IDomainConfigurationService>();
+        var expectedTime = DateTime.UtcNow.AddHours(-1);
+        
+        var mockStrategy = new Mock<IDispatchingStrategy>();
+        mockStrategy.Setup(x => x.LastTrained).Returns(expectedTime);
+
+        strategyFactory.Setup(x => x.GetStrategy<IDispatchingStrategy, List<DispatchResult>>(It.IsAny<string>()))
+            .Returns(mockStrategy.Object);
+
+        var service = new DispatchingService(context, _config, strategyFactory.Object, domainConfig.Object, _mockLogger.Object);
+
+        // Act
+        var result = service.LastModelTrainingTime;
+
+        // Assert
+        Assert.Equal(expectedTime, result);
     }
 }

@@ -135,14 +135,15 @@ public class DispatchBacklogService : IDispatchBacklogService
                                     Score = r.Score,
                                     Team = agent.Team,
                                     CurrentWorkload = workload.Item1,
-                                    MaxCapacity = 10,
+                                    MaxCapacity = agent.MaxCapacityPoints,
+                                    Specializations = agent.Specializations,
                                     Language = agent.Language,
-                                    Region = agent.Region
+                                    Region = agent.Region,
+                                    Reasons = r.Reasons
                                 };
                             })
                             .Where(r => r != null)
-                            .Cast<AgentRecommendation>() // Help compiler
-                            .ToList();
+                            .ToList()!;
                     }
                 }
                 catch (Exception ex)
@@ -204,7 +205,8 @@ public class DispatchBacklogService : IDispatchBacklogService
             CurrentPage = page,
             PageSize = pageSize,
             TotalItems = totalItems,
-            TotalPages = totalPages
+            TotalPages = totalPages,
+            LastModelTrainingTime = _dispatchingService.LastModelTrainingTime
         };
     }
 }

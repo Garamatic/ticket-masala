@@ -20,6 +20,7 @@ using TicketMasala.Domain.Data;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.GERDA.Configuration;
 using TicketMasala.Domain.Configuration;
+using TicketMasala.Web.Engine.Security;
 
 namespace TicketMasala.Tests.Services;
 
@@ -51,6 +52,11 @@ public class TicketServiceTests
         var ruleEngine = new Mock<IRuleEngineService>();
         var domainConfig = new Mock<IDomainConfigurationService>();
         var logger = new Mock<ILogger<TicketService>>();
+        var piiScrubber = new Mock<IPiiScrubberService>();
+        
+        // Default behavior: return input as is
+        piiScrubber.Setup(s => s.Scrub(It.IsAny<string>()))
+            .Returns((string s) => s);
 
         // Wire up Repository Mocks to use the InMemory Context
         userRepository.Setup(r => r.GetCustomerByIdAsync(It.IsAny<string>()))
@@ -122,7 +128,8 @@ public class TicketServiceTests
             logger.Object,
             ticketDispatchService,
             ticketReportingService,
-            ticketNotificationService);
+            ticketNotificationService,
+            piiScrubber.Object);
     }
 
     [Fact]
@@ -504,6 +511,8 @@ public class TicketServiceTests
         var ticketDispatchService = new TicketDispatchService(ticketRepo.Object, dispatchLogger.Object);
         var ticketReportingService = new TicketReportingService(ticketRepo.Object, reportingLogger.Object);
         var ticketNotificationService = new TicketNotificationService(new Mock<INotificationService>().Object, notificationLogger.Object);
+        var piiScrubber = new Mock<IPiiScrubberService>();
+        
         var service = new TicketService(
             context,
             ticketRepo.Object,
@@ -519,7 +528,8 @@ public class TicketServiceTests
             logger.Object,
             ticketDispatchService,
             ticketReportingService,
-            ticketNotificationService
+            ticketNotificationService,
+            piiScrubber.Object
         );
 
         // Mock Domain Config

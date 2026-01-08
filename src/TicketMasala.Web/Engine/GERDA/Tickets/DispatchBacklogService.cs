@@ -139,12 +139,13 @@ public class DispatchBacklogService : IDispatchBacklogService
                                     Specializations = agent.Specializations,
                                     Language = agent.Language,
                                     Region = agent.Region,
-                                    Reasons = r.Reasons
+                                    Reasons = r.Reasons,
+                                    Explanation = r.Explanation
                                 };
                             })
                             .Where(r => r != null)
                             .ToList()!;
-                    }
+                        }
                 }
                 catch (Exception ex)
                 {

@@ -131,12 +131,19 @@ public class DispatchingService : IDispatchingService
             return false;
         }
 
-        var recommendedAgent = await GetRecommendedAgentAsync(ticketGuid);
+        // Get top recommendation with score
+        var recommendations = await GetTopRecommendedAgentsAsync(ticketGuid, 1);
+        var bestMatch = recommendations.FirstOrDefault();
 
-        if (string.IsNullOrEmpty(recommendedAgent))
+        // Threshold: 3.5 out of 5.0 (70% confidence)
+        if (bestMatch == null || bestMatch.Score < 3.5)
         {
+            _logger.LogInformation("GERDA-D: Auto-dispatch skipped for {TicketGuid}. Best score {Score:F2} below threshold 3.5", 
+                ticketGuid, bestMatch?.Score ?? 0);
             return false;
         }
+
+        var recommendedAgent = bestMatch.AgentId;
 
         var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.Guid == ticketGuid);
         if (ticket == null)
@@ -151,7 +158,8 @@ public class DispatchingService : IDispatchingService
 
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("GERDA-D: Auto-dispatched ticket {TicketGuid} to agent {AgentId}", ticketGuid, recommendedAgent);
+        _logger.LogInformation("GERDA-D: Auto-dispatched ticket {TicketGuid} to agent {AgentId} (Score: {Score:F2})", 
+            ticketGuid, recommendedAgent, bestMatch.Score);
         return true;
     }
 

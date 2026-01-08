@@ -7,6 +7,7 @@ using TicketMasala.Web.Engine.Ingestion;
 using TicketMasala.Web.Engine.Ingestion.Background;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 
 namespace TicketMasala.Web.Controllers;
@@ -17,12 +18,21 @@ public class ImportController : Controller
     private readonly ITicketImportService _importService;
     private readonly ITicketService _ticketService;
     private readonly ILogger<ImportController> _logger;
+    private readonly IBackgroundTaskQueue _taskQueue;
+    private readonly IServiceScopeFactory _scopeFactory;
 
-    public ImportController(ITicketImportService importService, ITicketService ticketService, ILogger<ImportController> logger)
+    public ImportController(
+        ITicketImportService importService,
+        ITicketService ticketService,
+        ILogger<ImportController> logger,
+        IBackgroundTaskQueue taskQueue,
+        IServiceScopeFactory scopeFactory)
     {
         _importService = importService;
         _ticketService = ticketService;
         _logger = logger;
+        _taskQueue = taskQueue;
+        _scopeFactory = scopeFactory;
     }
 
     [HttpGet]
@@ -107,9 +117,6 @@ public class ImportController : Controller
 
         try
         {
-            using var stream = System.IO.File.OpenRead(tempPath);
-            var rows = _importService.ParseFile(stream, originalFileName);
-
             var uploaderId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             var departmentId = await _ticketService.GetCurrentUserDepartmentIdAsync();
 
@@ -125,19 +132,45 @@ public class ImportController : Controller
                 return RedirectToAction(nameof(Index));
             }
 
-            var count = await _importService.ImportTicketsAsync(rows, mapping, uploaderId, departmentId.Value);
+            var deptIdValue = departmentId.Value;
 
-            TempData["Success"] = $"Successfully imported {count} tickets.";
+            // Enqueue Background Job
+            await _taskQueue.QueueBackgroundWorkItemAsync(async token =>
+            {
+                using var scope = _scopeFactory.CreateScope();
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<ImportController>>();
+                
+                try 
+                {
+                    logger.LogInformation("Starting background import for {FileName}", originalFileName);
+                    var importService = scope.ServiceProvider.GetRequiredService<ITicketImportService>();
+                    
+                    using var stream = System.IO.File.OpenRead(tempPath);
+                    var rows = importService.ParseFile(stream, originalFileName);
+                    
+                    var count = await importService.ImportTicketsAsync(rows, mapping, uploaderId, deptIdValue);
+                    logger.LogInformation("Background import completed. Imported {Count} tickets.", count);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Error during background import of {FileName}", originalFileName);
+                }
+                finally
+                {
+                    if (System.IO.File.Exists(tempPath))
+                    {
+                        System.IO.File.Delete(tempPath);
+                    }
+                }
+            });
 
-            // Cleanup
-            System.IO.File.Delete(tempPath);
-
+            TempData["Success"] = "Import started in background. Please check the dashboard later.";
             return RedirectToAction("Index", "Ticket");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error executing import");
-            TempData["Error"] = "Error executing import.";
+            _logger.LogError(ex, "Error queuing import");
+            TempData["Error"] = "Error starting import.";
             return RedirectToAction(nameof(Index));
         }
     }

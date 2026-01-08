@@ -167,6 +167,37 @@ public class TicketImportService : ITicketImportService
                         ticket.TicketType = type;
                 }
 
+                if (mapping.ContainsKey("Status") && rowDict.ContainsKey(mapping["Status"]))
+                {
+                    var statusStr = rowDict[mapping["Status"]]?.ToString();
+                    if (!string.IsNullOrWhiteSpace(statusStr))
+                    {
+                        ticket.Status = statusStr;
+                        
+                        // Try to map to Enum
+                        if (Enum.TryParse<Status>(statusStr, true, out var statusEnum))
+                        {
+                            ticket.TicketStatus = statusEnum;
+                        }
+                        else if (statusStr.Equals("New", StringComparison.OrdinalIgnoreCase))
+                        {
+                            ticket.TicketStatus = Status.Pending;
+                        }
+                        else if (statusStr.Equals("Done", StringComparison.OrdinalIgnoreCase) || statusStr.Equals("Closed", StringComparison.OrdinalIgnoreCase))
+                        {
+                            ticket.TicketStatus = Status.Completed;
+                        }
+                    }
+                }
+
+                if (mapping.ContainsKey("Priority") && rowDict.ContainsKey(mapping["Priority"]))
+                {
+                    if (double.TryParse(rowDict[mapping["Priority"]]?.ToString(), out var priority))
+                    {
+                        ticket.PriorityScore = priority;
+                    }
+                }
+
                 _context.Tickets.Add(ticket);
                 count++;
             }

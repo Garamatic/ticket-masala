@@ -1,4 +1,6 @@
 using TicketMasala.Domain.Data;
+using TicketMasala.Web.Data;
+using TicketMasala.Web.Engine.GERDA.Dispatching;
 using Microsoft.EntityFrameworkCore;
 
 namespace TicketMasala.Web.Engine.Enrichment;
@@ -82,5 +84,19 @@ public class EnrichmentBackgroundService : BackgroundService
 
         await context.SaveChangesAsync(token);
         _logger.LogInformation("Enrichment complete for Ticket {TicketId}.", workItem.TicketId);
+
+        // Auto-Dispatch
+        if (workItem.EnrichmentType == "All" || workItem.EnrichmentType == "Dispatch")
+        {
+             try 
+             {
+                 var dispatchService = scope.ServiceProvider.GetRequiredService<IDispatchingService>();
+                 await dispatchService.AutoDispatchTicketAsync(workItem.TicketId);
+             }
+             catch (Exception ex)
+             {
+                 _logger.LogError(ex, "Auto-dispatch failed for ticket {TicketId}", workItem.TicketId);
+             }
+        }
     }
 }

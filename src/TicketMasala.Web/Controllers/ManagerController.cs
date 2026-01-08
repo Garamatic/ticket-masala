@@ -385,4 +385,23 @@ public class ManagerController : Controller
             return Json(new { success = false, message = "Failed to generate ticket" });
         }
     }
+
+    /// <summary>
+    /// Trigger Golden Path data generation for demo
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> GenerateGoldenPath()
+    {
+        try
+        {
+            await _ticketGenerator.GenerateGoldenPathDataAsync();
+            return Json(new { success = true, message = "Golden Path data generated successfully! Refresh page to see results." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating Golden Path data");
+            return Json(new { success = false, message = "Failed to generate Golden Path data: " + ex.Message });
+        }
+    }
 }

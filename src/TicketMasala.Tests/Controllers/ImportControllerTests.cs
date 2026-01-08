@@ -2,10 +2,12 @@ using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using TicketMasala.Web.Controllers;
 using TicketMasala.Web.Engine.Ingestion;
+using TicketMasala.Web.Engine.Ingestion.Background;
 using TicketMasala.Web.Engine.GERDA.Tickets;
 using Xunit;
 
@@ -16,6 +18,8 @@ public class ImportControllerTests
     private readonly Mock<ITicketImportService> _mockImportService;
     private readonly Mock<ITicketService> _mockTicketService;
     private readonly Mock<ILogger<ImportController>> _mockLogger;
+    private readonly Mock<IBackgroundTaskQueue> _mockTaskQueue;
+    private readonly Mock<IServiceScopeFactory> _mockScopeFactory;
     private readonly ImportController _controller;
 
     public ImportControllerTests()
@@ -23,11 +27,15 @@ public class ImportControllerTests
         _mockImportService = new Mock<ITicketImportService>();
         _mockTicketService = new Mock<ITicketService>();
         _mockLogger = new Mock<ILogger<ImportController>>();
+        _mockTaskQueue = new Mock<IBackgroundTaskQueue>();
+        _mockScopeFactory = new Mock<IServiceScopeFactory>();
 
         _controller = new ImportController(
             _mockImportService.Object,
             _mockTicketService.Object,
-            _mockLogger.Object
+            _mockLogger.Object,
+            _mockTaskQueue.Object,
+            _mockScopeFactory.Object
         );
 
         // Setup TempData

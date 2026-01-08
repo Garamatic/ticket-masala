@@ -267,6 +267,11 @@ public class MatrixFactorizationDispatchingStrategy : IDispatchingStrategy
                 {
                     result.Reasons.Add($"Region Match ({geoScore:F1}/5)");
                 }
+                result.Explanation = AffinityScoring.GetScoreExplanation(
+                    prediction.Score,
+                    ticket,
+                    employee,
+                    customer);
                 
                 scoredAgents.Add(result);
             }

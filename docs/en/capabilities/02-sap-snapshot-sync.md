@@ -92,6 +92,23 @@ For high-volume imports, the system prefers **Apache Parquet**. This allows for 
 
 ---
 
+## Manual Ingestion (MVP)
+
+For the initial release and demos, a **CSV Import** mechanism is provided as a lightweight alternative to the full API integration.
+
+### Capabilities
+- **Supported Formats:** `.csv`, `.xlsx`.
+- **Field Mapping:** Users can map column headers (e.g., "Description", "Priority") to internal ticket fields via the UI.
+- **Idempotency:** Imported tickets are treated as new "Snapshot" entries.
+
+### Usage
+1. Navigate to **Import SAP** on the Dashboard.
+2. Upload a CSV export from SAP/ERP.
+3. Map the columns in the wizard.
+4. Click **Import**.
+
+---
+
 ## References
 - **[Gatekeeper API](../guides/gatekeeper-api.md)**
 - **[Data Seeding Guide](../guides/data-seeding.md)**

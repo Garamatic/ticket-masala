@@ -78,6 +78,7 @@ public class AgentRecommendation
     public string? Language { get; set; }
     public string? Region { get; set; }
     public List<string> Reasons { get; set; } = new();
+    public string? Explanation { get; set; }
 
     public string WorkloadDisplay => $"{CurrentWorkload}/{MaxCapacity}";
     public int WorkloadPercentage => MaxCapacity > 0 ? (int)((CurrentWorkload / (double)MaxCapacity) * 100) : 0;

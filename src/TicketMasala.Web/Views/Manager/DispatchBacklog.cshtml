@@ -47,9 +47,19 @@
                 @Localizer["Model"]: @Model.LastModelTrainingTime.Value.ToLocalTime().ToString("g")
             </small>
         }
-        <button class="btn btn-outline-warning me-2" onclick="retrainModel()">
+        <button class="btn btn-outline-warning me-2" onclick="retrainModel(this)">
             <i class="fas fa-brain me-2"></i>
-            @Localizer["Retrain Model"]
+            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+            <span class="btn-text">@Localizer["Retrain Model"]</span>
+        </button>
+        <button class="btn btn-outline-info me-2" onclick="seedGoldenPath(this)">
+            <i class="fas fa-seedling me-2"></i>
+            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+            <span class="btn-text">@Localizer["Seed Demo"]</span>
+        </button>
+        <button class="btn btn-outline-secondary me-2" onclick="window.location.href='@Url.Action("Index", "Import")'">
+            <i class="fas fa-file-import me-2"></i>
+            @Localizer["Import SAP"]
         </button>
         <button class="btn btn-outline-primary" onclick="location.reload()">
             <i class="fas fa-sync-alt me-2"></i>
@@ -181,6 +191,14 @@
                                 </label>
                             </div>
                             <div>
+                                @if (ticket.RecommendedAgents.Any())
+                                {
+                                    var topScore = ticket.RecommendedAgents.First().Score;
+                                    var confidenceClass = topScore >= 80 ? "bg-success" : (topScore >= 50 ? "bg-warning text-dark" : "bg-danger");
+                                    <span class="badge @confidenceClass ms-2" data-bs-toggle="tooltip" title="@Localizer["AI Confidence Score"]">
+                                        <i class="fas fa-robot"></i> @topScore.ToString("F0")%
+                                    </span>
+                                }
                                 @if (ticket.PriorityScore >= 75)
                                 {
                                     <span class="priority-badge priority-high">
@@ -288,6 +306,12 @@
                                                 <span class="score-badge @(agent.Score >= 70 ? "score-high" : agent.Score >= 40 ? "score-medium" : "score-low")">
                                                     @Localizer["Score"]: @agent.ScoreDisplay
                                                 </span>
+                                                @if (!string.IsNullOrWhiteSpace(agent.Explanation))
+                                                {
+                                                    <span class="ms-1 text-muted" title="@agent.Explanation">
+                                                        <i class="fas fa-info-circle"></i>
+                                                    </span>
+                                                }
                                                 <br>
                                                 <small class="text-muted">@Localizer["Load"]: @agent.WorkloadDisplay</small>
                                             </div>
@@ -552,17 +576,12 @@
         }
     });
 
-    function retrainModel() {
+    function retrainModel(btn) {
         if (!confirm('@Localizer["Are you sure you want to manually trigger the dispatch model retraining? This may take a few moments."]')) {
             return;
         }
 
-        const btn = event.currentTarget;
-        const originalContent = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> @Localizer["Training..."]';
-
-        // Get Anti-Forgery Token
+        setLoading(btn, true);
         const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
 
         fetch('@Url.Action("RetrainDispatchModel", "Manager")', {
@@ -576,18 +595,64 @@
         .then(data => {
             if (data.success) {
                 alert(data.message);
+                location.reload(); // Reload to show updated timestamp
             } else {
                 alert('Error: ' + data.message);
+                setLoading(btn, false);
             }
         })
         .catch(error => {
             console.error('Error:', error);
             alert('@Localizer["An error occurred while triggering model retraining."]');
-        })
-        .finally(() => {
-            btn.disabled = false;
-            btn.innerHTML = originalContent;
+            setLoading(btn, false);
         });
+    }
+
+    function seedGoldenPath(btn) {
+        if (!confirm('@Localizer["Generate Golden Path demo data? This will create specific agents, customers, and history."]\n\n@Localizer["(Safe to run multiple times - checks existence first)"]')) {
+            return;
+        }
+
+        setLoading(btn, true);
+        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+        fetch('@Url.Action("GenerateGoldenPath", "Manager")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': token
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+                setLoading(btn, false);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('@Localizer["An error occurred while seeding data."]');
+            setLoading(btn, false);
+        });
+    }
+
+    function setLoading(btn, isLoading) {
+        const spinner = btn.querySelector('.spinner-border');
+        const icon = btn.querySelector('.fa-brain, .fa-seedling');
+        
+        if (spinner) {
+            if (isLoading) spinner.classList.remove('d-none');
+            else spinner.classList.add('d-none');
+        }
+        if (icon) {
+            if (isLoading) icon.classList.add('d-none');
+            else icon.classList.remove('d-none');
+        }
+        btn.disabled = isLoading;
     }
 
     let selectedTickets = new Set();
@@ -615,31 +680,7 @@
         updateSelectedCount();
     }
 
-    async function retrainModel() {
-        if (!confirm('@Localizer["Are you sure you want to retrain the dispatching model? This happens in the background."]')) {
-            return;
-        }
 
-        try {
-            const response = await fetch('@Url.Action("RetrainDispatchModel", "Manager")', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                }
-            });
-
-            if (response.ok) {
-                alert('@Localizer["Model retraining initiated in the background."]');
-                location.reload();
-            } else {
-                alert('@Localizer["Failed to initiate model retraining."]');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('@Localizer["An error occurred."]');
-        }
-    }
 
     async function assignTicketToAgent(ticketGuid, agentId, agentName) {
         if (!confirm(`Assign this ticket to ${agentName}?`)) {

@@ -247,10 +247,10 @@
                         <!-- Right: Actions (Dark mode, Language, Auth buttons) -->
                         <div class="d-flex align-items-center gap-2 header-actions">
                             <!-- Search (optional) - Hidden on landing page, shown for authenticated users -->
-                            <div class="search-box d-none d-md-block me-2" style="max-width: 250px;">
+                            <form asp-controller="KnowledgeBase" asp-action="Index" method="get" class="search-box d-none d-md-block me-2" style="max-width: 250px;">
                                 <i class="fas fa-search search-icon text-muted"></i>
-                                <input type="text" class="form-control border-0 bg-light" placeholder="@Localizer["Search..."]" style="padding-left: 2.5rem;" />
-                            </div>
+                                <input type="text" name="searchTerm" class="form-control border-0 bg-light" placeholder="@Localizer["Search KB..."]" style="padding-left: 2.5rem;" />
+                            </form>
                         
                         <!-- Notifications -->
                         @if (User.Identity?.IsAuthenticated == true)
@@ -371,10 +371,10 @@
                             </a>
 
                             <!-- Search (optional) -->
-                            <div class="search-box d-none d-md-block me-2" style="max-width: 250px;">
+                            <form asp-controller="KnowledgeBase" asp-action="Index" method="get" class="search-box d-none d-md-block me-2" style="max-width: 250px;">
                                 <i class="fas fa-search search-icon text-muted"></i>
-                                <input type="text" class="form-control border-0 bg-light" placeholder="@Localizer["Search..."]" style="padding-left: 2.5rem;" />
-                            </div>
+                                <input type="text" name="searchTerm" class="form-control border-0 bg-light" placeholder="@Localizer["Search KB..."]" style="padding-left: 2.5rem;" />
+                            </form>
                             
                             <!-- Notifications -->
                             @if (User.Identity?.IsAuthenticated == true)

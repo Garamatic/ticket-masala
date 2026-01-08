@@ -2,7 +2,7 @@ namespace TicketMasala.Web.Engine.GERDA;
 
 /// <summary>
 /// Main GERDA orchestrator interface.
-/// GERDA = GovTech Extended Resource Dispatch & Anticipation
+/// GERDA = GovTech Extended Resource Dispatch &amp; Anticipation
 /// </summary>
 public interface IGerdaService
 {

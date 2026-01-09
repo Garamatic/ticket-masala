@@ -17,7 +17,7 @@
         <p class="page-subtitle">Create a new @workItemLabel.ToLower() for processing</p>
     </div>
     <div class="page-actions">
-        <a asp-action="Index" class="btn btn-outline-secondary">
+        <a asp-controller="TicketSearch" asp-action="Index" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left me-2"></i>
             Back to @(workItemLabel)s
         </a>
@@ -144,7 +144,7 @@
                     <i class="fas fa-save me-2"></i>
                     Create @workItemLabel
                 </button>
-                <a asp-action="Index" class="btn btn-outline-secondary ms-2">
+                <a asp-controller="TicketSearch" asp-action="Index" class="btn btn-outline-secondary ms-2">
                     Cancel
                 </a>
             </div>

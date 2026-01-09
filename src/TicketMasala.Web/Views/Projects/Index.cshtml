@@ -20,13 +20,14 @@
         <p class="page-subtitle">@Localizer["Manage your projects and track progress"]</p>
     </div>
     <div class="page-actions">
-        @if (User.IsInRole(TicketMasala.Domain.Common.Constants.RoleAdmin) || User.IsInRole(TicketMasala.Domain.Common.Constants.RoleEmployee))
+        @if (User.IsInRole(TicketMasala.Domain.Common.Constants.RoleAdmin) ||
+        User.IsInRole(TicketMasala.Domain.Common.Constants.RoleEmployee))
         {
             <a asp-controller="Projects" asp-action="NewProject" class="btn btn-primary">
                 <i class="fas fa-plus me-2"></i>
                 @Localizer["New Project"]
             </a>
-            <a asp-controller="Ticket" asp-action="Index" class="btn btn-outline-primary ms-2">
+            <a asp-controller="TicketSearch" asp-action="Index" class="btn btn-outline-primary ms-2">
                 <i class="fas fa-ticket-alt me-2"></i>
                 @Localizer["Create from Ticket"]
             </a>
@@ -40,7 +41,7 @@
         <i class="fas fa-search search-icon"></i>
         <input type="text" class="form-control" id="projectSearch" placeholder="@Localizer["Search projects..."]" />
     </div>
-    
+
     <select class="form-select" id="statusFilter" style="max-width: 180px;">
         <option value="">@Localizer["All Status"]</option>
         <option value="Pending">@Localizer["Pending"]</option>
@@ -64,7 +65,7 @@
                             </a>
                         </h3>
                     </div>
-                    
+
                     <div class="project-card-meta">
                         <span>
                             <i class="fas fa-user-tie"></i>
@@ -75,7 +76,7 @@
                             @item.ProjectDetails.TicketCount @Localizer["Tickets"]
                         </span>
                     </div>
-                    
+
                     @if (item.Tasks != null && item.Tasks.Any())
                     {
                         <div class="table-responsive mt-3">
@@ -99,7 +100,7 @@
                                             Status.Failed => "status-failed",
                                             _ => ""
                                         };
-                                        
+
                                         <tr>
                                             <td>
                                                 <code class="text-muted">@ticket.Guid.ToString()[..8]...</code>
@@ -114,12 +115,12 @@
                                 </tbody>
                             </table>
                         </div>
-                        
+
                         @if (item.Tasks.Count > 5)
                         {
                             <div class="mt-2 text-center">
-                                <a asp-controller="Projects" asp-action="Details" asp-route-id="@item.ProjectDetails.Guid" 
-                                   class="btn btn-sm btn-outline-primary">
+                                <a asp-controller="Projects" asp-action="Details" asp-route-id="@item.ProjectDetails.Guid"
+                    class="btn btn-sm btn-outline-primary">
                                     @Localizer["View all {0} tickets", item.Tasks.Count]
                                     <i class="fas fa-arrow-right ms-1"></i>
                                 </a>
@@ -146,7 +147,8 @@ else
         </div>
         <h3 class="empty-state-title">@Localizer["No projects yet"]</h3>
         <p class="empty-state-text">@Localizer["Get started by creating your first project."]</p>
-        @if (User.IsInRole(TicketMasala.Domain.Common.Constants.RoleAdmin) || User.IsInRole(TicketMasala.Domain.Common.Constants.RoleEmployee))
+        @if (User.IsInRole(TicketMasala.Domain.Common.Constants.RoleAdmin) ||
+       User.IsInRole(TicketMasala.Domain.Common.Constants.RoleEmployee))
         {
             <a asp-controller="Projects" asp-action="NewProject" class="btn btn-primary">
                 <i class="fas fa-plus me-2"></i>
@@ -157,39 +159,39 @@ else
 }
 
 @section Scripts {
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const searchInput = document.getElementById('projectSearch');
-            const statusFilter = document.getElementById('statusFilter');
-            const projectCards = document.querySelectorAll('.project-card');
-            
-            function filterProjects() {
-                const searchTerm = searchInput?.value.toLowerCase() ?? '';
-                const selectedStatus = statusFilter?.value.toLowerCase() ?? '';
-                
-                projectCards.forEach(card => {
-                    const text = card.textContent.toLowerCase();
-                    const statusBadges = card.querySelectorAll('.status-badge');
-                    
-                    // Check search match
-                    const matchesSearch = !searchTerm || text.includes(searchTerm);
-                    
-                    // Check status match - look for matching status badges in tickets
-                    let matchesStatus = !selectedStatus;
-                    if (selectedStatus) {
-                        statusBadges.forEach(badge => {
-                            if (badge.textContent.toLowerCase().replace(/\s+/g, '').includes(selectedStatus.replace(/\s+/g, ''))) {
-                                matchesStatus = true;
-                            }
-                        });
-                    }
-                    
-                    card.closest('.col-12').style.display = (matchesSearch && matchesStatus) ? '' : 'none';
-                });
-            }
-            
-            searchInput?.addEventListener('input', filterProjects);
-            statusFilter?.addEventListener('change', filterProjects);
-        });
-    </script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('projectSearch');
+        const statusFilter = document.getElementById('statusFilter');
+        const projectCards = document.querySelectorAll('.project-card');
+
+        function filterProjects() {
+            const searchTerm = searchInput?.value.toLowerCase() ?? '';
+            const selectedStatus = statusFilter?.value.toLowerCase() ?? '';
+
+            projectCards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                const statusBadges = card.querySelectorAll('.status-badge');
+
+                // Check search match
+                const matchesSearch = !searchTerm || text.includes(searchTerm);
+
+                // Check status match - look for matching status badges in tickets
+                let matchesStatus = !selectedStatus;
+                if (selectedStatus) {
+                    statusBadges.forEach(badge => {
+                        if (badge.textContent.toLowerCase().replace(/\s+/g, '').includes(selectedStatus.replace(/\s+/g, ''))) {
+                            matchesStatus = true;
+                        }
+                    });
+                }
+
+                card.closest('.col-12').style.display = (matchesSearch && matchesStatus) ? '' : 'none';
+            });
+        }
+
+        searchInput?.addEventListener('input', filterProjects);
+        statusFilter?.addEventListener('change', filterProjects);
+    });
+</script>
 }

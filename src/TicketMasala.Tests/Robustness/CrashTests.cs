@@ -111,7 +111,7 @@ namespace TicketMasala.Tests.Robustness
 
             var controller = new TicketController(
                 mockGerda.Object, mockTicketService.Object, mockAudit.Object,
-                mockNotif.Object, mockDomain.Object, mockSavedFilter.Object,
+                mockNotif.Object, mockDomain.Object,
                 mockProjectService.Object, mockHttpContext.Object, mockRule.Object,
                 mockLogger.Object);
 
@@ -150,7 +150,7 @@ namespace TicketMasala.Tests.Robustness
 
             var controller = new TicketController(
                 mockGerda.Object, mockTicketService.Object, mockAudit.Object,
-                mockNotif.Object, mockDomain.Object, mockSavedFilter.Object,
+                mockNotif.Object, mockDomain.Object,
                 mockProjectService.Object, mockHttpContext.Object, mockRule.Object,
                 mockLogger.Object);
 

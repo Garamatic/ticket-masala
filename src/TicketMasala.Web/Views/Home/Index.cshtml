@@ -45,7 +45,7 @@
         
         @if (!User.IsInRole("Customer"))
         {
-            <a asp-controller="Manager" asp-action="TeamDashboard" class="stat-card warning text-decoration-none transform-hover">
+            <a asp-controller="Dashboard" asp-action="TeamDashboard" class="stat-card warning text-decoration-none transform-hover">
                 <i class="fas fa-clock stat-card-icon"></i>
                 <div class="stat-card-title text-white">@Localizer["Pending Tasks"]</div>
                 <div class="stat-card-value text-white">@(ViewBag.PendingTaskCount ?? 0)</div>
@@ -54,11 +54,11 @@
                 </div>
             </a>
             
-            <a asp-controller="Manager" asp-action="DispatchBacklog" class="stat-card success text-decoration-none transform-hover">
+            <a asp-controller="Dispatch" asp-action="DispatchBacklog" class="stat-card success text-decoration-none transform-hover">
                 <i class="fas fa-chart-line stat-card-icon"></i>
                 <div class="stat-card-title text-white">@Localizer["Completion Rate"]</div>
                 <div class="stat-card-value text-white">@(ViewBag.CompletionRate ?? 0)%</div>
-                <div class="stat-card-change text-white-50">
+                <div class="stat-card-change">
                     <i class="fas fa-trophy me-1"></i> @Localizer["Great progress!"]
                 </div>
             </a>

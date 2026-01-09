@@ -27,6 +27,12 @@ public static class ConfigurationServiceCollectionExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        // Bind OpenAiSettings
+        services.AddOptions<OpenAiSettings>()
+            .Bind(configuration.GetSection(OpenAiSettings.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         return services;
     }
 

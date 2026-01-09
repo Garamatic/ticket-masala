@@ -93,6 +93,9 @@ public static class CoreServiceCollectionExtensions
         // Ticket Generator
         services.AddScoped<ITicketGenerator, TicketGenerator>();
 
+        // Import Dispatcher
+        services.AddSingleton<ITicketImportDispatcher, TicketImportDispatcher>();
+
         return services;
     }
 }

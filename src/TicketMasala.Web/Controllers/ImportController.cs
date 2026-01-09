@@ -18,23 +18,20 @@ public class ImportController : Controller
     private readonly ITicketImportService _importService;
     private readonly ITicketService _ticketService;
     private readonly ILogger<ImportController> _logger;
-    private readonly IBackgroundTaskQueue _taskQueue;
-    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly ITicketImportDispatcher _dispatcher;
     private readonly IFileStorageService _fileStorageService;
 
     public ImportController(
         ITicketImportService importService,
         ITicketService ticketService,
         ILogger<ImportController> logger,
-        IBackgroundTaskQueue taskQueue,
-        IServiceScopeFactory scopeFactory,
+        ITicketImportDispatcher dispatcher,
         IFileStorageService fileStorageService)
     {
         _importService = importService;
         _ticketService = ticketService;
         _logger = logger;
-        _taskQueue = taskQueue;
-        _scopeFactory = scopeFactory;
+        _dispatcher = dispatcher;
         _fileStorageService = fileStorageService;
     }
 
@@ -75,7 +72,7 @@ public class ImportController : Controller
             // Better approach for pilot: Save temp file
             using var fileStream = file.OpenReadStream();
             var fileId = await _fileStorageService.StoreFileAsync(fileStream, file.FileName);
-            
+
             TempData["FileId"] = fileId;
             TempData["OriginalFileName"] = file.FileName; // Store original filename to preserve extension
 
@@ -135,33 +132,8 @@ public class ImportController : Controller
 
             var deptIdValue = departmentId.Value;
 
-            // Enqueue Background Job
-            await _taskQueue.QueueBackgroundWorkItemAsync(async token =>
-            {
-                using var scope = _scopeFactory.CreateScope();
-                var logger = scope.ServiceProvider.GetRequiredService<ILogger<ImportController>>();
-                var fileStorage = scope.ServiceProvider.GetRequiredService<IFileStorageService>();
-
-                try 
-                {
-                    logger.LogInformation("Starting background import for {FileName}", originalFileName);
-                    var importService = scope.ServiceProvider.GetRequiredService<ITicketImportService>();
-                    
-                    using var stream = await fileStorage.RetrieveFileAsync(fileId);
-                    var rows = importService.ParseFile(stream, originalFileName);
-                    
-                    var count = await importService.ImportTicketsAsync(rows, mapping, uploaderId, deptIdValue);
-                    logger.LogInformation("Background import completed. Imported {Count} tickets.", count);
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, "Error during background import of {FileName}", originalFileName);
-                }
-                finally
-                {
-                    await fileStorage.DeleteFileAsync(fileId);
-                }
-            });
+            // Dispatch Background Job
+            await _dispatcher.DispatchImportAsync(fileId, originalFileName, mapping, uploaderId, deptIdValue);
 
             TempData["Success"] = "Import started in background. Please check the dashboard later.";
             return RedirectToAction("Index", "Ticket");

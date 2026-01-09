@@ -14,16 +14,16 @@ namespace TicketMasala.Web.Controllers.Api.V1;
 [ApiController]
 public class WorkContainersController : ControllerBase
 {
-    private readonly IProjectService _projectService;
+    private readonly IProjectWorkflowService _projectWorkflowService;
     private readonly IProjectRepository _projectRepository;
     private readonly ILogger<WorkContainersController> _logger;
 
     public WorkContainersController(
-        IProjectService projectService,
+        IProjectWorkflowService projectWorkflowService,
         IProjectRepository projectRepository,
         ILogger<WorkContainersController> logger)
     {
-        _projectService = projectService;
+        _projectWorkflowService = projectWorkflowService;
         _projectRepository = projectRepository;
         _logger = logger;
     }
@@ -77,7 +77,7 @@ public class WorkContainersController : ControllerBase
                 ProjectType = container.ProjectType // Map if possible
             };
 
-            var project = await _projectService.CreateProjectAsync(vm, userId);
+            var project = await _projectWorkflowService.CreateProjectAsync(vm, userId);
 
             // Post-creation update for extra fields not in ViewModel
             bool needsUpdate = false;

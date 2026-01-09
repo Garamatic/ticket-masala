@@ -15,16 +15,16 @@ namespace TicketMasala.Web.Controllers.Api.V1;
 [Authorize]
 public class WorkItemsController : ControllerBase
 {
-    private readonly ITicketService _ticketService;
+    private readonly ITicketWorkflowService _ticketWorkflowService;
     private readonly ITicketRepository _ticketRepository;
     private readonly ILogger<WorkItemsController> _logger;
 
     public WorkItemsController(
-        ITicketService ticketService,
+        ITicketWorkflowService ticketWorkflowService,
         ITicketRepository ticketRepository,
         ILogger<WorkItemsController> logger)
     {
-        _ticketService = ticketService;
+        _ticketWorkflowService = ticketWorkflowService;
         _ticketRepository = ticketRepository;
         _logger = logger;
     }
@@ -91,7 +91,7 @@ public class WorkItemsController : ControllerBase
             }
 
             // Use Service for Create to ensure business rules/observers run
-            var ticket = await _ticketService.CreateTicketAsync(
+            var ticket = await _ticketWorkflowService.CreateTicketAsync(
                 workItem.Description,
                 customerId,
                 workItem.AssignedHandlerId,
@@ -119,7 +119,7 @@ public class WorkItemsController : ControllerBase
 
             if (needsUpdate)
             {
-                await _ticketService.UpdateTicketAsync(ticket);
+                await _ticketWorkflowService.UpdateTicketAsync(ticket);
             }
 
             return CreatedAtAction(nameof(GetById), new { id = ticket.Guid, version = "1.0" }, ticket.ToWorkItemDto());
@@ -151,7 +151,7 @@ public class WorkItemsController : ControllerBase
         var updatedTicket = workItem.ToTicket(existingTicket);
 
         // Use Service to persist to ensure Rules/Observers run
-        var result = await _ticketService.UpdateTicketAsync(updatedTicket);
+        var result = await _ticketWorkflowService.UpdateTicketAsync(updatedTicket);
 
         if (!result)
             return StatusCode(500, new ApiErrorResponse { Error = "INTERNAL_ERROR", Message = "Failed to update work item" });

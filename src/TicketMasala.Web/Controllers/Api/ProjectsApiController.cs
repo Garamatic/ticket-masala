@@ -24,18 +24,21 @@ namespace TicketMasala.Web.Controllers.Api;
 [Produces("application/json")]
 public class ProjectsApiController : ControllerBase
 {
-    private readonly IProjectService _projectService;
+    private readonly IProjectReadService _projectReadService;
+    private readonly IProjectWorkflowService _projectWorkflowService;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ILogger<ProjectsApiController> _logger;
     private readonly IOpenAiService _openAiService;
 
     public ProjectsApiController(
-        IProjectService projectService,
+        IProjectReadService projectReadService,
+        IProjectWorkflowService projectWorkflowService,
         UserManager<ApplicationUser> userManager,
         ILogger<ProjectsApiController> logger,
         IOpenAiService openAiService)
     {
-        _projectService = projectService;
+        _projectReadService = projectReadService;
+        _projectWorkflowService = projectWorkflowService;
         _userManager = userManager;
         _logger = logger;
         _openAiService = openAiService;
@@ -58,7 +61,7 @@ public class ProjectsApiController : ControllerBase
         {
             _logger.LogInformation("API: Getting all projects");
 
-            var projects = await _projectService.GetAllProjectsAsync(null, false);
+            var projects = await _projectReadService.GetAllProjectsAsync(null, false);
 
             return Ok(ApiResponse<IEnumerable<ProjectTicketViewModel>>.SuccessResponse(
                 projects,
@@ -86,7 +89,7 @@ public class ProjectsApiController : ControllerBase
     {
         try
         {
-            var viewModel = await _projectService.GetProjectDetailsAsync(id);
+            var viewModel = await _projectReadService.GetProjectDetailsAsync(id);
 
             if (viewModel == null)
             {
@@ -116,7 +119,7 @@ public class ProjectsApiController : ControllerBase
     {
         try
         {
-            var projects = await _projectService.GetProjectsByCustomerAsync(customerId);
+            var projects = await _projectReadService.GetProjectsByCustomerAsync(customerId);
 
             return Ok(ApiResponse<IEnumerable<ProjectTicketViewModel>>.SuccessResponse(
                 projects,
@@ -141,7 +144,7 @@ public class ProjectsApiController : ControllerBase
     {
         try
         {
-            var projects = await _projectService.SearchProjectsAsync(query);
+            var projects = await _projectReadService.SearchProjectsAsync(query);
 
             return Ok(ApiResponse<IEnumerable<ProjectTicketViewModel>>.SuccessResponse(
                 projects,
@@ -166,7 +169,7 @@ public class ProjectsApiController : ControllerBase
     {
         try
         {
-            var stats = await _projectService.GetProjectStatisticsAsync(customerId);
+            var stats = await _projectReadService.GetProjectStatisticsAsync(customerId);
 
             return Ok(ApiResponse<ProjectStatisticsViewModel>.SuccessResponse(stats));
         }
@@ -205,7 +208,7 @@ public class ProjectsApiController : ControllerBase
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
                 ?? throw new UnauthorizedAccessException("User ID not found");
 
-            var project = await _projectService.CreateProjectAsync(model, userId);
+            var project = await _projectWorkflowService.CreateProjectAsync(model, userId);
 
             return CreatedAtAction(
                 nameof(GetById),
@@ -259,7 +262,7 @@ public class ProjectsApiController : ControllerBase
     {
         try
         {
-            var success = await _projectService.UpdateProjectStatusAsync(id, status);
+            var success = await _projectWorkflowService.UpdateProjectStatusAsync(id, status);
 
             if (!success)
             {
@@ -291,7 +294,7 @@ public class ProjectsApiController : ControllerBase
     {
         try
         {
-            var success = await _projectService.AssignProjectManagerAsync(id, managerId);
+            var success = await _projectWorkflowService.AssignProjectManagerAsync(id, managerId);
 
             if (!success)
             {
@@ -322,7 +325,7 @@ public class ProjectsApiController : ControllerBase
     {
         try
         {
-            var success = await _projectService.DeleteProjectAsync(id);
+            var success = await _projectWorkflowService.DeleteProjectAsync(id);
 
             if (success)
             {

@@ -10,16 +10,16 @@ namespace TicketMasala.Web.Controllers;
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
-    private readonly ITicketService _ticketService;
+    private readonly ITicketReadService _ticketReadService;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
     public HomeController(
         ILogger<HomeController> logger,
-        ITicketService ticketService,
+        ITicketReadService ticketReadService,
         IHttpContextAccessor httpContextAccessor)
     {
         _logger = logger;
-        _ticketService = ticketService;
+        _ticketReadService = ticketReadService;
         _httpContextAccessor = httpContextAccessor;
     }
 
@@ -37,7 +37,7 @@ public class HomeController : Controller
             var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             var isCustomer = User.IsInRole(TicketMasala.Domain.Common.Constants.RoleCustomer);
 
-            var stats = await _ticketService.GetDashboardStatsAsync(userId, isCustomer);
+            var stats = await _ticketReadService.GetDashboardStatsAsync(userId, isCustomer);
             ViewBag.ProjectCount = stats.ProjectCount;
             ViewBag.ActiveTicketCount = stats.ActiveTicketCount;
             ViewBag.PendingTaskCount = stats.PendingTaskCount;
@@ -49,7 +49,7 @@ public class HomeController : Controller
             ViewBag.SentimentWarningCount = stats.SentimentWarningCount;
 
             // Fetch Recent Activity
-            ViewBag.RecentActivity = await _ticketService.GetRecentActivityAsync(userId, 3);
+            ViewBag.RecentActivity = await _ticketReadService.GetRecentActivityAsync(userId, 3);
         }
         catch (Exception ex)
         {

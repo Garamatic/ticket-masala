@@ -27,35 +27,61 @@ namespace TicketMasala.Web.Controllers;
 public class TicketController : Controller
 {
     private readonly IGerdaService _gerdaService;
-    private readonly ITicketService _ticketService;
+    private readonly ITicketWorkflowService _ticketWorkflowService;
+    private readonly ITicketReadService _ticketReadService;
     private readonly IAuditService _auditService;
     private readonly INotificationService _notificationService;
     private readonly IDomainConfigurationService _domainConfig;
-    private readonly IProjectService _projectService;
+    private readonly IProjectReadService _projectReadService;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IRuleEngineService _ruleEngine;
     private readonly ILogger<TicketController> _logger;
 
     public TicketController(
         IGerdaService gerdaService,
-        ITicketService ticketService,
+        ITicketWorkflowService ticketWorkflowService,
+        ITicketReadService ticketReadService,
         IAuditService auditService,
         INotificationService notificationService,
         IDomainConfigurationService domainConfig,
-        IProjectService projectService,
+        IProjectReadService projectReadService,
         IHttpContextAccessor httpContextAccessor,
         IRuleEngineService ruleEngine,
         ILogger<TicketController> logger)
     {
         _gerdaService = gerdaService;
-        _ticketService = ticketService;
+        _ticketWorkflowService = ticketWorkflowService;
+        _ticketReadService = ticketReadService;
         _auditService = auditService;
         _notificationService = notificationService;
         _domainConfig = domainConfig;
-        _projectService = projectService;
+        _projectReadService = projectReadService;
         _httpContextAccessor = httpContextAccessor;
         _ruleEngine = ruleEngine;
         _logger = logger;
+    }
+
+    public async Task<IActionResult> Index(TicketSearchViewModel searchModel)
+    {
+        if (searchModel == null) searchModel = new TicketSearchViewModel();
+
+        var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var isCustomer = User.IsInRole(Constants.RoleCustomer);
+        if (isCustomer && !string.IsNullOrEmpty(userId)) searchModel.CustomerId = userId;
+
+        var result = await _ticketReadService.SearchTicketsAsync(searchModel);
+        result.Customers = await _ticketReadService.GetCustomerSelectListAsync();
+        result.Employees = await _ticketReadService.GetEmployeeSelectListAsync();
+        result.Projects = await _ticketReadService.GetProjectSelectListAsync();
+
+        if (!string.IsNullOrEmpty(userId))
+        {
+            var savedFilterService = HttpContext.RequestServices.GetService<ISavedFilterService>();
+            if (savedFilterService != null)
+                ViewBag.SavedFilters = await savedFilterService.GetFiltersForUserAsync(userId);
+        }
+        ViewBag.IsCustomer = isCustomer;
+        return View("~/Views/TicketSearch/Index.cshtml", result);
     }
 
     #region Detail
@@ -64,7 +90,7 @@ public class TicketController : Controller
     {
         if (id == null) return NotFound();
 
-        var viewModel = await _ticketService.GetTicketDetailsAsync(id.Value);
+        var viewModel = await _ticketReadService.GetTicketDetailsAsync(id.Value);
         if (viewModel == null) return NotFound();
 
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -87,10 +113,10 @@ public class TicketController : Controller
                     if (recommendations != null && recommendations.Any())
                     {
                         var topRecommendation = recommendations.First();
-                        var agent = await _ticketService.GetEmployeeByIdAsync(topRecommendation.AgentId);
+                        var agent = await _ticketReadService.GetEmployeeByIdAsync(topRecommendation.AgentId);
                         if (agent != null)
                         {
-                            var currentWorkload = await _ticketService.GetEmployeeCurrentWorkloadAsync(agent.Id);
+                            var currentWorkload = await _ticketReadService.GetEmployeeCurrentWorkloadAsync(agent.Id);
                             viewModel.RecommendedAgent = new RecommendedAgentInfo
                             {
                                 AgentId = agent.Id,
@@ -144,14 +170,14 @@ public class TicketController : Controller
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         var isCustomer = User.IsInRole(Constants.RoleCustomer);
 
-        ViewBag.Employees = await _ticketService.GetEmployeeSelectListAsync();
-        ViewBag.Projects = await _ticketService.GetProjectSelectListAsync();
+        ViewBag.Employees = await _ticketReadService.GetEmployeeSelectListAsync();
+        ViewBag.Projects = await _ticketReadService.GetProjectSelectListAsync();
 
         string? preselectedCustomerId = null;
 
         if (projectGuid.HasValue)
         {
-            var project = await _projectService.GetProjectDetailsAsync(projectGuid.Value);
+            var project = await _projectReadService.GetProjectDetailsAsync(projectGuid.Value);
             if (project != null && project.ProjectDetails != null)
             {
                 ViewBag.PreselectedProjectId = project.ProjectDetails.Guid;
@@ -164,7 +190,7 @@ public class TicketController : Controller
 
         if (!isCustomer)
         {
-            ViewBag.Customers = await _ticketService.GetCustomerSelectListAsync();
+            ViewBag.Customers = await _ticketReadService.GetCustomerSelectListAsync();
             if (preselectedCustomerId != null)
             {
                 ViewBag.PreselectedCustomerId = preselectedCustomerId;
@@ -219,10 +245,10 @@ public class TicketController : Controller
         {
             if (!isCustomer)
             {
-                ViewBag.Customers = await _ticketService.GetCustomerSelectListAsync();
+                ViewBag.Customers = await _ticketReadService.GetCustomerSelectListAsync();
             }
-            ViewBag.Employees = await _ticketService.GetEmployeeSelectListAsync();
-            ViewBag.Projects = await _ticketService.GetProjectSelectListAsync();
+            ViewBag.Employees = await _ticketReadService.GetEmployeeSelectListAsync();
+            ViewBag.Projects = await _ticketReadService.GetProjectSelectListAsync();
             ViewBag.IsCustomer = isCustomer;
 
             var reloadDomain = _domainConfig.GetDefaultDomainId();
@@ -236,15 +262,15 @@ public class TicketController : Controller
 
         try
         {
-            var ticket = await _ticketService.CreateTicketAsync(description, customerId, responsibleId, projectGuid, completionTarget);
+            var ticket = await _ticketWorkflowService.CreateTicketAsync(description, customerId, responsibleId, projectGuid, completionTarget);
 
             ticket.DomainId = domainId ?? _domainConfig.GetDefaultDomainId();
             ticket.WorkItemTypeCode = workItemTypeCode;
 
             var formDictionary = Request.Form.ToDictionary(x => x.Key, x => x.Value.ToString());
-            ticket.CustomFieldsJson = _ticketService.ParseCustomFields(ticket.DomainId, formDictionary);
+            ticket.CustomFieldsJson = _ticketReadService.ParseCustomFields(ticket.DomainId, formDictionary);
 
-            await _ticketService.UpdateTicketAsync(ticket);
+            await _ticketWorkflowService.UpdateTicketAsync(ticket);
 
             _logger.LogInformation("Processing ticket {TicketGuid} with GERDA AI (Domain: {DomainId}, Type: {WorkItemTypeCode})",
                 ticket.Guid, ticket.DomainId, ticket.WorkItemTypeCode);
@@ -272,7 +298,7 @@ public class TicketController : Controller
     {
         if (id == null) return NotFound();
 
-        var ticket = await _ticketService.GetTicketForEditAsync(id.Value);
+        var ticket = await _ticketReadService.GetTicketForEditAsync(id.Value);
         if (ticket == null) return NotFound();
 
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -289,7 +315,7 @@ public class TicketController : Controller
             }
         }
 
-        var responsibleUsers = await _ticketService.GetAllUsersSelectListAsync();
+        var responsibleUsers = await _ticketReadService.GetAllUsersSelectListAsync();
 
         var viewModel = new EditTicketViewModel
         {
@@ -301,8 +327,8 @@ public class TicketController : Controller
             CustomerId = ticket.CustomerId,
             ProjectGuid = ticket.ProjectGuid,
             ResponsibleUsers = responsibleUsers,
-            CustomerList = (await _ticketService.GetCustomerSelectListAsync()).ToList(),
-            ProjectList = (await _ticketService.GetProjectSelectListAsync()).ToList()
+            CustomerList = (await _ticketReadService.GetCustomerSelectListAsync()).ToList(),
+            ProjectList = (await _ticketReadService.GetProjectSelectListAsync()).ToList()
         };
 
         var domainId = ticket.DomainId ?? _domainConfig.GetDefaultDomainId();
@@ -336,7 +362,7 @@ public class TicketController : Controller
 
         if (ModelState.IsValid)
         {
-            var ticketToUpdate = await _ticketService.GetTicketForEditAsync(id);
+            var ticketToUpdate = await _ticketReadService.GetTicketForEditAsync(id);
             if (ticketToUpdate == null) return NotFound();
 
             var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -361,11 +387,11 @@ public class TicketController : Controller
 
             var domainId = ticketToUpdate.DomainId ?? _domainConfig.GetDefaultDomainId();
             var formDictionary = Request.Form.ToDictionary(x => x.Key, x => x.Value.ToString());
-            ticketToUpdate.CustomFieldsJson = _ticketService.ParseCustomFields(domainId, formDictionary);
+            ticketToUpdate.CustomFieldsJson = _ticketReadService.ParseCustomFields(domainId, formDictionary);
 
             try
             {
-                var success = await _ticketService.UpdateTicketAsync(ticketToUpdate);
+                var success = await _ticketWorkflowService.UpdateTicketAsync(ticketToUpdate);
                 if (success)
                 {
                     return RedirectToAction(nameof(Detail), new { id = ticketToUpdate.Guid });
@@ -385,11 +411,11 @@ public class TicketController : Controller
             }
         }
 
-        viewModel.ResponsibleUsers = await _ticketService.GetAllUsersSelectListAsync();
-        viewModel.CustomerList = (await _ticketService.GetCustomerSelectListAsync()).ToList();
-        viewModel.ProjectList = (await _ticketService.GetProjectSelectListAsync()).ToList();
+        viewModel.ResponsibleUsers = await _ticketReadService.GetAllUsersSelectListAsync();
+        viewModel.CustomerList = (await _ticketReadService.GetCustomerSelectListAsync()).ToList();
+        viewModel.ProjectList = (await _ticketReadService.GetProjectSelectListAsync()).ToList();
 
-        var reloadTicket = await _ticketService.GetTicketForEditAsync(id);
+        var reloadTicket = await _ticketReadService.GetTicketForEditAsync(id);
         if (reloadTicket != null)
         {
             var validStates = _ruleEngine.GetValidNextStates(reloadTicket, User);

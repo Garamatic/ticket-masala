@@ -11,15 +11,15 @@ namespace TicketMasala.Tests.Controllers;
 
 public class TicketCommentsControllerTests
 {
-    private readonly Mock<ITicketService> _mockTicketService;
+    private readonly Mock<ITicketWorkflowService> _mockTicketWorkflowService;
     private readonly TicketCommentsController _controller;
 
     public TicketCommentsControllerTests()
     {
-        _mockTicketService = new Mock<ITicketService>();
+        _mockTicketWorkflowService = new Mock<ITicketWorkflowService>();
         var mockLogger = new Mock<Microsoft.Extensions.Logging.ILogger<TicketCommentsController>>();
 
-        _controller = new TicketCommentsController(_mockTicketService.Object, mockLogger.Object);
+        _controller = new TicketCommentsController(_mockTicketWorkflowService.Object, mockLogger.Object);
 
         // Set up user claims
         var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
@@ -50,7 +50,7 @@ public class TicketCommentsControllerTests
         var result = await _controller.AddComment(ticketId, comment, isInternal);
 
         // Assert
-        _mockTicketService.Verify(s => s.AddCommentAsync(
+        _mockTicketWorkflowService.Verify(s => s.AddCommentAsync(
             ticketId,
             comment,
             isInternal,
@@ -72,7 +72,7 @@ public class TicketCommentsControllerTests
         var result = await _controller.AddComment(ticketId, "", false);
 
         // Assert
-        _mockTicketService.Verify(s => s.AddCommentAsync(
+        _mockTicketWorkflowService.Verify(s => s.AddCommentAsync(
             It.IsAny<Guid>(),
             It.IsAny<string>(),
             It.IsAny<bool>(),
@@ -92,7 +92,7 @@ public class TicketCommentsControllerTests
         var result = await _controller.RequestReview(ticketGuid);
 
         // Assert
-        _mockTicketService.Verify(s => s.RequestReviewAsync(ticketGuid, "test-user-id"), Times.Once);
+        _mockTicketWorkflowService.Verify(s => s.RequestReviewAsync(ticketGuid, "test-user-id"), Times.Once);
 
         var redirect = Assert.IsType<RedirectToActionResult>(result);
         Assert.Equal("Detail", redirect.ActionName);
@@ -111,7 +111,7 @@ public class TicketCommentsControllerTests
         var result = await _controller.SubmitReview(ticketGuid, score, feedback, approve);
 
         // Assert
-        _mockTicketService.Verify(s => s.SubmitReviewAsync(
+        _mockTicketWorkflowService.Verify(s => s.SubmitReviewAsync(
             ticketGuid,
             score,
             feedback,

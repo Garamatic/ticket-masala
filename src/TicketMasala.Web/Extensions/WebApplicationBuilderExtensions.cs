@@ -141,15 +141,15 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddScoped<TicketMasala.Web.Engine.Ingestion.Validation.ICustomFieldValidationService,
             TicketMasala.Web.Engine.Ingestion.Validation.CustomFieldValidationService>();
         builder.Services.AddScoped<IRuleEngineService, RuleEngineService>();
-        builder.Services.AddScoped<TicketMasala.Web.Engine.Security.IPiiScrubberService, 
+        builder.Services.AddScoped<TicketMasala.Web.Engine.Security.IPiiScrubberService,
             TicketMasala.Web.Engine.Security.PiiScrubberService>();
         builder.Services.AddScoped<IMetricsService, MetricsService>();
 
-        // TicketService implements all three interfaces
-        builder.Services.AddScoped<TicketService>();
-        builder.Services.AddScoped<ITicketService>(sp => sp.GetRequiredService<TicketService>());
-        builder.Services.AddScoped<ITicketQueryService>(sp => sp.GetRequiredService<TicketService>());
-        builder.Services.AddScoped<ITicketCommandService>(sp => sp.GetRequiredService<TicketService>());
+        // Ticket Services (Split by Responsibility)
+        builder.Services.AddScoped<ITicketReadService, TicketReadService>();
+        builder.Services.AddScoped<ITicketWorkflowService, TicketWorkflowService>();
+        builder.Services.AddScoped<ITicketBatchService, TicketBatchService>();
+        builder.Services.AddScoped<TicketService>(); // Legacy implementation
 
         builder.Services.AddScoped<TicketDispatchService>();
         builder.Services.AddScoped<TicketReportingService>();
@@ -159,7 +159,10 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddScoped<IEmailService, EmailService>();
         builder.Services.AddScoped<INotificationService, NotificationService>();
         builder.Services.AddScoped<ISavedFilterService, SavedFilterService>();
-        builder.Services.AddScoped<IProjectService, ProjectService>();
+        builder.Services.AddScoped<IProjectReadService, ProjectReadService>();
+        builder.Services.AddScoped<IProjectWorkflowService, ProjectWorkflowService>();
+        builder.Services.AddScoped<IProjectTemplateService, ProjectTemplateService>();
+        builder.Services.AddScoped<ProjectService>(); // Legacy
         builder.Services.AddScoped<IAuditService, AuditService>();
         builder.Services.AddScoped<ITicketImportService, TicketImportService>();
         builder.Services.AddHostedService<EmailIngestionService>();

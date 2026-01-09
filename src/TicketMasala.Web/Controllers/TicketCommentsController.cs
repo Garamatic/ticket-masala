@@ -8,12 +8,12 @@ namespace TicketMasala.Web.Controllers;
 [Authorize]
 public class TicketCommentsController : Controller
 {
-    private readonly ITicketService _ticketService;
+    private readonly ITicketWorkflowService _ticketWorkflowService;
     private readonly ILogger<TicketCommentsController> _logger;
 
-    public TicketCommentsController(ITicketService ticketService, ILogger<TicketCommentsController> logger)
+    public TicketCommentsController(ITicketWorkflowService ticketWorkflowService, ILogger<TicketCommentsController> logger)
     {
-        _ticketService = ticketService;
+        _ticketWorkflowService = ticketWorkflowService;
         _logger = logger;
     }
 
@@ -32,7 +32,7 @@ public class TicketCommentsController : Controller
 
         try
         {
-            await _ticketService.AddCommentAsync(id, commentBody, isInternal, userId);
+            await _ticketWorkflowService.AddCommentAsync(id, commentBody, isInternal, userId);
             TempData["Success"] = "Comment added successfully.";
         }
         catch (Exception ex)
@@ -53,7 +53,7 @@ public class TicketCommentsController : Controller
 
         try
         {
-            await _ticketService.RequestReviewAsync(id, userId);
+            await _ticketWorkflowService.RequestReviewAsync(id, userId);
             TempData["Success"] = "Review requested successfully.";
         }
         catch (Exception ex)
@@ -75,7 +75,7 @@ public class TicketCommentsController : Controller
 
         try
         {
-            await _ticketService.SubmitReviewAsync(id, score, feedback, approve, userId);
+            await _ticketWorkflowService.SubmitReviewAsync(id, score, feedback, approve, userId);
             TempData["Success"] = approve ? "Review approved." : "Review rejected.";
         }
         catch (Exception ex)

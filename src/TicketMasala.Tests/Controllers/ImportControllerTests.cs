@@ -17,7 +17,7 @@ namespace TicketMasala.Tests.Controllers;
 public class ImportControllerTests
 {
     private readonly Mock<ITicketImportService> _mockImportService;
-    private readonly Mock<ITicketService> _mockTicketService;
+    private readonly Mock<ITicketReadService> _mockTicketReadService;
     private readonly Mock<ILogger<ImportController>> _mockLogger;
     private readonly Mock<ITicketImportDispatcher> _mockDispatcher;
     private readonly Mock<IFileStorageService> _mockFileStorageService;
@@ -26,14 +26,14 @@ public class ImportControllerTests
     public ImportControllerTests()
     {
         _mockImportService = new Mock<ITicketImportService>();
-        _mockTicketService = new Mock<ITicketService>();
+        _mockTicketReadService = new Mock<ITicketReadService>();
         _mockLogger = new Mock<ILogger<ImportController>>();
         _mockDispatcher = new Mock<ITicketImportDispatcher>();
         _mockFileStorageService = new Mock<IFileStorageService>();
 
         _controller = new ImportController(
             _mockImportService.Object,
-            _mockTicketService.Object,
+            _mockTicketReadService.Object,
             _mockLogger.Object,
             _mockDispatcher.Object,
             _mockFileStorageService.Object

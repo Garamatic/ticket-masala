@@ -10,26 +10,24 @@ using TicketMasala.Web.ViewModels.Portal;
 using TicketMasala.Web.ViewModels.Tickets;
 using System.Security.Claims;
 
-
-
 namespace TicketMasala.Web.Controllers;
 
 [Authorize(Roles = Constants.RoleCustomer)]
 public class PortalController : Controller
 {
-    private readonly ITicketService _ticketService;
-    private readonly IProjectService _projectService;
+    private readonly ITicketWorkflowService _ticketWorkflowService;
+    private readonly ITicketReadService _ticketReadService;
     private readonly IGerdaService _gerdaService;
     private readonly ILogger<PortalController> _logger;
 
     public PortalController(
-        ITicketService ticketService,
-        IProjectService projectService,
+        ITicketWorkflowService ticketWorkflowService,
+        ITicketReadService ticketReadService,
         IGerdaService gerdaService,
         ILogger<PortalController> logger)
     {
-        _ticketService = ticketService;
-        _projectService = projectService;
+        _ticketWorkflowService = ticketWorkflowService;
+        _ticketReadService = ticketReadService;
         _gerdaService = gerdaService;
         _logger = logger;
     }
@@ -46,7 +44,7 @@ public class PortalController : Controller
             PageSize = 10
         };
 
-        var result = await _ticketService.SearchTicketsAsync(searchModel);
+        var result = await _ticketReadService.SearchTicketsAsync(searchModel);
 
         return View(result);
     }
@@ -81,7 +79,7 @@ public class PortalController : Controller
             // Create ticket - Customer is implicitly the Creator and CustomerId
             var fullDescription = $"subject: {model.Title}\n\n{model.Description}";
 
-            var ticket = await _ticketService.CreateTicketAsync(
+            var ticket = await _ticketWorkflowService.CreateTicketAsync(
                 fullDescription,
                 userId!,
                 responsibleId: null,
@@ -107,6 +105,6 @@ public class PortalController : Controller
 
     private async Task<IEnumerable<SelectListItem>> GetCustomerProjectsSelectList(string userId)
     {
-        return await _ticketService.GetCustomerProjectSelectListAsync(userId);
+        return await _ticketReadService.GetCustomerProjectSelectListAsync(userId);
     }
 }

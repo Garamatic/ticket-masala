@@ -12,18 +12,18 @@ namespace TicketMasala.Web.Controllers;
 [Authorize]
 public class TicketSearchController : Controller
 {
-    private readonly ITicketService _ticketService;
+    private readonly ITicketReadService _ticketReadService;
     private readonly ISavedFilterService _savedFilterService;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<TicketSearchController> _logger;
 
     public TicketSearchController(
-        ITicketService ticketService,
+        ITicketReadService ticketReadService,
         ISavedFilterService savedFilterService,
         IHttpContextAccessor httpContextAccessor,
         ILogger<TicketSearchController> logger)
     {
-        _ticketService = ticketService;
+        _ticketReadService = ticketReadService;
         _savedFilterService = savedFilterService;
         _httpContextAccessor = httpContextAccessor;
         _logger = logger;
@@ -44,11 +44,11 @@ public class TicketSearchController : Controller
                 searchModel.CustomerId = userId;
             }
 
-            var result = await _ticketService.SearchTicketsAsync(searchModel);
+            var result = await _ticketReadService.SearchTicketsAsync(searchModel);
 
-            result.Customers = await _ticketService.GetCustomerSelectListAsync();
-            result.Employees = await _ticketService.GetEmployeeSelectListAsync();
-            result.Projects = await _ticketService.GetProjectSelectListAsync();
+            result.Customers = await _ticketReadService.GetCustomerSelectListAsync();
+            result.Employees = await _ticketReadService.GetEmployeeSelectListAsync();
+            result.Projects = await _ticketReadService.GetProjectSelectListAsync();
 
             if (!string.IsNullOrEmpty(userId))
             {

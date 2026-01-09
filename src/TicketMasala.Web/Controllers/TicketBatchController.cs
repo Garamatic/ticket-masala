@@ -10,16 +10,22 @@ namespace TicketMasala.Web.Controllers;
 [Authorize]
 public class TicketBatchController : Controller
 {
-    private readonly ITicketService _ticketService;
+    private readonly ITicketBatchService _ticketBatchService;
+    private readonly ITicketReadService _ticketReadService;
+    private readonly ITicketWorkflowService _ticketWorkflowService;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<TicketBatchController> _logger;
 
     public TicketBatchController(
-        ITicketService ticketService,
+        ITicketBatchService ticketBatchService,
+        ITicketReadService ticketReadService,
+        ITicketWorkflowService ticketWorkflowService,
         IHttpContextAccessor httpContextAccessor,
         ILogger<TicketBatchController> logger)
     {
-        _ticketService = ticketService;
+        _ticketBatchService = ticketBatchService;
+        _ticketReadService = ticketReadService;
+        _ticketWorkflowService = ticketWorkflowService;
         _httpContextAccessor = httpContextAccessor;
         _logger = logger;
     }
@@ -31,7 +37,7 @@ public class TicketBatchController : Controller
     {
         if (ticketIds != null && ticketIds.Any() && !string.IsNullOrEmpty(agentId))
         {
-            await _ticketService.BatchAssignToAgentAsync(ticketIds, agentId);
+            await _ticketBatchService.BatchAssignToAgentAsync(ticketIds, agentId);
             TempData["Success"] = $"{ticketIds.Count} ticket(s) assigned successfully.";
         }
         return RedirectToAction("Index", "TicketSearch");
@@ -44,7 +50,7 @@ public class TicketBatchController : Controller
     {
         if (ticketIds != null && ticketIds.Any())
         {
-            await _ticketService.BatchUpdateStatusAsync(ticketIds, status);
+            await _ticketBatchService.BatchUpdateStatusAsync(ticketIds, status);
             TempData["Success"] = $"{ticketIds.Count} ticket(s) updated successfully.";
         }
         return RedirectToAction("Index", "TicketSearch");
@@ -63,7 +69,7 @@ public class TicketBatchController : Controller
                 searchModel.CustomerId = userId;
             }
 
-            var result = await _ticketService.SearchTicketsAsync(searchModel);
+            var result = await _ticketReadService.SearchTicketsAsync(searchModel);
 
             var csv = new System.Text.StringBuilder();
             csv.AppendLine("Guid,Description,Status,Customer,Responsible,CreationDate,CompletionTarget");
@@ -90,7 +96,7 @@ public class TicketBatchController : Controller
     [Authorize(Roles = Constants.RoleEmployee + "," + Constants.RoleAdmin)]
     public async Task<IActionResult> LogTime(Guid id)
     {
-        var ticket = await _ticketService.GetTicketForEditAsync(id);
+        var ticket = await _ticketReadService.GetTicketForEditAsync(id);
         if (ticket == null) return NotFound();
 
         ViewBag.TicketGuid = id;
@@ -116,7 +122,7 @@ public class TicketBatchController : Controller
 
         if (!ModelState.IsValid)
         {
-            var ticket = await _ticketService.GetTicketForEditAsync(id);
+            var ticket = await _ticketReadService.GetTicketForEditAsync(id);
             ViewBag.TicketGuid = id;
             ViewBag.TicketDescription = ticket?.Description;
             return View();
@@ -127,7 +133,7 @@ public class TicketBatchController : Controller
 
         try
         {
-            await _ticketService.LogTimeAsync(id, userId, hours, date, description);
+            await _ticketWorkflowService.LogTimeAsync(id, userId, hours, date, description);
             TempData["Success"] = $"Successfully logged {hours} hours on this ticket.";
         }
         catch (Exception ex)

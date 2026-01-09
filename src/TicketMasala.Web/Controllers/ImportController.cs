@@ -16,20 +16,20 @@ namespace TicketMasala.Web.Controllers;
 public class ImportController : Controller
 {
     private readonly ITicketImportService _importService;
-    private readonly ITicketService _ticketService;
+    private readonly ITicketReadService _ticketReadService;
     private readonly ILogger<ImportController> _logger;
     private readonly ITicketImportDispatcher _dispatcher;
     private readonly IFileStorageService _fileStorageService;
 
     public ImportController(
         ITicketImportService importService,
-        ITicketService ticketService,
+        ITicketReadService ticketReadService,
         ILogger<ImportController> logger,
         ITicketImportDispatcher dispatcher,
         IFileStorageService fileStorageService)
     {
         _importService = importService;
-        _ticketService = ticketService;
+        _ticketReadService = ticketReadService;
         _logger = logger;
         _dispatcher = dispatcher;
         _fileStorageService = fileStorageService;
@@ -116,7 +116,7 @@ public class ImportController : Controller
         try
         {
             var uploaderId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            var departmentId = await _ticketService.GetCurrentUserDepartmentIdAsync();
+            var departmentId = await _ticketReadService.GetCurrentUserDepartmentIdAsync();
 
             if (string.IsNullOrEmpty(uploaderId))
             {

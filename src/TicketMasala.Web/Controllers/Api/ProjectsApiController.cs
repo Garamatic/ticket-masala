@@ -27,15 +27,18 @@ public class ProjectsApiController : ControllerBase
     private readonly IProjectService _projectService;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ILogger<ProjectsApiController> _logger;
+    private readonly IOpenAiService _openAiService;
 
     public ProjectsApiController(
         IProjectService projectService,
         UserManager<ApplicationUser> userManager,
-        ILogger<ProjectsApiController> logger)
+        ILogger<ProjectsApiController> logger,
+        IOpenAiService openAiService)
     {
         _projectService = projectService;
         _userManager = userManager;
         _logger = logger;
+        _openAiService = openAiService;
     }
 
     /// <summary>
@@ -232,7 +235,7 @@ public class ProjectsApiController : ControllerBase
     {
         try
         {
-            var roadmap = await OpenAiAPIHandler.GetOpenAIResponse(OpenAIPrompts.Steps, description);
+            var roadmap = await _openAiService.GetResponseAsync(OpenAIPrompts.Steps, description);
             return Ok(ApiResponse<string>.SuccessResponse(roadmap, "Roadmap generated successfully"));
         }
         catch (Exception ex)

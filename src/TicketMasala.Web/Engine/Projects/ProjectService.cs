@@ -25,19 +25,22 @@ public class ProjectService : IProjectService
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IEnumerable<IProjectObserver> _observers;
     private readonly ILogger<ProjectService> _logger;
+    private readonly IOpenAiService _openAiService;
 
     public ProjectService(
         MasalaDbContext context,
         IProjectRepository projectRepository,
         UserManager<ApplicationUser> userManager,
         IEnumerable<IProjectObserver> observers,
-        ILogger<ProjectService> logger)
+        ILogger<ProjectService> logger,
+        IOpenAiService openAiService)
     {
         _context = context;
         _projectRepository = projectRepository;
         _userManager = userManager;
         _observers = observers;
         _logger = logger;
+        _openAiService = openAiService;
     }
 
     public async Task<IEnumerable<ProjectTicketViewModel>> GetAllProjectsAsync(string? userId, bool isCustomer)
@@ -189,7 +192,7 @@ public class ProjectService : IProjectService
         string? roadmap = null;
         try
         {
-            roadmap = await OpenAiAPIHandler.GetOpenAIResponse(OpenAIPrompts.Steps, viewModel.Description);
+            roadmap = await _openAiService.GetResponseAsync(OpenAIPrompts.Steps, viewModel.Description);
         }
         catch (Exception ex)
         {
@@ -257,7 +260,7 @@ public class ProjectService : IProjectService
                 string? summary = null;
                 try
                 {
-                    summary = await OpenAiAPIHandler.GetOpenAIResponse(OpenAIPrompts.Summary, templateTicket.Description);
+                    summary = await _openAiService.GetResponseAsync(OpenAIPrompts.Summary, templateTicket.Description);
                 }
                 catch (Exception ex)
                 {
@@ -510,7 +513,7 @@ public class ProjectService : IProjectService
         string? roadmap = null;
         try
         {
-            roadmap = await OpenAiAPIHandler.GetOpenAIResponse(OpenAIPrompts.Steps, ticket.Description);
+            roadmap = await _openAiService.GetResponseAsync(OpenAIPrompts.Steps, ticket.Description);
         }
         catch (Exception ex)
         {

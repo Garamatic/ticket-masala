@@ -8,6 +8,7 @@ using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Engine.Projects;
+using TicketMasala.Web.AI;
 using TicketMasala.Web.Engine.Ingestion;
 using TicketMasala.Web.Engine.Ingestion.Background;
 using TicketMasala.Domain.Entities;
@@ -40,13 +41,15 @@ public class ProjectServiceTests
         var mockProjectRepo = new Mock<IProjectRepository>();
         var mockUserManager = MockUserManager();
         var mockObservers = new List<IProjectObserver>();
+        var mockOpenAiService = new Mock<IOpenAiService>();
 
         return new ProjectService(
             context,
             mockProjectRepo.Object,
             mockUserManager.Object,
             mockObservers,
-            _mockLogger.Object
+            _mockLogger.Object,
+            mockOpenAiService.Object
         );
     }
 

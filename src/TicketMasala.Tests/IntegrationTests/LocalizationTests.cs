@@ -23,8 +23,8 @@ public class LocalizationTests : IClassFixture<IntegrationTestFactory<Program>>
 
 
     [Theory]
-    [InlineData("fr", "Commencer gratuitement")]
-    [InlineData("nl", "Gratis aan de slag")]
+    [InlineData("fr", "Mot de passe")]
+    [InlineData("nl", "Wachtwoord")]
     public async Task Homepage_WithQueryString_ReturnsLocalizedContent(string culture, string expectedText)
     {
         // Arrange
@@ -46,8 +46,8 @@ public class LocalizationTests : IClassFixture<IntegrationTestFactory<Program>>
             });
         }).CreateClient();
 
-        // Act
-        var response = await client.GetAsync($"/?culture={culture}");
+        // Act - Request Login page directly to avoid redirect losing query string
+        var response = await client.GetAsync($"/Identity/Account/Login?culture={culture}");
 
         // Assert
         response.EnsureSuccessStatusCode();
@@ -61,8 +61,8 @@ public class LocalizationTests : IClassFixture<IntegrationTestFactory<Program>>
     }
 
     [Theory]
-    [InlineData("fr", "Commencer gratuitement")]
-    [InlineData("nl", "Gratis aan de slag")]
+    [InlineData("fr", "Mot de passe")]
+    [InlineData("nl", "Wachtwoord")]
     public async Task Homepage_WithAcceptLanguageHeader_ReturnsLocalizedContent(string culture, string expectedText)
     {
         // Arrange
@@ -86,8 +86,8 @@ public class LocalizationTests : IClassFixture<IntegrationTestFactory<Program>>
         }).CreateClient();
         client.DefaultRequestHeaders.Add("Accept-Language", culture);
 
-        // Act
-        var response = await client.GetAsync("/");
+        // Act - Request Login page directly as Home redirects there
+        var response = await client.GetAsync("/Identity/Account/Login");
 
         // Assert
         response.EnsureSuccessStatusCode();

@@ -2,6 +2,7 @@ using TicketMasala.Web.Data;
 using TicketMasala.Web.Tenancy;
 using TicketMasala.Web.Middleware;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.Extensions.Options;
 
 namespace TicketMasala.Web.Extensions;
 
@@ -26,7 +27,12 @@ public static class WebApplicationExtensions
         app.UseForwardedHeaders();
 
         // Localization
-        app.UseRequestLocalization();
+        var localizationOptions = app.Services.GetRequiredService<IOptions<RequestLocalizationOptions>>().Value;
+        localizationOptions.RequestCultureProviders.Clear();
+        localizationOptions.RequestCultureProviders.Add(new QueryStringRequestCultureProvider());
+        localizationOptions.RequestCultureProviders.Add(new CookieRequestCultureProvider());
+        localizationOptions.RequestCultureProviders.Add(new AcceptLanguageHeaderRequestCultureProvider());
+        app.UseRequestLocalization(localizationOptions);
 
         // Environment-specific
         if (env.IsDevelopment())

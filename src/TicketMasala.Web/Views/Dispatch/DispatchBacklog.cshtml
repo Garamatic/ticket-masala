@@ -584,7 +584,7 @@
         setLoading(btn, true);
         const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
 
-        fetch('@Url.Action("RetrainDispatchModel", "Manager")', {
+        fetch('@Url.Action("RetrainDispatchModel", "Dispatch")', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -688,7 +688,7 @@
         }
 
         try {
-            const response = await fetch('@Url.Action("AssignTicket", "Manager")', {
+            const response = await fetch('@Url.Action("AssignTicket", "Dispatch")', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -729,7 +729,7 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
 
         try {
-            const response = await fetch('@Url.Action("BatchAssignTickets", "Manager")', {
+            const response = await fetch('@Url.Action("BatchAssignTickets", "Dispatch")', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -779,7 +779,7 @@
         }
 
         try {
-            const response = await fetch('@Url.Action("AssignTicket", "Manager")', {
+            const response = await fetch('@Url.Action("AssignTicket", "Dispatch")', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -824,7 +824,7 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
 
         try {
-            const response = await fetch('@Url.Action("BatchAssignTickets", "Manager")', {
+            const response = await fetch('@Url.Action("BatchAssignTickets", "Dispatch")', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

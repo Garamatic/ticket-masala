@@ -19,8 +19,7 @@ public class ImportControllerTests
     private readonly Mock<ITicketImportService> _mockImportService;
     private readonly Mock<ITicketService> _mockTicketService;
     private readonly Mock<ILogger<ImportController>> _mockLogger;
-    private readonly Mock<IBackgroundTaskQueue> _mockTaskQueue;
-    private readonly Mock<IServiceScopeFactory> _mockScopeFactory;
+    private readonly Mock<ITicketImportDispatcher> _mockDispatcher;
     private readonly Mock<IFileStorageService> _mockFileStorageService;
     private readonly ImportController _controller;
 
@@ -29,16 +28,14 @@ public class ImportControllerTests
         _mockImportService = new Mock<ITicketImportService>();
         _mockTicketService = new Mock<ITicketService>();
         _mockLogger = new Mock<ILogger<ImportController>>();
-        _mockTaskQueue = new Mock<IBackgroundTaskQueue>();
-        _mockScopeFactory = new Mock<IServiceScopeFactory>();
+        _mockDispatcher = new Mock<ITicketImportDispatcher>();
         _mockFileStorageService = new Mock<IFileStorageService>();
 
         _controller = new ImportController(
             _mockImportService.Object,
             _mockTicketService.Object,
             _mockLogger.Object,
-            _mockTaskQueue.Object,
-            _mockScopeFactory.Object,
+            _mockDispatcher.Object,
             _mockFileStorageService.Object
         );
 
@@ -76,7 +73,7 @@ public class ImportControllerTests
 
         _mockImportService.Setup(s => s.ParseFile(It.IsAny<Stream>(), fileName))
             .Returns(parsedRows);
-        
+
         _mockFileStorageService.Setup(s => s.StoreFileAsync(It.IsAny<Stream>(), fileName))
             .ReturnsAsync(fileId);
 

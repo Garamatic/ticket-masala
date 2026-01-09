@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using OpenAI;
 using OpenAI.Chat;
 
@@ -8,15 +9,12 @@ public class OpenAiService : IOpenAiService
 {
     private readonly string _apiKey;
 
-    public OpenAiService(IConfiguration configuration)
+    public OpenAiService(IOptions<Configuration.OpenAiSettings> options)
     {
-        // Preferred: configuration.GetSection("OpenAI:ApiKey").Value
-        // Fallback: Environment variable (for backward compatibility during migration)
-        _apiKey = configuration["OpenAI:ApiKey"] ?? Environment.GetEnvironmentVariable("OPENAI_API_KEY") ?? "";
-        
+        _apiKey = options.Value.ApiKey ?? Environment.GetEnvironmentVariable("OPENAI_API_KEY") ?? "";
+
         if (string.IsNullOrEmpty(_apiKey))
         {
-            // Log warning or throw, depending on policy. For now, throw to match previous behavior.
             throw new InvalidOperationException("OpenAI API key not configured. Set 'OpenAI:ApiKey' in appsettings or 'OPENAI_API_KEY' environment variable.");
         }
     }

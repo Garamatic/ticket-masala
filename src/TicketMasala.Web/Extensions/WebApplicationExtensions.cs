@@ -20,9 +20,6 @@ public static class WebApplicationExtensions
         // Correlation ID (must be early in pipeline)
         app.UseMiddleware<CorrelationIdMiddleware>();
 
-        // Exception handling (must be early in pipeline)
-        app.UseExceptionHandler();
-
         // Forward headers (for reverse proxies)
         app.UseForwardedHeaders();
 

@@ -1,14 +1,29 @@
-using TicketMasala.Web;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
-using Microsoft.AspNetCore.Authorization;
+using TicketMasala.Web.Engine.GERDA.Tickets;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using TicketMasala.Web.ViewModels.Tickets;
 
 namespace TicketMasala.Web.Controllers;
 
-// Partial class: Batch operations, export, and time logging
-public partial class TicketController
+[Authorize]
+public class TicketBatchController : Controller
 {
+    private readonly ITicketService _ticketService;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ILogger<TicketBatchController> _logger;
+
+    public TicketBatchController(
+        ITicketService ticketService,
+        IHttpContextAccessor httpContextAccessor,
+        ILogger<TicketBatchController> logger)
+    {
+        _ticketService = ticketService;
+        _httpContextAccessor = httpContextAccessor;
+        _logger = logger;
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Roles = Constants.RoleEmployee + "," + Constants.RoleAdmin)]
@@ -19,7 +34,7 @@ public partial class TicketController
             await _ticketService.BatchAssignToAgentAsync(ticketIds, agentId);
             TempData["Success"] = $"{ticketIds.Count} ticket(s) assigned successfully.";
         }
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction("Index", "TicketSearch");
     }
 
     [HttpPost]
@@ -32,11 +47,11 @@ public partial class TicketController
             await _ticketService.BatchUpdateStatusAsync(ticketIds, status);
             TempData["Success"] = $"{ticketIds.Count} ticket(s) updated successfully.";
         }
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction("Index", "TicketSearch");
     }
 
     [HttpGet]
-    public async Task<IActionResult> ExportTickets(ViewModels.Tickets.TicketSearchViewModel searchModel)
+    public async Task<IActionResult> ExportTickets(TicketSearchViewModel searchModel)
     {
         try
         {
@@ -67,7 +82,7 @@ public partial class TicketController
         {
             _logger.LogError(ex, "Error exporting tickets");
             TempData["Error"] = "Failed to export tickets.";
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Index", "TicketSearch");
         }
     }
 
@@ -121,6 +136,6 @@ public partial class TicketController
             TempData["Error"] = "Failed to log time. Please try again.";
         }
 
-        return RedirectToAction(nameof(Detail), new { id });
+        return RedirectToAction("Detail", "Ticket", new { id });
     }
 }

@@ -19,7 +19,7 @@
         <p class="page-subtitle">@Localizer["View and manage all support tickets"]</p>
     </div>
     <div class="page-actions">
-        <a asp-action="Create" class="btn btn-primary">
+        <a asp-controller="Ticket" asp-action="Create" class="btn btn-primary">
             <i class="fas fa-plus me-2"></i>
             @Localizer["New Ticket"]
         </a>
@@ -116,7 +116,7 @@
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-search"></i> @Localizer["Search"]
                     </button>
-                    <a asp-action="ExportTickets" 
+                    <a asp-controller="TicketBatch" asp-action="ExportTickets" 
                        asp-route-SearchTerm="@Model.SearchTerm"
                        asp-route-Status="@Model.Status"
                        asp-route-TicketType="@Model.TicketType"
@@ -204,7 +204,7 @@
                             }
                             <td>
                                 <div class="fw-bold text-truncate" style="max-width: 200px;" title="@ticket.Description">
-                                    <a asp-action="Detail" asp-route-id="@ticket.Guid" class="text-decoration-none">
+                                    <a asp-controller="Ticket" asp-action="Detail" asp-route-id="@ticket.Guid" class="text-decoration-none">
                                         @ticket.Description
                                     </a>
                                 </div>
@@ -288,11 +288,11 @@
                         </td>
                             <td class="text-end">
                                 <div class="btn-group btn-group-sm">
-                                    <a asp-action="Detail" asp-route-id="@ticket.Guid" 
+                                    <a asp-controller="Ticket" asp-action="Detail" asp-route-id="@ticket.Guid" 
                                        class="btn btn-outline-primary" title="@Localizer["View Details"]">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a asp-action="Edit" asp-route-id="@ticket.Guid" 
+                                    <a asp-controller="Ticket" asp-action="Edit" asp-route-id="@ticket.Guid" 
                                        class="btn btn-outline-secondary" title="@Localizer["Edit"]">
                                         <i class="fas fa-edit"></i>
                                     </a>
@@ -334,7 +334,7 @@ else
         </div>
         <h3 class="empty-state-title">@Localizer["No tickets found"]</h3>
         <p class="empty-state-text">@Localizer["Try adjusting your search filters or create a new ticket."]</p>
-        <a asp-action="Create" class="btn btn-primary">
+        <a asp-controller="Ticket" asp-action="Create" class="btn btn-primary">
             <i class="fas fa-plus me-2"></i>
             @Localizer["Create Ticket"]
         </a>
@@ -345,7 +345,7 @@ else
 <div class="modal fade" id="bulkAssignModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form asp-action="BatchAssign" method="post">
+            <form asp-controller="TicketBatch" asp-action="BatchAssign" method="post">
                 <div class="modal-header">
                     <h5 class="modal-title">@Localizer["Bulk Assign Tickets"]</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -377,7 +377,7 @@ else
 <div class="modal fade" id="bulkStatusModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form asp-action="BatchStatus" method="post">
+            <form asp-controller="TicketBatch" asp-action="BatchStatus" method="post">
                 <div class="modal-header">
                     <h5 class="modal-title">@Localizer["Bulk Change Status"]</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>

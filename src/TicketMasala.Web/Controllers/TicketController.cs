@@ -21,22 +21,16 @@ using TicketMasala.Web.Data;
 namespace TicketMasala.Web.Controllers;
 
 /// <summary>
-/// Main controller for ticket CRUD operations.
-/// Split into partial classes for maintainability:
-/// - TicketController.cs (this file): Core actions (Index, Detail, Create, Edit)
-/// - TicketController.Filter.cs: Filter management
-/// - TicketController.Workflow.cs: Comments, reviews, assignment
-/// - TicketController.Batch.cs: Batch operations, export, time logging
+/// Main controller for ticket CRUD operations (Create, Read, Update, Detail).
 /// </summary>
 [Authorize]
-public partial class TicketController : Controller
+public class TicketController : Controller
 {
     private readonly IGerdaService _gerdaService;
     private readonly ITicketService _ticketService;
     private readonly IAuditService _auditService;
     private readonly INotificationService _notificationService;
     private readonly IDomainConfigurationService _domainConfig;
-    private readonly ISavedFilterService _savedFilterService;
     private readonly IProjectService _projectService;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IRuleEngineService _ruleEngine;
@@ -48,7 +42,6 @@ public partial class TicketController : Controller
         IAuditService auditService,
         INotificationService notificationService,
         IDomainConfigurationService domainConfig,
-        ISavedFilterService savedFilterService,
         IProjectService projectService,
         IHttpContextAccessor httpContextAccessor,
         IRuleEngineService ruleEngine,
@@ -59,52 +52,11 @@ public partial class TicketController : Controller
         _auditService = auditService;
         _notificationService = notificationService;
         _domainConfig = domainConfig;
-        _savedFilterService = savedFilterService;
         _projectService = projectService;
         _httpContextAccessor = httpContextAccessor;
         _ruleEngine = ruleEngine;
         _logger = logger;
     }
-
-    #region Index
-
-    public async Task<IActionResult> Index(TicketSearchViewModel searchModel)
-    {
-        try
-        {
-            if (searchModel == null) searchModel = new TicketSearchViewModel();
-
-            var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            var isCustomer = User.IsInRole(Constants.RoleCustomer);
-
-            if (isCustomer && !string.IsNullOrEmpty(userId))
-            {
-                searchModel.CustomerId = userId;
-            }
-
-            var result = await _ticketService.SearchTicketsAsync(searchModel);
-
-            result.Customers = await _ticketService.GetCustomerSelectListAsync();
-            result.Employees = await _ticketService.GetEmployeeSelectListAsync();
-            result.Projects = await _ticketService.GetProjectSelectListAsync();
-
-            if (!string.IsNullOrEmpty(userId))
-            {
-                ViewBag.SavedFilters = await _savedFilterService.GetFiltersForUserAsync(userId);
-            }
-
-            ViewBag.IsCustomer = isCustomer;
-
-            return View(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error loading tickets");
-            return StatusCode(500);
-        }
-    }
-
-    #endregion
 
     #region Detail
 
@@ -308,7 +260,7 @@ public partial class TicketController : Controller
             TempData["Warning"] = "Creation encountered an error. Please try again.";
         }
 
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction("Index", "TicketSearch");
     }
 
     #endregion

@@ -1,13 +1,27 @@
-using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
-using Microsoft.AspNetCore.Authorization;
+using TicketMasala.Web.Engine.GERDA.Tickets;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TicketMasala.Web.Controllers;
 
-// Partial class: Workflow actions (assignment, comments, reviews)
-public partial class TicketController
+[Authorize]
+public class TicketWorkflowController : Controller
 {
+    private readonly ITicketService _ticketService;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ILogger<TicketWorkflowController> _logger;
+
+    public TicketWorkflowController(
+        ITicketService ticketService,
+        IHttpContextAccessor httpContextAccessor,
+        ILogger<TicketWorkflowController> logger)
+    {
+        _ticketService = ticketService;
+        _httpContextAccessor = httpContextAccessor;
+        _logger = logger;
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AssignToRecommended(Guid ticketGuid, string agentId)
@@ -17,12 +31,12 @@ public partial class TicketController
         if (!success)
         {
             TempData["Error"] = "Failed to assign ticket. Please try again.";
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Index", "TicketSearch");
         }
 
         var agent = await _ticketService.GetEmployeeByIdAsync(agentId);
         TempData["Success"] = $"Ticket successfully assigned to {agent?.FirstName} {agent?.LastName}!";
-        return RedirectToAction(nameof(Detail), new { id = ticketGuid });
+        return RedirectToAction("Detail", "Ticket", new { id = ticketGuid });
     }
 
     [HttpPost]
@@ -37,7 +51,7 @@ public partial class TicketController
             }
 
             TempData["Error"] = "Comment cannot be empty";
-            return RedirectToAction(nameof(Detail), new { id });
+            return RedirectToAction("Detail", "Ticket", new { id });
         }
 
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -69,7 +83,7 @@ public partial class TicketController
             TempData["Error"] = "Failed to add comment";
         }
 
-        return RedirectToAction(nameof(Detail), new { id });
+        return RedirectToAction("Detail", "Ticket", new { id });
     }
 
     [HttpPost]
@@ -87,7 +101,7 @@ public partial class TicketController
             return PartialView("_QualityReviewPartial", ticketDetails);
         }
 
-        return RedirectToAction(nameof(Detail), new { id });
+        return RedirectToAction("Detail", "Ticket", new { id });
     }
 
     [HttpPost]
@@ -105,6 +119,6 @@ public partial class TicketController
             return PartialView("_QualityReviewPartial", ticketDetails);
         }
 
-        return RedirectToAction(nameof(Detail), new { id });
+        return RedirectToAction("Detail", "Ticket", new { id });
     }
 }

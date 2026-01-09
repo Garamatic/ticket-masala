@@ -13,7 +13,7 @@
 
 <div class="row mb-4">
     <div class="col-12">
-        <a asp-action="Index" class="btn btn-secondary">
+        <a asp-controller="TicketSearch" asp-action="Index" class="btn btn-secondary">
             <i class="fas fa-arrow-left me-2"></i> Back to List
         </a>
     </div>
@@ -49,7 +49,8 @@
                     <dd class="col-sm-9">
                         @if (Model.CompletionTarget.HasValue)
                         {
-                            <span class="@(Model.IsSlaBreached ? "text-danger fw-bold" : Model.DaysUntilSla <= 3 ? "text-warning" : "")">
+                            <span
+                            class="@(Model.IsSlaBreached ? "text-danger fw-bold" : Model.DaysUntilSla <= 3 ? "text-warning" : "")">
                                 @Model.CompletionTarget.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
                             </span>
                             <small class="ms-2">(@Model.SlaStatusLabel)</small>
@@ -85,7 +86,8 @@
                 @if (ViewBag.CustomFields != null)
                 {
                     <div class="mt-4">
-                        @await Html.PartialAsync("_CustomFieldsDisplayPartial", ViewBag.CustomFields as IEnumerable<global::TicketMasala.Domain.Configuration.CustomFieldDefinition>)
+                        @await Html.PartialAsync("_CustomFieldsDisplayPartial", ViewBag.CustomFields as
+                    IEnumerable<global::TicketMasala.Domain.Configuration.CustomFieldDefinition>)
                     </div>
                 }
 
@@ -105,38 +107,48 @@
                             @await Html.PartialAsync("_CommentListPartial", Model.Comments)
                         </div>
 
-                        <form asp-action="AddComment" method="post" 
-                              hx-post="@Url.Action("AddComment", "Ticket")" 
-                              hx-target="#commentList"
-                              hx-swap="innerHTML"
-                              hx-on::after-request="if(event.detail.successful) this.reset()">
+                        <form asp-action="AddComment" method="post" hx-post="@Url.Action("AddComment", "Ticket")"
+                            hx-target="#commentList" hx-swap="innerHTML"
+                            hx-on::after-request="if(event.detail.successful) this.reset()">
                             <input type="hidden" name="id" value="@Model.Guid" />
                             <div class="mb-3">
                                 <label for="commentBody" class="form-label">Add a comment</label>
                                 <div class="btn-toolbar mb-1" role="toolbar">
                                     <div class="btn-group me-2" role="group">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertFormat('bold')" title="Bold"><i class="fas fa-bold"></i></button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertFormat('italic')" title="Italic"><i class="fas fa-italic"></i></button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertFormat('list')" title="List"><i class="fas fa-list"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"
+                                            onclick="insertFormat('bold')" title="Bold"><i
+                                                class="fas fa-bold"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"
+                                            onclick="insertFormat('italic')" title="Italic"><i
+                                                class="fas fa-italic"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"
+                                            onclick="insertFormat('list')" title="List"><i
+                                                class="fas fa-list"></i></button>
                                     </div>
                                     <div class="btn-group" role="group">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                            data-bs-toggle="dropdown">
                                             <i class="fas fa-at"></i> Mention
                                         </button>
                                         <ul class="dropdown-menu">
-                                            <li><button class="dropdown-item" type="button" onclick="insertMention('Manager')">Manager</button></li>
+                                            <li><button class="dropdown-item" type="button"
+                                                    onclick="insertMention('Manager')">Manager</button></li>
                                             <!-- Ideally this would be populated dynamically -->
-                                            <li><button class="dropdown-item" type="button" onclick="insertMention('Support')">Support</button></li>
+                                            <li><button class="dropdown-item" type="button"
+                                                    onclick="insertMention('Support')">Support</button></li>
                                         </ul>
                                     </div>
                                 </div>
-                                <textarea class="form-control" id="commentBody" name="commentBody" rows="3" required></textarea>
+                                <textarea class="form-control" id="commentBody" name="commentBody" rows="3"
+                                    required></textarea>
                                 <div class="form-text">Supports Markdown (**bold**, *italic*, - list)</div>
                             </div>
-                            @if (User.IsInRole(TicketMasala.Domain.Common.Constants.RoleAdmin) || User.IsInRole(TicketMasala.Domain.Common.Constants.RoleEmployee))
+                            @if (User.IsInRole(TicketMasala.Domain.Common.Constants.RoleAdmin) ||
+                            User.IsInRole(TicketMasala.Domain.Common.Constants.RoleEmployee))
                             {
                                 <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="isInternal" name="isInternal" value="true">
+                                    <input class="form-check-input" type="checkbox" id="isInternal" name="isInternal"
+                                    value="true">
                                     <label class="form-check-label" for="isInternal">Internal Note (Team only)</label>
                                 </div>
                             }
@@ -146,7 +158,7 @@
                         </form>
                     </div>
                 </div>
-                
+
                 <dl class="row">
                     <dt class="col-sm-3">Attachments</dt>
                     <dd class="col-sm-9">
@@ -157,12 +169,14 @@
                                 {
                                     <li class="mb-2">
                                         <div class="d-flex align-items-center">
-                                            <a asp-action="DownloadAttachment" asp-route-id="@doc.Id" class="text-decoration-none me-2">
+                                            <a asp-action="DownloadAttachment" asp-route-id="@doc.Id"
+                                        class="text-decoration-none me-2">
                                                 📎 @doc.FileName
                                             </a>
                                             @if (doc.ContentType.StartsWith("image/") || doc.ContentType == "application/pdf")
                                             {
-                                                <a asp-action="PreviewAttachment" asp-route-id="@doc.Id" target="_blank" class="badge bg-info text-dark text-decoration-none me-2">
+                                                <a asp-action="PreviewAttachment" asp-route-id="@doc.Id" target="_blank"
+                                        class="badge bg-info text-dark text-decoration-none me-2">
                                                     <i class="fas fa-eye"></i> Preview
                                                 </a>
                                             }
@@ -174,7 +188,8 @@
                                             {
                                                 <span class="badge bg-secondary me-2">Internal</span>
                                             }
-                                            <small class="text-muted">(@(doc.FileSize / 1024) KB) - @doc.UploadDate.ToString("yyyy-MM-dd HH:mm")</small>
+                                            <small class="text-muted">(@(doc.FileSize / 1024) KB) -
+                                                @doc.UploadDate.ToString("yyyy-MM-dd HH:mm")</small>
                                         </div>
                                     </li>
                                 }
@@ -185,12 +200,14 @@
                             <p class="text-muted small">No attachments yet.</p>
                         }
 
-                        <form asp-action="UploadAttachment" method="post" enctype="multipart/form-data" class="d-flex gap-2 align-items-center">
+                        <form asp-action="UploadAttachment" method="post" enctype="multipart/form-data"
+                            class="d-flex gap-2 align-items-center">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="ticketId" value="@Model.Guid" />
                             <input type="file" name="file" class="form-control form-control-sm" required />
                             <div class="form-check form-switch mb-0">
-                                <input class="form-check-input" type="checkbox" id="isPublic" name="isPublic" value="true">
+                                <input class="form-check-input" type="checkbox" id="isPublic" name="isPublic"
+                                    value="true">
                                 <label class="form-check-label small" for="isPublic">Public</label>
                             </div>
                             <button type="submit" class="btn btn-sm btn-outline-primary">Upload</button>
@@ -254,7 +271,8 @@
 
     <!-- Right Column: GERDA AI Insights -->
     <!-- Right Column: GERDA AI Insights (Internal Only) -->
-    @if (User.IsInRole(TicketMasala.Domain.Common.Constants.RoleAdmin) || User.IsInRole(TicketMasala.Domain.Common.Constants.RoleEmployee))
+    @if (User.IsInRole(TicketMasala.Domain.Common.Constants.RoleAdmin) ||
+    User.IsInRole(TicketMasala.Domain.Common.Constants.RoleEmployee))
     {
         <div class="col-md-4">
             <div class="card border-primary mb-3">
@@ -263,25 +281,22 @@
                 </div>
                 <div class="card-body">
                     <!-- Complexity Estimation -->
-                    <div class="mb-3">
+                <div class="mb-3">
                         <h6 class="text-primary">Complexity</h6>
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="fs-4">@Model.EstimatedEffortPoints points</span>
                             <span class="badge bg-secondary">@Model.ComplexityLabel</span>
                         </div>
                         <div class="progress mt-2 progress-sm">
-                            <div class="progress-bar" 
-                                 role="progressbar" 
-                                 style="width: @((Model.EstimatedEffortPoints / 21.0 * 100))%"
-                                 aria-valuenow="@Model.EstimatedEffortPoints" 
-                                 aria-valuemin="0" 
-                                 aria-valuemax="21">
+                            <div class="progress-bar" role="progressbar"
+                            style="width: @((Model.EstimatedEffortPoints / 21.0 * 100))%"
+                            aria-valuenow="@Model.EstimatedEffortPoints" aria-valuemin="0" aria-valuemax="21">
                             </div>
                         </div>
                     </div>
 
                     <!-- Priority Ranking -->
-                    <div class="mb-3">
+                <div class="mb-3">
                         <h6 class="text-primary">Priority (WSJF)</h6>
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="fs-4">@Model.PriorityScore.ToString("F1")</span>
@@ -319,16 +334,14 @@
                             <span class="badge bg-success">@Model.RecommendedAgent.AffinityLabel</span>
                             <span class="text-muted ms-2">Score: @Model.RecommendedAgent.AffinityScore.ToString("F2")</span>
                         </p>
-                        
+
                         <div class="mb-2">
                             <small class="text-muted">Current Workload</small>
                             <div class="progress progress-md">
-                                <div class="progress-bar @(Model.RecommendedAgent.WorkloadPercentage > 80 ? "bg-warning" : "bg-success")" 
-                                     role="progressbar" 
-                                     style="width: @Model.RecommendedAgent.WorkloadPercentage%"
-                                     aria-valuenow="@Model.RecommendedAgent.WorkloadPercentage" 
-                                     aria-valuemin="0" 
-                                     aria-valuemax="100">
+                                <div class="progress-bar @(Model.RecommendedAgent.WorkloadPercentage > 80 ? "bg-warning" : "bg-success")"
+                            role="progressbar" style="width: @Model.RecommendedAgent.WorkloadPercentage%"
+                            aria-valuenow="@Model.RecommendedAgent.WorkloadPercentage" aria-valuemin="0"
+                            aria-valuemax="100">
                                     @Model.RecommendedAgent.CurrentWorkload / @Model.RecommendedAgent.MaxCapacity pts
                                 </div>
                             </div>
@@ -369,7 +382,8 @@
         <div class="alert alert-warning d-flex align-items-center" role="alert">
             <i class="fas fa-exclamation-triangle me-2"></i>
             <div>
-                <strong>Due Soon!</strong> This ticket is due in @Math.Round(timeRemaining.TotalHours) hours (@Model.CompletionTarget.Value.ToLocalTime().ToString("g")).
+                <strong>Due Soon!</strong> This ticket is due in @Math.Round(timeRemaining.TotalHours) hours
+                (@Model.CompletionTarget.Value.ToLocalTime().ToString("g")).
             </div>
         </div>
     }
@@ -382,21 +396,23 @@
     </a>
     @if (Model.ProjectGuid.HasValue)
     {
-        <a asp-controller="Projects" asp-action="Details" asp-route-id="@Model.ProjectGuid" class="btn btn-outline-secondary">
+        <a asp-controller="Projects" asp-action="Details" asp-route-id="@Model.ProjectGuid"
+        class="btn btn-outline-secondary">
             <i class="fas fa-folder me-2"></i> View Project
         </a>
     }
     else if (!User.IsInRole("Customer"))
     {
-        <a asp-controller="Projects" asp-action="CreateFromTicket" asp-route-ticketId="@Model.Guid" class="btn btn-outline-success">
+        <a asp-controller="Projects" asp-action="CreateFromTicket" asp-route-ticketId="@Model.Guid"
+        class="btn btn-outline-success">
             <i class="fas fa-plus-circle me-2"></i> Create Project
         </a>
     }
-    
+
     <button type="button" onclick="window.history.back()" class="btn btn-outline-secondary">Back</button>
 </div>
 
 @section Scripts {
-    <script src="~/lib/marked/marked.min.js"></script>
-    <script src="~/js/ticket-detail.js" asp-append-version="true"></script>
+<script src="~/lib/marked/marked.min.js"></script>
+<script src="~/js/ticket-detail.js" asp-append-version="true"></script>
 }

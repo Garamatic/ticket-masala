@@ -46,7 +46,7 @@ public class IntegrationTestFactory<TProgram> : WebApplicationFactory<TProgram> 
             services.AddScoped<IEstimatingService>(sp => Mock.Of<IEstimatingService>());
         });
 
-        builder.UseEnvironment("Development");
+        builder.UseEnvironment("Testing");
     }
 
     protected override void Dispose(bool disposing)

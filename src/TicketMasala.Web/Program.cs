@@ -73,6 +73,7 @@ builder.Services.AddBackgroundServices();
 // ============================================
 var configBasePath = TicketMasala.Web.Configuration.ConfigurationPaths.GetConfigBasePath(builder.Environment.ContentRootPath);
 builder.Services.AddGerdaServices(builder.Environment, configBasePath);
+builder.Services.AddTransient<TicketMasala.Web.AI.IOpenAiService, TicketMasala.Web.AI.OpenAiService>();
 builder.Services.AddScoped<TicketMasala.Domain.Services.IExplainabilityService, TicketMasala.Web.Engine.GERDA.Explainability.ExplainabilityService>();
 
 // ============================================
@@ -89,6 +90,7 @@ builder.Services.AddMasalaFrontend();
 builder.Services.AddMemoryCache();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSingleton<TenantConnectionResolver>();
+builder.Services.AddScoped<TicketMasala.Web.Engine.Core.IFileStorageService, TicketMasala.Web.Engine.Core.LocalFileStorageService>();
 
 var app = builder.Build();
 

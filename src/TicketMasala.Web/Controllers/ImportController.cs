@@ -20,19 +20,22 @@ public class ImportController : Controller
     private readonly ILogger<ImportController> _logger;
     private readonly IBackgroundTaskQueue _taskQueue;
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IFileStorageService _fileStorageService;
 
     public ImportController(
         ITicketImportService importService,
         ITicketService ticketService,
         ILogger<ImportController> logger,
         IBackgroundTaskQueue taskQueue,
-        IServiceScopeFactory scopeFactory)
+        IServiceScopeFactory scopeFactory,
+        IFileStorageService fileStorageService)
     {
         _importService = importService;
         _ticketService = ticketService;
         _logger = logger;
         _taskQueue = taskQueue;
         _scopeFactory = scopeFactory;
+        _fileStorageService = fileStorageService;
     }
 
     [HttpGet]
@@ -43,7 +46,7 @@ public class ImportController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Upload(IFormFile file)
+    public async Task<IActionResult> Upload(IFormFile file)
     {
         if (file == null || file.Length == 0)
         {
@@ -70,12 +73,10 @@ public class ImportController : Controller
 
             // Store full data in session or cache? For pilot, maybe just re-upload or keep in memory if small
             // Better approach for pilot: Save temp file
-            var tempPath = Path.GetTempFileName();
-            using (var fileStream = new FileStream(tempPath, FileMode.Create))
-            {
-                file.CopyTo(fileStream);
-            }
-            TempData["TempFilePath"] = tempPath;
+            using var fileStream = file.OpenReadStream();
+            var fileId = await _fileStorageService.StoreFileAsync(fileStream, file.FileName);
+            
+            TempData["FileId"] = fileId;
             TempData["OriginalFileName"] = file.FileName; // Store original filename to preserve extension
 
             // Get headers from first row
@@ -100,7 +101,7 @@ public class ImportController : Controller
     [HttpPost]
     public async Task<IActionResult> ExecuteImport(Dictionary<string, string> mapping)
     {
-        var tempPath = TempData["TempFilePath"]?.ToString();
+        var fileId = TempData["FileId"]?.ToString();
         var originalFileName = TempData["OriginalFileName"]?.ToString() ?? "temp.csv"; // Default to csv if missing
 
         if (mapping == null || !mapping.Any())
@@ -109,7 +110,7 @@ public class ImportController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        if (string.IsNullOrEmpty(tempPath) || !System.IO.File.Exists(tempPath))
+        if (string.IsNullOrEmpty(fileId))
         {
             TempData["Error"] = "Session expired. Please upload again.";
             return RedirectToAction(nameof(Index));
@@ -139,13 +140,14 @@ public class ImportController : Controller
             {
                 using var scope = _scopeFactory.CreateScope();
                 var logger = scope.ServiceProvider.GetRequiredService<ILogger<ImportController>>();
-                
+                var fileStorage = scope.ServiceProvider.GetRequiredService<IFileStorageService>();
+
                 try 
                 {
                     logger.LogInformation("Starting background import for {FileName}", originalFileName);
                     var importService = scope.ServiceProvider.GetRequiredService<ITicketImportService>();
                     
-                    using var stream = System.IO.File.OpenRead(tempPath);
+                    using var stream = await fileStorage.RetrieveFileAsync(fileId);
                     var rows = importService.ParseFile(stream, originalFileName);
                     
                     var count = await importService.ImportTicketsAsync(rows, mapping, uploaderId, deptIdValue);
@@ -157,10 +159,7 @@ public class ImportController : Controller
                 }
                 finally
                 {
-                    if (System.IO.File.Exists(tempPath))
-                    {
-                        System.IO.File.Delete(tempPath);
-                    }
+                    await fileStorage.DeleteFileAsync(fileId);
                 }
             });
 

@@ -34,11 +34,11 @@ public static class CoreServiceCollectionExtensions
         services.AddScoped<Engine.Security.IPiiScrubberService,
             Engine.Security.PiiScrubberService>();
 
-        // Ticket Service (implements ITicketService, ITicketQueryService, ITicketCommandService)
-        services.AddScoped<TicketService>();
-        services.AddScoped<ITicketService>(sp => sp.GetRequiredService<TicketService>());
-        services.AddScoped<ITicketQueryService>(sp => sp.GetRequiredService<TicketService>());
-        services.AddScoped<ITicketCommandService>(sp => sp.GetRequiredService<TicketService>());
+        // Ticket Services (Split by Responsibility)
+        services.AddScoped<ITicketReadService, TicketReadService>(); // Read/Search
+        services.AddScoped<ITicketWorkflowService, TicketWorkflowService>(); // Workflow
+        services.AddScoped<ITicketBatchService, TicketBatchService>(); // Batch Operations
+        services.AddScoped<TicketService>(); // Legacy implementation
 
         // Domain services for TicketService dependencies
         services.AddScoped<TicketDispatchService>();
@@ -53,7 +53,10 @@ public static class CoreServiceCollectionExtensions
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<ISavedFilterService, SavedFilterService>();
-        services.AddScoped<IProjectService, ProjectService>();
+        services.AddScoped<IProjectReadService, ProjectReadService>();
+        services.AddScoped<IProjectWorkflowService, ProjectWorkflowService>();
+        services.AddScoped<IProjectTemplateService, ProjectTemplateService>();
+        services.AddScoped<ProjectService>(); // Legacy
         services.AddScoped<IAuditService, AuditService>();
         services.AddScoped<ITicketImportService, TicketImportService>();
 

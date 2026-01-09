@@ -27,7 +27,8 @@ namespace TicketMasala.Web.Controllers.Api;
 [Produces("application/json")]
 public class TicketsApiController : ControllerBase
 {
-    private readonly ITicketService _ticketService;
+    private readonly ITicketWorkflowService _ticketWorkflowService;
+    private readonly ITicketReadService _ticketReadService;
     private readonly ITicketFactory _ticketFactory;
     private readonly IUserRepository _userRepository;
     private readonly ITicketRepository _ticketRepository;
@@ -35,14 +36,16 @@ public class TicketsApiController : ControllerBase
     private readonly ILogger<TicketsApiController> _logger;
 
     public TicketsApiController(
-        ITicketService ticketService,
+        ITicketWorkflowService ticketWorkflowService,
+        ITicketReadService ticketReadService,
         ITicketFactory ticketFactory,
         IUserRepository userRepository,
         ITicketRepository ticketRepository,
         UserManager<ApplicationUser> userManager,
         ILogger<TicketsApiController> logger)
     {
-        _ticketService = ticketService;
+        _ticketWorkflowService = ticketWorkflowService;
+        _ticketReadService = ticketReadService;
         _ticketFactory = ticketFactory;
         _userRepository = userRepository;
         _ticketRepository = ticketRepository;
@@ -85,7 +88,7 @@ public class TicketsApiController : ControllerBase
                 description += $"\n\n---\n*Submitted via: {request.SourceSite}*";
             }
 
-            var ticket = await _ticketService.CreateTicketAsync(
+            var ticket = await _ticketWorkflowService.CreateTicketAsync(
                 description: description,
                 customerId: customer.Id,
                 responsibleId: null, // GERDA will assign
@@ -171,7 +174,7 @@ public class TicketsApiController : ControllerBase
     [Obsolete("Use /api/v1/work-items endpoints instead")]
     public async Task<ActionResult<IEnumerable<TicketViewModel>>> GetAll()
     {
-        var tickets = await _ticketService.GetAllTicketsAsync();
+        var tickets = await _ticketReadService.GetAllTicketsAsync();
         return Ok(tickets);
     }
 
@@ -183,7 +186,7 @@ public class TicketsApiController : ControllerBase
     [Obsolete("Use /api/v1/work-items endpoints instead")]
     public async Task<ActionResult<TicketDetailsViewModel>> GetById(Guid id)
     {
-        var ticket = await _ticketService.GetTicketDetailsAsync(id);
+        var ticket = await _ticketReadService.GetTicketDetailsAsync(id);
 
         if (ticket == null)
         {
@@ -220,7 +223,7 @@ public class TicketsApiController : ControllerBase
                 : "{}";
 
             // Create the ticket using internal service
-            var ticket = await _ticketService.CreateTicketAsync(
+            var ticket = await _ticketWorkflowService.CreateTicketAsync(
                 description: $"**{request.Title}**\n\n{request.Description}",
                 customerId: request.CustomerId,
                 responsibleId: request.AssigneeId,

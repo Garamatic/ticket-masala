@@ -8,16 +8,19 @@ namespace TicketMasala.Web.Controllers;
 [Authorize]
 public class TicketWorkflowController : Controller
 {
-    private readonly ITicketService _ticketService;
+    private readonly ITicketWorkflowService _ticketWorkflowService;
+    private readonly ITicketReadService _ticketReadService;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<TicketWorkflowController> _logger;
 
     public TicketWorkflowController(
-        ITicketService ticketService,
+        ITicketWorkflowService ticketWorkflowService,
+        ITicketReadService ticketReadService,
         IHttpContextAccessor httpContextAccessor,
         ILogger<TicketWorkflowController> logger)
     {
-        _ticketService = ticketService;
+        _ticketWorkflowService = ticketWorkflowService;
+        _ticketReadService = ticketReadService;
         _httpContextAccessor = httpContextAccessor;
         _logger = logger;
     }
@@ -26,7 +29,7 @@ public class TicketWorkflowController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AssignToRecommended(Guid ticketGuid, string agentId)
     {
-        var success = await _ticketService.AssignTicketAsync(ticketGuid, agentId);
+        var success = await _ticketWorkflowService.AssignTicketAsync(ticketGuid, agentId);
 
         if (!success)
         {
@@ -34,7 +37,7 @@ public class TicketWorkflowController : Controller
             return RedirectToAction("Index", "TicketSearch");
         }
 
-        var agent = await _ticketService.GetEmployeeByIdAsync(agentId);
+        var agent = await _ticketReadService.GetEmployeeByIdAsync(agentId);
         TempData["Success"] = $"Ticket successfully assigned to {agent?.FirstName} {agent?.LastName}!";
         return RedirectToAction("Detail", "Ticket", new { id = ticketGuid });
     }
@@ -59,11 +62,11 @@ public class TicketWorkflowController : Controller
 
         try
         {
-            await _ticketService.AddCommentAsync(id, commentBody, isInternal, userId);
+            await _ticketWorkflowService.AddCommentAsync(id, commentBody, isInternal, userId);
 
             if (Request.Headers.ContainsKey("HX-Request"))
             {
-                var ticketDetails = await _ticketService.GetTicketDetailsAsync(id);
+                var ticketDetails = await _ticketReadService.GetTicketDetailsAsync(id);
                 if (ticketDetails != null)
                 {
                     return PartialView("_CommentListPartial", ticketDetails.Comments);
@@ -93,11 +96,11 @@ public class TicketWorkflowController : Controller
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
-        await _ticketService.RequestReviewAsync(id, userId);
+        await _ticketWorkflowService.RequestReviewAsync(id, userId);
 
         if (Request.Headers.ContainsKey("HX-Request"))
         {
-            var ticketDetails = await _ticketService.GetTicketDetailsAsync(id);
+            var ticketDetails = await _ticketReadService.GetTicketDetailsAsync(id);
             return PartialView("_QualityReviewPartial", ticketDetails);
         }
 
@@ -111,11 +114,11 @@ public class TicketWorkflowController : Controller
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
-        await _ticketService.SubmitReviewAsync(id, score, feedback, approve, userId);
+        await _ticketWorkflowService.SubmitReviewAsync(id, score, feedback, approve, userId);
 
         if (Request.Headers.ContainsKey("HX-Request"))
         {
-            var ticketDetails = await _ticketService.GetTicketDetailsAsync(id);
+            var ticketDetails = await _ticketReadService.GetTicketDetailsAsync(id);
             return PartialView("_QualityReviewPartial", ticketDetails);
         }
 

@@ -19,14 +19,17 @@ namespace TicketMasala.Web.Controllers;
 [Authorize(Roles = Constants.RoleEmployee + "," + Constants.RoleAdmin + "," + Constants.RoleCustomer)]
 public class ProjectsController : Controller
 {
-    private readonly IProjectService _projectService;
+    private readonly IProjectReadService _projectReadService;
+    private readonly IProjectWorkflowService _projectWorkflowService;
     private readonly ILogger<ProjectsController> _logger;
 
     public ProjectsController(
-        IProjectService projectService,
+        IProjectReadService projectReadService,
+        IProjectWorkflowService projectWorkflowService,
         ILogger<ProjectsController> logger)
     {
-        _projectService = projectService;
+        _projectReadService = projectReadService;
+        _projectWorkflowService = projectWorkflowService;
         _logger = logger;
     }
 
@@ -35,7 +38,7 @@ public class ProjectsController : Controller
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var isCustomer = User.IsInRole(Constants.RoleCustomer);
 
-        var viewModels = await _projectService.GetAllProjectsAsync(userId, isCustomer);
+        var viewModels = await _projectReadService.GetAllProjectsAsync(userId, isCustomer);
         return View(viewModels.ToList());
     }
 
@@ -51,16 +54,16 @@ public class ProjectsController : Controller
 
             var viewModel = new NewProject
             {
-                StakeholderList = (await _projectService.GetStakeholderSelectListAsync()).ToList(),
-                TemplateList = (await _projectService.GetTemplateSelectListAsync()).ToList(),
-                ProjectManagerList = (await _projectService.GetEmployeeSelectListAsync()).Items.Cast<SelectListItem>().ToList(),
+                StakeholderList = (await _projectReadService.GetStakeholderSelectListAsync()).ToList(),
+                TemplateList = (await _projectReadService.GetTemplateSelectListAsync()).ToList(),
+                ProjectManagerList = (await _projectReadService.GetEmployeeSelectListAsync()).Items.Cast<SelectListItem>().ToList(),
                 IsNewCustomer = false
             };
 
             // Only show customer list for non-customer users
             if (!isCustomer)
             {
-                viewModel.CustomerList = (await _projectService.GetCustomerSelectListAsync()).ToList();
+                viewModel.CustomerList = (await _projectReadService.GetCustomerSelectListAsync()).ToList();
             }
             else
             {
@@ -105,7 +108,7 @@ public class ProjectsController : Controller
             {
                 try
                 {
-                    await _projectService.CreateProjectAsync(viewModel, userId);
+                    await _projectWorkflowService.CreateProjectAsync(viewModel, userId);
                     return RedirectToAction("Index");
                 }
                 catch (InvalidOperationException ex)
@@ -114,9 +117,9 @@ public class ProjectsController : Controller
                 }
             }
 
-            viewModel.CustomerList = (await _projectService.GetCustomerSelectListAsync()).ToList();
-            viewModel.StakeholderList = (await _projectService.GetStakeholderSelectListAsync()).ToList();
-            viewModel.TemplateList = (await _projectService.GetTemplateSelectListAsync()).ToList();
+            viewModel.CustomerList = (await _projectReadService.GetCustomerSelectListAsync()).ToList();
+            viewModel.StakeholderList = (await _projectReadService.GetStakeholderSelectListAsync()).ToList();
+            viewModel.TemplateList = (await _projectReadService.GetTemplateSelectListAsync()).ToList();
             ViewBag.IsCustomer = isCustomer;
             return View(viewModel);
         }
@@ -128,9 +131,9 @@ public class ProjectsController : Controller
 
             ModelState.AddModelError(string.Empty, "An error occurred while creating the project. Please try again.");
 
-            viewModel.CustomerList = (await _projectService.GetCustomerSelectListAsync()).ToList();
-            viewModel.StakeholderList = (await _projectService.GetStakeholderSelectListAsync()).ToList();
-            viewModel.TemplateList = (await _projectService.GetTemplateSelectListAsync()).ToList();
+            viewModel.CustomerList = (await _projectReadService.GetCustomerSelectListAsync()).ToList();
+            viewModel.StakeholderList = (await _projectReadService.GetStakeholderSelectListAsync()).ToList();
+            viewModel.TemplateList = (await _projectReadService.GetTemplateSelectListAsync()).ToList();
             return View(viewModel);
         }
     }
@@ -140,7 +143,7 @@ public class ProjectsController : Controller
     {
         try
         {
-            var viewModel = await _projectService.GetProjectDetailsAsync(id);
+            var viewModel = await _projectReadService.GetProjectDetailsAsync(id);
 
             if (viewModel == null)
             {
@@ -164,7 +167,7 @@ public class ProjectsController : Controller
         {
             _logger.LogInformation("Edit project form requested for project: {ProjectId}", id);
 
-            var viewModel = await _projectService.GetProjectForEditAsync(id);
+            var viewModel = await _projectReadService.GetProjectForEditAsync(id);
 
             if (viewModel == null)
             {
@@ -197,12 +200,12 @@ public class ProjectsController : Controller
 
             if (!ModelState.IsValid)
             {
-                viewModel.CustomerList = (await _projectService.GetCustomerSelectListAsync()).ToList();
-                viewModel.ProjectManagerList = (await _projectService.GetEmployeeSelectListAsync()).Items.Cast<SelectListItem>().ToList();
+                viewModel.CustomerList = (await _projectReadService.GetCustomerSelectListAsync()).ToList();
+                viewModel.ProjectManagerList = (await _projectReadService.GetEmployeeSelectListAsync()).Items.Cast<SelectListItem>().ToList();
                 return View(viewModel);
             }
 
-            var success = await _projectService.UpdateProjectAsync(id, viewModel);
+            var success = await _projectWorkflowService.UpdateProjectAsync(id, viewModel);
 
             if (!success)
             {
@@ -217,8 +220,8 @@ public class ProjectsController : Controller
             var correlationId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
             _logger.LogError(ex, "Error updating project {ProjectId}. CorrelationId: {CorrelationId}", id, correlationId);
 
-            viewModel.CustomerList = (await _projectService.GetCustomerSelectListAsync()).ToList();
-            viewModel.ProjectManagerList = (await _projectService.GetEmployeeSelectListAsync()).Items.Cast<SelectListItem>().ToList();
+            viewModel.CustomerList = (await _projectReadService.GetCustomerSelectListAsync()).ToList();
+            viewModel.ProjectManagerList = (await _projectReadService.GetEmployeeSelectListAsync()).Items.Cast<SelectListItem>().ToList();
             ModelState.AddModelError(string.Empty, "An error occurred while updating the project. Please try again.");
             return View(viewModel);
         }
@@ -237,14 +240,14 @@ public class ProjectsController : Controller
             _logger.LogInformation("Create project from ticket requested for ticket: {TicketId}", ticketId);
 
             // Check if ticket already belongs to a project
-            var existingProjectId = await _projectService.GetProjectIdForTicketAsync(ticketId);
+            var existingProjectId = await _projectReadService.GetProjectIdForTicketAsync(ticketId);
             if (existingProjectId.HasValue)
             {
                 TempData["Warning"] = "This ticket already belongs to a project.";
                 return RedirectToAction("Details", new { id = existingProjectId.Value });
             }
 
-            var viewModel = await _projectService.PrepareCreateFromTicketViewModelAsync(ticketId);
+            var viewModel = await _projectReadService.PrepareCreateFromTicketViewModelAsync(ticketId);
 
             if (viewModel == null)
             {
@@ -279,7 +282,7 @@ public class ProjectsController : Controller
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
                     ?? throw new InvalidOperationException("User ID not found");
 
-                var projectId = await _projectService.CreateProjectFromTicketAsync(viewModel, userId);
+                var projectId = await _projectWorkflowService.CreateProjectFromTicketAsync(viewModel, userId);
 
                 if (projectId.HasValue)
                 {
@@ -290,8 +293,8 @@ public class ProjectsController : Controller
             }
 
             // Reload select lists
-            viewModel.TemplateList = new SelectList(await _projectService.GetTemplateSelectListAsync(), "Value", "Text");
-            viewModel.ProjectManagerList = await _projectService.GetEmployeeSelectListAsync();
+            viewModel.TemplateList = new SelectList(await _projectReadService.GetTemplateSelectListAsync(), "Value", "Text");
+            viewModel.ProjectManagerList = await _projectReadService.GetEmployeeSelectListAsync();
             return View(viewModel);
         }
         catch (Exception ex)
@@ -302,8 +305,8 @@ public class ProjectsController : Controller
 
             ModelState.AddModelError(string.Empty, "An error occurred while creating the project. Please try again.");
 
-            viewModel.TemplateList = new SelectList(await _projectService.GetTemplateSelectListAsync(), "Value", "Text");
-            viewModel.ProjectManagerList = await _projectService.GetEmployeeSelectListAsync();
+            viewModel.TemplateList = new SelectList(await _projectReadService.GetTemplateSelectListAsync(), "Value", "Text");
+            viewModel.ProjectManagerList = await _projectReadService.GetEmployeeSelectListAsync();
             return View(viewModel);
         }
     }
@@ -320,7 +323,7 @@ public class ProjectsController : Controller
         {
             _logger.LogInformation("Attempting to delete project: {ProjectId}", id);
 
-            var success = await _projectService.DeleteProjectAsync(id);
+            var success = await _projectWorkflowService.DeleteProjectAsync(id);
 
             if (!success)
             {

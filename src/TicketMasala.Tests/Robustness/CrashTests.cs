@@ -95,7 +95,8 @@ namespace TicketMasala.Tests.Robustness
         {
             // Arrange
             var mockGerda = new Mock<IGerdaService>();
-            var mockTicketService = new Mock<ITicketService>();
+            var mockTicketWorkflowService = new Mock<ITicketWorkflowService>();
+            var mockTicketReadService = new Mock<ITicketReadService>();
             var mockAudit = new Mock<IAuditService>();
             var mockNotif = new Mock<INotificationService>();
             var mockDomain = new Mock<IDomainConfigurationService>();
@@ -104,13 +105,13 @@ namespace TicketMasala.Tests.Robustness
             mockDomain.Setup(d => d.GetCustomFields(It.IsAny<string>())).Returns(new List<TicketMasala.Domain.Configuration.CustomFieldDefinition>());
 
             var mockSavedFilter = new Mock<ISavedFilterService>();
-            var mockProjectService = new Mock<IProjectService>();
+            var mockProjectService = new Mock<IProjectReadService>();
             var mockHttpContext = new Mock<IHttpContextAccessor>();
             var mockRule = new Mock<IRuleEngineService>();
             var mockLogger = new Mock<ILogger<TicketController>>();
 
             var controller = new TicketController(
-                mockGerda.Object, mockTicketService.Object, mockAudit.Object,
+                mockGerda.Object, mockTicketWorkflowService.Object, mockTicketReadService.Object, mockAudit.Object,
                 mockNotif.Object, mockDomain.Object,
                 mockProjectService.Object, mockHttpContext.Object, mockRule.Object,
                 mockLogger.Object);
@@ -138,18 +139,19 @@ namespace TicketMasala.Tests.Robustness
         {
             // Arrange
             var mockGerda = new Mock<IGerdaService>();
-            var mockTicketService = new Mock<ITicketService>();
+            var mockTicketWorkflowService = new Mock<ITicketWorkflowService>();
+            var mockTicketReadService = new Mock<ITicketReadService>();
             var mockAudit = new Mock<IAuditService>();
             var mockNotif = new Mock<INotificationService>();
             var mockDomain = new Mock<IDomainConfigurationService>();
             var mockSavedFilter = new Mock<ISavedFilterService>();
-            var mockProjectService = new Mock<IProjectService>();
+            var mockProjectService = new Mock<IProjectReadService>();
             var mockHttpContext = new Mock<IHttpContextAccessor>();
             var mockRule = new Mock<IRuleEngineService>();
             var mockLogger = new Mock<ILogger<TicketController>>();
 
             var controller = new TicketController(
-                mockGerda.Object, mockTicketService.Object, mockAudit.Object,
+                mockGerda.Object, mockTicketWorkflowService.Object, mockTicketReadService.Object, mockAudit.Object,
                 mockNotif.Object, mockDomain.Object,
                 mockProjectService.Object, mockHttpContext.Object, mockRule.Object,
                 mockLogger.Object);

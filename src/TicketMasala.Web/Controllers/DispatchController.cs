@@ -15,16 +15,22 @@ public class DispatchController : Controller
     private readonly ILogger<DispatchController> _logger;
     private readonly IDispatchingService? _dispatchingService;
     private readonly IDispatchBacklogService? _dispatchBacklogService;
-    private readonly ITicketService _ticketService;
+    private readonly ITicketReadService _ticketReadService;
+    private readonly ITicketWorkflowService _ticketWorkflowService;
+    private readonly ITicketBatchService _ticketBatchService;
 
     public DispatchController(
         ILogger<DispatchController> logger,
-        ITicketService ticketService,
+        ITicketReadService ticketReadService,
+        ITicketWorkflowService ticketWorkflowService,
+        ITicketBatchService ticketBatchService,
         IDispatchingService? dispatchingService = null,
         IDispatchBacklogService? dispatchBacklogService = null)
     {
         _logger = logger;
-        _ticketService = ticketService;
+        _ticketReadService = ticketReadService;
+        _ticketWorkflowService = ticketWorkflowService;
+        _ticketBatchService = ticketBatchService;
         _dispatchingService = dispatchingService;
         _dispatchBacklogService = dispatchBacklogService;
     }
@@ -71,7 +77,7 @@ public class DispatchController : Controller
     {
         try
         {
-            var success = await _ticketService.AssignTicketWithProjectAsync(ticketGuid, agentId, projectGuid);
+            var success = await _ticketWorkflowService.AssignTicketWithProjectAsync(ticketGuid, agentId, projectGuid);
 
             if (!success)
             {
@@ -104,8 +110,8 @@ public class DispatchController : Controller
                 "Manager batch assigning {Count} tickets, UseGerda={UseGerda}",
                 request.TicketGuids.Count, request.UseGerdaRecommendations);
 
-            // Use TicketService with GERDA recommendation function
-            var result = await _ticketService.BatchAssignTicketsAsync(
+            // Use TicketBatchService with GERDA recommendation function
+            var result = await _ticketBatchService.BatchAssignTicketsAsync(
                 request,
                 async (ticketGuid) =>
                 {
@@ -154,7 +160,7 @@ public class DispatchController : Controller
 
             if (success)
             {
-                var ticket = await _ticketService.GetTicketForEditAsync(ticketGuid);
+                var ticket = await _ticketReadService.GetTicketForEditAsync(ticketGuid);
 
                 var agentName = ticket?.Responsible != null
                     ? $"{ticket.Responsible.FirstName} {ticket.Responsible.LastName}"

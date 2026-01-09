@@ -57,11 +57,11 @@ namespace GatekeeperApi
 
                     using var scope = _scopeFactory.CreateScope();
                     var templateService = scope.ServiceProvider.GetRequiredService<IIngestionTemplateService>();
-                    var ticketService = scope.ServiceProvider.GetService<ITicketService>();
+                    var ticketService = scope.ServiceProvider.GetService<ITicketWorkflowService>();
 
                     if (ticketService == null)
                     {
-                        _logger.LogWarning("ITicketService is not registered in GatekeeperApi. Ingestion will only log results.");
+                        _logger.LogWarning("ITicketWorkflowService is not registered in GatekeeperApi. Ingestion will only log results.");
                     }
 
                     var result = templateService.Transform(request.Template, request.Data);

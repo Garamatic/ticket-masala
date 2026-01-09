@@ -11,6 +11,7 @@ namespace TicketMasala.Web.Engine.Projects;
 /// Service interface for project business logic.
 /// Follows the same pattern as ITicketService for consistency.
 /// </summary>
+[Obsolete("Use IProjectReadService, IProjectWorkflowService, or IProjectTemplateService instead.")]
 public interface IProjectService
 {
     /// <summary>

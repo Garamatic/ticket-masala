@@ -15,7 +15,10 @@ public static class FrontendServiceCollectionExtensions
             options.SetDefaultCulture(supportedCultures[0]);
             options.AddSupportedCultures(supportedCultures);
             options.AddSupportedUICultures(supportedCultures);
-            options.RequestCultureProviders.Insert(0, new Microsoft.AspNetCore.Localization.CookieRequestCultureProvider());
+            options.RequestCultureProviders.Clear();
+            options.RequestCultureProviders.Add(new Microsoft.AspNetCore.Localization.QueryStringRequestCultureProvider());
+            options.RequestCultureProviders.Add(new Microsoft.AspNetCore.Localization.CookieRequestCultureProvider());
+            options.RequestCultureProviders.Add(new Microsoft.AspNetCore.Localization.AcceptLanguageHeaderRequestCultureProvider());
         });
 
         services.AddWebOptimizer(pipeline =>

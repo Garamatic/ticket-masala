@@ -12,18 +12,21 @@ namespace TicketMasala.Web.Engine.Ingestion;
 
 public class TicketGenerator : ITicketGenerator
 {
-    private readonly ITicketService _ticketService;
+    private readonly ITicketWorkflowService _ticketWorkflowService;
+    private readonly ITicketReadService _ticketReadService;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly MasalaDbContext _context;
     private readonly ILogger<TicketGenerator> _logger;
 
     public TicketGenerator(
-        ITicketService ticketService,
+        ITicketWorkflowService ticketWorkflowService,
+        ITicketReadService ticketReadService,
         UserManager<ApplicationUser> userManager,
         MasalaDbContext context,
         ILogger<TicketGenerator> logger)
     {
-        _ticketService = ticketService;
+        _ticketWorkflowService = ticketWorkflowService;
+        _ticketReadService = ticketReadService;
         _userManager = userManager;
         _context = context;
         _logger = logger;
@@ -44,7 +47,7 @@ public class TicketGenerator : ITicketGenerator
         // 3. Generate History (Training Data)
         // 10 tickets: Customer SQL -> Agent DB
         await GenerateHistoryAsync(customerSql, agentDb, "SQL Query Optimization", "Database query is running slow", 10, cancellationToken);
-        
+
         // 10 tickets: Customer WiFi -> Agent Net
         await GenerateHistoryAsync(customerWifi, agentNet, "Wifi Connection Issue", "Cannot connect to office wifi", 10, cancellationToken);
 
@@ -78,11 +81,11 @@ public class TicketGenerator : ITicketGenerator
         }
         else if (agent is Employee emp)
         {
-             // Update skills if exists and is an Employee
-             emp.Specializations = JsonSerializer.Serialize(skills);
-             emp.Language = lang;
-             emp.Region = region;
-             await _userManager.UpdateAsync(emp);
+            // Update skills if exists and is an Employee
+            emp.Specializations = JsonSerializer.Serialize(skills);
+            emp.Language = lang;
+            emp.Region = region;
+            await _userManager.UpdateAsync(emp);
         }
         return agent;
     }
@@ -110,22 +113,23 @@ public class TicketGenerator : ITicketGenerator
     private async Task GenerateHistoryAsync(ApplicationUser customer, ApplicationUser agent, string title, string desc, int count, CancellationToken ct)
     {
         var project = await _context.Projects.FirstOrDefaultAsync(ct);
-        
+
         for (int i = 0; i < count; i++)
         {
             var ticket = new Ticket
             {
-                Description = $"{title} #{i+1} - {desc}",
+                Description = $"{title} #{i + 1} - {desc}",
                 CreatorGuid = Guid.Parse(customer.Id),
                 ResponsibleId = agent.Id,
                 CreationDate = DateTime.UtcNow.AddDays(-30 + i), // Spread over last 30 days
                 CompletionDate = DateTime.UtcNow.AddDays(-30 + i + 1),
                 Status = "Completed",
+                TicketStatus = Status.Completed,
                 PriorityScore = 50,
                 EstimatedEffortPoints = 3,
                 ProjectGuid = project?.Guid // Can be null
             };
-            
+
             _context.Tickets.Add(ticket);
         }
         await _context.SaveChangesAsync(ct);
@@ -133,23 +137,23 @@ public class TicketGenerator : ITicketGenerator
 
     private async Task GeneratePendingTicketAsync(ApplicationUser customer, string title, string desc, CancellationToken ct)
     {
-         var project = await _context.Projects.FirstOrDefaultAsync(ct);
-         await _ticketService.CreateTicketAsync(
-            description: $"{title} - {desc}",
-            customerId: customer.Id,
-            responsibleId: null,
-            projectGuid: project?.Guid ?? Guid.Empty,
-            completionTarget: DateTime.UtcNow.AddDays(2)
-        );
+        var project = await _context.Projects.FirstOrDefaultAsync(ct);
+        await _ticketWorkflowService.CreateTicketAsync(
+           description: $"{title} - {desc}",
+           customerId: customer.Id,
+           responsibleId: null,
+           projectGuid: project?.Guid ?? Guid.Empty,
+           completionTarget: DateTime.UtcNow.AddDays(2)
+       );
     }
 
     public async Task GenerateRandomTicketAsync(CancellationToken cancellationToken = default)
     {
         // Get a random customer
-        var customer = await _userManager.GetUsersInRoleAsync(Constants.RoleCustomer);
-        if (customer.Count == 0) return;
+        var customers = await _userManager.GetUsersInRoleAsync(Constants.RoleCustomer);
+        if (customers.Count == 0) return;
 
-        var randomCustomer = customer[new Random().Next(customer.Count)];
+        var randomCustomer = customers[new Random().Next(customers.Count)];
 
         // Get a random project safely
         Project? project = null;
@@ -187,7 +191,7 @@ public class TicketGenerator : ITicketGenerator
         var description = RandomDataHelper.GenerateTicketDescription();
 
         // Create ticket using the service method which handles defaults and notifications
-        var ticket = await _ticketService.CreateTicketAsync(
+        var ticket = await _ticketWorkflowService.CreateTicketAsync(
             description: $"{title} - {description}",
             customerId: randomCustomer.Id,
             responsibleId: null, // Let GERDA or manual assignment handle this
@@ -195,12 +199,11 @@ public class TicketGenerator : ITicketGenerator
             completionTarget: DateTime.UtcNow.AddDays(new Random().Next(1, 14))
         );
 
-        // The service method sets defaults. If we want random priority, we might need to update it after creation.
+        // Enhance with random priority
         ticket.PriorityScore = new Random().NextDouble() * 100;
 
-        await _ticketService.UpdateTicketAsync(ticket);
+        await _ticketWorkflowService.UpdateTicketAsync(ticket);
 
         _logger.LogInformation("Generated random ticket: {Title} for Customer: {Customer}", title, randomCustomer.UserName);
     }
-
 }

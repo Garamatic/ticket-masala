@@ -1,6 +1,7 @@
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
 using TicketMasala.Web.Data;
+using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Engine.GERDA.Estimating;
 using TicketMasala.Web.Engine.GERDA.Sentiment;
 
@@ -15,16 +16,16 @@ public interface IEmailTicketProcessor
 
 public class EmailTicketProcessor : IEmailTicketProcessor
 {
-    private readonly MasalaDbContext _dbContext;
+    private readonly ITicketWorkflowService _ticketWorkflowService;
     private readonly IEstimatingService _estimatingService;
     private readonly ILogger<EmailTicketProcessor> _logger;
 
     public EmailTicketProcessor(
-        MasalaDbContext dbContext,
+        ITicketWorkflowService ticketWorkflowService,
         IEstimatingService estimatingService,
         ILogger<EmailTicketProcessor> logger)
     {
-        _dbContext = dbContext;
+        _ticketWorkflowService = ticketWorkflowService;
         _estimatingService = estimatingService;
         _logger = logger;
     }
@@ -34,31 +35,21 @@ public class EmailTicketProcessor : IEmailTicketProcessor
         // 1. Analyze Sentiment / Urgency
         var (urgencyScore, sentimentLabel) = SimpleSentimentAnalyzer.Analyze(email.Subject, email.Body);
 
-        // 2. Create Ticket
-        var ticket = new Ticket
-        {
-            Guid = Guid.NewGuid(),
-            Title = email.Subject ?? "(No Subject)",
-            Description = email.Body ?? "(No Content)",
-            TicketStatus = Status.Pending,
-            TicketType = TicketType.Incident, // Default to Incident for emails
-            DomainId = "IT", // Default domain
-            CreationDate = DateTime.UtcNow,
+        // 2. Create Ticket via Workflow Service (handles observers, defaults, PII scrubbing)
+        var ticket = await _ticketWorkflowService.CreateTicketAsync(
+            description: email.Body ?? "(No Content)",
+            customerId: "system-email", // Or look up user
+            responsibleId: null,
+            projectGuid: null,
+            completionTarget: DateTime.UtcNow.AddDays(7)
+        );
 
-            // AI Fields
-            PriorityScore = urgencyScore,
-            GerdaTags = $"Email-Ingested,Sentiment-{sentimentLabel}",
+        // Enhance with email-specific info (Update ticket returned from creation)
+        ticket.Title = email.Subject ?? "(No Subject)";
+        ticket.PriorityScore = urgencyScore;
+        ticket.GerdaTags = $"Email-Ingested,Sentiment-{sentimentLabel}";
 
-            // Meta
-            CustomFieldsJson = "{}",
-            Status = "New"
-        };
-
-        // Determine Creator (simple logic for now)
-        // In real app, look up user by email.From
-
-        _dbContext.Tickets.Add(ticket);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _ticketWorkflowService.UpdateTicketAsync(ticket);
 
         _logger.LogInformation("Created Ticket {TicketGuid} for '{Subject}' (Priority: {Score:F1} - {Label})", ticket.Guid, email.Subject, urgencyScore, sentimentLabel);
 

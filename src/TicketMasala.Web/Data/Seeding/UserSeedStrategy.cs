@@ -15,6 +15,7 @@ public class UserSeedStrategy : ISeedStrategy
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IWebHostEnvironment _environment;
     private readonly ILogger<UserSeedStrategy> _logger;
+    private readonly IReadOnlyDictionary<string, EmployeeType> _employeeTypeAliases;
 
     public UserSeedStrategy(
         MasalaDbContext context,
@@ -26,6 +27,7 @@ public class UserSeedStrategy : ISeedStrategy
         _userManager = userManager;
         _environment = environment;
         _logger = logger;
+        _employeeTypeAliases = LoadEmployeeTypeAliases();
     }
 
     public async Task<bool> ShouldSeedAsync()
@@ -151,7 +153,7 @@ public class UserSeedStrategy : ISeedStrategy
                 LastName = empDto.LastName,
                 Phone = empDto.Phone,
                 Team = empDto.Team ?? string.Empty,
-                Level = empDto.Level ?? EmployeeType.Support,
+                Level = ResolveEmployeeType(empDto.Level),
                 // GERDA Fields
                 Language = empDto.Language,
                 Specializations = empDto.Specializations,
@@ -171,5 +173,97 @@ public class UserSeedStrategy : ISeedStrategy
                     employee.Email, string.Join(", ", result.Errors.Select(e => e.Description)));
             }
         }
+    }
+
+    private EmployeeType ResolveEmployeeType(string? rawLevel)
+    {
+        if (string.IsNullOrWhiteSpace(rawLevel))
+        {
+            return EmployeeType.Support;
+        }
+
+        var normalized = rawLevel.Trim();
+
+        if (Enum.TryParse<EmployeeType>(normalized, ignoreCase: true, out var parsed))
+        {
+            return parsed;
+        }
+
+        if (_employeeTypeAliases.TryGetValue(normalized, out var mapped))
+        {
+            return mapped;
+        }
+
+        return EmployeeType.Support;
+    }
+
+    private IReadOnlyDictionary<string, EmployeeType> LoadEmployeeTypeAliases()
+    {
+        var aliases = new Dictionary<string, EmployeeType>(StringComparer.OrdinalIgnoreCase);
+
+        var configPath = TicketMasala.Web.Configuration.ConfigurationPaths.GetConfigFilePath(
+            _environment.ContentRootPath,
+            "masala_config.json");
+
+        if (!File.Exists(configPath))
+        {
+            return aliases;
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(File.ReadAllText(configPath));
+            var root = doc.RootElement;
+
+            if (!TryGetPropertyIgnoreCase(root, "EmployeeTypeAliases", out var mapElement))
+            {
+                if (TryGetPropertyIgnoreCase(root, "Employees", out var employeesElement) &&
+                    employeesElement.ValueKind == JsonValueKind.Object &&
+                    !TryGetPropertyIgnoreCase(employeesElement, "EmployeeTypeAliases", out mapElement))
+                {
+                    return aliases;
+                }
+            }
+
+            if (mapElement.ValueKind != JsonValueKind.Object)
+            {
+                return aliases;
+            }
+
+            foreach (var kvp in mapElement.EnumerateObject())
+            {
+                var targetRaw = kvp.Value.GetString();
+                if (string.IsNullOrWhiteSpace(targetRaw))
+                {
+                    continue;
+                }
+
+                if (Enum.TryParse<EmployeeType>(targetRaw.Trim(), ignoreCase: true, out var target))
+                {
+                    aliases[kvp.Name] = target;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to parse employee type aliases from {Path}", configPath);
+        }
+
+        return aliases;
+    }
+
+    private static bool TryGetPropertyIgnoreCase(JsonElement element, string propertyName, out JsonElement value)
+    {
+        foreach (var prop in element.EnumerateObject())
+        {
+            if (string.Equals(prop.Name, propertyName, StringComparison.OrdinalIgnoreCase))
+            {
+                value = prop.Value;
+                return true;
+            }
+        }
+
+        value = default;
+        return false;
     }
 }

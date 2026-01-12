@@ -22,7 +22,7 @@ public class SeedUser
     public string LastName { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;
     public string? Team { get; set; }
-    public EmployeeType? Level { get; set; }
+    public string? Level { get; set; }
     public string? Code { get; set; }
 
     // GERDA Fields

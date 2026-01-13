@@ -107,6 +107,7 @@ public class KnowledgeBaseRepositoryTests
 
         // Assert
         var updated = await context.KnowledgeBaseArticles.FindAsync(article.Id);
+        Assert.NotNull(updated);
         Assert.Equal(1, updated.UsageCount);
     }
 }

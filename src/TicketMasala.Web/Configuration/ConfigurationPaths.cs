@@ -35,7 +35,15 @@ public static class ConfigurationPaths
             return _configBasePath;
         }
 
-        // Development fallback
+        // Development fallback - Local config (Priority)
+        var localConfig = Path.Combine(contentRootPath, "config");
+        if (Directory.Exists(localConfig))
+        {
+            _configBasePath = localConfig;
+            return _configBasePath;
+        }
+
+        // Development fallback - Standard Repo Structure (Legacy)
         _configBasePath = Path.Combine(contentRootPath, "..", "..", "config");
         return _configBasePath;
     }

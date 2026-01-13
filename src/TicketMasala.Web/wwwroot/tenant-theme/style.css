@@ -1,0 +1,227 @@
+/**
+ * Ticket Masala - Theme Configuration
+ * 
+ * This file contains all customizable theming variables.
+ * 
+ * Structure:
+ *   - Brand identity (colors, fonts)
+ *   - Status colors
+ *   - Background/surface colors
+ *   - Component styling (shadows, borders)
+ *   - Dark mode overrides
+ */
+
+/* ==========================================
+   BRAND IDENTITY
+   ========================================== */
+
+:root {
+    /* --------------------------------------------------
+       PRIMARY BRAND COLORS
+       Change these to match your organization's branding
+       -------------------------------------------------- */
+    --color-primary: #6366F1;
+    /* Main brand color */
+    --color-primary-light: #818CF8;
+    /* Lighter variant */
+    --color-primary-dark: #4F46E5;
+    /* Darker variant */
+    --color-primary-hover: #5558E3;
+    /* Button hover state */
+
+    --color-secondary: #64748B;
+    /* Secondary/muted actions */
+    --color-accent: #F97316;
+    /* Highlight/accent color */
+    --color-accent-text: #EA580C;
+    /* Accent for text */
+
+    /* Legacy brand colors (kept for backward compatibility) */
+    --color-brand-green-light: #C8E6C9;
+    --color-brand-green-dark: #383D39;
+    --color-brand-accent: #8BC34A;
+
+    /* --------------------------------------------------
+       STATUS COLORS
+       Used for tickets, projects, and notifications
+       -------------------------------------------------- */
+    --color-success: #10B981;
+    /* Completed, approved */
+    --color-warning: #F59E0B;
+    /* Pending, attention */
+    --color-danger: #EF4444;
+    /* Error, failed */
+    --color-info: #3B82F6;
+    /* In progress, info */
+
+    /* Semantic status mapping */
+    --color-pending: var(--color-warning);
+    --color-in-progress: var(--color-info);
+    --color-completed: var(--color-success);
+    --color-failed: var(--color-danger);
+
+    /* --------------------------------------------------
+       TYPOGRAPHY
+       Font families and weights
+       -------------------------------------------------- */
+    --font-family-heading: 'Rajdhani', system-ui, sans-serif;
+    --font-family-base: 'Inter', system-ui, -apple-system, sans-serif;
+
+    /* --------------------------------------------------
+       GRADIENTS
+       Used for cards, headers, and decorative elements
+       -------------------------------------------------- */
+    --gradient-primary: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+    --gradient-dispatch: linear-gradient(135deg, var(--color-primary) 0%, #1E293B 100%);
+    --gradient-success: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    --gradient-warning: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+    --gradient-info: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+    --gradient-danger: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+    --gradient-accent: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+}
+
+/* ==========================================
+   LIGHT MODE (Default)
+   ========================================== */
+
+:root {
+    /* Surface colors */
+    --bg-primary: #FFFFFF;
+    /* Cards, modals */
+    --bg-secondary: #F8FAFC;
+    /* Page background */
+    --bg-tertiary: #F1F5F9;
+    /* Subtle backgrounds */
+
+    /* Text colors */
+    --text-primary: #0F172A;
+    /* Headings, primary text */
+    --text-secondary: #475569;
+    /* Body text, labels */
+    --text-tertiary: #94A3B8;
+    /* Placeholders, muted */
+
+    /* Borders */
+    --border-color: #E2E8F0;
+    /* Default border */
+
+    /* Shadows - Can be customized for different "feels" */
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+
+    /* Colored shadows for emphasis */
+    --shadow-primary: 0 4px 14px 0 rgb(99 102 241 / 0.4);
+    --shadow-success: 0 4px 14px 0 rgb(16 185 129 / 0.4);
+
+    /* Border radius - adjust for rounder or sharper look */
+    --border-radius-sm: 0.375rem;
+    /* 6px */
+    --border-radius: 0.5rem;
+    /* 8px */
+    --border-radius-lg: 0.75rem;
+    /* 12px */
+    --border-radius-xl: 1rem;
+    /* 16px */
+    --border-radius-full: 9999px;
+    /* Pill shape */
+}
+
+/* ==========================================
+   DARK MODE
+   ========================================== */
+
+[data-theme='dark'] {
+    /* Dark surfaces */
+    --bg-primary: #1E293B;
+    --bg-secondary: #0F172A;
+    --bg-tertiary: #334155;
+
+    /* Light text on dark */
+    --text-primary: #F1F5F9;
+    --text-secondary: #CBD5E1;
+    --text-tertiary: #94A3B8;
+
+    /* Darker borders */
+    --border-color: #334155;
+
+    /* Lighter primary for better contrast */
+    --color-primary-hover: #818CF8;
+
+    /* Adjusted shadows for dark mode */
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+}
+
+/* ==========================================
+   BOOTSTRAP OVERRIDES
+   Keep Bootstrap aligned with our theme
+   ========================================== */
+
+:root {
+    --bs-primary: var(--color-primary);
+    --bs-primary-rgb: 99, 102, 241;
+    --bs-link-color: var(--color-primary);
+    --bs-link-hover-color: var(--color-primary-dark);
+}
+
+/* Primary button theming */
+.btn-primary {
+    --bs-btn-bg: var(--color-primary);
+    --bs-btn-border-color: var(--color-primary);
+    --bs-btn-hover-bg: var(--color-primary-hover);
+    --bs-btn-hover-border-color: var(--color-primary-dark);
+    --bs-btn-active-bg: var(--color-primary-dark);
+    --bs-btn-active-border-color: var(--color-primary-dark);
+}
+
+.btn-primary:hover {
+    box-shadow: var(--shadow-primary);
+    transform: translateY(-1px);
+}
+
+.btn-primary:focus-visible {
+    box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.5);
+}
+
+/* ==========================================
+   COMPONENT THEMING
+   Customizable component appearances
+   ========================================== */
+
+/* Stat card gradients - customize per brand */
+.stat-card.primary {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+}
+
+.stat-card.secondary {
+    background: var(--gradient-info);
+}
+
+.stat-card.warning {
+    background: var(--gradient-warning);
+}
+
+.stat-card.success {
+    background: var(--gradient-success);
+}
+
+.stat-card.accent {
+    background: var(--gradient-accent);
+}
+
+.stat-card.danger {
+    background: var(--gradient-danger);
+}
+
+/* GERDA AI Badge - gradient for AI features */
+.badge-gerda {
+    background: linear-gradient(135deg, var(--color-primary) 0%, #A855F7 100%);
+    color: white;
+    box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}

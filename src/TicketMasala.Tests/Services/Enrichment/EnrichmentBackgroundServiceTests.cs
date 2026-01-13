@@ -82,9 +82,9 @@ public class EnrichmentBackgroundServiceTests
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Enriching Ticket {ticketId}")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains($"Enriching Ticket {ticketId}")),
                 It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
     }
 }

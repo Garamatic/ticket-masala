@@ -99,6 +99,7 @@ public class KnowledgeSnippetRepositoryIntegrationTests : IDisposable
         await repository.IncrementUsageCountAsync(snippet.Id);
 
         var updatedSnippet = await context.KnowledgeBaseSnippets.FindAsync(snippet.Id);
+        Assert.NotNull(updatedSnippet);
         Assert.Equal(11, updatedSnippet.UsageCount);
     }
 

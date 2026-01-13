@@ -32,13 +32,13 @@ public class UserSeedStrategy : ISeedStrategy
 
     public async Task<bool> ShouldSeedAsync()
     {
-        // Seed if no users exist yet
-        var userCount = await _context.Users.CountAsync();
-        return userCount == 0;
+        // Always run to ensure admins are up to date
+        return true;
     }
 
     public async Task SeedAsync()
     {
+        Console.WriteLine("DEBUG: UserSeedStrategy.SeedAsync called!");
         _logger.LogInformation("Seeding users and employees...");
 
         var config = await LoadSeedConfigurationAsync();
@@ -51,7 +51,7 @@ public class UserSeedStrategy : ISeedStrategy
         // Seed Admins
         if (config.Admins?.Count > 0)
         {
-            await CreateUsersAsync(config.Admins, Constants.RoleAdmin, "Admin123!");
+            await CreateOrUpdateUsersAsync(config.Admins, Constants.RoleAdmin, "Admin123!");
         }
 
         // Seed Employees
@@ -63,7 +63,7 @@ public class UserSeedStrategy : ISeedStrategy
         // Seed Customers
         if (config.Customers?.Count > 0)
         {
-            await CreateUsersAsync(config.Customers, Constants.RoleCustomer, "Customer123!");
+            await CreateOrUpdateUsersAsync(config.Customers, Constants.RoleCustomer, "Customer123!");
         }
 
         _logger.LogInformation("Users and employees seeded successfully");
@@ -74,10 +74,27 @@ public class UserSeedStrategy : ISeedStrategy
         var seedFilePath = TicketMasala.Web.Configuration.ConfigurationPaths.GetConfigFilePath(
             _environment.ContentRootPath,
             "seed_data.json");
+        
+        Console.WriteLine($"Attempting to load seed data from: {seedFilePath}");
+        _logger.LogInformation("Attempting to load seed data from: {Path}", seedFilePath);
 
         if (!File.Exists(seedFilePath))
         {
+            Console.WriteLine($"Seed data file NOT FOUND at: {seedFilePath}");
             _logger.LogWarning("Seed data file not found at: {Path}", seedFilePath);
+
+            // List files in directory
+            var directory = Path.GetDirectoryName(seedFilePath);
+            if (Directory.Exists(directory))
+            {
+                var files = Directory.GetFiles(directory);
+                Console.WriteLine($"Files in {directory}: {string.Join(", ", files.Select(Path.GetFileName))}");
+            }
+            else 
+            {
+                Console.WriteLine($"Directory NOT FOUND: {directory}");
+            }
+
             return null;
         }
 
@@ -99,7 +116,7 @@ public class UserSeedStrategy : ISeedStrategy
         }
     }
 
-    private async Task CreateUsersAsync(List<SeedUser> users, string role, string defaultPassword)
+    private async Task CreateOrUpdateUsersAsync(List<SeedUser> users, string role, string defaultPassword)
     {
         if (users == null || users.Count == 0)
         {
@@ -109,27 +126,56 @@ public class UserSeedStrategy : ISeedStrategy
 
         foreach (var userDto in users)
         {
-            var user = new ApplicationUser
+            var user = await _userManager.FindByNameAsync(userDto.UserName);
+            if (user == null)
             {
-                UserName = userDto.UserName,
-                Email = userDto.Email,
-                EmailConfirmed = true,
-                FirstName = userDto.FirstName,
-                LastName = userDto.LastName,
-                Phone = userDto.Phone,
-                Code = userDto.Code
-            };
+                // Create new
+                user = new ApplicationUser
+                {
+                    UserName = userDto.UserName,
+                    Email = userDto.Email,
+                    EmailConfirmed = true,
+                    FirstName = userDto.FirstName,
+                    LastName = userDto.LastName,
+                    Phone = userDto.Phone,
+                    Code = userDto.Code
+                };
 
-            var result = await _userManager.CreateAsync(user, defaultPassword);
-            if (result.Succeeded)
-            {
-                await _userManager.AddToRoleAsync(user, role);
-                _logger.LogInformation("Created {Role} user: {Email}", role, user.Email);
+                var result = await _userManager.CreateAsync(user, defaultPassword);
+                if (result.Succeeded)
+                {
+                    await _userManager.AddToRoleAsync(user, role);
+                    _logger.LogInformation("Created {Role} user: {Email}", role, user.Email);
+                }
+                else
+                {
+                    _logger.LogError("Failed to create {Role} user {Email}: {Errors}",
+                        role, user.Email, string.Join(", ", result.Errors?.Select(e => e.Description) ?? new string[0]));
+                }
             }
             else
             {
-                _logger.LogError("Failed to create {Role} user {Email}: {Errors}",
-                    role, user.Email, string.Join(", ", result.Errors?.Select(e => e.Description) ?? new string[0]));
+                // Update existing - Reset Password
+                _logger.LogInformation("User {UserName} exists. Resetting password...", user.UserName);
+                
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var result = await _userManager.ResetPasswordAsync(user, token, defaultPassword);
+                
+                if (result.Succeeded)
+                {
+                    _logger.LogInformation("Password reset for {UserName} to default.", user.UserName);
+                }
+                else
+                {
+                    _logger.LogError("Failed to reset password for {UserName}: {Errors}", 
+                        user.UserName, string.Join(", ", result.Errors.Select(e => e.Description)));
+                }
+
+                // Ensure role
+                if (!await _userManager.IsInRoleAsync(user, role))
+                {
+                    await _userManager.AddToRoleAsync(user, role);
+                }
             }
         }
     }

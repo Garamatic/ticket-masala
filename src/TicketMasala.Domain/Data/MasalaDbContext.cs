@@ -79,7 +79,11 @@ public class MasalaDbContext : IdentityDbContext<ApplicationUser, IdentityRole, 
             entity.Property(e => e.CustomerIds)
                 .HasConversion(
                     v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                    v => System.Text.Json.JsonSerializer.Deserialize<List<string>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<string>());
+                    v => System.Text.Json.JsonSerializer.Deserialize<List<string>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<string>())
+                .Metadata.SetValueComparer(new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<List<string>>(
+                    (c1, c2) => (c1 ?? new List<string>()).SequenceEqual(c2 ?? new List<string>()),
+                    c => c == null ? 0 : c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                    c => c == null ? new List<string>() : c.ToList()));
         });
 
         // 5. Configure navigation properties for ApplicationUser relationships
@@ -162,19 +166,19 @@ public class MasalaDbContext : IdentityDbContext<ApplicationUser, IdentityRole, 
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<AuditLogEntry>()
-            .HasOne<ApplicationUser>()
+            .HasOne(a => a.User)
             .WithMany()
             .HasForeignKey(a => a.UserId)
             .OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder.Entity<KnowledgeBaseArticle>()
-            .HasOne<ApplicationUser>()
+            .HasOne(k => k.Author)
             .WithMany()
             .HasForeignKey(k => k.AuthorId)
             .OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder.Entity<QualityReview>()
-            .HasOne<ApplicationUser>()
+            .HasOne(q => q.Reviewer)
             .WithMany()
             .HasForeignKey(q => q.ReviewerId)
             .OnDelete(DeleteBehavior.Cascade);

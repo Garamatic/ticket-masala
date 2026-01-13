@@ -1,4 +1,5 @@
 using TicketMasala.Web.Data;
+using TicketMasala.Web.Data.Seeding;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Tenancy;
 using TicketMasala.Web.Repositories;
@@ -79,7 +80,7 @@ public static class WebApplicationBuilderExtensions
                     }
 
                     Console.WriteLine($"Using SQLite Provider with connection: {connectionString}");
-                    options.UseSqlite(connectionString);
+                    options.UseSqlite(connectionString, b => b.MigrationsAssembly("TicketMasala.Web"));
                     options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
                 }
                 else
@@ -87,6 +88,7 @@ public static class WebApplicationBuilderExtensions
                     Console.WriteLine($"Using SQL Server Provider");
                     options.UseSqlServer(connectionString, sqlServerOptions =>
                     {
+                        sqlServerOptions.MigrationsAssembly("TicketMasala.Web");
                         sqlServerOptions.EnableRetryOnFailure(
                             maxRetryCount: 5,
                             maxRetryDelay: TimeSpan.FromSeconds(10),
@@ -173,6 +175,12 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddHostedService<QueuedHostedService>();
         builder.Services.AddHostedService<TicketGeneratorService>();
         builder.Services.AddScoped<ITicketGenerator, TicketGenerator>();
+
+        // Seed Strategies (Strategy Pattern - executed in registration order)
+        builder.Services.AddScoped<ISeedStrategy, RoleSeedStrategy>();
+        builder.Services.AddScoped<ISeedStrategy, UserSeedStrategy>();
+        builder.Services.AddScoped<ISeedStrategy, ProjectSeedStrategy>();
+        builder.Services.AddScoped<ISeedStrategy, KnowledgeBaseSeedStrategy>();
 
         // DbSeeder
         builder.Services.AddScoped<DbSeeder>();

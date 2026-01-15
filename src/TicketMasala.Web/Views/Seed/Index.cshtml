@@ -2,6 +2,10 @@
 @{
     ViewData["Title"] = "Test Accounts";
     Layout = null;
+
+    var adminPassword = Environment.GetEnvironmentVariable("MASALA_SEEDED_ADMIN_PASSWORD") ?? "Admin123!";
+    var employeePassword = Environment.GetEnvironmentVariable("MASALA_SEEDED_EMPLOYEE_PASSWORD") ?? "Employee123!";
+    var customerPassword = Environment.GetEnvironmentVariable("MASALA_SEEDED_CUSTOMER_PASSWORD") ?? "Customer123!";
 }
 
 <!DOCTYPE html>
@@ -62,27 +66,23 @@
 
         <h2>👨‍💻 Admin Accounts</h2>
         <div class='account'>
+            <strong>System Administrator</strong><br>
             <strong>Email:</strong> admin@ticketmasala.com<br>
-            <strong>Password:</strong> <span class='password'>Admin123!</span>
+            <strong>Password:</strong> <span class='password'>@adminPassword</span>
         </div>
 
         <h2>👷‍♂️ Employee Accounts</h2>
         <div class='account'>
-            <strong>Project Manager - Mike Johnson</strong><br>
-            <strong>Email:</strong> mike.pm@ticketmasala.com<br>
-            <strong>Password:</strong> <span class='password'>Employee123!</span>
-        </div>
-        <div class='account'>
-            <strong>Support - David Martinez</strong><br>
-            <strong>Email:</strong> david.support@ticketmasala.com<br>
-            <strong>Password:</strong> <span class='password'>Employee123!</span>
+            <strong>Support Agent</strong><br>
+            <strong>Email:</strong> agent@ticketmasala.com<br>
+            <strong>Password:</strong> <span class='password'>@employeePassword</span>
         </div>
 
         <h2>👥 Customer Accounts</h2>
         <div class='account'>
-            <strong>Alice Smith</strong><br>
-            <strong>Email:</strong> alice.customer@example.com<br>
-            <strong>Password:</strong> <span class='password'>Customer123!</span>
+            <strong>Test Customer</strong><br>
+            <strong>Email:</strong> customer@example.com<br>
+            <strong>Password:</strong> <span class='password'>@customerPassword</span>
         </div>
 
         <h2>🔑 Password Requirements</h2>

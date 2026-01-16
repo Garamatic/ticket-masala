@@ -116,6 +116,9 @@ docker-compose up --build
 
 ## Demo Accounts (Seeded)
 
+Passwords are configurable via environment variables:
+`MASALA_SEEDED_ADMIN_PASSWORD`, `MASALA_SEEDED_EMPLOYEE_PASSWORD`, `MASALA_SEEDED_CUSTOMER_PASSWORD`.
+
 <details>
 <summary><strong>Click to expand User List</strong></summary>
 

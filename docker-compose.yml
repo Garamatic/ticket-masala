@@ -29,7 +29,9 @@ services:
           memory: 512M
 
     ports:
-      - "8080:8080"
+      - "8085:8080"
+    networks:
+      - proxy-net
 
     volumes:
       # THE BRAIN: Injecting tenant config (Read Only)
@@ -45,3 +47,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - MASALA_CONFIG_PATH=/app/inputs/config
       - MASALA_DB_PATH=/app/inputs/data/masala.db
+
+networks:
+  proxy-net:
+    external: true

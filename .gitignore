@@ -14,3 +14,7 @@ dist/
 .idea/
 *.swp
 *.bak
+
+# SQLite sidecar files (created when app.db is opened)
+*.db-wal
+*.db-shm

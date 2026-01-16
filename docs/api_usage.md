@@ -8,6 +8,8 @@ Identify serves are used to get an access token.
 
 **Login:**
 
+Note: the seeded admin password defaults to `Admin123!` unless overridden via `MASALA_SEEDED_ADMIN_PASSWORD`.
+
 ```bash
 curl -X POST "http://localhost:5054/api/v1/auth/login" \
   -H "Content-Type: application/json" \

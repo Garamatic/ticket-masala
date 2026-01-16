@@ -122,7 +122,7 @@ public class LoginModel : PageModel
             Input = new InputModel
             {
                 Email = demoEmail,
-                Password = demoPassword ?? "Admin123!" // Default demo password fallback
+                Password = demoPassword ?? string.Empty
             };
 
             if (autoLogin)

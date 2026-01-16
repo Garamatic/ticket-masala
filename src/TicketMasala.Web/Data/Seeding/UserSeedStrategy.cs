@@ -41,6 +41,10 @@ public class UserSeedStrategy : ISeedStrategy
         Console.WriteLine("DEBUG: UserSeedStrategy.SeedAsync called!");
         _logger.LogInformation("Seeding users and employees...");
 
+        var adminPassword = GetSeedPassword("MASALA_SEEDED_ADMIN_PASSWORD", "Admin123!");
+        var employeePassword = GetSeedPassword("MASALA_SEEDED_EMPLOYEE_PASSWORD", "Employee123!");
+        var customerPassword = GetSeedPassword("MASALA_SEEDED_CUSTOMER_PASSWORD", "Customer123!");
+
         var config = await LoadSeedConfigurationAsync();
         if (config == null)
         {
@@ -51,19 +55,19 @@ public class UserSeedStrategy : ISeedStrategy
         // Seed Admins
         if (config.Admins?.Count > 0)
         {
-            await CreateOrUpdateUsersAsync(config.Admins, Constants.RoleAdmin, "Admin123!");
+            await CreateOrUpdateUsersAsync(config.Admins, Constants.RoleAdmin, adminPassword);
         }
 
         // Seed Employees
         if (config.Employees?.Count > 0)
         {
-            await CreateEmployeesAsync(config.Employees, "Employee123!");
+            await CreateEmployeesAsync(config.Employees, employeePassword);
         }
 
         // Seed Customers
         if (config.Customers?.Count > 0)
         {
-            await CreateOrUpdateUsersAsync(config.Customers, Constants.RoleCustomer, "Customer123!");
+            await CreateOrUpdateUsersAsync(config.Customers, Constants.RoleCustomer, customerPassword);
         }
 
         _logger.LogInformation("Users and employees seeded successfully");
@@ -180,6 +184,22 @@ public class UserSeedStrategy : ISeedStrategy
         }
     }
 
+    private string GetSeedPassword(string envVarName, string fallback)
+    {
+        var value = Environment.GetEnvironmentVariable(envVarName);
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            return value;
+        }
+
+        if (_environment.IsProduction())
+        {
+            _logger.LogWarning("{EnvVar} is not set; using insecure fallback password in Production.", envVarName);
+        }
+
+        return fallback;
+    }
+
     private async Task CreateEmployeesAsync(List<SeedUser> employees, string defaultPassword)
     {
         if (employees == null || employees.Count == 0)
@@ -190,33 +210,80 @@ public class UserSeedStrategy : ISeedStrategy
 
         foreach (var empDto in employees)
         {
-            var employee = new Employee
+            var existingUser = await _userManager.FindByNameAsync(empDto.UserName);
+            if (existingUser == null)
             {
-                UserName = empDto.UserName,
-                Email = empDto.Email,
-                EmailConfirmed = true,
-                FirstName = empDto.FirstName,
-                LastName = empDto.LastName,
-                Phone = empDto.Phone,
-                Team = empDto.Team ?? string.Empty,
-                Level = ResolveEmployeeType(empDto.Level),
-                // GERDA Fields
-                Language = empDto.Language,
-                Specializations = empDto.Specializations,
-                MaxCapacityPoints = empDto.MaxCapacityPoints ?? 0,
-                Region = empDto.Region
-            };
+                // Create new employee
+                var employee = new Employee
+                {
+                    UserName = empDto.UserName,
+                    Email = empDto.Email,
+                    EmailConfirmed = true,
+                    FirstName = empDto.FirstName,
+                    LastName = empDto.LastName,
+                    Phone = empDto.Phone,
+                    Team = empDto.Team ?? string.Empty,
+                    Level = ResolveEmployeeType(empDto.Level),
+                    // GERDA Fields
+                    Language = empDto.Language,
+                    Specializations = empDto.Specializations,
+                    MaxCapacityPoints = empDto.MaxCapacityPoints ?? 0,
+                    Region = empDto.Region
+                };
 
-            var result = await _userManager.CreateAsync(employee, defaultPassword);
-            if (result.Succeeded)
-            {
-                await _userManager.AddToRoleAsync(employee, Constants.RoleEmployee);
-                _logger.LogInformation("Created employee user: {Email}", employee.Email);
+                var result = await _userManager.CreateAsync(employee, defaultPassword);
+                if (result.Succeeded)
+                {
+                    await _userManager.AddToRoleAsync(employee, Constants.RoleEmployee);
+                    _logger.LogInformation("Created employee user: {Email}", employee.Email);
+                }
+                else
+                {
+                    _logger.LogError("Failed to create employee user {Email}: {Errors}",
+                        employee.Email, string.Join(", ", result.Errors.Select(e => e.Description)));
+                }
             }
             else
             {
-                _logger.LogError("Failed to create employee user {Email}: {Errors}",
-                    employee.Email, string.Join(", ", result.Errors.Select(e => e.Description)));
+                // Update existing user - Reset Password
+                _logger.LogInformation("Employee {UserName} exists. Resetting password...", existingUser.UserName);
+                
+                var token = await _userManager.GeneratePasswordResetTokenAsync(existingUser);
+                var result = await _userManager.ResetPasswordAsync(existingUser, token, defaultPassword);
+                
+                if (result.Succeeded)
+                {
+                    _logger.LogInformation("Password reset for employee {UserName} to default.", existingUser.UserName);
+                }
+                else
+                {
+                    _logger.LogError("Failed to reset password for employee {UserName}: {Errors}", 
+                        existingUser.UserName, string.Join(", ", result.Errors.Select(e => e.Description)));
+                }
+
+                // Ensure role
+                if (!await _userManager.IsInRoleAsync(existingUser, Constants.RoleEmployee))
+                {
+                    await _userManager.AddToRoleAsync(existingUser, Constants.RoleEmployee);
+                }
+
+                // If it's not already an Employee, we can't update the Employee-specific fields
+                // But password reset should be sufficient
+                if (existingUser is Employee employee)
+                {
+                    // Update other fields if needed
+                    employee.FirstName = empDto.FirstName;
+                    employee.LastName = empDto.LastName;
+                    employee.Phone = empDto.Phone;
+                    employee.Team = empDto.Team ?? string.Empty;
+                    employee.Level = ResolveEmployeeType(empDto.Level);
+                    employee.Language = empDto.Language;
+                    employee.Specializations = empDto.Specializations;
+                    employee.MaxCapacityPoints = empDto.MaxCapacityPoints ?? 0;
+                    employee.Region = empDto.Region;
+
+                    await _userManager.UpdateAsync(employee);
+                }
             }
         }
     }

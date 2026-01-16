@@ -358,21 +358,6 @@ public static class WebApplicationBuilderExtensions
 
         // Swagger
         builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen(c =>
-        {
-            c.SwaggerDoc("v1", new()
-            {
-                Title = "Ticket Masala API",
-                Version = "v1",
-                Description = "Configuration-driven work management API."
-            });
-            var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
-            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-            if (File.Exists(xmlPath))
-            {
-                c.IncludeXmlComments(xmlPath);
-            }
-        });
 
         // Forwarded Headers
         builder.Services.Configure<ForwardedHeadersOptions>(options =>

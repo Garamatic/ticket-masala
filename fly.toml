@@ -15,7 +15,8 @@ primary_region = 'ams'
   MASALA_CONFIG_PATH = "/app/inputs/config"
   MASALA_DB_PATH = "/app/inputs/data/masala.db"
   MASALA_AUTOLOGIN_EMAIL = "admin@ticketmasala.com"
-  MASALA_AUTOLOGIN_PASSWORD = "Admin123!"
+  # NOTE: Do not store passwords in git. Set this as a Fly secret instead:
+  #   fly secrets set MASALA_AUTOLOGIN_PASSWORD=... --app ticket-masala-api
 
 [http_service]
   internal_port = 8080

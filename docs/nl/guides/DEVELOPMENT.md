@@ -79,11 +79,17 @@ dotnet ef database update --project src/TicketMasala.Web
 
 ## Testaccounts
 
+Standaard wachtwoorden kunnen worden overschreven via omgevingsvariabelen:
+
+- `MASALA_SEEDED_ADMIN_PASSWORD`
+- `MASALA_SEEDED_EMPLOYEE_PASSWORD`
+- `MASALA_SEEDED_CUSTOMER_PASSWORD`
+
 | Rol | E-mail | Wachtwoord |
 |------|-------|----------|
-| Beheerder | admin@ticketmasala.com | Admin123! |
-| Medewerker | mike.pm@ticketmasala.com | Employee123! |
-| Klant | alice.customer@example.com | Customer123! |
+| Beheerder | admin@ticketmasala.com | Admin123! (default) |
+| Medewerker | mike.pm@ticketmasala.com | Employee123! (default) |
+| Klant | alice.customer@example.com | Customer123! (default) |
 
 ---
 

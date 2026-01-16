@@ -51,22 +51,9 @@ TenantPluginLoader.LoadPlugins(builder, pluginPath ?? "");
 builder.Services.AddMasalaDatabase(builder.Configuration, builder.Environment);
 
 // ============================================
-// IDENTITY CONFIGURATION
-// ============================================
-builder.Services.AddMasalaIdentity();
-builder.Services.ConfigureMasalaCookie();
-
-// ============================================
-// REPOSITORIES & OBSERVERS
-// ============================================
-builder.Services.AddRepositories();
-builder.Services.AddObservers();
-
-// ============================================
 // CORE BUSINESS SERVICES
 // ============================================
-builder.Services.AddCoreServices();
-builder.Services.AddBackgroundServices();
+builder.AddMasalaCore();
 
 // ============================================
 // GERDA AI SERVICES
@@ -79,6 +66,7 @@ builder.Services.AddScoped<TicketMasala.Domain.Services.IExplainabilityService, 
 // ============================================
 // INFRASTRUCTURE & SECURITY
 // ============================================
+builder.Services.AddHttpContextAccessor(); // Required for services that need HttpContext
 builder.Services.AddMasalaMonitoring();
 builder.Services.AddMasalaSecurity(builder.Environment);
 builder.Services.AddMasalaApi();

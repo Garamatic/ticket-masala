@@ -63,7 +63,7 @@ We use a hybrid relational and document-based storage approach in SQLite:
 
 ### AI Sovereignty
 - **PII Proxy:** Local scrubbing before any third-party AI service is called.
-- **Budget Caps:** Hard and soft tokens caps per tenant to prevent operational shock.
+- **Governance Gateway:** Centralized OpenAI service with HTTP rate limiting. Per-tenant token caps and a dedicated compliance dashboard are roadmap items and are not yet implemented.
 
 ---
 

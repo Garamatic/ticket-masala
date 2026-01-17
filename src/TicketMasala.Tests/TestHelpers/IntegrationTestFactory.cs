@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.EntityFrameworkCore;
 using TicketMasala.Domain.Data;
 using TicketMasala.Web.Engine.GERDA.Estimating;
 using Moq;
@@ -28,21 +28,18 @@ public class IntegrationTestFactory<TProgram> : WebApplicationFactory<TProgram> 
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.ConfigureAppConfiguration((context, configBuilder) =>
+        {
+            var testSettings = new Dictionary<string, string?>
+            {
+                ["DatabaseProvider"] = "InMemory"
+            };
+
+            configBuilder.AddInMemoryCollection(testSettings);
+        });
+
         builder.ConfigureServices(services =>
         {
-            // Remove existing DbContext
-            var descriptor = services.SingleOrDefault(
-                d => d.ServiceType == typeof(DbContextOptions<MasalaDbContext>));
-            if (descriptor != null) services.Remove(descriptor);
-
-            // Add InMemory DbContext
-            services.AddDbContext<MasalaDbContext>(options =>
-            {
-                options.UseInMemoryDatabase("InMemoryDbForTesting");
-                options.EnableSensitiveDataLogging();
-            });
-
-            // Mock EstimatingService to avoid complex Gerda setup
             services.AddScoped<IEstimatingService>(sp => Mock.Of<IEstimatingService>());
         });
 

@@ -18,18 +18,30 @@ public static class DatabaseServiceCollectionExtensions
         IConfiguration configuration,
         IWebHostEnvironment environment)
     {
+        var tenantConnectionResolver = new TenantConnectionResolver(configuration);
         if (environment.IsEnvironment("Testing"))
         {
-            return services; // Skip DB registration in test environment
+            services.AddDbContext<MasalaDbContext>(options =>
+            {
+                options.UseInMemoryDatabase("MasalaInMemoryDb");
+                options.EnableSensitiveDataLogging();
+            });
+
+            services.AddSingleton<TenantConnectionResolver>();
+            return services;
         }
 
         var dbProvider = configuration["DatabaseProvider"];
-        var tenantConnectionResolver = new TenantConnectionResolver(configuration);
         var connectionString = tenantConnectionResolver.GetCurrentConnectionString();
 
         services.AddDbContext<MasalaDbContext>(options =>
         {
-            if (string.Equals(dbProvider, "Sqlite", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(dbProvider, "InMemory", StringComparison.OrdinalIgnoreCase))
+            {
+                options.UseInMemoryDatabase("MasalaInMemoryDb");
+                options.EnableSensitiveDataLogging();
+            }
+            else if (string.Equals(dbProvider, "Sqlite", StringComparison.OrdinalIgnoreCase))
             {
                 ConfigureSqlite(options, connectionString);
             }

@@ -1,0 +1,238 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ticketmasala.dev/schema/masala-config.schema.json",
+  "title": "Ticket Masala Tenant Configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "AppInstanceName",
+    "DefaultLocale",
+    "GerdaAI"
+  ],
+  "properties": {
+    "AppInstanceName": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-friendly name of the tenant instance shown in headers and navigation."
+    },
+    "AppSubtitle": {
+      "type": "string",
+      "description": "Optional short subtitle or tagline displayed next to the instance name."
+    },
+    "DefaultLocale": {
+      "type": "string",
+      "pattern": "^[a-z]{2}(-[A-Z]{2})?$",
+      "description": "Default IETF language tag for this tenant (for example: 'en', 'fr', 'nl-BE')."
+    },
+    "GerdaAI": {
+      "type": "object",
+      "description": "Top-level configuration for the GERDA AI orchestration engine.",
+      "additionalProperties": false,
+      "required": [
+        "IsEnabled"
+      ],
+      "properties": {
+        "IsEnabled": {
+          "type": "boolean",
+          "description": "Globally enable or disable AI features for this tenant."
+        },
+        "SystemPrompt": {
+          "type": "string",
+          "description": "System prompt describing the persona and tone GERDA AI should adopt."
+        },
+        "SpamDetection": {
+          "type": "object",
+          "description": "Controls AI-powered spam and noise detection for inbound tickets.",
+          "additionalProperties": false,
+          "required": [
+            "IsEnabled"
+          ],
+          "properties": {
+            "IsEnabled": {
+              "type": "boolean",
+              "description": "Enable classification of tickets as spam or low-signal noise."
+            }
+          }
+        },
+        "ComplexityEstimation": {
+          "type": "object",
+          "description": "Controls how GERDA estimates the complexity of incoming work items.",
+          "additionalProperties": false,
+          "required": [
+            "IsEnabled"
+          ],
+          "properties": {
+            "IsEnabled": {
+              "type": "boolean",
+              "description": "Enable automatic estimation of case complexity."
+            },
+            "Strategy": {
+              "type": "string",
+              "description": "Optional strategy hint such as 'StoryPoints' or a domain-specific label."
+            }
+          }
+        },
+        "Ranking": {
+          "type": "object",
+          "description": "Controls prioritization of tickets and projects within queues.",
+          "additionalProperties": false,
+          "required": [
+            "IsEnabled"
+          ],
+          "properties": {
+            "IsEnabled": {
+              "type": "boolean",
+              "description": "Enable AI-driven ranking for queues."
+            },
+            "Strategy": {
+              "type": "string",
+              "description": "Optional ranking algorithm key such as 'WSJF', 'SeverityAndPriority', or a custom strategy."
+            },
+            "SlaWeight": {
+              "type": "number",
+              "description": "Relative weight of SLA urgency when computing ranking scores."
+            },
+            "ComplexityWeight": {
+              "type": "number",
+              "description": "Relative weight of complexity when computing ranking scores."
+            }
+          }
+        },
+        "Dispatching": {
+          "type": "object",
+          "description": "Controls how tickets are routed to agents or teams.",
+          "additionalProperties": false,
+          "required": [
+            "IsEnabled"
+          ],
+          "properties": {
+            "IsEnabled": {
+              "type": "boolean",
+              "description": "Enable AI-driven dispatching and routing."
+            },
+            "Strategy": {
+              "type": "string",
+              "description": "Optional dispatching algorithm key such as 'ServiceBased', 'GeoLocation', 'SkillBased', or 'ZoneBased'."
+            }
+          }
+        },
+        "Anticipation": {
+          "type": "object",
+          "description": "Controls proactive detection of future incidents or workload.",
+          "additionalProperties": false,
+          "required": [
+            "IsEnabled"
+          ],
+          "properties": {
+            "IsEnabled": {
+              "type": "boolean",
+              "description": "Enable anticipatory analysis to forecast issues before they become incidents."
+            }
+          }
+        },
+        "RootCauseAnalysis": {
+          "type": "object",
+          "description": "Controls automated root-cause analysis for incident-heavy tenants.",
+          "additionalProperties": false,
+          "required": [
+            "IsEnabled"
+          ],
+          "properties": {
+            "IsEnabled": {
+              "type": "boolean",
+              "description": "Enable generation of root-cause summaries and contributing factor analysis."
+            }
+          }
+        },
+        "Summarization": {
+          "type": "object",
+          "description": "Controls AI-generated summaries of tickets and applications.",
+          "additionalProperties": false,
+          "required": [
+            "IsEnabled"
+          ],
+          "properties": {
+            "IsEnabled": {
+              "type": "boolean",
+              "description": "Enable generation of short summaries for long-form content."
+            },
+            "MaxLength": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Hard limit for the length of generated summaries in characters."
+            }
+          }
+        }
+      }
+    },
+    "PerformanceProfile": {
+      "type": "object",
+      "description": "Per-tenant performance and SLA targets used for observability and tuning.",
+      "additionalProperties": false,
+      "properties": {
+        "TargetResponseMsP95": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Target 95th percentile response time for acknowledgement (in milliseconds)."
+        },
+        "TargetResolutionHoursP80": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Target 80th percentile end-to-end resolution time (in hours)."
+        },
+        "TargetTimeToTriagedMinutesP80": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Target 80th percentile time-to-triage (in minutes) for incident-driven tenants."
+        },
+        "TargetOnSiteMinutesP80": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Target 80th percentile time-to-on-site (in minutes) for field operations tenants."
+        },
+        "TargetReviewDaysP80": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Target 80th percentile review duration (in days) for grant-style workflows."
+        },
+        "TargetDecisionDaysP80": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Target 80th percentile decision time (in days) for grant-style workflows."
+        },
+        "SlaDescription": {
+          "type": "string",
+          "description": "Human-readable summary of SLA behaviour for this tenant."
+        }
+      }
+    },
+    "DemoProfiles": {
+      "type": "object",
+      "description": "Named demo profiles that bundle ranking and dispatch strategies for live demos.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "Description",
+          "RankingStrategy",
+          "DispatchingStrategy"
+        ],
+        "properties": {
+          "Description": {
+            "type": "string",
+            "description": "Narrative description of the demo scenario and what it highlights."
+          },
+          "RankingStrategy": {
+            "type": "string",
+            "description": "Key of the ranking strategy to apply for this demo profile."
+          },
+          "DispatchingStrategy": {
+            "type": "string",
+            "description": "Key of the dispatching strategy to apply for this demo profile."
+          }
+        }
+      }
+    }
+  }
+}
+

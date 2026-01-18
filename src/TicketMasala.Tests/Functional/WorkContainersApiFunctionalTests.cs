@@ -29,18 +29,6 @@ public class WorkContainersApiFunctionalTests : IClassFixture<WebApplicationFact
                 // Bypass strict auth for testing
                 services.Configure<AuthorizationOptions>(options => options.FallbackPolicy = null);
 
-                // Remove existing if any (just in case)
-                var descriptors = services.Where(d => d.ServiceType == typeof(Microsoft.EntityFrameworkCore.DbContextOptions<TicketMasala.Domain.Data.MasalaDbContext>)).ToList();
-                foreach (var descriptor in descriptors)
-                {
-                    services.Remove(descriptor);
-                }
-
-                services.AddDbContext<TicketMasala.Domain.Data.MasalaDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase("InMemoryDbForFunctionalTesting");
-                });
-
                 // Ensure schema is created
                 var sp = services.BuildServiceProvider();
                 using (var scope = sp.CreateScope())

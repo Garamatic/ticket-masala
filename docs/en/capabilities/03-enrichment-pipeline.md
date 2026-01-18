@@ -86,7 +86,7 @@ The pipeline identifies specific risk patterns in extracted text that are often 
 
 1. **Security:** 98%+ detection of common PII patterns.
 2. **Performance:** Process a 5-page document in <10 seconds.
-3. **Budget:** Zero overrides of established monthly AI spend caps.
+3. **Governance:** External AI calls flow through a central gateway with HTTP rate limits.
 
 ---
 

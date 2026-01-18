@@ -6,6 +6,7 @@ using System.Text.Encodings.Web;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
@@ -144,5 +145,86 @@ public class WorkItemsApiFunctionalTests : IClassFixture<CustomWebApplicationFac
         var response = await client.PostAsJsonAsync("/api/v1/work-items", invalidItem);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>(_jsonOptions);
+        Assert.NotNull(problem);
+        Assert.True(problem!.Errors.ContainsKey("Title"));
+        Assert.True(problem.Errors.ContainsKey("Description"));
+        Assert.True(problem.Errors.ContainsKey("Status"));
+        Assert.True(problem.Errors.ContainsKey("DomainId"));
+    }
+
+    [Fact]
+    public async Task Create_WorkItem_WithTooLongFields_Returns_BadRequest_With_ValidationErrors()
+    {
+        var client = CreateAuthenticatedClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
+
+        var invalidItem = new WorkItemDto
+        {
+            Title = new string('A', 201),
+            Description = new string('B', 5001),
+            Status = "New",
+            DomainId = new string('C', 51)
+        };
+
+        var response = await client.PostAsJsonAsync("/api/v1/work-items", invalidItem);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>(_jsonOptions);
+        Assert.NotNull(problem);
+        Assert.True(problem!.Errors.ContainsKey("Title"));
+        Assert.True(problem.Errors.ContainsKey("Description"));
+        Assert.True(problem.Errors.ContainsKey("DomainId"));
+    }
+
+    [Fact]
+    public async Task Create_WorkItem_WithMaxLengthFields_Succeeds()
+    {
+        var client = CreateAuthenticatedClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
+
+        var validItem = new WorkItemDto
+        {
+            Title = new string('A', 200),
+            Description = new string('B', 5000),
+            Status = "New",
+            DomainId = "IT"
+        };
+
+        var response = await client.PostAsJsonAsync("/api/v1/work-items", validItem);
+
+        Assert.NotEqual(HttpStatusCode.BadRequest, response.StatusCode);
+
+        if (response.StatusCode == HttpStatusCode.Created)
+        {
+            var created = await response.Content.ReadFromJsonAsync<WorkItemDto>(_jsonOptions);
+            Assert.NotNull(created);
+            Assert.Equal(validItem.Title, created!.Title);
+            Assert.Equal(validItem.Description, created.Description);
+            Assert.Equal(validItem.DomainId, created.DomainId);
+        }
+    }
+
+    [Fact]
+    public async Task Create_WorkItem_Unauthenticated_User_Is_Unauthorized_Or_Redirected()
+    {
+        var client = _factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false
+        });
+
+        var item = new WorkItemDto
+        {
+            Title = "Test",
+            Description = "Test description",
+            Status = "New",
+            DomainId = "IT"
+        };
+
+        var response = await client.PostAsJsonAsync("/api/v1/work-items", item);
+
+        Assert.True(
+            response.StatusCode == HttpStatusCode.Unauthorized ||
+            response.StatusCode == HttpStatusCode.Redirect);
     }
 }

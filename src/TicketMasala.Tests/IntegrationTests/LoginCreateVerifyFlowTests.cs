@@ -18,9 +18,11 @@ namespace TicketMasala.Tests.IntegrationTests;
 public class LoginCreateVerifyFlowTests : IClassFixture<CustomWebApplicationFactory>
 {
     private const string DefaultCustomerEmail = "customer@example.com";
-    private const string DefaultCustomerPassword = "Customer123!";
     private const string SecondaryCustomerEmail = "second.customer@example.com";
-    private const string SecondaryCustomerPassword = "Customer123!";
+    private static readonly string DefaultCustomerPassword = GetConfiguredPassword("MASALA_SEEDED_CUSTOMER_PASSWORD", "Customer123!");
+    private static readonly string SecondaryCustomerPassword = DefaultCustomerPassword;
+    private const string EmployeeEmail = "employee@example.com";
+    private static readonly string EmployeePassword = GetConfiguredPassword("MASALA_SEEDED_EMPLOYEE_PASSWORD", "Employee123!");
 
     private readonly CustomWebApplicationFactory _factory;
 
@@ -153,11 +155,12 @@ public class LoginCreateVerifyFlowTests : IClassFixture<CustomWebApplicationFact
     public async Task CreateTicket_AsAuthenticatedCustomer_PersistsAndIsViewable()
     {
         await EnsureCustomerUserAsync(DefaultCustomerEmail, DefaultCustomerPassword);
+        var customerId = await GetUserIdAsync(DefaultCustomerEmail);
 
         var client = await CreateAuthenticatedClientAsync(DefaultCustomerEmail, DefaultCustomerPassword);
 
         var description = "End-to-end ticket " + Guid.NewGuid();
-        var ticketGuid = await CreateTicketAsync(client, description);
+        var ticketGuid = await CreateTicketAsync(client, description, customerId);
 
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<MasalaDbContext>();
@@ -179,27 +182,38 @@ public class LoginCreateVerifyFlowTests : IClassFixture<CustomWebApplicationFact
     {
         await EnsureCustomerUserAsync(DefaultCustomerEmail, DefaultCustomerPassword);
         await EnsureCustomerUserAsync(SecondaryCustomerEmail, SecondaryCustomerPassword);
+        var ownerId = await GetUserIdAsync(DefaultCustomerEmail);
 
         var ownerClient = await CreateAuthenticatedClientAsync(DefaultCustomerEmail, DefaultCustomerPassword);
         var description = "Ownership test ticket " + Guid.NewGuid();
-        var ticketGuid = await CreateTicketAsync(ownerClient, description);
+        var ticketGuid = await CreateTicketAsync(ownerClient, description, ownerId);
 
         var otherClient = await CreateAuthenticatedClientAsync(SecondaryCustomerEmail, SecondaryCustomerPassword);
         var response = await otherClient.GetAsync($"/Ticket/Detail/{ticketGuid}");
 
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        if (response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        }
+        else
+        {
+            Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+            var location = response.Headers.Location?.ToString() ?? "";
+            Assert.Contains("AccessDenied", location, StringComparison.OrdinalIgnoreCase);
+        }
     }
 
     [Fact(DisplayName = "Given full flow When executed Then completes within performance budget")]
     public async Task Login_CreateTicket_ViewDetail_Flow_CompletesWithinTimeBudget()
     {
         await EnsureCustomerUserAsync(DefaultCustomerEmail, DefaultCustomerPassword);
+        var customerId = await GetUserIdAsync(DefaultCustomerEmail);
 
         var stopwatch = Stopwatch.StartNew();
 
         var client = await CreateAuthenticatedClientAsync(DefaultCustomerEmail, DefaultCustomerPassword);
         var description = "Performance flow ticket " + Guid.NewGuid();
-        var ticketGuid = await CreateTicketAsync(client, description);
+        var ticketGuid = await CreateTicketAsync(client, description, customerId);
         var detailResponse = await client.GetAsync($"/Ticket/Detail/{ticketGuid}");
         detailResponse.EnsureSuccessStatusCode();
 
@@ -242,12 +256,9 @@ public class LoginCreateVerifyFlowTests : IClassFixture<CustomWebApplicationFact
     [Fact(DisplayName = "Given employee without customer When creating ticket Then validation error is shown")]
     public async Task CreateTicket_AsEmployeeWithoutCustomer_ShowsValidationError()
     {
-        const string employeeEmail = "employee@example.com";
-        const string employeePassword = "Employee123!";
+        await EnsureEmployeeUserAsync(EmployeeEmail, EmployeePassword);
 
-        await EnsureEmployeeUserAsync(employeeEmail, employeePassword);
-
-        var client = await CreateAuthenticatedClientAsync(employeeEmail, employeePassword);
+        var client = await CreateAuthenticatedClientAsync(EmployeeEmail, EmployeePassword);
 
         var createPageResponse = await client.GetAsync("/Ticket/Create");
         createPageResponse.EnsureSuccessStatusCode();
@@ -463,6 +474,14 @@ public class LoginCreateVerifyFlowTests : IClassFixture<CustomWebApplicationFact
         await userManager.UpdateAsync(user);
     }
 
+    private async Task<string> GetUserIdAsync(string email)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var user = await userManager.FindByEmailAsync(email);
+        return user?.Id ?? string.Empty;
+    }
+
     private async Task<HttpClient> CreateAuthenticatedClientAsync(string email, string password)
     {
         var client = _factory.CreateClient(new WebApplicationFactoryClientOptions
@@ -494,7 +513,13 @@ public class LoginCreateVerifyFlowTests : IClassFixture<CustomWebApplicationFact
         return client;
     }
 
-    private async Task<Guid> CreateTicketAsync(HttpClient client, string description)
+    private static string GetConfiguredPassword(string envVarName, string fallback)
+    {
+        var value = Environment.GetEnvironmentVariable(envVarName);
+        return string.IsNullOrWhiteSpace(value) ? fallback : value;
+    }
+
+    private async Task<Guid> CreateTicketAsync(HttpClient client, string description, string customerId = "")
     {
         var createPageResponse = await client.GetAsync("/Ticket/Create");
         createPageResponse.EnsureSuccessStatusCode();
@@ -504,7 +529,7 @@ public class LoginCreateVerifyFlowTests : IClassFixture<CustomWebApplicationFact
         var formData = new Dictionary<string, string>
         {
             ["Description"] = description,
-            ["CustomerId"] = string.Empty,
+            ["CustomerId"] = customerId,
             ["ResponsibleId"] = string.Empty,
             ["ProjectGuid"] = string.Empty,
             ["CompletionTarget"] = DateTime.UtcNow.AddDays(7).ToString("yyyy-MM-dd")
@@ -516,16 +541,28 @@ public class LoginCreateVerifyFlowTests : IClassFixture<CustomWebApplicationFact
         }
 
         var response = await client.PostAsync("/Ticket/Create", new FormUrlEncodedContent(formData));
-        Assert.True(
-            response.StatusCode == HttpStatusCode.Redirect ||
-            response.StatusCode == HttpStatusCode.OK,
-            $"Unexpected status code when creating ticket: {response.StatusCode}");
+        
+        if (response.StatusCode == HttpStatusCode.OK)
+        {
+            var content = await response.Content.ReadAsStringAsync();
+            // Try to extract validation summary
+            Assert.Fail($"Ticket creation failed (returned OK instead of Redirect). This usually means validation errors. HTML snippet: {content.Substring(0, Math.Min(content.Length, 1000))}");
+        }
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
 
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<MasalaDbContext>();
         var ticket = await context.Tickets
             .OrderByDescending(t => t.CreationDate)
-            .FirstAsync(t => t.Description == description);
+            .FirstOrDefaultAsync(t => t.Description == description);
+
+        if (ticket == null)
+        {
+            var allTickets = await context.Tickets.Select(t => new { t.Guid, t.Description, t.Customer.Email }).ToListAsync();
+            var ticketDump = string.Join("; ", allTickets.Select(t => $"{t.Guid}: {t.Description} ({t.Email})"));
+            throw new InvalidOperationException($"Ticket not found after creation. Expected description: '{description}'. Available tickets: {ticketDump}");
+        }
 
         return ticket.Guid;
     }

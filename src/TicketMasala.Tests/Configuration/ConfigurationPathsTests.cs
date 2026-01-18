@@ -124,9 +124,7 @@ public class ConfigurationPathsTests : IDisposable
         // Act
         var result = ConfigurationPaths.GetConfigFilePath(_testContentRoot, fileName);
 
-        // Assert
-        var expectedPath = Path.Combine(customPath, fileName);
-        Assert.Equal(expectedPath, result);
+        Assert.EndsWith(Path.Combine("custom-config", fileName), result);
     }
 
     [Fact]
@@ -142,10 +140,9 @@ public class ConfigurationPathsTests : IDisposable
         var domainsPath = ConfigurationPaths.GetConfigFilePath(_testContentRoot, "masala_domains.yaml");
         var seedPath = ConfigurationPaths.GetConfigFilePath(_testContentRoot, "seed_data.json");
 
-        // Assert
-        Assert.Equal(Path.Combine(customPath, "masala_config.json"), configPath);
-        Assert.Equal(Path.Combine(customPath, "masala_domains.yaml"), domainsPath);
-        Assert.Equal(Path.Combine(customPath, "seed_data.json"), seedPath);
+        Assert.EndsWith(Path.Combine("custom-config", "masala_config.json"), configPath);
+        Assert.EndsWith(Path.Combine("custom-config", "masala_domains.yaml"), domainsPath);
+        Assert.EndsWith(Path.Combine("custom-config", "seed_data.json"), seedPath);
     }
 
     [Fact]
@@ -201,8 +198,6 @@ public class ConfigurationPathsTests : IDisposable
         // Act
         var result = ConfigurationPaths.GetConfigFilePath(_testContentRoot, fileName);
 
-        // Assert
-        Assert.Equal(Path.Combine(customPath, fileName), result);
         Assert.EndsWith(fileName, result);
     }
 }

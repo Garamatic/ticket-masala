@@ -23,6 +23,20 @@
             "Specializations": "General",
             "MaxCapacityPoints": 100,
             "Region": "Global"
+        },
+        {
+            "UserName": "employee@example.com",
+            "Email": "employee@example.com",
+            "FirstName": "Test",
+            "LastName": "Employee",
+            "Phone": "+1555000001",
+            "Code": "EMP002",
+            "Team": "Support",
+            "Level": "Support",
+            "Language": "English",
+            "Specializations": "General",
+            "MaxCapacityPoints": 100,
+            "Region": "Global"
         }
     ],
     "Customers": [
@@ -33,6 +47,14 @@
             "LastName": "Customer",
             "Phone": "+1122334455",
             "Code": "CUST001"
+        },
+        {
+            "UserName": "second.customer@example.com",
+            "Email": "second.customer@example.com",
+            "FirstName": "Second",
+            "LastName": "Customer",
+            "Phone": "+1122334456",
+            "Code": "CUST002"
         }
     ],
     "WorkContainers": [],

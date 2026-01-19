@@ -17,11 +17,11 @@ namespace TicketMasala.Tests.IntegrationTests;
 
 public class LoginCreateVerifyFlowTests : IClassFixture<CustomWebApplicationFactory>
 {
-    private const string DefaultCustomerEmail = "customer@example.com";
-    private const string SecondaryCustomerEmail = "second.customer@example.com";
+    private readonly string DefaultCustomerEmail = $"customer_{Guid.NewGuid()}@example.com";
+    private readonly string SecondaryCustomerEmail = $"second.customer_{Guid.NewGuid()}@example.com";
     private static readonly string DefaultCustomerPassword = GetConfiguredPassword("MASALA_SEEDED_CUSTOMER_PASSWORD", "Customer123!");
     private static readonly string SecondaryCustomerPassword = DefaultCustomerPassword;
-    private const string EmployeeEmail = "employee@example.com";
+    private readonly string EmployeeEmail = $"employee_{Guid.NewGuid()}@example.com";
     private static readonly string EmployeePassword = GetConfiguredPassword("MASALA_SEEDED_EMPLOYEE_PASSWORD", "Employee123!");
 
     private readonly CustomWebApplicationFactory _factory;

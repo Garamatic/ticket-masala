@@ -12,11 +12,15 @@ namespace TicketMasala.Tests.TestHelpers;
 public class IntegrationTestFactory<TProgram> : WebApplicationFactory<TProgram> where TProgram : class
 {
     private readonly string _tempConfigPath;
+    private readonly string? _originalEnvVar;
 
     public IntegrationTestFactory()
     {
         _tempConfigPath = Path.Combine(Path.GetTempPath(), "ticket_masala_test_config_" + Guid.NewGuid());
         Directory.CreateDirectory(_tempConfigPath);
+
+        // Capture original environment variable
+        _originalEnvVar = Environment.GetEnvironmentVariable("MASALA_CONFIG_PATH");
 
         // Create dummy configuration files required for startup
         File.WriteAllText(Path.Combine(_tempConfigPath, "masala_domains.yaml"), "domains: {}\nglobal:\n  default_domain: IT");
@@ -49,6 +53,10 @@ public class IntegrationTestFactory<TProgram> : WebApplicationFactory<TProgram> 
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
+
+        // Restore original environment variable and reset cache
+        Environment.SetEnvironmentVariable("MASALA_CONFIG_PATH", _originalEnvVar);
+        TicketMasala.Web.Configuration.ConfigurationPaths.ResetCache();
 
         if (Directory.Exists(_tempConfigPath))
         {

@@ -3,6 +3,7 @@ using TicketMasala.Web.Configuration;
 
 namespace TicketMasala.Tests.Configuration;
 
+[Collection("ConfigurationTests")]
 public class ConfigurationPathsTests : IDisposable
 {
     private readonly string _originalEnvVar;

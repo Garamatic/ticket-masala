@@ -192,6 +192,38 @@ public static class WebApplicationBuilderExtensions
             builder.Services.AddScoped<IGerdaService, NoOpGerdaService>();
         }
 
+        // Rate Limiting
+        builder.Services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = Microsoft.AspNetCore.Http.StatusCodes.Status429TooManyRequests;
+
+            options.AddFixedWindowLimiter("api", opt =>
+            {
+                opt.PermitLimit = 100;
+                opt.Window = TimeSpan.FromMinutes(1);
+                opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                opt.QueueLimit = 10;
+            });
+
+            options.AddSlidingWindowLimiter("login", opt =>
+            {
+                opt.PermitLimit = 5;
+                opt.Window = TimeSpan.FromMinutes(15);
+                opt.SegmentsPerWindow = 3;
+                opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                opt.QueueLimit = 0;
+            });
+
+            options.AddTokenBucketLimiter("general", opt =>
+            {
+                opt.TokenLimit = 50;
+                opt.TokensPerPeriod = 10;
+                opt.ReplenishmentPeriod = TimeSpan.FromSeconds(10);
+                opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                opt.QueueLimit = 5;
+            });
+        });
+
         // Memory Cache
         builder.Services.AddMemoryCache();
         builder.Services.AddDistributedMemoryCache();

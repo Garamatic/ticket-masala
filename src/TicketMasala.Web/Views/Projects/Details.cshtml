@@ -30,6 +30,19 @@
     </dl>
 </div>
 
+<!-- AI Roadmap Section -->
+<div class="card mb-4 border-primary">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 text-primary"><i class="fas fa-route me-2"></i>AI Roadmap</h5>
+        <button class="btn btn-sm btn-outline-primary" id="btnGenerateRoadmap" onclick="generateRoadmap('@Model.ProjectDetails.Guid')">
+            <i class="fas fa-magic me-1"></i> Generate Roadmap
+        </button>
+    </div>
+    <div class="card-body" id="roadmapContent">
+        <p class="text-muted">Generate a project execution roadmap based on current tickets.</p>
+    </div>
+</div>
+
 <h3>Tickets (@Model.Tasks.Count)</h3>
 
 @if (Model.Tasks != null && Model.Tasks.Any())
@@ -93,3 +106,40 @@ else
         </form>
     }
 </div>
+
+@section Scripts {
+    <script src="~/lib/marked/marked.min.js"></script>
+    <script>
+        async function generateRoadmap(projectId) {
+            const btn = document.getElementById('btnGenerateRoadmap');
+            const content = document.getElementById('roadmapContent');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Generating...';
+            
+            try {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                const response = await fetch(`/Projects/GenerateAiRoadmap?projectId=${projectId}`, {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': token
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    content.innerHTML = typeof marked !== 'undefined' ? marked.parse(data.roadmap) : data.roadmap;
+                } else {
+                    content.innerHTML = `<div class="text-danger"><i class="fas fa-exclamation-circle"></i> Error: ${data.message}</div>`;
+                }
+            } catch (error) {
+                console.error(error);
+                content.innerHTML = '<div class="text-danger"><i class="fas fa-exclamation-circle"></i> Failed to reach server.</div>';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-magic me-1"></i> Regenerate Roadmap';
+            }
+        }
+    </script>
+}

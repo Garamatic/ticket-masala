@@ -249,7 +249,9 @@ public class TicketReadService : ITicketReadService
         if (!string.IsNullOrEmpty(userId))
         {
             var user = await _userRepository.GetUserByIdAsync(userId);
-            if (user != null && user is not Employee)
+            var isAdmin = _httpContextAccessor.HttpContext?.User?.IsInRole("Admin") ?? false;
+            
+            if (user != null && user is not Employee && !isAdmin)
             {
                 searchModel.CustomerId = userId;
             }

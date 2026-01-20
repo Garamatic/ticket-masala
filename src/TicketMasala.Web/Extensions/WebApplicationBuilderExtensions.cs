@@ -130,6 +130,7 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddScoped<ISeedStrategy, RoleSeedStrategy>();
         builder.Services.AddScoped<ISeedStrategy, UserSeedStrategy>();
         builder.Services.AddScoped<ISeedStrategy, ProjectSeedStrategy>();
+        builder.Services.AddScoped<ISeedStrategy, WorkItemSeedStrategy>();
         builder.Services.AddScoped<ISeedStrategy, KnowledgeBaseSeedStrategy>();
 
         // DbSeeder

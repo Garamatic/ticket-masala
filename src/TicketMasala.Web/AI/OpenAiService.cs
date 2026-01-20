@@ -24,8 +24,8 @@ public class OpenAiService : IOpenAiService
     public async Task<string> GetResponseAsync(OpenAIPrompts promptType, string query, bool fastResponse = true)
     {
         var client = string.IsNullOrEmpty(_baseUrl) 
-            ? new OpenAIClient(_apiKey)
-            : new OpenAIClient(_apiKey, new OpenAIClientOptions { Endpoint = new Uri(_baseUrl) });
+            ? new OpenAIClient(new System.ClientModel.ApiKeyCredential(_apiKey))
+            : new OpenAIClient(new System.ClientModel.ApiKeyCredential(_apiKey), new OpenAIClientOptions { Endpoint = new Uri(_baseUrl) });
             
         var model = fastResponse ? "openai/gpt-4o-mini" : "openai/gpt-4o";
         var chatClient = client.GetChatClient(model);

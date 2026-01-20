@@ -78,6 +78,12 @@ public class DbSeeder
         // Each strategy is now responsible for its own idempotency checks.
 
         // Execute all seed strategies in order
+        Console.WriteLine($"DEBUG: DbSeeder found {_seedStrategies.Count()} strategies registered.");
+        foreach (var s in _seedStrategies) 
+        {
+             Console.WriteLine($"DEBUG: Registered Strategy: {s.GetType().Name}");
+        }
+
         foreach (var strategy in _seedStrategies)
         {
             var strategyName = strategy.GetType().Name;

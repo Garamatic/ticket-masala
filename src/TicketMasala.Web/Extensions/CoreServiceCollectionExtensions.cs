@@ -64,6 +64,7 @@ public static class CoreServiceCollectionExtensions
         services.AddScoped<ISeedStrategy, RoleSeedStrategy>();
         services.AddScoped<ISeedStrategy, UserSeedStrategy>();
         services.AddScoped<ISeedStrategy, ProjectSeedStrategy>();
+        services.AddScoped<ISeedStrategy, WorkItemSeedStrategy>();
         services.AddScoped<ISeedStrategy, KnowledgeBaseSeedStrategy>();
 
         // DbSeeder (orchestrator)

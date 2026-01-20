@@ -32,7 +32,7 @@ public class UserSeedStrategy : ISeedStrategy
 
     public async Task<bool> ShouldSeedAsync()
     {
-        // Always run to ensure admins are up to date
+        Console.WriteLine("DEBUG: UserSeedStrategy.ShouldSeedAsync called");
         return true;
     }
 

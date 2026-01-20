@@ -12,8 +12,8 @@
     Layout = null; // Use custom full-page layout for login
     
     // Detect tenant from query parameter, header, or environment variable
-    string? tenantId = Context.Request.Query["tenant"].FirstOrDefault()
-        ?? Context.Request.Headers["X-Tenant"].FirstOrDefault()
+    string? tenantId = HttpContext.Request.Query["tenant"].FirstOrDefault()
+        ?? HttpContext.Request.Headers["X-Tenant"].FirstOrDefault()
         ?? Environment.GetEnvironmentVariable("MASALA_TENANT");
     
     // Determine tenant-specific paths

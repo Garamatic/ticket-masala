@@ -1,0 +1,200 @@
+{
+    "Admins": [
+        {
+            "UserName": "admin",
+            "Email": "admin@localhost.dev",
+            "FirstName": "Admin",
+            "LastName": "User",
+            "Phone": "+1 555 000 0001",
+            "Code": "ADM-001"
+        }
+    ],
+    "Employees": [
+        {
+            "UserName": "manager.john",
+            "Email": "john.manager@localhost.dev",
+            "FirstName": "John",
+            "LastName": "Manager",
+            "Team": "Support Team",
+            "Level": "Manager",
+            "Language": "en-US",
+            "Specializations": "Customer Support, Technical Issues",
+            "MaxCapacityPoints": 50,
+            "Region": "North"
+        },
+        {
+            "UserName": "agent.sarah",
+            "Email": "sarah.agent@localhost.dev",
+            "FirstName": "Sarah",
+            "LastName": "Agent",
+            "Team": "Support Team",
+            "Level": "Support",
+            "Language": "en-US",
+            "Specializations": "General Inquiries, Documentation",
+            "MaxCapacityPoints": 35,
+            "Region": "South"
+        },
+        {
+            "UserName": "specialist.mike",
+            "Email": "mike.specialist@localhost.dev",
+            "FirstName": "Mike",
+            "LastName": "Specialist",
+            "Team": "Technical Team",
+            "Level": "Lead",
+            "Language": "en-US",
+            "Specializations": "Advanced Technical, Integration",
+            "MaxCapacityPoints": 45,
+            "Region": "Central"
+        },
+        {
+            "UserName": "support.lisa",
+            "Email": "lisa.support@localhost.dev",
+            "FirstName": "Lisa",
+            "LastName": "Support",
+            "Team": "Customer Service",
+            "Level": "Support",
+            "Language": "en-US",
+            "Specializations": "Billing, Account Management",
+            "MaxCapacityPoints": 30,
+            "Region": "East"
+        },
+        {
+            "UserName": "gerda.system",
+            "Email": "gerda@ticketmasala.ai",
+            "FirstName": "GERDA",
+            "LastName": "AI",
+            "Team": "System Core",
+            "Level": "Lead",
+            "Language": "en-US",
+            "Specializations": "Sentiment Analysis, Routing, Policy Validation",
+            "MaxCapacityPoints": 999,
+            "Region": "Global"
+        }
+    ],
+    "Customers": [
+        {
+            "UserName": "customer.alice",
+            "Email": "alice@example.com",
+            "FirstName": "Alice",
+            "LastName": "Johnson",
+            "Phone": "+1 555 123 4567",
+            "Code": "CUS-001"
+        },
+        {
+            "UserName": "customer.bob",
+            "Email": "bob@company.com",
+            "FirstName": "Bob",
+            "LastName": "Smith",
+            "Phone": "+1 555 987 6543",
+            "Code": "CUS-002"
+        }
+    ],
+    "WorkContainers": [
+        {
+            "Name": "Website Redesign Project",
+            "Description": "Complete overhaul of company website including new design, improved UX, and mobile optimization.",
+            "Status": "Active",
+            "CustomerEmail": "bob@company.com",
+            "ProjectManagerEmail": "mike.specialist@localhost.dev",
+            "CompletionTargetMonths": 6,
+            "WorkItems": [
+                {
+                    "Description": "Design mockups for homepage and landing pages",
+                    "Status": "In_Progress",
+                    "Type": "Task",
+                    "ResponsibleEmail": "mike.specialist@localhost.dev",
+                    "CompletionTargetDays": 14,
+                    "EstimatedEffortPoints": 21,
+                    "PriorityScore": 15,
+                    "GerdaTags": "Design, UX, High Priority",
+                    "Comments": [
+                        {
+                            "Body": "We need to align on the color scheme before proceeding. Can we schedule a meeting?",
+                            "AuthorEmail": "bob@company.com",
+                            "CreatedDaysAgo": 2
+                        },
+                        {
+                            "Body": "🤖 **GERDA Analysis**: Design Review Required (Confidence: 92%). Stakeholder alignment needed. Recommended action: Schedule design review meeting.",
+                            "AuthorEmail": "gerda@ticketmasala.ai",
+                            "CreatedDaysAgo": 1
+                        }
+                    ]
+                },
+                {
+                    "Description": "Implement responsive navigation menu",
+                    "Status": "In_Progress",
+                    "Type": "Task",
+                    "ResponsibleEmail": "sarah.agent@localhost.dev",
+                    "CompletionTargetDays": 7,
+                    "EstimatedEffortPoints": 13,
+                    "PriorityScore": 8,
+                    "GerdaTags": "Development, Frontend"
+                }
+            ]
+        }
+    ],
+    "UnassignedWorkItems": [
+        {
+            "Description": "URGENT: Login system not working for multiple users",
+            "Status": "New",
+            "Type": "Incident",
+            "CustomerEmail": "alice@example.com",
+            "CompletionTargetDays": 1,
+            "EstimatedEffortPoints": 34,
+            "PriorityScore": 95,
+            "GerdaTags": "Sentiment:Critical, System_Down, Urgent",
+            "Comments": [
+                {
+                    "Body": "This is critical! Our team cannot access the system and we have a deadline today. Multiple users are affected. Please help ASAP!",
+                    "AuthorEmail": "alice@example.com",
+                    "CreatedDaysAgo": 0
+                },
+                {
+                    "Body": "🤖 **GERDA Autopilot**: Critical System Alert. Sentiment Analysis: 99% Urgent. Multiple users affected. Auto-escalated to Technical Team Lead. SLA: 1 hour response time.",
+                    "AuthorEmail": "gerda@ticketmasala.ai",
+                    "CreatedDaysAgo": 0
+                }
+            ]
+        },
+        {
+            "Description": "Feature request: Add dark mode to dashboard",
+            "Status": "New",
+            "Type": "Service_Request",
+            "CustomerEmail": "bob@company.com",
+            "CompletionTargetDays": 30,
+            "EstimatedEffortPoints": 21,
+            "PriorityScore": 12,
+            "GerdaTags": "Enhancement, UI, Low Priority",
+            "Comments": [
+                {
+                    "Body": "Would be great to have a dark mode option for the dashboard. Many of our team members work late hours.",
+                    "AuthorEmail": "bob@company.com",
+                    "CreatedDaysAgo": 5
+                }
+            ]
+        }
+    ],
+    "KnowledgeBaseArticles": [
+        {
+            "Title": "How to Reset Your Password",
+            "Content": "Follow these steps to reset your password:\n\n**Steps:**\n1. Click on 'Forgot Password' on the login page.\n2. Enter your email address.\n3. Check your email for the reset link.\n4. Click the link and create a new password.\n5. Log in with your new credentials.\n\n*Note: Password reset links expire after 24 hours.*",
+            "Tags": "Account, Security, Password",
+            "AuthorEmail": "sarah.agent@localhost.dev",
+            "CreatedDaysAgo": 30
+        },
+        {
+            "Title": "Troubleshooting Common Login Issues",
+            "Content": "Common login problems and solutions:\n\n**Issue 1: Incorrect Password**\n* Use the password reset feature.\n* Check for caps lock.\n\n**Issue 2: Account Locked**\n* Contact support after 3 failed attempts.\n* Wait 15 minutes for automatic unlock.\n\n**Issue 3: Browser Issues**\n* Clear cache and cookies.\n* Try a different browser.\n* Disable browser extensions.",
+            "Tags": "Troubleshooting, Login, Support",
+            "AuthorEmail": "mike.specialist@localhost.dev",
+            "CreatedDaysAgo": 15
+        },
+        {
+            "Title": "Getting Started Guide",
+            "Content": "Welcome to Ticket Masala! Here's how to get started:\n\n**For Customers:**\n1. Create an account or log in.\n2. Submit a ticket describing your issue.\n3. Track your ticket status in real-time.\n4. Receive notifications on updates.\n\n**For Agents:**\n1. Review assigned tickets in your dashboard.\n2. Update ticket status as you work.\n3. Communicate with customers via comments.\n4. Use knowledge base for common solutions.",
+            "Tags": "Getting Started, Tutorial, Onboarding",
+            "AuthorEmail": "john.manager@localhost.dev",
+            "CreatedDaysAgo": 60
+        }
+    ]
+}

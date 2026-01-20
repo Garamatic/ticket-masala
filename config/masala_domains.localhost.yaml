@@ -1,0 +1,128 @@
+global:
+  defaultDomain: "Support"
+  allowDomainSwitching: true
+  configReloadEnabled: true
+
+domains:
+  Support:
+    displayName: "Customer Support"
+    description: "General customer support and service requests"
+    ui:
+      label: "Support"
+      icon: "bi-headset"
+      cssClass: "theme-support"
+    entityLabels:
+      workItem: "Ticket"
+      workContainer: "Project"
+      workHandler: "Agent"
+    workItemTypes:
+      - code: "INCIDENT"
+        name: "Incident"
+        icon: "fa-fire"
+        color: "#dc3545"
+      - code: "SERVICE_REQUEST"
+        name: "Service Request"
+        icon: "fa-cogs"
+        color: "#17a2b8"
+      - code: "QUESTION"
+        name: "Question"
+        icon: "fa-question-circle"
+        color: "#ffc107"
+    workflow:
+      states:
+        - code: "New"
+          name: "New"
+        - code: "In_Progress"
+          name: "In Progress"
+        - code: "Pending"
+          name: "Pending Customer"
+        - code: "Resolved"
+          name: "Resolved"
+        - code: "Closed"
+          name: "Closed"
+      transitions:
+        New: ["In_Progress"]
+        In_Progress: ["Pending", "Resolved"]
+        Pending: ["In_Progress", "Resolved"]
+        Resolved: ["Closed", "In_Progress"]
+
+  IT:
+    displayName: "IT Support"
+    description: "Technical support and infrastructure"
+    ui:
+      label: "IT Support"
+      icon: "bi-laptop"
+      cssClass: "theme-it"
+    entityLabels:
+      workItem: "Ticket"
+      workContainer: "Project"
+      workHandler: "Technician"
+    workItemTypes:
+      - code: "INCIDENT"
+        name: "Incident"
+        icon: "fa-fire"
+        color: "#dc3545"
+      - code: "SERVICE_REQUEST"
+        name: "Service Request"
+        icon: "fa-cogs"
+        color: "#17a2b8"
+      - code: "CHANGE"
+        name: "Change Request"
+        icon: "fa-exchange-alt"
+        color: "#28a745"
+    workflow:
+      states:
+        - code: "Pending"
+          name: "Pending"
+        - code: "InProgress"
+          name: "In Progress"
+        - code: "Testing"
+          name: "Testing"
+        - code: "Completed"
+          name: "Completed"
+      transitions:
+        Pending: ["InProgress"]
+        InProgress: ["Testing", "Completed"]
+        Testing: ["InProgress", "Completed"]
+
+  Development:
+    displayName: "Development"
+    description: "Software development and bug tracking"
+    ui:
+      label: "Dev Team"
+      icon: "bi-code-slash"
+      cssClass: "theme-dev"
+    entityLabels:
+      workItem: "Issue"
+      workContainer: "Sprint"
+      workHandler: "Developer"
+    workItemTypes:
+      - code: "BUG"
+        name: "Bug"
+        icon: "fa-bug"
+        color: "#dc3545"
+      - code: "FEATURE"
+        name: "Feature"
+        icon: "fa-star"
+        color: "#28a745"
+      - code: "TASK"
+        name: "Task"
+        icon: "fa-tasks"
+        color: "#17a2b8"
+    workflow:
+      states:
+        - code: "Backlog"
+          name: "Backlog"
+        - code: "Todo"
+          name: "To Do"
+        - code: "InProgress"
+          name: "In Progress"
+        - code: "Review"
+          name: "Code Review"
+        - code: "Done"
+          name: "Done"
+      transitions:
+        Backlog: ["Todo"]
+        Todo: ["InProgress"]
+        InProgress: ["Review", "Todo"]
+        Review: ["Done", "InProgress"]

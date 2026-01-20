@@ -23,6 +23,12 @@ RUN mkdir -p /app/inputs/config /app/inputs/data /app/keys \
     /app/wwwroot/tenant-theme
 COPY tenants/_template/ /app/tenants/_template/
 
+# Copy all tenant configurations from masala-web (relative to ticket-masala root)
+COPY ../masala-web/tenants/desgoffe /app/tenants/desgoffe
+COPY ../masala-web/tenants/whitman /app/tenants/whitman
+COPY ../masala-web/tenants/liberty /app/tenants/liberty
+COPY ../masala-web/tenants/hennessey /app/tenants/hennessey
+
 # Set permissions for the 'app' user (UID 1654 in Chiseled)
 RUN chown -R 1654:1654 /app
 
@@ -34,7 +40,9 @@ WORKDIR /app
 COPY --from=prepare --chown=1654:1654 /app .
 
 # ENVIRONMENT DEFAULTS
-ENV MASALA_CONFIG_PATH="/app/inputs/config" \
+# MASALA_TENANT can be overridden at runtime to switch tenants
+ENV MASALA_TENANT="desgoffe" \
+    MASALA_CONFIG_PATH="/app/tenants/desgoffe/config" \
     MASALA_DB_PATH="/app/inputs/data/masala.db" \
     ASPNETCORE_URLS="http://+:8080" \
     DOTNET_RUNNING_IN_CONTAINER=true

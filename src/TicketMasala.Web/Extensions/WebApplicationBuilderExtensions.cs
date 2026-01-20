@@ -71,6 +71,8 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddScoped<ITicketRepository, EfCoreTicketRepository>();
         builder.Services.AddScoped<IProjectRepository, EfCoreProjectRepository>();
         builder.Services.AddScoped<IUserRepository, EfCoreUserRepository>();
+        builder.Services.AddScoped<IKnowledgeBaseRepository, EfCoreKnowledgeBaseRepository>();
+        builder.Services.AddScoped<IKnowledgeSnippetRepository, EfCoreKnowledgeSnippetRepository>();
         builder.Services.AddScoped<IUnitOfWork, EfCoreUnitOfWork>();
 
         // ============================================

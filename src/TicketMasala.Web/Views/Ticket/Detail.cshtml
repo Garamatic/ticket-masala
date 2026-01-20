@@ -371,7 +371,36 @@
                     </div>
                 </div>
             }
+
+            <!-- Suggested Knowledge (GERDA-K) -->
+            @if (Model.SuggestedArticles.Any())
+            {
+                <div class="card border-info mb-3">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">💡 Suggested Knowledge</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            @foreach (var article in Model.SuggestedArticles)
+                            {
+                                <a asp-controller="KnowledgeBase" asp-action="Details" asp-route-id="@article.ArticleId" 
+                                   class="list-group-item list-group-item-action px-0">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1 text-primary">@article.Title</h6>
+                                        <small class="text-muted">@(Math.Round(article.RelevanceScore * 100))%</small>
+                                    </div>
+                                    <p class="mb-1 small">@article.MatchingReason</p>
+                                </a>
+                            }
+                        </div>
+                        <div class="mt-2 text-center">
+                            <a asp-controller="KnowledgeBase" asp-action="Index" class="btn btn-sm btn-link">View all articles</a>
+                        </div>
+                    </div>
+                </div>
+            }
         </div>
+
     }
 </div>
 

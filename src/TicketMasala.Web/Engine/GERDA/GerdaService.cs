@@ -3,6 +3,7 @@ using TicketMasala.Web.Engine.GERDA.Grouping;
 using TicketMasala.Web.Engine.GERDA.Estimating;
 using TicketMasala.Web.Engine.GERDA.Ranking;
 using TicketMasala.Web.Engine.GERDA.Dispatching;
+using TicketMasala.Web.Engine.GERDA.Knowledge;
 using TicketMasala.Web.Engine.GERDA.Anticipation;
 
 using TicketMasala.Domain.Entities;
@@ -24,6 +25,7 @@ public class GerdaService : IGerdaService
     private readonly IEstimatingService _estimatingService;
     private readonly IRankingService? _rankingService;
     private readonly IDispatchingService? _dispatchingService;
+    private readonly IKnowledgeService? _knowledgeService;
     private readonly IAnticipationService? _anticipationService;
 
     public GerdaService(
@@ -34,6 +36,7 @@ public class GerdaService : IGerdaService
         IEstimatingService estimatingService,
         IRankingService? rankingService = null,
         IDispatchingService? dispatchingService = null,
+        IKnowledgeService? knowledgeService = null,
         IAnticipationService? anticipationService = null)
     {
         _ticketRepository = ticketRepository;
@@ -43,6 +46,7 @@ public class GerdaService : IGerdaService
         _estimatingService = estimatingService;
         _rankingService = rankingService;
         _dispatchingService = dispatchingService;
+        _knowledgeService = knowledgeService;
         _anticipationService = anticipationService;
     }
 
@@ -85,6 +89,17 @@ public class GerdaService : IGerdaService
                 if (recommendedAgent != null)
                 {
                     _logger.LogInformation("GERDA-D: Recommended agent {AgentId} for ticket {TicketGuid}", recommendedAgent, ticketGuid);
+                }
+            }
+
+            // K - Knowledge: Suggest KB articles (if service is available)
+            if (_knowledgeService != null)
+            {
+                var ticket = await _ticketRepository.GetByIdAsync(ticketGuid);
+                if (ticket != null)
+                {
+                    var suggestions = await _knowledgeService.GetSuggestedArticlesAsync(ticket);
+                    _logger.LogInformation("GERDA-K: Found {Count} suggested articles for ticket {TicketGuid}", suggestions.Count, ticketGuid);
                 }
             }
 

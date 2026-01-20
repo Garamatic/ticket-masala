@@ -1,0 +1,16 @@
+{
+    "name": "Guichet Citoyen - Ville de Desgoffe",
+    "short_name": "Desgoffe",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "background_color": "#FDF5E6",
+    "theme_color": "#5D3A5D",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "../../desgoffe.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

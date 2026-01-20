@@ -1,0 +1,111 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# Ville de Desgoffe - Configuration du Domaine Municipal
+# ═══════════════════════════════════════════════════════════════════════════
+# "Confectionery Bureaucracy" - Old-world charm meets state authority
+
+domains:
+  Municipal:
+    display_name: "Services Municipaux"
+    description: "Gestion des demandes citoyennes et dossiers administratifs"
+    
+    entity_labels:
+      work_item: "Dossier"
+      work_container: "Service"
+      work_handler: "Agent"
+    
+    work_item_types:
+      - code: PLAINTE
+        name: "Plainte"
+        icon: "fa-exclamation-circle"
+        color: "#9A2A2A"
+        default_sla_days: 5
+      - code: PERMIS
+        name: "Demande de Permis"
+        icon: "fa-file-signature"
+        color: "#5D3A5D"
+        default_sla_days: 30
+      - code: DEMANDE
+        name: "Demande Générale"
+        icon: "fa-envelope"
+        color: "#6c757d"
+        default_sla_days: 10
+      - code: NUISANCE
+        name: "Nuisance Sonore"
+        icon: "fa-volume-up"
+        color: "#dc3545"
+        default_sla_days: 3
+    
+    custom_fields:
+      - name: numero_dossier
+        label: "Numéro de Dossier"
+        type: text
+        required: false
+      - name: quartier
+        label: "Quartier"
+        type: select
+        options: ["Centre-Ville", "Faubourg Nord", "Quartier Est", "Zone Industrielle"]
+        required: true
+      - name: article_code
+        label: "Article du Code Municipal"
+        type: text
+        required: false
+      - name: priorite_citoyenne
+        label: "Priorité Citoyenne"
+        type: select
+        options: ["Standard", "Urgent", "Très Urgent"]
+        required: true
+    
+    workflow:
+      states:
+        - code: RECU
+          name: "Reçu"
+          color: "#6c757d"
+        - code: EN_TRAITEMENT
+          name: "En Traitement"
+          color: "#5D3A5D"
+        - code: EN_ATTENTE
+          name: "En Attente d'Information"
+          color: "#ffc107"
+        - code: TAMPONNE
+          name: "Tamponné"
+          color: "#28a745"
+        - code: REFUSE
+          name: "Refusé"
+          color: "#9A2A2A"
+      
+      transitions:
+        RECU: [EN_TRAITEMENT, REFUSE]
+        EN_TRAITEMENT: [EN_ATTENTE, TAMPONNE, REFUSE]
+        EN_ATTENTE: [EN_TRAITEMENT]
+        TAMPONNE: []
+        REFUSE: []
+    
+    ai_strategies:
+      ranking: 
+        strategy_name: "CitizenPriority"
+        base_formula: "priorite_citoyenne * urgency"
+        multipliers:
+          - conditions: 
+              - field: "work_item_type"
+                operator: "=="
+                value: "NUISANCE"
+            value: 2.0
+      dispatching: ServiceBased
+      estimating: ComplexityScoring
+    
+    ai_prompts:
+      summarize: "Résume ce dossier citoyen de manière formelle. Identifie les articles du Code Municipal pertinents."
+      suggest_response: "Propose une réponse formelle au citoyen, en citant les règlements applicables."
+    
+    integrations:
+      ingestion:
+        - type: portal
+          enabled: true
+          config:
+            endpoint: "/guichet"
+            form_type: "official_request"
+
+global:
+  default_domain: "Municipal"
+  allow_domain_switching: false
+  config_reload_enabled: true

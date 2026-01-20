@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Submitted - Fonds Hennessey</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <header class="header">
+            <img src="../hennessey.png" alt="Fonds Hennessey" class="logo">
+            <h1 class="main-title">Application Submitted</h1>
+            <p class="subtitle">Fonds Hennessey</p>
+        </header>
+
+        <main class="main-content">
+            <div
+                style="background: white; border: 1px solid var(--color-border); border-radius: 8px; padding: 4rem 3rem; text-align: center;">
+                <div
+                    style="width: 100px; height: 100px; background: linear-gradient(135deg, #75AADB, #5a8bb8); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem;">
+                    <i class="fas fa-check" style="color: white; font-size: 3rem;"></i>
+                </div>
+
+                <h2
+                    style="font-family: var(--font-serif); font-size: 2rem; color: var(--color-primary); margin-bottom: 1rem;">
+                    Application Successfully Submitted</h2>
+
+                <div id="ticketNumber"
+                    style="font-family: var(--font-sans); font-size: 1.5rem; color: var(--color-text); padding: 1.5rem; background: var(--color-background); margin: 2rem 0; border-radius: 4px; border: 1px solid var(--color-border);">
+                </div>
+
+                <p style="font-size: 1.1rem; line-height: 1.8; margin-bottom: 2rem; color: var(--color-text-light);">
+                    Your grant application has been received and will undergo a comprehensive review process.
+                    You will receive email confirmation shortly.
+                </p>
+
+                <div
+                    style="background: var(--color-background); border: 1px solid var(--color-border); border-radius: 4px; padding: 2rem; text-align: left; margin: 2rem 0;">
+                    <h3
+                        style="font-family: var(--font-serif); color: var(--color-primary); margin-bottom: 1.5rem; font-weight: 400;">
+                        Review Process</h3>
+                    <ul style="list-style: none; padding: 0; line-height: 2;">
+                        <li style="padding: 0.75rem 0; display: flex; gap: 1rem; align-items: flex-start;">
+                            <i class="fas fa-robot" style="color: var(--color-primary); margin-top: 0.25rem;"></i>
+                            <div>
+                                <strong>AI Preliminary Review</strong><br>
+                                <span style="color: var(--color-text-light); font-size: 0.9rem;">Automated compliance
+                                    check and executive summary generation</span>
+                            </div>
+                        </li>
+                        <li style="padding: 0.75rem 0; display: flex; gap: 1rem; align-items: flex-start;">
+                            <i class="fas fa-user-tie" style="color: var(--color-primary); margin-top: 0.25rem;"></i>
+                            <div>
+                                <strong>Officer Review</strong><br>
+                                <span style="color: var(--color-text-light); font-size: 0.9rem;">Detailed evaluation by
+                                    compliance officer</span>
+                            </div>
+                        </li>
+                        <li style="padding: 0.75rem 0; display: flex; gap: 1rem; align-items: flex-start;">
+                            <i class="fas fa-users" style="color: var(--color-primary); margin-top: 0.25rem;"></i>
+                            <div>
+                                <strong>Board Review</strong><br>
+                                <span style="color: var(--color-text-light); font-size: 0.9rem;">Final decision by the
+                                    review board</span>
+                            </div>
+                        </li>
+                        <li style="padding: 0.75rem 0; display: flex; gap: 1rem; align-items: flex-start;">
+                            <i class="fas fa-clock" style="color: var(--color-primary); margin-top: 0.25rem;"></i>
+                            <div>
+                                <strong>Timeline</strong><br>
+                                <span style="color: var(--color-text-light); font-size: 0.9rem;">Typical review period:
+                                    6-8 weeks</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div
+                    style="background: #FFF9E6; border-left: 4px solid var(--color-accent); padding: 1.5rem; text-align: left; margin: 2rem 0; border-radius: 4px;">
+                    <p style="margin: 0; color: var(--color-text);">
+                        <i class="fas fa-info-circle" style="color: var(--color-accent); margin-right: 0.5rem;"></i>
+                        <strong>Important:</strong> Please check your email for a confirmation message containing your
+                        application reference number and next steps.
+                    </p>
+                </div>
+
+                <div style="margin-top: 3rem;">
+                    <a href="index.html" class="btn btn-primary" style="text-decoration: none;">
+                        <i class="fas fa-home"></i>
+                        Return to Application Portal
+                    </a>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>Fonds Hennessey © 2025</p>
+        </footer>
+    </div>
+
+    <script>
+        const result = JSON.parse(sessionStorage.getItem('submissionResult') || '{}');
+        document.getElementById('ticketNumber').textContent = `Application Reference: ${result.ticketNumber || 'GRANT-XXXX'}`;
+        sessionStorage.removeItem('submissionResult');
+    </script>
+</body>
+
+</html>

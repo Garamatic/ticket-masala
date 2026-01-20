@@ -24,6 +24,10 @@ for TENANT in "${TENANTS[@]}"; do
     echo "📦 Deploying Container App: $APP_NAME"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     
+    # ** NEW: Get ACR Credentials **
+    ACR_USERNAME=$(az acr credential show --name "acrmasalademo" --query "username" --output tsv)
+    ACR_PASSWORD=$(az acr credential show --name "acrmasalademo" --query "passwords[0].value" --output tsv)
+
     # Check if Container App exists
     if az containerapp show --name "$APP_NAME" --resource-group "$RESOURCE_GROUP" &>/dev/null; then
         echo "✅ Container App exists, updating..."
@@ -32,6 +36,9 @@ for TENANT in "${TENANTS[@]}"; do
             --name "$APP_NAME" \
             --resource-group "$RESOURCE_GROUP" \
             --image "$ACR/$IMAGE_NAME:$IMAGE_TAG" \
+            --registry-server "$ACR" \
+            --registry-username "$ACR_USERNAME" \
+            --registry-password "$ACR_PASSWORD" \
             --set-env-vars \
                 MASALA_TENANT="$TENANT" \
                 MASALA_CONFIG_PATH="/app/tenants/$TENANT/config" \
@@ -43,6 +50,9 @@ for TENANT in "${TENANTS[@]}"; do
             --name "$APP_NAME" \
             --resource-group "$RESOURCE_GROUP" \
             --image "$ACR/$IMAGE_NAME:$IMAGE_TAG" \
+            --registry-server "$ACR" \
+            --registry-username "$ACR_USERNAME" \
+            --registry-password "$ACR_PASSWORD" \
             --environment "cae-masala-demo" \
             --target-port 8080 \
             --ingress external \

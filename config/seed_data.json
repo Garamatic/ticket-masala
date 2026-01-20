@@ -1,62 +1,142 @@
 {
     "Admins": [
         {
-            "UserName": "bourgmestre.gustave",
-            "Email": "gustave@desgoffe.gov",
-            "FirstName": "Gustave",
-            "LastName": "Desgoffe",
-            "Phone": "+32 2 555 01 01",
+            "UserName": "admin",
+            "Email": "admin@localhost.dev",
+            "FirstName": "Admin",
+            "LastName": "User",
+            "Phone": "+1 555 000 0001",
             "Code": "ADM-001"
+        },
+        {
+            "UserName": "director.emma",
+            "Email": "emma.director@localhost.dev",
+            "FirstName": "Emma",
+            "LastName": "Director",
+            "Phone": "+1 555 000 0002",
+            "Code": "ADM-002"
         }
     ],
     "Employees": [
         {
-            "UserName": "greffier.serge",
-            "Email": "serge@desgoffe.gov",
-            "FirstName": "Serge",
-            "LastName": "Leclerc",
-            "Team": "Clergé Municipal",
+            "UserName": "manager.john",
+            "Email": "john.manager@localhost.dev",
+            "FirstName": "John",
+            "LastName": "Manager",
+            "Team": "Support Team",
             "Level": "Manager",
-            "Language": "fr-BE",
-            "Specializations": "Urbanisme, État Civil",
+            "Language": "en-US",
+            "Specializations": "Customer Support, Technical Issues, Escalations",
             "MaxCapacityPoints": 50,
-            "Region": "Desgoffe-Centre"
+            "Region": "North"
         },
         {
-            "UserName": "archiviste.marcel",
-            "Email": "marcel@desgoffe.gov",
-            "FirstName": "Marcel",
-            "LastName": "Proust",
-            "Team": "Archives & Mémoire",
+            "UserName": "agent.sarah",
+            "Email": "sarah.agent@localhost.dev",
+            "FirstName": "Sarah",
+            "LastName": "Chen",
+            "Team": "Support Team",
             "Level": "Support",
-            "Language": "fr-BE",
-            "Specializations": "Dossiers Historiques, Scan 3D",
+            "Language": "en-US",
+            "Specializations": "General Inquiries, Documentation, Onboarding",
             "MaxCapacityPoints": 35,
-            "Region": "Vieux-Desgoffe"
+            "Region": "South"
         },
         {
-            "UserName": "conseiller.claire",
-            "Email": "claire@desgoffe.gov",
-            "FirstName": "Claire",
-            "LastName": "Valmont",
-            "Team": "Affaires Juridiques",
+            "UserName": "specialist.mike",
+            "Email": "mike.specialist@localhost.dev",
+            "FirstName": "Mike",
+            "LastName": "Rodriguez",
+            "Team": "Technical Team",
             "Level": "Lead",
-            "Language": "fr-BE",
-            "Specializations": "Droit Administratif, Expropriation",
+            "Language": "en-US",
+            "Specializations": "Advanced Technical, Integration, API Support",
             "MaxCapacityPoints": 45,
-            "Region": "Desgoffe-Centre"
+            "Region": "Central"
         },
         {
-            "UserName": "agent.zero",
-            "Email": "zero@desgoffe.gov",
-            "FirstName": "Agent",
-            "LastName": "Zero",
-            "Team": "Service de la Tranquillité",
+            "UserName": "support.lisa",
+            "Email": "lisa.support@localhost.dev",
+            "FirstName": "Lisa",
+            "LastName": "Thompson",
+            "Team": "Customer Service",
             "Level": "Support",
-            "Language": "fr-BE",
-            "Specializations": "Nuisances Sonores, Voirie",
+            "Language": "en-US",
+            "Specializations": "Billing, Account Management, Renewals",
             "MaxCapacityPoints": 30,
-            "Region": "Desgoffe-Nord"
+            "Region": "East"
+        },
+        {
+            "UserName": "dev.alex",
+            "Email": "alex.dev@localhost.dev",
+            "FirstName": "Alex",
+            "LastName": "Kumar",
+            "Team": "Development Team",
+            "Level": "Lead",
+            "Language": "en-US",
+            "Specializations": "Backend Development, Database, Performance",
+            "MaxCapacityPoints": 40,
+            "Region": "West"
+        },
+        {
+            "UserName": "dev.maria",
+            "Email": "maria.dev@localhost.dev",
+            "FirstName": "Maria",
+            "LastName": "Garcia",
+            "Team": "Development Team",
+            "Level": "Support",
+            "Language": "en-US",
+            "Specializations": "Frontend Development, UI/UX, Accessibility",
+            "MaxCapacityPoints": 35,
+            "Region": "West"
+        },
+        {
+            "UserName": "qa.david",
+            "Email": "david.qa@localhost.dev",
+            "FirstName": "David",
+            "LastName": "Wilson",
+            "Team": "Quality Assurance",
+            "Level": "Lead",
+            "Language": "en-US",
+            "Specializations": "Testing, Automation, Bug Verification",
+            "MaxCapacityPoints": 40,
+            "Region": "Central"
+        },
+        {
+            "UserName": "security.rachel",
+            "Email": "rachel.security@localhost.dev",
+            "FirstName": "Rachel",
+            "LastName": "Park",
+            "Team": "Security Team",
+            "Level": "Lead",
+            "Language": "en-US",
+            "Specializations": "Security Audits, Penetration Testing, Compliance",
+            "MaxCapacityPoints": 45,
+            "Region": "Global"
+        },
+        {
+            "UserName": "devops.james",
+            "Email": "james.devops@localhost.dev",
+            "FirstName": "James",
+            "LastName": "Anderson",
+            "Team": "DevOps Team",
+            "Level": "Lead",
+            "Language": "en-US",
+            "Specializations": "Infrastructure, CI/CD, Monitoring",
+            "MaxCapacityPoints": 42,
+            "Region": "Global"
+        },
+        {
+            "UserName": "sales.olivia",
+            "Email": "olivia.sales@localhost.dev",
+            "FirstName": "Olivia",
+            "LastName": "Martinez",
+            "Team": "Sales Team",
+            "Level": "Manager",
+            "Language": "en-US",
+            "Specializations": "Enterprise Sales, Demos, Onboarding",
+            "MaxCapacityPoints": 38,
+            "Region": "North"
         },
         {
             "UserName": "gerda.system",
@@ -65,92 +145,414 @@
             "LastName": "AI",
             "Team": "System Core",
             "Level": "Lead",
-            "Language": "fr-BE",
-            "Specializations": "Sentiment Analysis, Routing, Policy Validation",
+            "Language": "en-US",
+            "Specializations": "Sentiment Analysis, Routing, Policy Validation, Auto-Triage",
             "MaxCapacityPoints": 999,
             "Region": "Global"
         }
     ],
     "Customers": [
         {
-            "UserName": "mme.villeneuve",
-            "Email": "villeneuve@charity.org",
-            "FirstName": "Hortense",
-            "LastName": "Villeneuve",
-            "Phone": "+32 2 555 99 99",
-            "Code": "CIT-777"
+            "UserName": "customer.alice",
+            "Email": "alice@example.com",
+            "FirstName": "Alice",
+            "LastName": "Johnson",
+            "Phone": "+1 555 123 4567",
+            "Code": "CUS-001"
         },
         {
-            "UserName": "mr.legrand",
-            "Email": "legrand@developpement.be",
-            "FirstName": "Jean-Pierre",
-            "LastName": "Legrand",
-            "Phone": "+32 2 555 12 34",
-            "Code": "DEV-088"
+            "UserName": "customer.bob",
+            "Email": "bob@company.com",
+            "FirstName": "Bob",
+            "LastName": "Smith",
+            "Phone": "+1 555 987 6543",
+            "Code": "CUS-002"
+        },
+        {
+            "UserName": "customer.carol",
+            "Email": "carol@techcorp.io",
+            "FirstName": "Carol",
+            "LastName": "Davis",
+            "Phone": "+1 555 246 8135",
+            "Code": "CUS-003"
+        },
+        {
+            "UserName": "customer.daniel",
+            "Email": "daniel@startup.xyz",
+            "FirstName": "Daniel",
+            "LastName": "Lee",
+            "Phone": "+1 555 369 2580",
+            "Code": "CUS-004"
+        },
+        {
+            "UserName": "customer.eva",
+            "Email": "eva@enterprise.net",
+            "FirstName": "Eva",
+            "LastName": "Brown",
+            "Phone": "+1 555 147 2589",
+            "Code": "CUS-005"
+        },
+        {
+            "UserName": "customer.frank",
+            "Email": "frank@solutions.biz",
+            "FirstName": "Frank",
+            "LastName": "Miller",
+            "Phone": "+1 555 753 9514",
+            "Code": "CUS-006"
         }
     ],
     "WorkContainers": [
         {
-            "Name": "Projet 'Le Grand Canal' - Phase 1",
-            "Description": "Réaménagement des berges et transformation des anciens entrepôts en logements sociaux.",
+            "Name": "Website Redesign Project",
+            "Description": "Complete overhaul of company website including new design, improved UX, and mobile optimization.",
             "Status": "Active",
-            "CustomerEmail": "legrand@developpement.be",
-            "ProjectManagerEmail": "claire@desgoffe.gov",
-            "CompletionTargetMonths": 24,
+            "CustomerEmail": "bob@company.com",
+            "ProjectManagerEmail": "mike.specialist@localhost.dev",
+            "CompletionTargetMonths": 6,
             "WorkItems": [
                 {
-                    "Description": "Étude d'Impact Environnemental - Faune Aquatique",
+                    "Description": "Design mockups for homepage and landing pages",
                     "Status": "In_Progress",
                     "Type": "Task",
-                    "ResponsibleEmail": "claire@desgoffe.gov",
-                    "CompletionTargetDays": 90,
-                    "EstimatedEffortPoints": 34,
+                    "ResponsibleEmail": "maria.dev@localhost.dev",
+                    "CompletionTargetDays": 14,
+                    "EstimatedEffortPoints": 21,
                     "PriorityScore": 15,
-                    "GerdaTags": "Environnement, Écologie, Legal",
+                    "GerdaTags": "Design, UX, High Priority",
                     "Comments": [
                         {
-                            "Body": "L'association locale des pêcheurs a déposé un recours. Besoin d'un avis juridique urgent sur la zone Natura 2000.",
-                            "AuthorEmail": "legrand@developpement.be",
-                            "CreatedDaysAgo": 5
+                            "Body": "We need to align on the color scheme before proceeding. Can we schedule a meeting?",
+                            "AuthorEmail": "bob@company.com",
+                            "CreatedDaysAgo": 2
                         },
                         {
-                            "Body": "🤖 **Analyse GERDA**: Risque de Contentieux Détecté (Confidence: 85%). Recours administratif identifié. Dossier transféré à Claire Valmont (Affaires Juridiques).",
+                            "Body": "🤖 **GERDA Analysis**: Design Review Required (Confidence: 92%). Stakeholder alignment needed. Recommended action: Schedule design review meeting.",
                             "AuthorEmail": "gerda@ticketmasala.ai",
-                            "CreatedDaysAgo": 4
+                            "CreatedDaysAgo": 1
+                        },
+                        {
+                            "Body": "I've prepared three color palette options. Will share in tomorrow's meeting.",
+                            "AuthorEmail": "maria.dev@localhost.dev",
+                            "CreatedDaysAgo": 1
                         }
                     ]
                 },
                 {
-                    "Description": "Numérisation des plans cadastraux (1880-1920)",
+                    "Description": "Implement responsive navigation menu",
                     "Status": "In_Progress",
                     "Type": "Task",
-                    "ResponsibleEmail": "marcel@desgoffe.gov",
-                    "CompletionTargetDays": 30,
+                    "ResponsibleEmail": "maria.dev@localhost.dev",
+                    "CompletionTargetDays": 7,
                     "EstimatedEffortPoints": 13,
                     "PriorityScore": 8,
-                    "GerdaTags": "Archives, Patrimoine"
+                    "GerdaTags": "Development, Frontend"
+                },
+                {
+                    "Description": "Set up CDN and optimize image loading",
+                    "Status": "New",
+                    "Type": "Task",
+                    "ResponsibleEmail": "james.devops@localhost.dev",
+                    "CompletionTargetDays": 10,
+                    "EstimatedEffortPoints": 18,
+                    "PriorityScore": 12,
+                    "GerdaTags": "Performance, Infrastructure"
+                },
+                {
+                    "Description": "Accessibility audit and WCAG compliance",
+                    "Status": "New",
+                    "Type": "Task",
+                    "ResponsibleEmail": "maria.dev@localhost.dev",
+                    "CompletionTargetDays": 21,
+                    "EstimatedEffortPoints": 25,
+                    "PriorityScore": 18,
+                    "GerdaTags": "Accessibility, Compliance, Legal"
+                }
+            ]
+        },
+        {
+            "Name": "Enterprise API Integration - TechCorp",
+            "Description": "Custom API integration for TechCorp's ERP system with real-time data synchronization.",
+            "Status": "Active",
+            "CustomerEmail": "carol@techcorp.io",
+            "ProjectManagerEmail": "mike.specialist@localhost.dev",
+            "CompletionTargetMonths": 3,
+            "WorkItems": [
+                {
+                    "Description": "API authentication and security setup",
+                    "Status": "Completed",
+                    "Type": "Task",
+                    "ResponsibleEmail": "alex.dev@localhost.dev",
+                    "CompletionTargetDays": 5,
+                    "EstimatedEffortPoints": 13,
+                    "PriorityScore": 20,
+                    "GerdaTags": "Security, API, Integration",
+                    "Comments": [
+                        {
+                            "Body": "OAuth2 implementation complete. Tokens are refreshing correctly.",
+                            "AuthorEmail": "alex.dev@localhost.dev",
+                            "CreatedDaysAgo": 3
+                        }
+                    ]
+                },
+                {
+                    "Description": "Data mapping and transformation layer",
+                    "Status": "In_Progress",
+                    "Type": "Task",
+                    "ResponsibleEmail": "alex.dev@localhost.dev",
+                    "CompletionTargetDays": 14,
+                    "EstimatedEffortPoints": 34,
+                    "PriorityScore": 22,
+                    "GerdaTags": "Backend, Data Processing"
+                },
+                {
+                    "Description": "Real-time webhook implementation",
+                    "Status": "New",
+                    "Type": "Task",
+                    "ResponsibleEmail": "alex.dev@localhost.dev",
+                    "CompletionTargetDays": 10,
+                    "EstimatedEffortPoints": 21,
+                    "PriorityScore": 15,
+                    "GerdaTags": "Real-time, Webhooks"
+                }
+            ]
+        },
+        {
+            "Name": "Mobile App Development - iOS & Android",
+            "Description": "Native mobile applications for iOS and Android with offline support and push notifications.",
+            "Status": "Active",
+            "CustomerEmail": "eva@enterprise.net",
+            "ProjectManagerEmail": "olivia.sales@localhost.dev",
+            "CompletionTargetMonths": 9,
+            "WorkItems": [
+                {
+                    "Description": "iOS app architecture and setup",
+                    "Status": "In_Progress",
+                    "Type": "Task",
+                    "ResponsibleEmail": "alex.dev@localhost.dev",
+                    "CompletionTargetDays": 21,
+                    "EstimatedEffortPoints": 40,
+                    "PriorityScore": 25,
+                    "GerdaTags": "Mobile, iOS, Architecture"
+                },
+                {
+                    "Description": "Android app architecture and setup",
+                    "Status": "In_Progress",
+                    "Type": "Task",
+                    "ResponsibleEmail": "alex.dev@localhost.dev",
+                    "CompletionTargetDays": 21,
+                    "EstimatedEffortPoints": 40,
+                    "PriorityScore": 25,
+                    "GerdaTags": "Mobile, Android, Architecture"
+                },
+                {
+                    "Description": "Push notification service integration",
+                    "Status": "New",
+                    "Type": "Task",
+                    "ResponsibleEmail": "james.devops@localhost.dev",
+                    "CompletionTargetDays": 14,
+                    "EstimatedEffortPoints": 28,
+                    "PriorityScore": 18,
+                    "GerdaTags": "Notifications, Infrastructure"
                 }
             ]
         }
     ],
     "UnassignedWorkItems": [
         {
-            "Description": "URGENT: Manifestation contre l'abattage des platanes du Canal",
+            "Description": "URGENT: Login system not working for multiple users",
             "Status": "New",
             "Type": "Incident",
-            "CustomerEmail": "villeneuve@charity.org",
+            "CustomerEmail": "alice@example.com",
             "CompletionTargetDays": 1,
-            "EstimatedEffortPoints": 21,
-            "PriorityScore": 92,
-            "GerdaTags": "Sentiment:StronglyNegative, Risque_Politique, Media_Alert",
+            "EstimatedEffortPoints": 34,
+            "PriorityScore": 95,
+            "GerdaTags": "Sentiment:Critical, System_Down, Urgent, P0",
             "Comments": [
                 {
-                    "Body": "C'est un scandale! Ces arbres ont 200 ans. Nous organisons un sit-in demain matin. Les médias sont prévenus. Desgoffe ne peut pas sacrifier son âme pour du béton!",
-                    "AuthorEmail": "villeneuve@charity.org",
+                    "Body": "This is critical! Our team cannot access the system and we have a deadline today. Multiple users are affected. Please help ASAP!",
+                    "AuthorEmail": "alice@example.com",
                     "CreatedDaysAgo": 0
                 },
                 {
-                    "Body": "🤖 **GERDA Autopilot**: Alerte Média Critique. Sentiment 'Fidèle' (98% négatif). Détection de 'Manifestation' et 'Médias'. Notification envoyée au cabinet du Bourgmestre.",
+                    "Body": "🤖 **GERDA Autopilot**: Critical System Alert. Sentiment Analysis: 99% Urgent. Multiple users affected. Auto-escalated to Technical Team Lead. SLA: 1 hour response time.",
+                    "AuthorEmail": "gerda@ticketmasala.ai",
+                    "CreatedDaysAgo": 0
+                }
+            ]
+        },
+        {
+            "Description": "Database performance degradation during peak hours",
+            "Status": "New",
+            "Type": "Incident",
+            "CustomerEmail": "carol@techcorp.io",
+            "CompletionTargetDays": 2,
+            "EstimatedEffortPoints": 28,
+            "PriorityScore": 85,
+            "GerdaTags": "Performance, Database, Production, P1",
+            "Comments": [
+                {
+                    "Body": "Our API response times are 5x slower than normal between 2-4 PM daily. This is affecting our customers.",
+                    "AuthorEmail": "carol@techcorp.io",
+                    "CreatedDaysAgo": 1
+                },
+                {
+                    "Body": "🤖 **GERDA Analysis**: Performance Issue Detected (Confidence: 87%). Pattern: Daily occurrence. Recommended: Database query optimization and indexing review.",
+                    "AuthorEmail": "gerda@ticketmasala.ai",
+                    "CreatedDaysAgo": 1
+                }
+            ]
+        },
+        {
+            "Description": "Security vulnerability reported in authentication module",
+            "Status": "New",
+            "Type": "Incident",
+            "CustomerEmail": "daniel@startup.xyz",
+            "CompletionTargetDays": 1,
+            "EstimatedEffortPoints": 40,
+            "PriorityScore": 98,
+            "GerdaTags": "Security, Critical, CVE, P0",
+            "Comments": [
+                {
+                    "Body": "Our security audit found a potential JWT token validation bypass. This needs immediate attention!",
+                    "AuthorEmail": "daniel@startup.xyz",
+                    "CreatedDaysAgo": 0
+                },
+                {
+                    "Body": "🤖 **GERDA Autopilot**: SECURITY ALERT - Critical vulnerability detected. Auto-assigned to Security Team Lead. Immediate response required. Compliance risk: HIGH.",
+                    "AuthorEmail": "gerda@ticketmasala.ai",
+                    "CreatedDaysAgo": 0
+                }
+            ]
+        },
+        {
+            "Description": "Feature request: Add dark mode to dashboard",
+            "Status": "New",
+            "Type": "Service_Request",
+            "CustomerEmail": "bob@company.com",
+            "CompletionTargetDays": 30,
+            "EstimatedEffortPoints": 21,
+            "PriorityScore": 12,
+            "GerdaTags": "Enhancement, UI, Low Priority",
+            "Comments": [
+                {
+                    "Body": "Would be great to have a dark mode option for the dashboard. Many of our team members work late hours.",
+                    "AuthorEmail": "bob@company.com",
+                    "CreatedDaysAgo": 5
+                }
+            ]
+        },
+        {
+            "Description": "Export functionality for reports in Excel format",
+            "Status": "New",
+            "Type": "Service_Request",
+            "CustomerEmail": "eva@enterprise.net",
+            "CompletionTargetDays": 21,
+            "EstimatedEffortPoints": 18,
+            "PriorityScore": 25,
+            "GerdaTags": "Feature, Reporting, Excel",
+            "Comments": [
+                {
+                    "Body": "We need to export our monthly reports to Excel for board presentations. CSV is not sufficient.",
+                    "AuthorEmail": "eva@enterprise.net",
+                    "CreatedDaysAgo": 3
+                },
+                {
+                    "Body": "🤖 **GERDA Analysis**: Feature Request (Confidence: 95%). Business Impact: Medium. Recommended: Add to product backlog for next sprint planning.",
+                    "AuthorEmail": "gerda@ticketmasala.ai",
+                    "CreatedDaysAgo": 2
+                }
+            ]
+        },
+        {
+            "Description": "API rate limiting too restrictive for our use case",
+            "Status": "New",
+            "Type": "Service_Request",
+            "CustomerEmail": "carol@techcorp.io",
+            "CompletionTargetDays": 7,
+            "EstimatedEffortPoints": 15,
+            "PriorityScore": 35,
+            "GerdaTags": "API, Rate Limiting, Configuration",
+            "Comments": [
+                {
+                    "Body": "Current limit of 100 requests/minute is blocking our integration. We need at least 500/minute for our batch processing.",
+                    "AuthorEmail": "carol@techcorp.io",
+                    "CreatedDaysAgo": 2
+                }
+            ]
+        },
+        {
+            "Description": "Question: How to set up SSO with Azure AD?",
+            "Status": "New",
+            "Type": "Question",
+            "CustomerEmail": "frank@solutions.biz",
+            "CompletionTargetDays": 3,
+            "EstimatedEffortPoints": 8,
+            "PriorityScore": 15,
+            "GerdaTags": "SSO, Azure AD, Documentation",
+            "Comments": [
+                {
+                    "Body": "We're trying to configure SSO with Azure AD but the documentation is unclear. Can someone guide us through the process?",
+                    "AuthorEmail": "frank@solutions.biz",
+                    "CreatedDaysAgo": 1
+                }
+            ]
+        },
+        {
+            "Description": "Billing discrepancy - charged for wrong tier",
+            "Status": "New",
+            "Type": "Incident",
+            "CustomerEmail": "alice@example.com",
+            "CompletionTargetDays": 3,
+            "EstimatedEffortPoints": 12,
+            "PriorityScore": 45,
+            "GerdaTags": "Billing, Finance, Urgent",
+            "Comments": [
+                {
+                    "Body": "We were charged for the Enterprise tier but we're on the Professional plan. Please review and refund the difference.",
+                    "AuthorEmail": "alice@example.com",
+                    "CreatedDaysAgo": 1
+                },
+                {
+                    "Body": "🤖 **GERDA Analysis**: Billing Issue (Confidence: 91%). Sentiment: Negative. Auto-routed to Billing Team. SLA: 48 hours for resolution.",
+                    "AuthorEmail": "gerda@ticketmasala.ai",
+                    "CreatedDaysAgo": 1
+                }
+            ]
+        },
+        {
+            "Description": "Request for custom training session for our team",
+            "Status": "New",
+            "Type": "Service_Request",
+            "CustomerEmail": "eva@enterprise.net",
+            "CompletionTargetDays": 14,
+            "EstimatedEffortPoints": 25,
+            "PriorityScore": 20,
+            "GerdaTags": "Training, Onboarding, Enterprise",
+            "Comments": [
+                {
+                    "Body": "We have 50 new users joining next month. Would like to schedule a custom training session covering advanced features.",
+                    "AuthorEmail": "eva@enterprise.net",
+                    "CreatedDaysAgo": 4
+                }
+            ]
+        },
+        {
+            "Description": "Mobile app crashes on iOS 17 devices",
+            "Status": "New",
+            "Type": "Incident",
+            "CustomerEmail": "daniel@startup.xyz",
+            "CompletionTargetDays": 5,
+            "EstimatedEffortPoints": 22,
+            "PriorityScore": 65,
+            "GerdaTags": "Mobile, iOS, Crash, Bug",
+            "Comments": [
+                {
+                    "Body": "The app crashes immediately on launch for all iOS 17 users. This is affecting about 30% of our user base.",
+                    "AuthorEmail": "daniel@startup.xyz",
+                    "CreatedDaysAgo": 0
+                },
+                {
+                    "Body": "🤖 **GERDA Autopilot**: Critical Bug Detected (Confidence: 94%). Impact: 30% of user base. Auto-escalated to Mobile Development Team. Priority: P1.",
                     "AuthorEmail": "gerda@ticketmasala.ai",
                     "CreatedDaysAgo": 0
                 }
@@ -159,18 +561,74 @@
     ],
     "KnowledgeBaseArticles": [
         {
-            "Title": "Procédure d'Expropriation pour Utilité Publique",
-            "Content": "Le cadre légal de l'expropriation sous le mandat de Gustave Desgoffe.\n\n**Étapes:**\n1. Déclaration d'utilité publique par le Conseil Municipal.\n2. Enquête publique (15 jours).\n3. Offre d'indemnisation provisionnelle.\n4. Transfert de propriété.\n\n*Note: Tout recours suspend l'exécution de l'acte.*",
-            "Tags": "Legal, Urbanisme, Politique",
-            "AuthorEmail": "claire@desgoffe.gov",
+            "Title": "How to Reset Your Password",
+            "Content": "Follow these steps to reset your password:\n\n**Steps:**\n1. Click on 'Forgot Password' on the login page.\n2. Enter your email address.\n3. Check your email for the reset link.\n4. Click the link and create a new password.\n5. Log in with your new credentials.\n\n*Note: Password reset links expire after 24 hours.*",
+            "Tags": "Account, Security, Password",
+            "AuthorEmail": "sarah.agent@localhost.dev",
+            "CreatedDaysAgo": 30
+        },
+        {
+            "Title": "Troubleshooting Common Login Issues",
+            "Content": "Common login problems and solutions:\n\n**Issue 1: Incorrect Password**\n* Use the password reset feature.\n* Check for caps lock.\n\n**Issue 2: Account Locked**\n* Contact support after 3 failed attempts.\n* Wait 15 minutes for automatic unlock.\n\n**Issue 3: Browser Issues**\n* Clear cache and cookies.\n* Try a different browser.\n* Disable browser extensions.",
+            "Tags": "Troubleshooting, Login, Support",
+            "AuthorEmail": "mike.specialist@localhost.dev",
+            "CreatedDaysAgo": 15
+        },
+        {
+            "Title": "Getting Started Guide",
+            "Content": "Welcome to Ticket Masala! Here's how to get started:\n\n**For Customers:**\n1. Create an account or log in.\n2. Submit a ticket describing your issue.\n3. Track your ticket status in real-time.\n4. Receive notifications on updates.\n\n**For Agents:**\n1. Review assigned tickets in your dashboard.\n2. Update ticket status as you work.\n3. Communicate with customers via comments.\n4. Use knowledge base for common solutions.",
+            "Tags": "Getting Started, Tutorial, Onboarding",
+            "AuthorEmail": "john.manager@localhost.dev",
+            "CreatedDaysAgo": 60
+        },
+        {
+            "Title": "API Authentication Guide",
+            "Content": "Complete guide to authenticating with our API:\n\n**Authentication Methods:**\n1. **API Keys** - For server-to-server communication\n2. **OAuth 2.0** - For user-delegated access\n3. **JWT Tokens** - For session-based authentication\n\n**Getting Your API Key:**\n1. Navigate to Settings > API Keys\n2. Click 'Generate New Key'\n3. Copy and securely store your key\n4. Add to request headers: `Authorization: Bearer YOUR_KEY`\n\n**Rate Limits:**\n* Free tier: 100 requests/minute\n* Professional: 500 requests/minute\n* Enterprise: Custom limits\n\n**Best Practices:**\n* Never commit API keys to version control\n* Rotate keys every 90 days\n* Use environment variables for key storage\n* Implement exponential backoff for retries",
+            "Tags": "API, Authentication, Security, Developer",
+            "AuthorEmail": "alex.dev@localhost.dev",
+            "CreatedDaysAgo": 45
+        },
+        {
+            "Title": "Setting Up SSO with Azure AD",
+            "Content": "Step-by-step guide to configure Single Sign-On with Azure Active Directory:\n\n**Prerequisites:**\n* Azure AD Premium subscription\n* Admin access to Azure portal\n* Admin access to Ticket Masala\n\n**Configuration Steps:**\n\n1. **In Azure Portal:**\n   * Navigate to Azure Active Directory > Enterprise Applications\n   * Click 'New Application' > 'Create your own application'\n   * Name it 'Ticket Masala' and select 'Integrate any other application'\n   * Go to Single Sign-On > SAML\n   * Configure Basic SAML Configuration:\n     - Identifier (Entity ID): `https://ticketmasala.io/saml/metadata`\n     - Reply URL: `https://ticketmasala.io/saml/acs`\n\n2. **In Ticket Masala:**\n   * Go to Settings > Authentication > SSO\n   * Select 'Azure AD' as provider\n   * Enter your Azure AD Tenant ID\n   * Upload the certificate from Azure\n   * Save configuration\n\n3. **Test the Connection:**\n   * Click 'Test SSO' button\n   * Verify successful authentication\n   * Assign users in Azure AD\n\n**Troubleshooting:**\n* Ensure redirect URLs match exactly\n* Check certificate expiration dates\n* Verify user assignments in Azure AD",
+            "Tags": "SSO, Azure AD, Authentication, Enterprise",
+            "AuthorEmail": "rachel.security@localhost.dev",
+            "CreatedDaysAgo": 20
+        },
+        {
+            "Title": "Performance Optimization Best Practices",
+            "Content": "Guidelines for optimizing application performance:\n\n**Database Optimization:**\n* Add indexes on frequently queried columns\n* Use connection pooling\n* Implement query result caching\n* Avoid N+1 query problems\n* Use pagination for large datasets\n\n**API Optimization:**\n* Implement response caching\n* Use compression (gzip/brotli)\n* Minimize payload size\n* Batch requests when possible\n* Use CDN for static assets\n\n**Frontend Optimization:**\n* Lazy load images and components\n* Minimize bundle size\n* Use code splitting\n* Implement service workers\n* Optimize critical rendering path\n\n**Monitoring:**\n* Set up performance monitoring\n* Track Core Web Vitals\n* Monitor API response times\n* Set up alerts for degradation\n\n**Common Issues:**\n* Slow queries: Add database indexes\n* High memory usage: Implement pagination\n* Slow page loads: Enable caching and compression",
+            "Tags": "Performance, Optimization, Best Practices, Developer",
+            "AuthorEmail": "james.devops@localhost.dev",
             "CreatedDaysAgo": 10
         },
         {
-            "Title": "Gestion du Patrimoine Arboré",
-            "Content": "Classification des arbres remarquables de la ville.\n\n**Critères de protection:**\n* Âge supérieur à 100 ans.\n* Intérêt historique ou paysager.\n* Essence rare.\n\nL'abattage nécessite un vote à l'unanimité du clergé municipal.",
-            "Tags": "Environnement, Patrimoine, Archives",
-            "AuthorEmail": "marcel@desgoffe.gov",
-            "CreatedDaysAgo": 45
+            "Title": "Understanding Priority Levels and SLAs",
+            "Content": "Guide to ticket priority levels and service level agreements:\n\n**Priority Levels:**\n\n**P0 - Critical (Priority Score: 90-100)**\n* System completely down\n* Security vulnerability\n* Data loss risk\n* SLA: 1 hour response, 4 hours resolution\n\n**P1 - High (Priority Score: 70-89)**\n* Major feature broken\n* Performance degradation\n* Multiple users affected\n* SLA: 4 hours response, 24 hours resolution\n\n**P2 - Medium (Priority Score: 40-69)**\n* Minor feature issues\n* Workaround available\n* Single user affected\n* SLA: 24 hours response, 5 days resolution\n\n**P3 - Low (Priority Score: 0-39)**\n* Feature requests\n* Cosmetic issues\n* Documentation updates\n* SLA: 48 hours response, 30 days resolution\n\n**How Priorities Are Assigned:**\n* GERDA AI analyzes ticket content\n* Sentiment analysis applied\n* Impact assessment performed\n* Urgency keywords detected\n* Historical patterns considered\n\n**Escalation Process:**\n* P0/P1 tickets auto-escalate to team leads\n* SLA breaches trigger manager notifications\n* Critical issues escalate to on-call engineer",
+            "Tags": "SLA, Priority, Support, Process",
+            "AuthorEmail": "john.manager@localhost.dev",
+            "CreatedDaysAgo": 25
+        },
+        {
+            "Title": "Mobile App Installation and Setup",
+            "Content": "Complete guide to installing and configuring our mobile apps:\n\n**iOS Installation:**\n1. Open App Store on your iPhone/iPad\n2. Search for 'Ticket Masala'\n3. Tap 'Get' to download\n4. Open app after installation\n5. Sign in with your credentials\n\n**Android Installation:**\n1. Open Google Play Store\n2. Search for 'Ticket Masala'\n3. Tap 'Install'\n4. Open app after installation\n5. Sign in with your credentials\n\n**Initial Setup:**\n* Enable push notifications for ticket updates\n* Configure notification preferences\n* Set up biometric authentication (optional)\n* Download offline data (optional)\n\n**Features:**\n* Create and manage tickets on the go\n* Real-time notifications\n* Offline mode support\n* Biometric login\n* Dark mode\n\n**Troubleshooting:**\n* App won't open: Reinstall from store\n* Login issues: Reset password on web\n* Notifications not working: Check device settings\n* Sync issues: Pull down to refresh",
+            "Tags": "Mobile, Installation, iOS, Android, Setup",
+            "AuthorEmail": "maria.dev@localhost.dev",
+            "CreatedDaysAgo": 35
+        },
+        {
+            "Title": "Data Export and Reporting Guide",
+            "Content": "How to export data and generate reports:\n\n**Export Formats:**\n* CSV - For spreadsheet analysis\n* Excel - For formatted reports\n* JSON - For API integration\n* PDF - For presentations\n\n**Exporting Tickets:**\n1. Navigate to Tickets page\n2. Apply desired filters\n3. Click 'Export' button\n4. Select format\n5. Download file\n\n**Generating Reports:**\n\n**Standard Reports:**\n* Ticket Volume by Status\n* Average Resolution Time\n* Agent Performance Metrics\n* Customer Satisfaction Scores\n* SLA Compliance Report\n\n**Custom Reports:**\n1. Go to Reports > Custom Reports\n2. Select metrics and dimensions\n3. Apply date range and filters\n4. Preview report\n5. Export or schedule delivery\n\n**Scheduled Reports:**\n* Set up daily/weekly/monthly delivery\n* Email to stakeholders\n* Auto-export to cloud storage\n\n**API Access:**\n* Use `/api/reports` endpoint\n* Authenticate with API key\n* Specify parameters in request\n* Receive JSON response",
+            "Tags": "Reports, Export, Analytics, Data",
+            "AuthorEmail": "sarah.agent@localhost.dev",
+            "CreatedDaysAgo": 18
+        },
+        {
+            "Title": "Security Best Practices for Administrators",
+            "Content": "Essential security guidelines for system administrators:\n\n**Access Control:**\n* Implement principle of least privilege\n* Use role-based access control (RBAC)\n* Regularly audit user permissions\n* Remove inactive user accounts\n* Enforce strong password policies\n\n**Authentication:**\n* Enable multi-factor authentication (MFA)\n* Configure SSO when possible\n* Set session timeout policies\n* Monitor failed login attempts\n* Implement account lockout policies\n\n**Data Protection:**\n* Enable encryption at rest\n* Use TLS for data in transit\n* Regular backup schedule\n* Test backup restoration\n* Implement data retention policies\n\n**Monitoring:**\n* Enable audit logging\n* Monitor for suspicious activity\n* Set up security alerts\n* Review logs regularly\n* Track API usage patterns\n\n**Compliance:**\n* GDPR compliance checklist\n* SOC 2 requirements\n* HIPAA guidelines (if applicable)\n* Regular security audits\n* Penetration testing schedule\n\n**Incident Response:**\n* Have incident response plan\n* Define escalation procedures\n* Maintain security contact list\n* Document security incidents\n* Conduct post-incident reviews",
+            "Tags": "Security, Best Practices, Admin, Compliance",
+            "AuthorEmail": "rachel.security@localhost.dev",
+            "CreatedDaysAgo": 12
         }
     ]
 }

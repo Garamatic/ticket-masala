@@ -1,0 +1,126 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# Fonds Hennessey - Research Grants Configuration
+# ═══════════════════════════════════════════════════════════════════════════
+# "Marine Sterile" - Cold, expensive, academic
+
+domains:
+  Research:
+    display_name: "Research Grants"
+    description: "Grant proposals, compliance reviews, and funding decisions"
+    
+    entity_labels:
+      work_item: "Grant"
+      work_container: "Portfolio"
+      work_handler: "Analyst"
+    
+    work_item_types:
+      - code: PROPOSAL
+        name: "Grant Proposal"
+        icon: "fa-file-alt"
+        color: "#75AADB"
+        default_sla_days: 30
+      - code: AMENDMENT
+        name: "Budget Amendment"
+        icon: "fa-edit"
+        color: "#6c757d"
+        default_sla_days: 14
+      - code: REPORT
+        name: "Progress Report"
+        icon: "fa-chart-bar"
+        color: "#28a745"
+        default_sla_days: 21
+      - code: EXTENSION
+        name: "Extension Request"
+        icon: "fa-clock"
+        color: "#FF4500"
+        default_sla_days: 7
+    
+    custom_fields:
+      - name: funding_tier
+        label: "Funding Tier"
+        type: select
+        options: ["Tier 1 (< €50k)", "Tier 2 (€50k-€200k)", "Tier 3 (> €200k)"]
+        required: true
+      - name: research_domain
+        label: "Research Domain"
+        type: select
+        options: ["Marine Biology", "Environmental Science", "Oceanography", "Climate Research", "Other"]
+        required: true
+      - name: principal_investigator
+        label: "Principal Investigator"
+        type: text
+        required: true
+      - name: institution
+        label: "Institution"
+        type: text
+        required: true
+      - name: budget_total
+        label: "Total Budget (€)"
+        type: number
+        required: true
+      - name: compliance_check
+        label: "Compliance Status"
+        type: select
+        options: ["Pending Review", "Compliant", "Issues Found", "Waived"]
+        required: false
+    
+    workflow:
+      states:
+        - code: DRAFT
+          name: "Draft"
+          color: "#6c757d"
+        - code: SUBMITTED
+          name: "Submitted"
+          color: "#75AADB"
+        - code: UNDER_REVIEW
+          name: "Under Review"
+          color: "#ffc107"
+        - code: REVISION_REQUESTED
+          name: "Revision Requested"
+          color: "#FF4500"
+        - code: APPROVED
+          name: "Approved"
+          color: "#28a745"
+        - code: REJECTED
+          name: "Rejected"
+          color: "#dc3545"
+      
+      transitions:
+        DRAFT: [SUBMITTED]
+        SUBMITTED: [UNDER_REVIEW]
+        UNDER_REVIEW: [REVISION_REQUESTED, APPROVED, REJECTED]
+        REVISION_REQUESTED: [SUBMITTED]
+        APPROVED: []
+        REJECTED: []
+    
+    ai_strategies:
+      ranking: 
+        strategy_name: "MeritBased"
+        base_formula: "research_merit * feasibility / budget_total"
+        multipliers:
+          - conditions: 
+              - field: "funding_tier"
+                operator: "=="
+                value: "Tier 3 (> €200k)"
+            value: 0.8
+      dispatching: PortfolioBased
+      estimating: DocumentComplexity
+    
+    ai_prompts:
+      summarize: "Generate an executive summary of this grant proposal. Include: research objectives, methodology, budget overview, and potential impact. Maximum 3 bullet points."
+      compliance_check: "Review this proposal against funding guidelines. Flag any budget discrepancies or missing documentation."
+      suggest_response: "Draft a formal response to the applicant regarding their proposal status."
+    
+    integrations:
+      ingestion:
+        - type: portal
+          enabled: true
+          config:
+            endpoint: "/apply"
+            form_type: "multi_step_wizard"
+            max_attachment_size: "50MB"
+
+global:
+  default_domain: "Research"
+  allow_domain_switching: false
+  config_reload_enabled: true

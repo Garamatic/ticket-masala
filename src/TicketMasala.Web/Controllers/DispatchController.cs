@@ -46,7 +46,7 @@ public class DispatchController : Controller
             if (_dispatchBacklogService == null)
             {
                 // Fallback for when GERDA configuration is missing
-                return View("~/Views/Manager/DispatchBacklog.cshtml", new GerdaDispatchViewModel
+                return View("~/Views/Dispatch/DispatchBacklog.cshtml", new GerdaDispatchViewModel
                 {
                     Statistics = new DispatchStatistics(),
                     UnassignedTickets = new List<TicketDispatchInfo>(),
@@ -58,7 +58,7 @@ public class DispatchController : Controller
 
             var viewModel = await _dispatchBacklogService.BuildDispatchBacklogViewModelAsync(page, pageSize, cancellationToken);
 
-            return View("~/Views/Manager/DispatchBacklog.cshtml", viewModel);
+            return View("~/Views/Dispatch/DispatchBacklog.cshtml", viewModel);
         }
         catch (Exception ex)
         {

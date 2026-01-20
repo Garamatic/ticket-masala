@@ -160,11 +160,15 @@
                                             <div class="progress" style="height: 25px;">
                                                 <div class="progress-bar bg-@agent.UtilizationClass" 
                                                      role="progressbar" 
-                                                     style="width: @agent.UtilizationPercentage%"
-                                                     aria-valuenow="@agent.UtilizationPercentage" 
+                                                     style="width: @agent.UtilizationPercentageCapped%"
+                                                     aria-valuenow="@agent.UtilizationPercentageCapped" 
                                                      aria-valuemin="0" 
                                                      aria-valuemax="100">
                                                     @agent.UtilizationPercentage%
+                                                    @if (agent.IsOverCapacity)
+                                                    {
+                                                        <span class="ms-1 small">(@Localizer["Over capacity"])</span>
+                                                    }
                                                 </div>
                                             </div>
                                         </td>

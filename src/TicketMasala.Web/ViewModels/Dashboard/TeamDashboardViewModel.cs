@@ -80,6 +80,8 @@ public class AgentWorkloadMetric
     public int CurrentWorkload { get; set; } // EstimatedEffortPoints sum
     public int MaxCapacity { get; set; }
     public double UtilizationPercentage { get; set; }
+    public double UtilizationPercentageCapped => Math.Min(UtilizationPercentage, 100);
+    public bool IsOverCapacity => UtilizationPercentage > 100;
     public string UtilizationClass
     {
         get

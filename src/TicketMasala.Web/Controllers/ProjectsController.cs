@@ -13,6 +13,7 @@ using TicketMasala.Web.Engine.Ingestion;
 using TicketMasala.Web.Engine.Ingestion.Background;
 using System.Diagnostics;
 using System.Security.Claims;
+using TicketMasala.Web.AI;
 
 namespace TicketMasala.Web.Controllers;
 
@@ -21,15 +22,18 @@ public class ProjectsController : Controller
 {
     private readonly IProjectReadService _projectReadService;
     private readonly IProjectWorkflowService _projectWorkflowService;
+    private readonly IOpenAiService _openAiService;
     private readonly ILogger<ProjectsController> _logger;
 
     public ProjectsController(
         IProjectReadService projectReadService,
         IProjectWorkflowService projectWorkflowService,
+        IOpenAiService openAiService,
         ILogger<ProjectsController> logger)
     {
         _projectReadService = projectReadService;
         _projectWorkflowService = projectWorkflowService;
+        _openAiService = openAiService;
         _logger = logger;
     }
 
@@ -342,6 +346,31 @@ public class ProjectsController : Controller
 
             TempData["Error"] = "An error occurred while deleting the project. The project may have associated tickets.";
             return RedirectToAction("Details", new { id });
+        }
+    }
+    [HttpPost("GenerateAiRoadmap")]
+    public async Task<IActionResult> GenerateAiRoadmap(Guid projectId)
+    {
+        var project = await _projectReadService.GetProjectDetailsAsync(projectId);
+        if (project == null) return NotFound();
+
+        var query = $"Project: {project.ProjectDetails.Name}\n" +
+                $"Description: {project.ProjectDetails.Description}\n" +
+                $"Target Completion: {project.ProjectDetails.CompletionTarget}\n\n" +
+                $"Tickets:\n" +
+                string.Join("\n", project.Tasks.Select(t => $"- {t.Description} (Status: {t.TicketStatus})"));
+
+        var fullPrompt = "Based on the following project details and tickets, create a suggested high-level execution roadmap with phases and key milestones:\n\n" + query;
+
+        try
+        {
+            var roadmap = await _openAiService.GetResponseAsync(OpenAIPrompts.Normal, fullPrompt);
+            return Json(new { success = true, roadmap });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating AI roadmap for project {ProjectId}", projectId);
+            return Json(new { success = false, message = "Failed to generate roadmap." });
         }
     }
 }

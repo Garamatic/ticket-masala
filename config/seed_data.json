@@ -629,6 +629,34 @@
             "Tags": "Security, Best Practices, Admin, Compliance",
             "AuthorEmail": "rachel.security@localhost.dev",
             "CreatedDaysAgo": 12
+        },
+        {
+            "Title": "Using the GERDA AI Dashboard",
+            "Content": "The GERDA (Generative Engine for Routing & Dispatch Automation) Dashboard provides real-time insights for Managers.\n\n**Key Features:**\n1. **Unassigned Ticket Backlog**: Shows tickets waiting for triage.\n2. **AI Recommendations**: GERDA suggests the best agent based on skills, load, and past performance.\n3. **Workload Balancing**: visualizes team capacity to prevent burnout.\n\n**How to use:**\n* Navigate to **GERDA Dispatch** in the side menu.\n* Review the 'Confidence Score' for AI suggestions.\n* Click 'Auto-Assign' to accept high-confidence matches.\n* Use the manual override for complex cases.",
+            "Tags": "GERDA, AI, Manager, Dashboard",
+            "AuthorEmail": "gerda@ticketmasala.ai",
+            "CreatedDaysAgo": 5
+        },
+        {
+            "Title": "Escalation Procedures for Critical Incidents",
+            "Content": "Standard Operating Procedure (SOP) for P0/P1 incidents.\n\n**Definition:**\n* **P0 (Critical)**: Site down, data loss, security breach.\n* **P1 (High)**: Core feature broken, majority users affected.\n\n**Escalation Path:**\n1. **Ack**: Acknowledge ticket within 15 mins.\n2. **Assess**: Verify impact and user scope.\n3. **Notify**: Post in #incidents slack channel.\n4. **Escalate**: If not resolved in 1hr, page the On-Call Engineer.\n5. **Communicate**: Update status page for customers every 30 mins.\n\n**Note**: GERDA automatically flags tickets with negative sentiment as potential escalations.",
+            "Tags": "SOP, Escalation, Process, Critical",
+            "AuthorEmail": "john.manager@localhost.dev",
+            "CreatedDaysAgo": 45
+        },
+        {
+            "Title": "Ticket Status Lifecycle Definitions",
+            "Content": "Understanding what each status means:\n\n* **Pending**: New ticket, not yet assigned.\n* **Assigned**: Owner identified, work scheduled.\n* **In Progress**: Active work being done.\n* **On Hold**: Waiting for customer response or 3rd party vendor.\n* **Review**: Code review or QA in progress.\n* **Completed**: Fix deployed and verified.\n* **Closed**: No further action required (e.g. invalid, duplicate).",
+            "Tags": "Status, Process, Lifecycle",
+            "AuthorEmail": "sarah.agent@localhost.dev",
+            "CreatedDaysAgo": 90
+        },
+        {
+            "Title": "Managing Your User Profile",
+            "Content": "Keep your profile updated to help GERDA route tickets effectively.\n\n**Steps:**\n1. Click your avatar in the top right.\n2. Select **Profile**.\n3. **Skills**: Add tags like 'iOS', 'Database', 'React'.\n4. **Capacity**: Set your daily point limit (default 40).\n5. **Region**: Update your timezone/region.\n\n*Tip: Accurate skills ensure you get tickets you are expert in!*",
+            "Tags": "Profile, Settings, Onboarding",
+            "AuthorEmail": "admin@localhost.dev",
+            "CreatedDaysAgo": 5
         }
     ]
 }

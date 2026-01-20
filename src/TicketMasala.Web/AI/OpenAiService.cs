@@ -14,15 +14,15 @@ public class OpenAiService : IOpenAiService
     {
         _apiKey = options.Value.ApiKey ?? Environment.GetEnvironmentVariable("OPENAI_API_KEY") ?? "";
         _baseUrl = options.Value.BaseUrl;
-
-        if (string.IsNullOrEmpty(_apiKey))
-        {
-            throw new InvalidOperationException("OpenAI API key not configured. Set 'OpenAI:ApiKey' in appsettings or 'OPENAI_API_KEY' environment variable.");
-        }
     }
 
     public async Task<string> GetResponseAsync(OpenAIPrompts promptType, string query, bool fastResponse = true)
     {
+        if (string.IsNullOrEmpty(_apiKey))
+        {
+            return "Error: OpenAI API key is not configured. Please set 'OpenAI:ApiKey' in appsettings.json or 'OPENAI_API_KEY' environment variable.";
+        }
+
         var client = string.IsNullOrEmpty(_baseUrl) 
             ? new OpenAIClient(new System.ClientModel.ApiKeyCredential(_apiKey))
             : new OpenAIClient(new System.ClientModel.ApiKeyCredential(_apiKey), new OpenAIClientOptions { Endpoint = new Uri(_baseUrl) });

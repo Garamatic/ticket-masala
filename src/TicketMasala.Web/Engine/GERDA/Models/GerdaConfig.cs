@@ -76,6 +76,9 @@ public class GerdaAISettings
 
     [JsonPropertyName("Anticipation")]
     public AnticipationSettings Anticipation { get; set; } = new();
+
+    [JsonPropertyName("Knowledge")]
+    public KnowledgeSettings Knowledge { get; set; } = new();
 }
 
 /// <summary>
@@ -182,4 +185,22 @@ public class AnticipationSettings
     [JsonPropertyName("RiskThresholdPercentage")]
     public int RiskThresholdPercentage { get; set; } = 20;
 
+}
+
+/// <summary>
+/// K - Knowledge/KB Recommendation settings
+/// </summary>
+public class KnowledgeSettings
+{
+    [JsonPropertyName("IsEnabled")]
+    public bool IsEnabled { get; set; } = true;
+
+    [JsonPropertyName("MaxSuggestions")]
+    public int MaxSuggestions { get; set; } = 3;
+
+    [JsonPropertyName("MinRelevanceScore")]
+    public double MinRelevanceScore { get; set; } = 0.2;
+
+    [JsonPropertyName("StrategyName")]
+    public string StrategyName { get; set; } = "Similarity";
 }

@@ -96,7 +96,7 @@ public class MatrixFactorizationDispatchingStrategy : IDispatchingStrategy
         if (!File.Exists(_modelPath))
         {
             _logger.LogWarning("GERDA-D: Model file not ready, using workload-based fallback");
-            return await GetWorkloadBasedRecommendationsAsync(employees, count);
+            return await GetHeuristicRecommendationsAsync(ticket, employees, count);
         }
 
         // Ensure model is available (via Pool/File)
@@ -294,7 +294,7 @@ public class MatrixFactorizationDispatchingStrategy : IDispatchingStrategy
         }
 
         // Fallback if model fails or returns no results
-        return await GetWorkloadBasedRecommendationsAsync(employees, count);
+        return await GetHeuristicRecommendationsAsync(ticket, employees, count);
     }
 
     public async Task RetrainModelAsync()
@@ -410,6 +410,72 @@ public class MatrixFactorizationDispatchingStrategy : IDispatchingStrategy
             
             if (workload == 0) result.Reasons.Add("Fully Available");
             
+            results.Add(result);
+        }
+
+        return results
+            .OrderByDescending(x => x.Score)
+            .Take(count)
+            .ToList();
+    }
+
+    private async Task<List<DispatchResult>> GetHeuristicRecommendationsAsync(
+        Ticket ticket,
+        List<Employee> employees,
+        int count)
+    {
+        var agentWorkloads = await _context.Tickets
+            .Where(t => t.ResponsibleId != null)
+            .Where(t => t.TicketStatus != Status.Completed && t.TicketStatus != Status.Failed)
+            .GroupBy(t => t.ResponsibleId)
+            .Select(g => new { AgentId = g.Key!, Count = g.Count() })
+            .ToDictionaryAsync(x => x.AgentId, x => x.Count);
+
+        var customer = await _context.Users.FindAsync(ticket.CreatorGuid.ToString());
+        var results = new List<DispatchResult>();
+
+        foreach (var employee in employees)
+        {
+            if (string.IsNullOrEmpty(employee.Id)) continue;
+
+            var workload = agentWorkloads.GetValueOrDefault(employee.Id, 0);
+            if (workload >= _config.GerdaAI.Dispatching.MaxAssignedTicketsPerAgent)
+            {
+                continue;
+            }
+
+            // Use neutral ML prediction when model isn't available
+            var baseScore = AffinityScoring.CalculateMultiFactorScore(2.5, ticket, employee, customer);
+            var workloadPenalty = workload / (double)_config.GerdaAI.Dispatching.MaxAssignedTicketsPerAgent;
+            var adjustedScore = baseScore * (1.0 - (workloadPenalty * 0.5));
+
+            var result = new DispatchResult(employee.Id, adjustedScore);
+            result.Reasons.Add("Heuristic Fallback");
+
+            if (workload == 0)
+            {
+                result.Reasons.Add("Fully Available");
+            }
+
+            var expertiseScore = AffinityScoring.CalculateExpertiseScore(ticket, employee);
+            if (expertiseScore > 3.0)
+            {
+                var category = AffinityScoring.ExtractCategoryFromTicket(ticket);
+                result.Reasons.Add($"Expertise Match: {category} ({expertiseScore:F1}/5)");
+            }
+
+            var languageScore = AffinityScoring.CalculateLanguageScore(employee, customer);
+            if (languageScore >= 4.5)
+            {
+                result.Reasons.Add($"Language Match ({languageScore:F1}/5)");
+            }
+
+            var geoScore = AffinityScoring.CalculateGeographyScore(employee, customer);
+            if (geoScore >= 4.0)
+            {
+                result.Reasons.Add($"Region Match ({geoScore:F1}/5)");
+            }
+
             results.Add(result);
         }
 

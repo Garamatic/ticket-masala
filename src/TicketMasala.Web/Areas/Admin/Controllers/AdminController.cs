@@ -30,13 +30,21 @@ public class AdminController : Controller
 
     public async Task<IActionResult> Index()
     {
-        var now = DateTime.UtcNow;
-        var today = now.Date;
+        var now = DateTimeOffset.UtcNow;
+        var today = DateTime.UtcNow.Date;
+
+        // Calculate active users: total users minus currently locked users
+        var totalUsers = await _userManager.Users.CountAsync();
+        var lockedUsers = await _userManager.Users
+            .Where(u => u.LockoutEnd != null)
+            .ToListAsync();
+        var currentlyLockedCount = lockedUsers.Count(u => u.LockoutEnd > now);
+        var activeUsers = totalUsers - currentlyLockedCount;
 
         var viewModel = new AdminDashboardViewModel
         {
-            TotalUsers = await _userManager.Users.CountAsync(),
-            ActiveUsers = await _userManager.Users.CountAsync(u => u.LockoutEnd == null || u.LockoutEnd < now),
+            TotalUsers = totalUsers,
+            ActiveUsers = activeUsers,
             TotalTickets = await _context.Tickets.CountAsync(),
             TicketsToday = await _context.Tickets.CountAsync(t => t.CreationDate.Date == today),
             TicketsResolvedToday = await _context.Tickets.CountAsync(t => t.CompletionDate.HasValue && t.CompletionDate.Value.Date == today),

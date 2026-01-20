@@ -1,0 +1,198 @@
+/* ═══════════════════════════════════════════════════════════════
+   Whitman Spoor - Scorched Earth Utility Theme
+   Palette: Industrial Blue (#004B87), Safety Orange (#FF9933), Concrete Grey
+   Typography: Condensed Sans, square corners, large touch targets
+   ══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;700&family=Roboto+Condensed:wght@400;700&display=swap');
+
+:root {
+    /* Whitman Color Palette */
+    --color-primary: #004B87;
+    --color-primary-hover: #003a6a;
+    --color-primary-dark: #002d52;
+    --color-secondary: #FF9933;
+    --color-accent: #FFD700;
+    --color-background: #DDE4E8;
+    --color-surface: #ffffff;
+    --color-text: #1a1a1a;
+    --color-danger: #dc3545;
+
+    /* Typography */
+    --font-family-heading: 'Oswald', 'Impact', sans-serif;
+    --font-family-base: 'Roboto Condensed', 'Arial Narrow', sans-serif;
+
+    /* Borders - Square for industrial feel */
+    --border-radius: 0px;
+    --border-radius-lg: 0px;
+
+    /* Login Specifics */
+    --login-branding-bg: var(--color-primary);
+    --font-family-branding: var(--font-family-heading);
+    --login-btn-bg: var(--color-secondary);
+    --login-btn-text: #000;
+}
+
+/* Body - Concrete background */
+body {
+    background-color: var(--color-background) !important;
+    font-family: var(--font-family-base);
+}
+
+/* Headings - Bold industrial */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.dashboard-title,
+.card-title {
+    font-family: var(--font-family-heading) !important;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-primary);
+}
+
+/* Primary buttons - Safety Orange */
+.btn-primary {
+    background-color: var(--color-secondary) !important;
+    border-color: var(--color-secondary) !important;
+    color: #000 !important;
+    font-weight: 700 !important;
+    border-radius: var(--border-radius) !important;
+    text-transform: uppercase;
+    min-height: 48px;
+    /* Large touch targets */
+    font-size: 1rem;
+}
+
+.btn-primary:hover {
+    background-color: #e68a2e !important;
+    border-color: #e68a2e !important;
+}
+
+/* Secondary buttons - Industrial Blue */
+.btn-secondary,
+.btn-outline-primary {
+    background-color: var(--color-primary) !important;
+    border-color: var(--color-primary) !important;
+    color: #fff !important;
+    border-radius: var(--border-radius) !important;
+}
+
+/* Cards - Clean industrial panels */
+.card {
+    background-color: var(--color-surface) !important;
+    border: 3px solid var(--color-primary) !important;
+    border-radius: var(--border-radius) !important;
+    box-shadow: 4px 4px 0 rgba(0, 75, 135, 0.2) !important;
+}
+
+.card-header {
+    background-color: var(--color-primary) !important;
+    color: #fff !important;
+    font-family: var(--font-family-heading);
+    text-transform: uppercase;
+    border-radius: 0 !important;
+}
+
+/* Sidebar - Deep blue */
+.app-sidebar {
+    background: var(--color-primary) !important;
+}
+
+.sidebar-nav .sidebar-link {
+    color: #fff !important;
+    font-family: var(--font-family-heading);
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+}
+
+.sidebar-nav .sidebar-link.active {
+    background: var(--color-secondary) !important;
+    color: #000 !important;
+    border-left: 4px solid #FFD700 !important;
+}
+
+/* Status badges - High visibility */
+.badge {
+    font-family: var(--font-family-heading) !important;
+    text-transform: uppercase;
+    font-weight: 700;
+    padding: 0.5em 1em;
+    border-radius: 0 !important;
+}
+
+.badge-warning,
+.badge.bg-warning {
+    background-color: var(--color-secondary) !important;
+    color: #000 !important;
+}
+
+.badge-danger,
+.badge.bg-danger {
+    background-color: var(--color-danger) !important;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Stats cards - Industrial gradients */
+.stat-card.primary {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)) !important;
+}
+
+.stat-card.secondary {
+    background: linear-gradient(135deg, var(--color-secondary), #e68a2e) !important;
+}
+
+/* Form inputs - Large touch targets */
+.form-control {
+    font-family: var(--font-family-base);
+    border: 2px solid var(--color-primary) !important;
+    border-radius: var(--border-radius) !important;
+    min-height: 48px;
+    font-size: 1rem;
+}
+
+.form-control:focus {
+    border-color: var(--color-secondary) !important;
+    box-shadow: 0 0 0 3px rgba(255, 153, 51, 0.3) !important;
+}
+
+/* Tables - High contrast */
+.table {
+    border: 2px solid var(--color-primary);
+}
+
+.table th {
+    background-color: var(--color-primary) !important;
+    color: #fff !important;
+    font-family: var(--font-family-heading);
+    text-transform: uppercase;
+    font-size: 0.9rem;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 75, 135, 0.05);
+}
+
+/* Alert styling for emergencies */
+.alert-danger {
+    background-color: var(--color-danger) !important;
+    border: 3px solid #a71d2a !important;
+    color: #fff !important;
+    font-weight: 700;
+}

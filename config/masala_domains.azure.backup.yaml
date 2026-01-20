@@ -1,0 +1,57 @@
+global:
+  defaultDomain: "IT"
+  allowDomainSwitching: true
+  configReloadEnabled: true
+
+domains:
+  IT:
+    displayName: "IT Support"
+    description: "Technical support and infrastructure"
+    ui:
+      label: "IT Support"
+      icon: "bi-laptop"
+      cssClass: "theme-it"
+    entityLabels:
+      workItem: "Ticket"
+      workContainer: "Project"
+      workHandler: "Agent"
+    workItemTypes:
+      - code: "INCIDENT"
+        name: "Incident"
+        icon: "fa-fire"
+        color: "#dc3545"
+      - code: "SERVICE_REQUEST"
+        name: "Service Request"
+        icon: "fa-cogs"
+        color: "#17a2b8"
+    workflow:
+      states:
+        - code: "Pending"
+          name: "Pending"
+        - code: "InProgress"
+          name: "In Progress"
+        - code: "Completed"
+          name: "Completed"
+      transitions:
+        Pending: ["InProgress"]
+        InProgress: ["Completed"]
+
+  Gardening:
+    displayName: "Gardening Services"
+    description: "Maintenance and landscaping"
+    ui:
+      label: "Green Care"
+      icon: "bi-tree"
+      cssClass: "theme-gardening"
+    entityLabels:
+      workItem: "Service Visit"
+      workContainer: "Property"
+      workHandler: "Gardener"
+    workflow:
+      states:
+        - code: "Scheduled"
+          name: "Scheduled"
+        - code: "Done"
+          name: "Done"
+      transitions:
+        Scheduled: ["Done"]

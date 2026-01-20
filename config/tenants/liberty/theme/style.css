@@ -1,0 +1,264 @@
+/* ═══════════════════════════════════════════════════════════════
+   Liberty Systems - Cyberpunk Minimalism Theme
+   Palette: Charcoal (#2F3131), Mustard (#E1AD01), Code Green (#98FF98)
+   Typography: Inter + Fira Code, borderless, syntax highlighting
+   ══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+
+:root {
+    /* Liberty Dark Mode Palette */
+    --color-primary: #E1AD01;
+    --color-primary-hover: #c99a01;
+    --color-primary-dark: #b08901;
+    --color-secondary: #98FF98;
+    --color-accent: #61dafb;
+    --color-background: #1a1a1a;
+    --color-surface: #2F3131;
+    --color-surface-elevated: #3a3c3c;
+    --color-text: #e0e0e0;
+    --color-text-muted: #888;
+    --color-danger: #ff6b6b;
+    --color-success: #98FF98;
+
+    /* Typography */
+    --font-family-heading: 'Inter', -apple-system, sans-serif;
+    --font-family-base: 'Inter', -apple-system, sans-serif;
+    --font-family-mono: 'Fira Code', 'Consolas', monospace;
+
+    /* Borders - Minimal */
+    --border-radius: 6px;
+    --border-radius-lg: 8px;
+
+    /* Login Specifics */
+    --login-branding-bg: var(--color-background);
+    --font-family-branding: var(--font-family-heading);
+    --login-btn-bg: var(--color-primary);
+    --login-btn-text: #000;
+    --login-branding-text: var(--color-text);
+}
+
+/* Dark mode body */
+body {
+    background-color: var(--color-background) !important;
+    color: var(--color-text) !important;
+    font-family: var(--font-family-base);
+}
+
+/* Headings */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.dashboard-title,
+.card-title {
+    font-family: var(--font-family-heading) !important;
+    color: var(--color-text) !important;
+    font-weight: 600;
+}
+
+/* Primary buttons - Mustard accent */
+.btn-primary {
+    background-color: var(--color-primary) !important;
+    border-color: var(--color-primary) !important;
+    color: #1a1a1a !important;
+    font-weight: 600 !important;
+    border-radius: var(--border-radius) !important;
+}
+
+.btn-primary:hover {
+    background-color: var(--color-primary-hover) !important;
+    border-color: var(--color-primary-hover) !important;
+}
+
+/* Secondary buttons */
+.btn-secondary,
+.btn-outline-primary {
+    background-color: transparent !important;
+    border: 1px solid var(--color-primary) !important;
+    color: var(--color-primary) !important;
+}
+
+.btn-outline-secondary {
+    border-color: var(--color-text-muted) !important;
+    color: var(--color-text-muted) !important;
+}
+
+/* Cards - Elevated dark surfaces */
+.card {
+    background-color: var(--color-surface) !important;
+    border: none !important;
+    border-radius: var(--border-radius-lg) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+}
+
+.card-header {
+    background-color: var(--color-surface-elevated) !important;
+    color: var(--color-text) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Sidebar - Dark */
+.app-sidebar {
+    background: var(--color-surface) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.navbar-brand,
+.navbar-logo+span {
+    color: var(--color-primary) !important;
+}
+
+.sidebar-nav .sidebar-link {
+    color: var(--color-text-muted) !important;
+    font-weight: 500;
+}
+
+.sidebar-nav .sidebar-link:hover {
+    color: var(--color-text) !important;
+    background: rgba(225, 173, 1, 0.1) !important;
+}
+
+.sidebar-nav .sidebar-link.active {
+    color: var(--color-primary) !important;
+    background: rgba(225, 173, 1, 0.15) !important;
+    border-left: 3px solid var(--color-primary) !important;
+}
+
+/* Header */
+.app-header {
+    background-color: var(--color-surface) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Status badges - Syntax highlighting inspired */
+.badge {
+    font-family: var(--font-family-mono) !important;
+    font-size: 0.75rem;
+    padding: 0.4em 0.8em;
+    border-radius: 4px !important;
+}
+
+.badge-success,
+.badge.bg-success {
+    background-color: rgba(152, 255, 152, 0.2) !important;
+    color: var(--color-success) !important;
+}
+
+.badge-warning,
+.badge.bg-warning {
+    background-color: rgba(225, 173, 1, 0.2) !important;
+    color: var(--color-primary) !important;
+}
+
+.badge-danger,
+.badge.bg-danger {
+    background-color: rgba(255, 107, 107, 0.2) !important;
+    color: var(--color-danger) !important;
+}
+
+.badge-info,
+.badge.bg-info {
+    background-color: rgba(97, 218, 251, 0.2) !important;
+    color: var(--color-accent) !important;
+}
+
+/* Stats cards */
+.stat-card.primary {
+    background: linear-gradient(135deg, var(--color-surface-elevated), var(--color-surface)) !important;
+    border-left: 4px solid var(--color-primary) !important;
+}
+
+.stat-card.secondary {
+    background: linear-gradient(135deg, var(--color-surface-elevated), var(--color-surface)) !important;
+    border-left: 4px solid var(--color-secondary) !important;
+}
+
+/* Form inputs - Dark mode */
+.form-control {
+    font-family: var(--font-family-base);
+    background-color: var(--color-surface-elevated) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: var(--color-text) !important;
+    border-radius: var(--border-radius) !important;
+}
+
+.form-control:focus {
+    border-color: var(--color-primary) !important;
+    box-shadow: 0 0 0 3px rgba(225, 173, 1, 0.2) !important;
+    background-color: var(--color-surface) !important;
+}
+
+.form-control::placeholder {
+    color: var(--color-text-muted) !important;
+}
+
+/* Tables - Dark */
+.table {
+    color: var(--color-text);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.table th {
+    background-color: var(--color-surface-elevated) !important;
+    color: var(--color-text-muted) !important;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.table td {
+    border-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.table tbody tr:hover {
+    background-color: rgba(225, 173, 1, 0.05) !important;
+}
+
+/* Code blocks - Syntax highlighting */
+code,
+pre {
+    font-family: var(--font-family-mono) !important;
+    background-color: var(--color-surface-elevated) !important;
+    color: var(--color-secondary) !important;
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+}
+
+/* Text colors */
+.text-muted {
+    color: var(--color-text-muted) !important;
+}
+
+.text-dark {
+    color: var(--color-text) !important;
+}
+
+/* Footer */
+.footer {
+    background-color: var(--color-surface) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: var(--color-text-muted) !important;
+}
+
+/* Dropdowns */
+.dropdown-menu {
+    background-color: var(--color-surface-elevated) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.dropdown-item {
+    color: var(--color-text) !important;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(225, 173, 1, 0.1) !important;
+}

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Issue Submitted - Liberty Systems</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <img src="../liberty.png" alt="Liberty Systems" class="logo">
+                <div>
+                    <h1 class="main-title">ISSUE SUBMITTED</h1>
+                    <p class="subtitle">Liberty Systems</p>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div
+                style="background: var(--color-surface); border: 1px solid var(--color-border); padding: 3rem 2rem; text-align: center;">
+                <div
+                    style="width: 80px; height: 80px; background: var(--color-secondary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem;">
+                    <i class="fas fa-check" style="color: #1a1a1a; font-size: 2.5rem;"></i>
+                </div>
+
+                <h2
+                    style="font-family: var(--font-mono); font-size: 1.75rem; color: var(--color-primary); margin-bottom: 1rem;">
+                    Issue Created</h2>
+
+                <div id="ticketNumber"
+                    style="font-family: var(--font-mono); font-size: 2rem; color: var(--color-secondary); padding: 1rem; background: var(--color-bg); margin: 1.5rem 0; border: 1px solid var(--color-border);">
+                </div>
+
+                <p style="font-size: 1.05rem; margin-bottom: 2rem; color: var(--color-text-dim);">Your issue has been
+                    logged and will be triaged by the development team.</p>
+
+                <div
+                    style="background: var(--color-bg); border-left: 3px solid var(--color-primary); padding: 1.5rem; text-align: left; margin: 2rem 0;">
+                    <h3 style="font-weight: 600; color: var(--color-text); margin-bottom: 1rem;">Next Steps</h3>
+                    <ul style="list-style: none; padding: 0; color: var(--color-text-dim);">
+                        <li style="padding: 0.5rem 0; display: flex; gap: 0.75rem;">
+                            <i class="fas fa-robot" style="color: var(--color-primary);"></i>
+                            <span>AI will analyze and categorize the issue</span>
+                        </li>
+                        <li style="padding: 0.5rem 0; display: flex; gap: 0.75rem;">
+                            <i class="fas fa-code-branch" style="color: var(--color-primary);"></i>
+                            <span>System will check for similar issues and commits</span>
+                        </li>
+                        <li style="padding: 0.5rem 0; display: flex; gap: 0.75rem;">
+                            <i class="fas fa-user-tie" style="color: var(--color-primary);"></i>
+                            <span>Developer will be assigned based on expertise</span>
+                        </li>
+                        <li style="padding: 0.5rem 0; display: flex; gap: 0.75rem;">
+                            <i class="fas fa-bell" style="color: var(--color-primary);"></i>
+                            <span>You'll receive email updates on progress</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="form-actions" style="justify-content: center; margin-top: 2rem;">
+                    <a href="index.html" class="btn btn-primary" style="text-decoration: none;">
+                        <i class="fas fa-plus"></i>
+                        Report Another Issue
+                    </a>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>Liberty Systems © 2025</p>
+        </footer>
+    </div>
+
+    <script>
+        const result = JSON.parse(sessionStorage.getItem('submissionResult') || '{}');
+        document.getElementById('ticketNumber').textContent = result.ticketNumber || 'ISSUE #XXXX';
+        sessionStorage.removeItem('submissionResult');
+    </script>
+</body>
+
+</html>

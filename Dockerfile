@@ -23,11 +23,11 @@ RUN mkdir -p /app/inputs/config /app/inputs/data /app/keys \
     /app/wwwroot/tenant-theme
 COPY tenants/_template/ /app/tenants/_template/
 
-# Copy all tenant configurations from masala-web (relative to ticket-masala root)
-COPY ../masala-web/tenants/desgoffe /app/tenants/desgoffe
-COPY ../masala-web/tenants/whitman /app/tenants/whitman
-COPY ../masala-web/tenants/liberty /app/tenants/liberty
-COPY ../masala-web/tenants/hennessey /app/tenants/hennessey
+# Copy all tenant configurations from local config directory
+COPY config/tenants/desgoffe /app/tenants/desgoffe
+COPY config/tenants/whitman /app/tenants/whitman
+COPY config/tenants/liberty /app/tenants/liberty
+COPY config/tenants/hennessey /app/tenants/hennessey
 
 # Set permissions for the 'app' user (UID 1654 in Chiseled)
 RUN chown -R 1654:1654 /app

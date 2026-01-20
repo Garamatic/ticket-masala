@@ -8,10 +8,12 @@ namespace TicketMasala.Web.AI;
 public class OpenAiService : IOpenAiService
 {
     private readonly string _apiKey;
+    private readonly string? _baseUrl;
 
     public OpenAiService(IOptions<Configuration.OpenAiSettings> options)
     {
         _apiKey = options.Value.ApiKey ?? Environment.GetEnvironmentVariable("OPENAI_API_KEY") ?? "";
+        _baseUrl = options.Value.BaseUrl;
 
         if (string.IsNullOrEmpty(_apiKey))
         {
@@ -21,8 +23,11 @@ public class OpenAiService : IOpenAiService
 
     public async Task<string> GetResponseAsync(OpenAIPrompts promptType, string query, bool fastResponse = true)
     {
-        var client = new OpenAIClient(apiKey: _apiKey);
-        var model = fastResponse ? "gpt-4.1-mini" : "gpt-4.1";
+        var client = string.IsNullOrEmpty(_baseUrl) 
+            ? new OpenAIClient(_apiKey)
+            : new OpenAIClient(_apiKey, new OpenAIClientOptions { Endpoint = new Uri(_baseUrl) });
+            
+        var model = fastResponse ? "openai/gpt-4o-mini" : "openai/gpt-4o";
         var chatClient = client.GetChatClient(model);
 
         var response = await chatClient.CompleteChatAsync(CreatePrompt(query, promptType));

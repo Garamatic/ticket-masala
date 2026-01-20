@@ -1,0 +1,176 @@
+{
+    "Admins": [
+        {
+            "UserName": "bourgmestre.gustave",
+            "Email": "gustave@desgoffe.gov",
+            "FirstName": "Gustave",
+            "LastName": "Desgoffe",
+            "Phone": "+32 2 555 01 01",
+            "Code": "ADM-001"
+        }
+    ],
+    "Employees": [
+        {
+            "UserName": "greffier.serge",
+            "Email": "serge@desgoffe.gov",
+            "FirstName": "Serge",
+            "LastName": "Leclerc",
+            "Team": "Clergé Municipal",
+            "Level": "Manager",
+            "Language": "fr-BE",
+            "Specializations": "Urbanisme, État Civil",
+            "MaxCapacityPoints": 50,
+            "Region": "Desgoffe-Centre"
+        },
+        {
+            "UserName": "archiviste.marcel",
+            "Email": "marcel@desgoffe.gov",
+            "FirstName": "Marcel",
+            "LastName": "Proust",
+            "Team": "Archives & Mémoire",
+            "Level": "Support",
+            "Language": "fr-BE",
+            "Specializations": "Dossiers Historiques, Scan 3D",
+            "MaxCapacityPoints": 35,
+            "Region": "Vieux-Desgoffe"
+        },
+        {
+            "UserName": "conseiller.claire",
+            "Email": "claire@desgoffe.gov",
+            "FirstName": "Claire",
+            "LastName": "Valmont",
+            "Team": "Affaires Juridiques",
+            "Level": "Lead",
+            "Language": "fr-BE",
+            "Specializations": "Droit Administratif, Expropriation",
+            "MaxCapacityPoints": 45,
+            "Region": "Desgoffe-Centre"
+        },
+        {
+            "UserName": "agent.zero",
+            "Email": "zero@desgoffe.gov",
+            "FirstName": "Agent",
+            "LastName": "Zero",
+            "Team": "Service de la Tranquillité",
+            "Level": "Support",
+            "Language": "fr-BE",
+            "Specializations": "Nuisances Sonores, Voirie",
+            "MaxCapacityPoints": 30,
+            "Region": "Desgoffe-Nord"
+        },
+        {
+            "UserName": "gerda.system",
+            "Email": "gerda@ticketmasala.ai",
+            "FirstName": "GERDA",
+            "LastName": "AI",
+            "Team": "System Core",
+            "Level": "Lead",
+            "Language": "fr-BE",
+            "Specializations": "Sentiment Analysis, Routing, Policy Validation",
+            "MaxCapacityPoints": 999,
+            "Region": "Global"
+        }
+    ],
+    "Customers": [
+        {
+            "UserName": "mme.villeneuve",
+            "Email": "villeneuve@charity.org",
+            "FirstName": "Hortense",
+            "LastName": "Villeneuve",
+            "Phone": "+32 2 555 99 99",
+            "Code": "CIT-777"
+        },
+        {
+            "UserName": "mr.legrand",
+            "Email": "legrand@developpement.be",
+            "FirstName": "Jean-Pierre",
+            "LastName": "Legrand",
+            "Phone": "+32 2 555 12 34",
+            "Code": "DEV-088"
+        }
+    ],
+    "WorkContainers": [
+        {
+            "Name": "Projet 'Le Grand Canal' - Phase 1",
+            "Description": "Réaménagement des berges et transformation des anciens entrepôts en logements sociaux.",
+            "Status": "Active",
+            "CustomerEmail": "legrand@developpement.be",
+            "ProjectManagerEmail": "claire@desgoffe.gov",
+            "CompletionTargetMonths": 24,
+            "WorkItems": [
+                {
+                    "Description": "Étude d'Impact Environnemental - Faune Aquatique",
+                    "Status": "In_Progress",
+                    "Type": "Task",
+                    "ResponsibleEmail": "claire@desgoffe.gov",
+                    "CompletionTargetDays": 90,
+                    "EstimatedEffortPoints": 34,
+                    "PriorityScore": 15,
+                    "GerdaTags": "Environnement, Écologie, Legal",
+                    "Comments": [
+                        {
+                            "Body": "L'association locale des pêcheurs a déposé un recours. Besoin d'un avis juridique urgent sur la zone Natura 2000.",
+                            "AuthorEmail": "legrand@developpement.be",
+                            "CreatedDaysAgo": 5
+                        },
+                        {
+                            "Body": "🤖 **Analyse GERDA**: Risque de Contentieux Détecté (Confidence: 85%). Recours administratif identifié. Dossier transféré à Claire Valmont (Affaires Juridiques).",
+                            "AuthorEmail": "gerda@ticketmasala.ai",
+                            "CreatedDaysAgo": 4
+                        }
+                    ]
+                },
+                {
+                    "Description": "Numérisation des plans cadastraux (1880-1920)",
+                    "Status": "In_Progress",
+                    "Type": "Task",
+                    "ResponsibleEmail": "marcel@desgoffe.gov",
+                    "CompletionTargetDays": 30,
+                    "EstimatedEffortPoints": 13,
+                    "PriorityScore": 8,
+                    "GerdaTags": "Archives, Patrimoine"
+                }
+            ]
+        }
+    ],
+    "UnassignedWorkItems": [
+        {
+            "Description": "URGENT: Manifestation contre l'abattage des platanes du Canal",
+            "Status": "New",
+            "Type": "Incident",
+            "CustomerEmail": "villeneuve@charity.org",
+            "CompletionTargetDays": 1,
+            "EstimatedEffortPoints": 21,
+            "PriorityScore": 92,
+            "GerdaTags": "Sentiment:StronglyNegative, Risque_Politique, Media_Alert",
+            "Comments": [
+                {
+                    "Body": "C'est un scandale! Ces arbres ont 200 ans. Nous organisons un sit-in demain matin. Les médias sont prévenus. Desgoffe ne peut pas sacrifier son âme pour du béton!",
+                    "AuthorEmail": "villeneuve@charity.org",
+                    "CreatedDaysAgo": 0
+                },
+                {
+                    "Body": "🤖 **GERDA Autopilot**: Alerte Média Critique. Sentiment 'Fidèle' (98% négatif). Détection de 'Manifestation' et 'Médias'. Notification envoyée au cabinet du Bourgmestre.",
+                    "AuthorEmail": "gerda@ticketmasala.ai",
+                    "CreatedDaysAgo": 0
+                }
+            ]
+        }
+    ],
+    "KnowledgeBaseArticles": [
+        {
+            "Title": "Procédure d'Expropriation pour Utilité Publique",
+            "Content": "Le cadre légal de l'expropriation sous le mandat de Gustave Desgoffe.\n\n**Étapes:**\n1. Déclaration d'utilité publique par le Conseil Municipal.\n2. Enquête publique (15 jours).\n3. Offre d'indemnisation provisionnelle.\n4. Transfert de propriété.\n\n*Note: Tout recours suspend l'exécution de l'acte.*",
+            "Tags": "Legal, Urbanisme, Politique",
+            "AuthorEmail": "claire@desgoffe.gov",
+            "CreatedDaysAgo": 10
+        },
+        {
+            "Title": "Gestion du Patrimoine Arboré",
+            "Content": "Classification des arbres remarquables de la ville.\n\n**Critères de protection:**\n* Âge supérieur à 100 ans.\n* Intérêt historique ou paysager.\n* Essence rare.\n\nL'abattage nécessite un vote à l'unanimité du clergé municipal.",
+            "Tags": "Environnement, Patrimoine, Archives",
+            "AuthorEmail": "marcel@desgoffe.gov",
+            "CreatedDaysAgo": 45
+        }
+    ]
+}

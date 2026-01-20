@@ -13,10 +13,20 @@ using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Localization;
+using System.IO;
 using WebOptimizer;
 using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ============================================
+// LOAD .env (local development)
+// ============================================
+var envPath = Path.Combine(builder.Environment.ContentRootPath, ".env");
+if (File.Exists(envPath))
+{
+    DotNetEnv.Env.Load(envPath);
+}
 
 // ============================================
 // STRONGLY-TYPED CONFIGURATION

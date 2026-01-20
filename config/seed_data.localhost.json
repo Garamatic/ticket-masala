@@ -205,14 +205,14 @@
         {
             "Name": "Website Redesign Project",
             "Description": "Complete overhaul of company website including new design, improved UX, and mobile optimization.",
-            "Status": "Active",
+            "Status": "InProgress",
             "CustomerEmail": "bob@company.com",
             "ProjectManagerEmail": "mike.specialist@localhost.dev",
             "CompletionTargetMonths": 6,
             "WorkItems": [
                 {
                     "Description": "Design mockups for homepage and landing pages",
-                    "Status": "In_Progress",
+                    "Status": "InProgress",
                     "Type": "Task",
                     "ResponsibleEmail": "maria.dev@localhost.dev",
                     "CompletionTargetDays": 14,
@@ -239,7 +239,7 @@
                 },
                 {
                     "Description": "Implement responsive navigation menu",
-                    "Status": "In_Progress",
+                    "Status": "InProgress",
                     "Type": "Task",
                     "ResponsibleEmail": "maria.dev@localhost.dev",
                     "CompletionTargetDays": 7,
@@ -249,7 +249,7 @@
                 },
                 {
                     "Description": "Set up CDN and optimize image loading",
-                    "Status": "New",
+                    "Status": "Pending",
                     "Type": "Task",
                     "ResponsibleEmail": "james.devops@localhost.dev",
                     "CompletionTargetDays": 10,
@@ -259,7 +259,7 @@
                 },
                 {
                     "Description": "Accessibility audit and WCAG compliance",
-                    "Status": "New",
+                    "Status": "Pending",
                     "Type": "Task",
                     "ResponsibleEmail": "maria.dev@localhost.dev",
                     "CompletionTargetDays": 21,
@@ -272,7 +272,7 @@
         {
             "Name": "Enterprise API Integration - TechCorp",
             "Description": "Custom API integration for TechCorp's ERP system with real-time data synchronization.",
-            "Status": "Active",
+            "Status": "InProgress",
             "CustomerEmail": "carol@techcorp.io",
             "ProjectManagerEmail": "mike.specialist@localhost.dev",
             "CompletionTargetMonths": 3,
@@ -296,7 +296,7 @@
                 },
                 {
                     "Description": "Data mapping and transformation layer",
-                    "Status": "In_Progress",
+                    "Status": "InProgress",
                     "Type": "Task",
                     "ResponsibleEmail": "alex.dev@localhost.dev",
                     "CompletionTargetDays": 14,
@@ -306,7 +306,7 @@
                 },
                 {
                     "Description": "Real-time webhook implementation",
-                    "Status": "New",
+                    "Status": "Pending",
                     "Type": "Task",
                     "ResponsibleEmail": "alex.dev@localhost.dev",
                     "CompletionTargetDays": 10,
@@ -319,14 +319,14 @@
         {
             "Name": "Mobile App Development - iOS & Android",
             "Description": "Native mobile applications for iOS and Android with offline support and push notifications.",
-            "Status": "Active",
+            "Status": "InProgress",
             "CustomerEmail": "eva@enterprise.net",
             "ProjectManagerEmail": "olivia.sales@localhost.dev",
             "CompletionTargetMonths": 9,
             "WorkItems": [
                 {
                     "Description": "iOS app architecture and setup",
-                    "Status": "In_Progress",
+                    "Status": "InProgress",
                     "Type": "Task",
                     "ResponsibleEmail": "alex.dev@localhost.dev",
                     "CompletionTargetDays": 21,
@@ -336,7 +336,7 @@
                 },
                 {
                     "Description": "Android app architecture and setup",
-                    "Status": "In_Progress",
+                    "Status": "InProgress",
                     "Type": "Task",
                     "ResponsibleEmail": "alex.dev@localhost.dev",
                     "CompletionTargetDays": 21,
@@ -346,7 +346,7 @@
                 },
                 {
                     "Description": "Push notification service integration",
-                    "Status": "New",
+                    "Status": "Pending",
                     "Type": "Task",
                     "ResponsibleEmail": "james.devops@localhost.dev",
                     "CompletionTargetDays": 14,
@@ -360,7 +360,7 @@
     "UnassignedWorkItems": [
         {
             "Description": "URGENT: Login system not working for multiple users",
-            "Status": "New",
+            "Status": "Pending",
             "Type": "Incident",
             "CustomerEmail": "alice@example.com",
             "CompletionTargetDays": 1,
@@ -382,7 +382,7 @@
         },
         {
             "Description": "Database performance degradation during peak hours",
-            "Status": "New",
+            "Status": "Pending",
             "Type": "Incident",
             "CustomerEmail": "carol@techcorp.io",
             "CompletionTargetDays": 2,
@@ -404,7 +404,7 @@
         },
         {
             "Description": "Security vulnerability reported in authentication module",
-            "Status": "New",
+            "Status": "Pending",
             "Type": "Incident",
             "CustomerEmail": "daniel@startup.xyz",
             "CompletionTargetDays": 1,
@@ -426,8 +426,8 @@
         },
         {
             "Description": "Feature request: Add dark mode to dashboard",
-            "Status": "New",
-            "Type": "Service_Request",
+            "Status": "Pending",
+            "Type": "ServiceRequest",
             "CustomerEmail": "bob@company.com",
             "CompletionTargetDays": 30,
             "EstimatedEffortPoints": 21,
@@ -443,8 +443,8 @@
         },
         {
             "Description": "Export functionality for reports in Excel format",
-            "Status": "New",
-            "Type": "Service_Request",
+            "Status": "Pending",
+            "Type": "ServiceRequest",
             "CustomerEmail": "eva@enterprise.net",
             "CompletionTargetDays": 21,
             "EstimatedEffortPoints": 18,
@@ -465,8 +465,8 @@
         },
         {
             "Description": "API rate limiting too restrictive for our use case",
-            "Status": "New",
-            "Type": "Service_Request",
+            "Status": "Pending",
+            "Type": "ServiceRequest",
             "CustomerEmail": "carol@techcorp.io",
             "CompletionTargetDays": 7,
             "EstimatedEffortPoints": 15,
@@ -482,8 +482,8 @@
         },
         {
             "Description": "Question: How to set up SSO with Azure AD?",
-            "Status": "New",
-            "Type": "Question",
+            "Status": "Pending",
+            "Type": "ServiceRequest",
             "CustomerEmail": "frank@solutions.biz",
             "CompletionTargetDays": 3,
             "EstimatedEffortPoints": 8,
@@ -499,7 +499,7 @@
         },
         {
             "Description": "Billing discrepancy - charged for wrong tier",
-            "Status": "New",
+            "Status": "Pending",
             "Type": "Incident",
             "CustomerEmail": "alice@example.com",
             "CompletionTargetDays": 3,
@@ -521,8 +521,8 @@
         },
         {
             "Description": "Request for custom training session for our team",
-            "Status": "New",
-            "Type": "Service_Request",
+            "Status": "Pending",
+            "Type": "ServiceRequest",
             "CustomerEmail": "eva@enterprise.net",
             "CompletionTargetDays": 14,
             "EstimatedEffortPoints": 25,
@@ -538,7 +538,7 @@
         },
         {
             "Description": "Mobile app crashes on iOS 17 devices",
-            "Status": "New",
+            "Status": "Pending",
             "Type": "Incident",
             "CustomerEmail": "daniel@startup.xyz",
             "CompletionTargetDays": 5,

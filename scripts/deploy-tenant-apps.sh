@@ -32,13 +32,19 @@ for TENANT in "${TENANTS[@]}"; do
     if az containerapp show --name "$APP_NAME" --resource-group "$RESOURCE_GROUP" &>/dev/null; then
         echo "✅ Container App exists, updating..."
         
+        # Update registry credentials first
+        az containerapp registry set \
+            --name "$APP_NAME" \
+            --resource-group "$RESOURCE_GROUP" \
+            --server "$ACR" \
+            --username "$ACR_USERNAME" \
+            --password "$ACR_PASSWORD"
+
+        # Update container app (image/env vars)
         az containerapp update \
             --name "$APP_NAME" \
             --resource-group "$RESOURCE_GROUP" \
             --image "$ACR/$IMAGE_NAME:$IMAGE_TAG" \
-            --registry-server "$ACR" \
-            --registry-username "$ACR_USERNAME" \
-            --registry-password "$ACR_PASSWORD" \
             --set-env-vars \
                 MASALA_TENANT="$TENANT" \
                 MASALA_CONFIG_PATH="/app/tenants/$TENANT/config" \

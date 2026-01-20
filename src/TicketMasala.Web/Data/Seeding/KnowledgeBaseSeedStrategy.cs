@@ -1,5 +1,6 @@
 using TicketMasala.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace TicketMasala.Web.Data.Seeding;
 
@@ -11,11 +12,15 @@ public class KnowledgeBaseSeedStrategy : ISeedStrategy
     private readonly MasalaDbContext _context;
     private readonly ILogger<KnowledgeBaseSeedStrategy> _logger;
 
+    private readonly IWebHostEnvironment _environment;
+
     public KnowledgeBaseSeedStrategy(
         MasalaDbContext context,
+        IWebHostEnvironment environment,
         ILogger<KnowledgeBaseSeedStrategy> logger)
     {
         _context = context;
+        _environment = environment;
         _logger = logger;
     }
 
@@ -30,7 +35,30 @@ public class KnowledgeBaseSeedStrategy : ISeedStrategy
     {
         _logger.LogInformation("Seeding knowledge base articles...");
 
-        var articles = CreateDefaultArticles();
+        var articles = new List<KnowledgeBaseArticle>();
+        var config = await LoadSeedConfigurationAsync();
+
+        if (config?.KnowledgeBaseArticles?.Count > 0)
+        {
+             _logger.LogInformation("Loading {Count} KB articles from configuration", config.KnowledgeBaseArticles.Count);
+            foreach (var dto in config.KnowledgeBaseArticles)
+            {
+                articles.Add(new KnowledgeBaseArticle
+                {
+                    Title = dto.Title,
+                    Content = dto.Content,
+                    Tags = dto.Tags,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    AuthorId = null // System article
+                });
+            }
+        }
+        else 
+        {
+             _logger.LogInformation("No KB config found, using defaults");
+             articles = CreateDefaultArticles();
+        }
 
         foreach (var article in articles)
         {
@@ -39,6 +67,34 @@ public class KnowledgeBaseSeedStrategy : ISeedStrategy
 
         await _context.SaveChangesAsync();
         _logger.LogInformation("Created {Count} knowledge base articles", articles.Count);
+    }
+
+    private async Task<SeedConfig?> LoadSeedConfigurationAsync()
+    {
+        var seedFilePath = TicketMasala.Web.Configuration.ConfigurationPaths.GetConfigFilePath(
+            _environment.ContentRootPath,
+            "seed_data.json");
+        
+        if (!File.Exists(seedFilePath))
+        {
+            return null;
+        }
+
+        try
+        {
+            var json = await File.ReadAllTextAsync(seedFilePath);
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
+            };
+            return JsonSerializer.Deserialize<SeedConfig>(json, options);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error parsing seed data JSON from {Path}", seedFilePath);
+            return null;
+        }
     }
 
     private List<KnowledgeBaseArticle> CreateDefaultArticles()

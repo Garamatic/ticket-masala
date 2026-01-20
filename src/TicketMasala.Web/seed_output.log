@@ -1,0 +1,166 @@
+Using launch settings from /home/juan/Projects/garamatic/ticket-masala/src/TicketMasala.Web/Properties/launchSettings.json...
+info: TicketMasala.Web.Configuration.ConfigurationValidator[0]
+      Configuration validation successful
+info: Startup[0]
+      Masala configuration validated successfully
+[Tenancy] Plugin path not found or empty: 
+Loading configuration from: /home/juan/Projects/garamatic/ticket-masala/src/TicketMasala.Web/../../config
+Note: GERDA config not found at /home/juan/Projects/garamatic/ticket-masala/src/TicketMasala.Web/../../config/masala_config.json
+Application will run with basic ticketing functionality
+Loading configuration from: /home/juan/Projects/garamatic/ticket-masala/src/TicketMasala.Web/../../config
+Note: GERDA config not found at /home/juan/Projects/garamatic/ticket-masala/src/TicketMasala.Web/../../config/masala_config.json
+Application will run with basic ticketing functionality
+info: Program[0]
+      Checking if Masala database seeding is needed...
+Using SQLite Provider with connection: Data Source=app.db
+========== DATABASE SEEDING STARTED ==========
+Applying pending database migrations...
+info: TicketMasala.Web.Data.DbSeeder[0]
+      ========== DATABASE SEEDING STARTED ==========
+info: TicketMasala.Web.Data.DbSeeder[0]
+      Applying pending database migrations...
+info: Microsoft.EntityFrameworkCore.Migrations[20411]
+      Acquiring an exclusive lock for migration application. See https://aka.ms/efcore-docs-migrations-lock for more information if this takes too long.
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*) FROM "sqlite_master" WHERE "name" = '__EFMigrationsLock' AND "type" = 'table';
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      INSERT OR IGNORE INTO "__EFMigrationsLock"("Id", "Timestamp") VALUES(1, '2026-01-20 18:50:14.1968526+00:00');
+      SELECT changes();
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
+          "MigrationId" TEXT NOT NULL CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY,
+          "ProductVersion" TEXT NOT NULL
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*) FROM "sqlite_master" WHERE "name" = '__EFMigrationsHistory' AND "type" = 'table';
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "MigrationId", "ProductVersion"
+      FROM "__EFMigrationsHistory"
+      ORDER BY "MigrationId";
+info: Microsoft.EntityFrameworkCore.Migrations[20405]
+      No migrations were applied. The database is already up to date.
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      DELETE FROM "__EFMigrationsLock";
+Migrations applied successfully.
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "AspNetUsers" AS "a"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "KnowledgeBaseArticles" AS "k"
+Current Database Status - Users: 0, KB Articles: 3
+info: TicketMasala.Web.Data.DbSeeder[0]
+      Current Database Status - Users: 0, KB Articles: 3
+DEBUG: DbSeeder found 5 strategies registered.
+DEBUG: Registered Strategy: RoleSeedStrategy
+DEBUG: Registered Strategy: UserSeedStrategy
+DEBUG: Registered Strategy: ProjectSeedStrategy
+DEBUG: Registered Strategy: WorkItemSeedStrategy
+DEBUG: Registered Strategy: KnowledgeBaseSeedStrategy
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@normalizedName='?' (Size = 5)], CommandType='Text', CommandTimeout='30']
+      SELECT "a"."Id", "a"."ConcurrencyStamp", "a"."Name", "a"."NormalizedName"
+      FROM "AspNetRoles" AS "a"
+      WHERE "a"."NormalizedName" = @normalizedName
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@normalizedName='?' (Size = 8)], CommandType='Text', CommandTimeout='30']
+      SELECT "a"."Id", "a"."ConcurrencyStamp", "a"."Name", "a"."NormalizedName"
+      FROM "AspNetRoles" AS "a"
+      WHERE "a"."NormalizedName" = @normalizedName
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@normalizedName='?' (Size = 8)], CommandType='Text', CommandTimeout='30']
+      SELECT "a"."Id", "a"."ConcurrencyStamp", "a"."Name", "a"."NormalizedName"
+      FROM "AspNetRoles" AS "a"
+      WHERE "a"."NormalizedName" = @normalizedName
+      LIMIT 1
+Skipping seed strategy (already seeded): RoleSeedStrategy
+DEBUG: UserSeedStrategy.ShouldSeedAsync called
+Executing seed strategy: UserSeedStrategy
+info: TicketMasala.Web.Data.DbSeeder[0]
+      Executing seed strategy: UserSeedStrategy
+DEBUG: UserSeedStrategy.SeedAsync called!
+info: TicketMasala.Web.Data.Seeding.UserSeedStrategy[0]
+      Seeding users and employees...
+Attempting to load seed data from: /home/juan/Projects/garamatic/ticket-masala/src/TicketMasala.Web/../../config/seed_data.json
+info: TicketMasala.Web.Data.Seeding.UserSeedStrategy[0]
+      Attempting to load seed data from: /home/juan/Projects/garamatic/ticket-masala/src/TicketMasala.Web/../../config/seed_data.json
+info: TicketMasala.Web.Data.Seeding.UserSeedStrategy[0]
+      Loading seed data from: /home/juan/Projects/garamatic/ticket-masala/src/TicketMasala.Web/../../config/seed_data.json
+fail: TicketMasala.Web.Data.Seeding.UserSeedStrategy[0]
+      Error parsing seed data JSON from /home/juan/Projects/garamatic/ticket-masala/src/TicketMasala.Web/../../config/seed_data.json
+      System.Text.Json.JsonException: The JSON value could not be converted to TicketMasala.Domain.Common.Status. Path: $.UnassignedWorkItems[0].Status | LineNumber: 362 | BytePositionInLine: 27.
+         at System.Text.Json.ThrowHelper.ThrowJsonException(String message)
+         at System.Text.Json.Serialization.Converters.EnumConverter`1.Read(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options)
+         at System.Text.Json.Serialization.Metadata.JsonPropertyInfo`1.ReadJsonAndSetMember(Object obj, ReadStack& state, Utf8JsonReader& reader)
+         at System.Text.Json.Serialization.Converters.ObjectDefaultConverter`1.OnTryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value)
+         at System.Text.Json.Serialization.JsonConverter`1.TryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value, Boolean& isPopulatedValue)
+         at System.Text.Json.Serialization.JsonCollectionConverter`2.OnTryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, TCollection& value)
+         at System.Text.Json.Serialization.JsonConverter`1.TryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value, Boolean& isPopulatedValue)
+         at System.Text.Json.Serialization.Metadata.JsonPropertyInfo`1.ReadJsonAndSetMember(Object obj, ReadStack& state, Utf8JsonReader& reader)
+         at System.Text.Json.Serialization.Converters.ObjectDefaultConverter`1.OnTryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value)
+         at System.Text.Json.Serialization.JsonConverter`1.TryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value, Boolean& isPopulatedValue)
+         at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader& reader, T& value, JsonSerializerOptions options, ReadStack& state)
+         at System.Text.Json.Serialization.Metadata.JsonTypeInfo`1.Deserialize(Utf8JsonReader& reader, ReadStack& state)
+         at System.Text.Json.JsonSerializer.ReadFromSpan[TValue](ReadOnlySpan`1 utf8Json, JsonTypeInfo`1 jsonTypeInfo, Nullable`1 actualByteCount)
+         at System.Text.Json.JsonSerializer.ReadFromSpan[TValue](ReadOnlySpan`1 json, JsonTypeInfo`1 jsonTypeInfo)
+         at TicketMasala.Web.Data.Seeding.UserSeedStrategy.LoadSeedConfigurationAsync() in /home/juan/Projects/garamatic/ticket-masala/src/TicketMasala.Web/Data/Seeding/UserSeedStrategy.cs:line 114
+warn: TicketMasala.Web.Data.Seeding.UserSeedStrategy[0]
+      No seed configuration found, skipping user seeding
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "ProjectTemplates" AS "p"
+Skipping seed strategy (already seeded): ProjectSeedStrategy
+Executing seed strategy: WorkItemSeedStrategy
+info: TicketMasala.Web.Data.DbSeeder[0]
+      Executing seed strategy: WorkItemSeedStrategy
+fail: TicketMasala.Web.Data.Seeding.WorkItemSeedStrategy[0]
+      Error parsing seed data JSON from /home/juan/Projects/garamatic/ticket-masala/src/TicketMasala.Web/../../config/seed_data.json
+      System.Text.Json.JsonException: The JSON value could not be converted to TicketMasala.Domain.Common.Status. Path: $.UnassignedWorkItems[0].Status | LineNumber: 362 | BytePositionInLine: 27.
+         at System.Text.Json.ThrowHelper.ThrowJsonException(String message)
+         at System.Text.Json.Serialization.Converters.EnumConverter`1.Read(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options)
+         at System.Text.Json.Serialization.Metadata.JsonPropertyInfo`1.ReadJsonAndSetMember(Object obj, ReadStack& state, Utf8JsonReader& reader)
+         at System.Text.Json.Serialization.Converters.ObjectDefaultConverter`1.OnTryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value)
+         at System.Text.Json.Serialization.JsonConverter`1.TryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value, Boolean& isPopulatedValue)
+         at System.Text.Json.Serialization.JsonCollectionConverter`2.OnTryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, TCollection& value)
+         at System.Text.Json.Serialization.JsonConverter`1.TryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value, Boolean& isPopulatedValue)
+         at System.Text.Json.Serialization.Metadata.JsonPropertyInfo`1.ReadJsonAndSetMember(Object obj, ReadStack& state, Utf8JsonReader& reader)
+         at System.Text.Json.Serialization.Converters.ObjectDefaultConverter`1.OnTryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value)
+         at System.Text.Json.Serialization.JsonConverter`1.TryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value, Boolean& isPopulatedValue)
+         at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader& reader, T& value, JsonSerializerOptions options, ReadStack& state)
+         at System.Text.Json.Serialization.Metadata.JsonTypeInfo`1.Deserialize(Utf8JsonReader& reader, ReadStack& state)
+         at System.Text.Json.JsonSerializer.ReadFromSpan[TValue](ReadOnlySpan`1 utf8Json, JsonTypeInfo`1 jsonTypeInfo, Nullable`1 actualByteCount)
+         at System.Text.Json.JsonSerializer.ReadFromSpan[TValue](ReadOnlySpan`1 json, JsonTypeInfo`1 jsonTypeInfo)
+         at TicketMasala.Web.Data.Seeding.WorkItemSeedStrategy.LoadSeedConfigurationAsync() in /home/juan/Projects/garamatic/ticket-masala/src/TicketMasala.Web/Data/Seeding/WorkItemSeedStrategy.cs:line 85
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*)
+      FROM "KnowledgeBaseArticles" AS "k"
+Skipping seed strategy (already seeded): KnowledgeBaseSeedStrategy
+========== DATABASE SEEDING COMPLETED ==========
+info: TicketMasala.Web.Data.DbSeeder[0]
+      ========== DATABASE SEEDING COMPLETED ==========
+info: Program[0]
+      Masala database check completed
+info: TicketMasala.Web.Engine.Compiler.RuleCompilerService[0]
+      Compiling rules for hot reload...
+info: TicketMasala.Web.Engine.Compiler.RuleCompilerService[0]
+      Successfully swapped 0 compiled rule delegates in 0ms.
+info: TicketMasala.Web.Engine.GERDA.Configuration.DomainConfigurationService[0]
+      Loaded domain configuration version 2fd9a8497e09ddf0f57f4c3bcfeb969fd511294131634dce7a0cd83c829f18cf with 3 domains
+info: TicketMasala.Web.Engine.GERDA.Configuration.DomainConfigurationService[0]
+      File watcher enabled for /home/juan/Projects/garamatic/ticket-masala/src/TicketMasala.Web/../../config/masala_domains.yaml
+info: Program[0]
+      Strategy factory not registered; skipping validation.
+Seed-only mode completed. Exiting.
+Using SQLite Provider with connection: Data Source=app.db

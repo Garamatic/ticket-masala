@@ -12,7 +12,12 @@ public class OpenAiService : IOpenAiService
 
     public OpenAiService(IOptions<Configuration.OpenAiSettings> options)
     {
-        _apiKey = options.Value.ApiKey ?? Environment.GetEnvironmentVariable("OPENAI_API_KEY") ?? "";
+        var configuredKey = options.Value.ApiKey;
+        var envKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
+
+        _apiKey = !string.IsNullOrWhiteSpace(configuredKey)
+            ? configuredKey
+            : (envKey ?? "");
         _baseUrl = NormalizeBaseUrl(options.Value.BaseUrl);
     }
 
@@ -33,7 +38,7 @@ public class OpenAiService : IOpenAiService
 
     public async Task<string> GetResponseAsync(OpenAIPrompts promptType, string query, bool fastResponse = true)
     {
-        if (string.IsNullOrEmpty(_apiKey))
+        if (string.IsNullOrWhiteSpace(_apiKey))
         {
             return "Error: OpenAI API key is not configured. Please set 'OpenAI:ApiKey' in appsettings.json or 'OPENAI_API_KEY' environment variable.";
         }

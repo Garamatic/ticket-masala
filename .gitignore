@@ -21,3 +21,7 @@ dist/
 
 # Local development secrets
 appsettings.Development.json
+
+
+.env
+.env.example

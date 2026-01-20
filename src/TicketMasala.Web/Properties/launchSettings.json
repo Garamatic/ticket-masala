@@ -33,7 +33,8 @@
       "commandName": "IISExpress",
       "launchBrowser": true,
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "OPENAI_API_KEY": "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"
       }
     }
   }

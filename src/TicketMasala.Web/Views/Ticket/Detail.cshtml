@@ -445,14 +445,23 @@
                 }
             });
             
-            const data = await response.json();
-            
-            if (data.success) {
+            const raw = await response.text();
+            let data = null;
+            try { data = JSON.parse(raw); } catch { }
+
+            if (!response.ok) {
+                const message = data?.message ?? `${response.status} ${response.statusText}`;
+                content.innerHTML = `<div class="text-danger"><i class="fas fa-exclamation-circle"></i> Error: ${message}</div>`;
+                return;
+            }
+
+            if (data?.success) {
                 // Parse markdown if needed, but summary is usually plain text or simple markdown
                 // Using marked.js if available, else plain text
                 content.innerHTML = typeof marked !== 'undefined' ? marked.parse(data.summary) : data.summary;
             } else {
-                content.innerHTML = `<div class="text-danger"><i class="fas fa-exclamation-circle"></i> Error: ${data.message}</div>`;
+                const message = data?.message ?? 'Failed to generate summary.';
+                content.innerHTML = `<div class="text-danger"><i class="fas fa-exclamation-circle"></i> Error: ${message}</div>`;
             }
         } catch (error) {
             console.error(error);

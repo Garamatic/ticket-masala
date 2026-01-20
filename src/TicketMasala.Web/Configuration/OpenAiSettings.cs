@@ -6,7 +6,6 @@ public class OpenAiSettings
 {
     public const string SectionName = "OpenAI";
 
-    [Required]
     public string ApiKey { get; set; } = string.Empty;
     
     public string? BaseUrl { get; set; }

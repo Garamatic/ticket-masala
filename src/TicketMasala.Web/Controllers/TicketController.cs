@@ -186,7 +186,7 @@ public class TicketController : Controller
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error generating AI summary for ticket {TicketId}", ticketId);
-            return Json(new { success = false, message = "Failed to generate summary." });
+            return Json(new { success = false, message = $"Failed to generate summary: {ex.Message}" });
         }
     }
 

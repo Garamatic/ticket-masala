@@ -18,7 +18,7 @@ namespace TicketMasala.Web.Engine.Projects;
 /// Follows Information Expert and Single Responsibility principles.
 /// Mirrors the TicketService pattern for architectural consistency.
 /// </summary>
-public class ProjectService : IProjectService
+public class ProjectService : IProjectReadService, IProjectWorkflowService
 {
     private readonly MasalaDbContext _context;
     private readonly IProjectRepository _projectRepository;

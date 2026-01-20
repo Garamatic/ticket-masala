@@ -13,7 +13,22 @@ public class OpenAiService : IOpenAiService
     public OpenAiService(IOptions<Configuration.OpenAiSettings> options)
     {
         _apiKey = options.Value.ApiKey ?? Environment.GetEnvironmentVariable("OPENAI_API_KEY") ?? "";
-        _baseUrl = options.Value.BaseUrl;
+        _baseUrl = NormalizeBaseUrl(options.Value.BaseUrl);
+    }
+
+    private static string? NormalizeBaseUrl(string? baseUrl)
+    {
+        if (string.IsNullOrWhiteSpace(baseUrl)) return baseUrl;
+
+        var normalized = baseUrl.TrimEnd('/');
+
+        // OpenAI SDK appends /v1; avoid double /v1 (e.g., openrouter.ai/api/v1/v1)
+        if (normalized.EndsWith("/v1", StringComparison.OrdinalIgnoreCase))
+        {
+            normalized = normalized[..^3];
+        }
+
+        return normalized;
     }
 
     public async Task<string> GetResponseAsync(OpenAIPrompts promptType, string query, bool fastResponse = true)

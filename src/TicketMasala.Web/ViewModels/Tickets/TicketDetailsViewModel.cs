@@ -137,7 +137,22 @@ public class TicketDetailsViewModel
     /// Recommended agent from Dispatching service (if available)
     /// </summary>
     public RecommendedAgentInfo? RecommendedAgent { get; set; }
+
+    /// <summary>
+    /// Suggested knowledge base articles from Knowledge service
+    /// </summary>
+    public List<KnowledgeSuggestionInfo> SuggestedArticles { get; set; } = new();
 }
+
+public class KnowledgeSuggestionInfo
+{
+    public Guid ArticleId { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public double RelevanceScore { get; set; }
+    public string MatchingReason { get; set; } = string.Empty;
+}
+
+
 
 /// <summary>
 /// Information about recommended agent from GERDA Dispatching service

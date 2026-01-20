@@ -348,7 +348,7 @@ public class ProjectsController : Controller
             return RedirectToAction("Details", new { id });
         }
     }
-    [HttpPost("GenerateAiRoadmap")]
+    [HttpPost]
     public async Task<IActionResult> GenerateAiRoadmap(Guid projectId)
     {
         var project = await _projectReadService.GetProjectDetailsAsync(projectId);

@@ -117,8 +117,24 @@ public class KnowledgeBaseSeedStrategy : ISeedStrategy
             {
                 Title = "Understanding GERDA AI",
                 Content = "GERDA (GovTech Extended Resource Dispatch & Anticipation) is our AI system...",
-                Tags = "gerda,ai,automation"
+                Tags = "gerda,ai,automation",
+                IsVerified = true
+            },
+            new KnowledgeBaseArticle
+            {
+                Title = "VPN Connection Troubleshooting",
+                Content = "If you are having trouble connecting to the VPN, try restarting your client and checking your internet connection. Ensure you are using the correct credentials.",
+                Tags = "vpn,connectivity,remote",
+                IsVerified = true
+            },
+            new KnowledgeBaseArticle
+            {
+                Title = "Password Reset Guide",
+                Content = "You can reset your password by clicking the 'Forgot Password' link on the login page. An email will be sent to your registered address with further instructions.",
+                Tags = "password,account,security",
+                IsVerified = true
             }
         };
     }
 }
+

@@ -17,6 +17,7 @@ public class DomainConfigurationServiceTests : IDisposable
     private readonly Mock<IServiceScopeFactory> _mockScopeFactory;
     private readonly RuleCompilerService _ruleCompiler;
     private readonly string _originalEnvVar;
+    private readonly List<DomainConfigurationService> _createdServices = new();
 
     public DomainConfigurationServiceTests()
     {
@@ -37,6 +38,13 @@ public class DomainConfigurationServiceTests : IDisposable
         TicketMasala.Web.Configuration.ConfigurationPaths.ResetCache();
     }
 
+    private DomainConfigurationService CreateService()
+    {
+        var service = new DomainConfigurationService(_mockLogger.Object, _mockEnvironment.Object, _ruleCompiler, _mockScopeFactory.Object);
+        _createdServices.Add(service);
+        return service;
+    }
+
     public void Dispose()
     {
         // Restore original environment variable
@@ -51,9 +59,29 @@ public class DomainConfigurationServiceTests : IDisposable
 
         TicketMasala.Web.Configuration.ConfigurationPaths.ResetCache();
 
+        foreach (var service in _createdServices)
+        {
+            service.Dispose();
+        }
+
         if (Directory.Exists(_testConfigPath))
         {
-            Directory.Delete(_testConfigPath, true);
+            for (var attempt = 0; attempt < 5; attempt++)
+            {
+                try
+                {
+                    Directory.Delete(_testConfigPath, true);
+                    break;
+                }
+                catch (IOException) when (attempt < 4)
+                {
+                    System.Threading.Thread.Sleep(150);
+                }
+                catch (UnauthorizedAccessException) when (attempt < 4)
+                {
+                    System.Threading.Thread.Sleep(150);
+                }
+            }
         }
     }
 
@@ -64,7 +92,7 @@ public class DomainConfigurationServiceTests : IDisposable
         CreateTestDomainConfig();
 
         // Act
-        var service = new DomainConfigurationService(_mockLogger.Object, _mockEnvironment.Object, _ruleCompiler, _mockScopeFactory.Object);
+        var service = CreateService();
         var domains = service.GetAllDomains();
 
         // Assert
@@ -77,7 +105,7 @@ public class DomainConfigurationServiceTests : IDisposable
     {
         // Arrange
         CreateTestDomainConfig();
-        var service = new DomainConfigurationService(_mockLogger.Object, _mockEnvironment.Object, _ruleCompiler, _mockScopeFactory.Object);
+        var service = CreateService();
 
         // Act
         var domain = service.GetDomain("TestDomain");
@@ -92,7 +120,7 @@ public class DomainConfigurationServiceTests : IDisposable
     {
         // Arrange
         CreateTestDomainConfig();
-        var service = new DomainConfigurationService(_mockLogger.Object, _mockEnvironment.Object, _ruleCompiler, _mockScopeFactory.Object);
+        var service = CreateService();
 
         // Act
         var domain = service.GetDomain("NonExistent");
@@ -106,7 +134,7 @@ public class DomainConfigurationServiceTests : IDisposable
     {
         // Arrange
         CreateTestDomainConfig();
-        var service = new DomainConfigurationService(_mockLogger.Object, _mockEnvironment.Object, _ruleCompiler, _mockScopeFactory.Object);
+        var service = CreateService();
 
         // Act
         var defaultDomain = service.GetDefaultDomainId();
@@ -120,7 +148,7 @@ public class DomainConfigurationServiceTests : IDisposable
     {
         // Arrange
         CreateTestDomainConfig();
-        var service = new DomainConfigurationService(_mockLogger.Object, _mockEnvironment.Object, _ruleCompiler, _mockScopeFactory.Object);
+        var service = CreateService();
 
         // Act
         var types = service.GetWorkItemTypes("TestDomain").ToList();
@@ -135,7 +163,7 @@ public class DomainConfigurationServiceTests : IDisposable
     {
         // Arrange
         CreateTestDomainConfig();
-        var service = new DomainConfigurationService(_mockLogger.Object, _mockEnvironment.Object, _ruleCompiler, _mockScopeFactory.Object);
+        var service = CreateService();
 
         // Act
         var type = service.GetWorkItemType("TestDomain", "TEST_TYPE");
@@ -151,7 +179,7 @@ public class DomainConfigurationServiceTests : IDisposable
     {
         // Arrange
         CreateTestDomainConfig();
-        var service = new DomainConfigurationService(_mockLogger.Object, _mockEnvironment.Object, _ruleCompiler, _mockScopeFactory.Object);
+        var service = CreateService();
 
         // Act
         var fields = service.GetCustomFields("TestDomain").ToList();
@@ -166,7 +194,7 @@ public class DomainConfigurationServiceTests : IDisposable
     {
         // Arrange
         CreateTestDomainConfig();
-        var service = new DomainConfigurationService(_mockLogger.Object, _mockEnvironment.Object, _ruleCompiler, _mockScopeFactory.Object);
+        var service = CreateService();
 
         // Act
         var states = service.GetWorkflowStates("TestDomain").ToList();
@@ -182,7 +210,7 @@ public class DomainConfigurationServiceTests : IDisposable
     {
         // Arrange
         CreateTestDomainConfig();
-        var service = new DomainConfigurationService(_mockLogger.Object, _mockEnvironment.Object, _ruleCompiler, _mockScopeFactory.Object);
+        var service = CreateService();
 
         // Act
         var transitions = service.GetValidTransitions("TestDomain", "NEW").ToList();
@@ -197,7 +225,7 @@ public class DomainConfigurationServiceTests : IDisposable
     {
         // Arrange
         CreateTestDomainConfig();
-        var service = new DomainConfigurationService(_mockLogger.Object, _mockEnvironment.Object, _ruleCompiler, _mockScopeFactory.Object);
+        var service = CreateService();
 
         // Act
         var transitions = service.GetValidTransitions("TestDomain", "INVALID_STATE").ToList();
@@ -211,7 +239,7 @@ public class DomainConfigurationServiceTests : IDisposable
     {
         // Arrange
         CreateTestDomainConfig();
-        var service = new DomainConfigurationService(_mockLogger.Object, _mockEnvironment.Object, _ruleCompiler, _mockScopeFactory.Object);
+        var service = CreateService();
 
         // Act
         var labels = service.GetEntityLabels("TestDomain");
@@ -227,7 +255,7 @@ public class DomainConfigurationServiceTests : IDisposable
     {
         // Arrange
         CreateTestDomainConfig();
-        var service = new DomainConfigurationService(_mockLogger.Object, _mockEnvironment.Object, _ruleCompiler, _mockScopeFactory.Object);
+        var service = CreateService();
 
         // Act
         var strategies = service.GetAiStrategies("TestDomain");
@@ -244,7 +272,7 @@ public class DomainConfigurationServiceTests : IDisposable
         // Arrange - no config file created
 
         // Act
-        var service = new DomainConfigurationService(_mockLogger.Object, _mockEnvironment.Object, _ruleCompiler, _mockScopeFactory.Object);
+        var service = CreateService();
         var domains = service.GetAllDomains();
 
         // Assert
@@ -257,7 +285,7 @@ public class DomainConfigurationServiceTests : IDisposable
     {
         // Arrange
         CreateTestDomainConfig();
-        var service = new DomainConfigurationService(_mockLogger.Object, _mockEnvironment.Object, _ruleCompiler, _mockScopeFactory.Object);
+        var service = CreateService();
 
         var initialDomains = service.GetAllDomains().Count;
 

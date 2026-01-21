@@ -1,3 +1,5 @@
+using YamlDotNet.Serialization;
+
 namespace TicketMasala.Domain.Configuration;
 
 /// <summary>
@@ -18,6 +20,7 @@ public class DomainConfig
     public string Description { get; set; } = string.Empty;
     public EntityLabels EntityLabels { get; set; } = new();
     public List<WorkItemTypeDefinition> WorkItemTypes { get; set; } = new();
+    [YamlMember(Alias = "custom_fields", ApplyNamingConventions = false)]
     public List<CustomFieldDefinition> CustomFields { get; set; } = new();
     public WorkflowConfig Workflow { get; set; } = new();
     public AiStrategiesConfig AiStrategies { get; set; } = new();

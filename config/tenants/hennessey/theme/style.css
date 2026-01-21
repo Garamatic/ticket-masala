@@ -1,0 +1,263 @@
+/* ═══════════════════════════════════════════════════════════════
+   Fonds Hennessey - Marine Sterile Theme
+   Palette: Ice White (#F5F9FA), Zissou Blue (#75AADB), Beanie Red (#FF4500)
+   Typography: Elegant Serif, spacious, delicate lines
+   ══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&family=Helvetica+Neue:wght@300;400;500&display=swap');
+
+:root {
+    /* Hennessey Color Palette */
+    --color-primary: #75AADB;
+    --color-primary-hover: #5d94c7;
+    --color-primary-dark: #4a7eb3;
+    --color-secondary: #FF4500;
+    --color-accent: #2E8B57;
+    --color-background: #F5F9FA;
+    --color-surface: #ffffff;
+    --color-text: #333;
+    --color-text-muted: #7a8b9a;
+
+    /* Typography */
+    --font-family-heading: 'EB Garamond', 'Georgia', serif;
+    --font-family-base: 'Helvetica Neue', 'Helvetica', sans-serif;
+
+    /* Borders - Delicate */
+    --border-radius: 4px;
+    --border-radius-lg: 8px;
+
+    /* Login Specifics */
+    --login-branding-bg: var(--color-background);
+    --font-family-branding: var(--font-family-heading);
+    --login-btn-bg: var(--color-primary);
+    --login-branding-text: var(--color-text);
+}
+
+/* Body - Clean ice white */
+body {
+    background-color: var(--color-background) !important;
+    font-family: var(--font-family-base);
+    font-weight: 300;
+    line-height: 1.7;
+}
+
+/* Headings - Elegant serif */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.dashboard-title,
+.card-title {
+    font-family: var(--font-family-heading) !important;
+    color: var(--color-text) !important;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+}
+
+h1,
+.dashboard-title {
+    font-size: 2.5rem;
+}
+
+/* Primary buttons - Zissou Blue */
+.btn-primary {
+    background-color: var(--color-primary) !important;
+    border-color: var(--color-primary) !important;
+    color: #fff !important;
+    font-weight: 400 !important;
+    border-radius: var(--border-radius) !important;
+    padding: 0.6em 1.5em;
+    letter-spacing: 0.02em;
+}
+
+.btn-primary:hover {
+    background-color: var(--color-primary-hover) !important;
+    border-color: var(--color-primary-hover) !important;
+}
+
+/* Secondary buttons - Outline */
+.btn-outline-primary {
+    background-color: transparent !important;
+    border: 1px solid var(--color-primary) !important;
+    color: var(--color-primary) !important;
+}
+
+/* Cards - Airy, minimal */
+.card {
+    background-color: var(--color-surface) !important;
+    border: 1px solid #e8eef2 !important;
+    border-radius: var(--border-radius-lg) !important;
+    box-shadow: 0 2px 12px rgba(117, 170, 219, 0.08) !important;
+}
+
+.card-header {
+    background-color: transparent !important;
+    border-bottom: 1px solid #e8eef2 !important;
+    font-family: var(--font-family-heading);
+    font-size: 1.1rem;
+    padding: 1.25rem 1.5rem;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Sidebar - Light marine */
+.app-sidebar {
+    background: linear-gradient(180deg, #f8fbfc 0%, #eef4f7 100%) !important;
+    border-right: 1px solid #e0e8ed !important;
+}
+
+.navbar-brand {
+    color: var(--color-primary) !important;
+}
+
+.sidebar-nav .sidebar-link {
+    color: var(--color-text-muted) !important;
+    font-weight: 400;
+}
+
+.sidebar-nav .sidebar-link:hover {
+    color: var(--color-primary) !important;
+    background: rgba(117, 170, 219, 0.08) !important;
+}
+
+.sidebar-nav .sidebar-link.active {
+    color: var(--color-primary) !important;
+    background: rgba(117, 170, 219, 0.12) !important;
+    border-left: 3px solid var(--color-primary) !important;
+}
+
+/* Header */
+.app-header {
+    background-color: var(--color-surface) !important;
+    border-bottom: 1px solid #e8eef2 !important;
+}
+
+/* Status badges - Minimal */
+.badge {
+    font-weight: 500;
+    padding: 0.4em 0.9em;
+    border-radius: 20px !important;
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
+}
+
+.badge-success,
+.badge.bg-success {
+    background-color: rgba(46, 139, 87, 0.15) !important;
+    color: var(--color-accent) !important;
+}
+
+.badge-warning,
+.badge.bg-warning {
+    background-color: rgba(255, 193, 7, 0.15) !important;
+    color: #d39e00 !important;
+}
+
+.badge-danger,
+.badge.bg-danger {
+    background-color: rgba(255, 69, 0, 0.15) !important;
+    color: var(--color-secondary) !important;
+}
+
+.badge-info,
+.badge.bg-info {
+    background-color: rgba(117, 170, 219, 0.15) !important;
+    color: var(--color-primary) !important;
+}
+
+/* Stats cards - Subtle gradients */
+.stat-card.primary {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)) !important;
+}
+
+.stat-card.secondary {
+    background: linear-gradient(135deg, var(--color-accent), #246b46) !important;
+}
+
+/* Form inputs - Light and airy */
+.form-control {
+    font-family: var(--font-family-base);
+    font-weight: 300;
+    background-color: var(--color-surface) !important;
+    border: 1px solid #d4dfe6 !important;
+    border-radius: var(--border-radius) !important;
+    padding: 0.75rem 1rem;
+}
+
+.form-control:focus {
+    border-color: var(--color-primary) !important;
+    box-shadow: 0 0 0 3px rgba(117, 170, 219, 0.15) !important;
+}
+
+/* Labels */
+.form-label {
+    font-weight: 500;
+    color: var(--color-text);
+    margin-bottom: 0.5rem;
+}
+
+/* Save as Draft - Prominent */
+.btn-save-draft,
+.btn-secondary {
+    background-color: #f0f4f7 !important;
+    border: 1px solid #d4dfe6 !important;
+    color: var(--color-text) !important;
+}
+
+/* Tables - Clean academic */
+.table {
+    border-color: #e8eef2;
+}
+
+.table th {
+    background-color: #f8fbfc !important;
+    color: var(--color-text-muted) !important;
+    font-weight: 500;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid #e0e8ed !important;
+}
+
+.table td {
+    vertical-align: middle;
+    padding: 1rem;
+    border-color: #f0f4f7 !important;
+}
+
+/* Progress indicators - For wizard forms */
+.progress {
+    height: 6px;
+    border-radius: 3px;
+    background-color: #e8eef2;
+}
+
+.progress-bar {
+    background-color: var(--color-primary);
+}
+
+/* Footer */
+.footer {
+    background-color: #f8fbfc !important;
+    border-top: 1px solid #e8eef2 !important;
+    color: var(--color-text-muted) !important;
+    font-size: 0.85rem;
+}
+
+/* Text utilities */
+.text-muted {
+    color: var(--color-text-muted) !important;
+}
+
+/* Blockquotes - Academic style */
+blockquote {
+    border-left: 3px solid var(--color-primary);
+    padding-left: 1.5rem;
+    margin-left: 0;
+    font-style: italic;
+    color: var(--color-text-muted);
+}

@@ -1,0 +1,121 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# Whitman Spoor - Spoorweginfrastructuur Configuratie
+# ═══════════════════════════════════════════════════════════════════════════
+# "Scorched Earth Utility" - High-vis, rugged, and urgent
+
+domains:
+  Spoorweg:
+    display_name: "Spoorweginfrastructuur"
+    description: "Beheer van spoorwegonderhoud, storingen en inspecties"
+    
+    entity_labels:
+      work_item: "Interventie"
+      work_container: "Sector"
+      work_handler: "Technicus"
+    
+    work_item_types:
+      - code: STORING
+        name: "Storing"
+        icon: "fa-exclamation-triangle"
+        color: "#FF9933"
+        default_sla_days: 1
+      - code: ONDERHOUD
+        name: "Gepland Onderhoud"
+        icon: "fa-tools"
+        color: "#004B87"
+        default_sla_days: 7
+      - code: INSPECTIE
+        name: "Inspectie"
+        icon: "fa-search"
+        color: "#6c757d"
+        default_sla_days: 14
+      - code: NOODGEVAL
+        name: "Noodgeval"
+        icon: "fa-bolt"
+        color: "#dc3545"
+        default_sla_days: 0
+    
+    custom_fields:
+      - name: asset_id
+        label: "Asset ID"
+        type: text
+        required: true
+      - name: asset_type
+        label: "Asset Type"
+        type: select
+        options: ["Wissel", "Sein", "Bovenleiding", "Spoor", "Overweg"]
+        required: true
+      - name: sector
+        label: "Sector"
+        type: select
+        options: ["Sector Noord", "Sector Oost", "Sector Zuid", "Sector West", "Depot"]
+        required: true
+      - name: gps_coords
+        label: "GPS Coördinaten"
+        type: text
+        required: false
+      - name: severity
+        label: "Ernst"
+        type: select
+        options: ["Laag", "Gemiddeld", "Hoog", "Kritiek"]
+        required: true
+    
+    workflow:
+      states:
+        - code: GEMELD
+          name: "Gemeld"
+          color: "#FF9933"
+        - code: INGEPLAND
+          name: "Ingepland"
+          color: "#004B87"
+        - code: ONDERWEG
+          name: "Technicus Onderweg"
+          color: "#17a2b8"
+        - code: UITGEVOERD
+          name: "Uitgevoerd"
+          color: "#28a745"
+        - code: GEANNULEERD
+          name: "Geannuleerd"
+          color: "#6c757d"
+      
+      transitions:
+        GEMELD: [INGEPLAND, GEANNULEERD]
+        INGEPLAND: [ONDERWEG, GEANNULEERD]
+        ONDERWEG: [UITGEVOERD]
+        UITGEVOERD: []
+        GEANNULEERD: []
+    
+    ai_strategies:
+      ranking: 
+        strategy_name: "SafetyFirst"
+        base_formula: "severity * urgency"
+        multipliers:
+          - conditions: 
+              - field: "work_item_type"
+                operator: "=="
+                value: "NOODGEVAL"
+            value: 10.0
+          - conditions:
+              - field: "severity"
+                operator: "=="
+                value: "Kritiek"
+            value: 5.0
+      dispatching: GeoLocation
+      estimating: AssetComplexity
+    
+    ai_prompts:
+      summarize: "Vat deze interventie samen. Focus op veiligheidsrisico's en benodigde middelen."
+      suggest_response: "Stel een korte technische update voor de dienstleider voor."
+    
+    integrations:
+      ingestion:
+        - type: mobile
+          enabled: true
+          config:
+            camera_enabled: true
+            gps_required: true
+
+global:
+  default_domain: "Spoorweg"
+  allow_domain_switching: false
+  config_reload_enabled: true

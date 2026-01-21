@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demande Soumise - Ville de Desgoffe</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .success-container {
+            max-width: 700px;
+            margin: 4rem auto;
+            text-align: center;
+        }
+
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            animation: scaleIn 0.5s ease-out;
+        }
+
+        .success-icon i {
+            color: white;
+            font-size: 3rem;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+            }
+
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .success-card {
+            background-color: var(--color-surface);
+            border: 2px solid var(--color-border);
+            border-radius: var(--border-radius-lg);
+            padding: 3rem 2rem;
+            box-shadow: 0 4px 12px rgba(93, 58, 93, 0.1);
+        }
+
+        .success-title {
+            font-family: var(--font-heading);
+            color: var(--color-primary);
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .ticket-number {
+            font-family: var(--font-mono);
+            font-size: 2.5rem;
+            color: var(--color-secondary);
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background-color: #FFF9E6;
+            border-radius: var(--border-radius);
+            border: 2px dashed var(--color-border);
+        }
+
+        .success-message {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 2rem;
+            color: var(--color-text);
+        }
+
+        .info-box {
+            background-color: #E8F4F8;
+            border-left: 4px solid var(--color-primary);
+            padding: 1.5rem;
+            margin: 2rem 0;
+            text-align: left;
+            border-radius: var(--border-radius);
+        }
+
+        .info-box h3 {
+            font-family: var(--font-heading);
+            color: var(--color-primary);
+            margin-bottom: 1rem;
+        }
+
+        .info-box ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .info-box li {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .info-box li i {
+            color: var(--color-primary);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo-section">
+                <img src="../desgoffe.png" alt="Ville de Desgoffe" class="logo">
+            </div>
+            <h1 class="main-title">Guichet Citoyen</h1>
+            <p class="subtitle">Ville de Desgoffe - Services Municipaux</p>
+        </header>
+
+        <div class="success-container">
+            <div class="success-card">
+                <div class="success-icon">
+                    <i class="fas fa-check"></i>
+                </div>
+
+                <h1 class="success-title">Demande Soumise avec Succès</h1>
+
+                <p class="success-message">
+                    Votre demande a été enregistrée et sera traitée par nos services dans les plus brefs délais.
+                </p>
+
+                <div class="ticket-number" id="ticketNumber">
+                    Chargement...
+                </div>
+
+                <div class="info-box">
+                    <h3><i class="fas fa-info-circle"></i> Prochaines Étapes</h3>
+                    <ul>
+                        <li>
+                            <i class="fas fa-envelope"></i>
+                            <span>Vous recevrez un email de confirmation à l'adresse fournie</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-clock"></i>
+                            <span>Délai de traitement standard: 3-7 jours ouvrables</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-user-tie"></i>
+                            <span>Un agent municipal sera assigné à votre dossier</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-bell"></i>
+                            <span>Vous serez notifié de tout changement de statut</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="button-group" style="margin-top: 2rem;">
+                    <a href="index.html" class="btn btn-primary">
+                        <i class="fas fa-home"></i>
+                        Retour au Guichet
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>&copy; 2025 Ville de Desgoffe - Tous droits réservés</p>
+        </footer>
+    </div>
+
+    <script>
+        // Display submission result
+        const result = JSON.parse(sessionStorage.getItem('submissionResult') || '{}');
+        const ticketNumberEl = document.getElementById('ticketNumber');
+
+        if (result.ticketNumber) {
+            ticketNumberEl.textContent = `Numéro de Dossier: ${result.ticketNumber}`;
+        } else {
+            ticketNumberEl.textContent = 'Numéro de Dossier: En attente';
+        }
+
+        // Clear session storage
+        sessionStorage.removeItem('submissionResult');
+    </script>
+</body>
+
+</html>

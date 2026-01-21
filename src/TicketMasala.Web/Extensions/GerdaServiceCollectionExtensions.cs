@@ -8,6 +8,7 @@ using TicketMasala.Web.Engine.GERDA.Estimating;
 using TicketMasala.Web.Engine.GERDA.Grouping;
 using TicketMasala.Web.Engine.GERDA.Models;
 using TicketMasala.Web.Engine.GERDA.Ranking;
+using TicketMasala.Web.Engine.GERDA.Knowledge;
 using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Tenancy;
 
@@ -68,9 +69,16 @@ public static class GerdaServiceCollectionExtensions
         services.AddScoped<IGroupingService, GroupingService>();
         services.AddScoped<IEstimatingService, EstimatingService>();
         services.AddScoped<IRankingService, RankingService>();
+
+        // Dispatching policies & selectors
+        services.AddScoped<IDispatchingStrategySelector, DomainDispatchingStrategySelector>();
+        services.AddScoped<IAutoDispatchPolicy, ScoreThresholdAutoDispatchPolicy>();
+        services.AddScoped<IProjectManagerRecommendationService, WorkloadAndSuccessProjectManagerRecommendationService>();
+
         services.AddScoped<IDispatchingService, DispatchingService>();
         services.AddScoped<IDispatchBacklogService, DispatchBacklogService>();
         services.AddScoped<IAnticipationService, AnticipationService>();
+        services.AddScoped<IKnowledgeService, KnowledgeService>();
         services.AddScoped<IGerdaService, GerdaService>();
 
         // Strategy Factory & Built-in Strategies
@@ -80,6 +88,7 @@ public static class GerdaServiceCollectionExtensions
         services.AddScoped<IEstimatingStrategy, CategoryBasedEstimatingStrategy>();
         services.AddScoped<IDispatchingStrategy, MatrixFactorizationDispatchingStrategy>();
         services.AddScoped<IDispatchingStrategy, ZoneBasedDispatchingStrategy>();
+        services.AddScoped<IKnowledgeStrategy, SimilarityKnowledgeStrategy>();
 
         // AI Features
         services.AddScoped<Engine.GERDA.Features.IFeatureExtractor, Engine.GERDA.Features.DynamicFeatureExtractor>();

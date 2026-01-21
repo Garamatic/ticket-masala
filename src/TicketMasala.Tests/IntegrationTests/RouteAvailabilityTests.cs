@@ -31,7 +31,11 @@ public class RouteAvailabilityTests : IClassFixture<WebApplicationFactory<Progra
         // Assert
         Assert.NotEqual(HttpStatusCode.InternalServerError, response.StatusCode);
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-        Assert.StartsWith("/Identity/Account/Login", response.Headers.Location?.LocalPath);
+        var location = response.Headers.Location;
+        var path = location == null
+            ? string.Empty
+            : location.IsAbsoluteUri ? location.AbsolutePath : location.OriginalString;
+        Assert.StartsWith("/Identity/Account/Login", path);
     }
 
     [Theory]

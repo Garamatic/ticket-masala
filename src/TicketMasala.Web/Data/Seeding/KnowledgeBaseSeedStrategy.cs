@@ -1,5 +1,6 @@
 using TicketMasala.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace TicketMasala.Web.Data.Seeding;
 
@@ -11,11 +12,15 @@ public class KnowledgeBaseSeedStrategy : ISeedStrategy
     private readonly MasalaDbContext _context;
     private readonly ILogger<KnowledgeBaseSeedStrategy> _logger;
 
+    private readonly IWebHostEnvironment _environment;
+
     public KnowledgeBaseSeedStrategy(
         MasalaDbContext context,
+        IWebHostEnvironment environment,
         ILogger<KnowledgeBaseSeedStrategy> logger)
     {
         _context = context;
+        _environment = environment;
         _logger = logger;
     }
 
@@ -30,7 +35,30 @@ public class KnowledgeBaseSeedStrategy : ISeedStrategy
     {
         _logger.LogInformation("Seeding knowledge base articles...");
 
-        var articles = CreateDefaultArticles();
+        var articles = new List<KnowledgeBaseArticle>();
+        var config = await LoadSeedConfigurationAsync();
+
+        if (config?.KnowledgeBaseArticles?.Count > 0)
+        {
+             _logger.LogInformation("Loading {Count} KB articles from configuration", config.KnowledgeBaseArticles.Count);
+            foreach (var dto in config.KnowledgeBaseArticles)
+            {
+                articles.Add(new KnowledgeBaseArticle
+                {
+                    Title = dto.Title,
+                    Content = dto.Content,
+                    Tags = dto.Tags,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    AuthorId = null // System article
+                });
+            }
+        }
+        else
+        {
+             _logger.LogInformation("No KB config found, using defaults");
+             articles = CreateDefaultArticles();
+        }
 
         foreach (var article in articles)
         {
@@ -39,6 +67,34 @@ public class KnowledgeBaseSeedStrategy : ISeedStrategy
 
         await _context.SaveChangesAsync();
         _logger.LogInformation("Created {Count} knowledge base articles", articles.Count);
+    }
+
+    private async Task<SeedConfig?> LoadSeedConfigurationAsync()
+    {
+        var seedFilePath = TicketMasala.Web.Configuration.ConfigurationPaths.GetConfigFilePath(
+            _environment.ContentRootPath,
+            "seed_data.json");
+
+        if (!File.Exists(seedFilePath))
+        {
+            return null;
+        }
+
+        try
+        {
+            var json = await File.ReadAllTextAsync(seedFilePath);
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
+            };
+            return JsonSerializer.Deserialize<SeedConfig>(json, options);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error parsing seed data JSON from {Path}", seedFilePath);
+            return null;
+        }
     }
 
     private List<KnowledgeBaseArticle> CreateDefaultArticles()
@@ -61,7 +117,22 @@ public class KnowledgeBaseSeedStrategy : ISeedStrategy
             {
                 Title = "Understanding GERDA AI",
                 Content = "GERDA (GovTech Extended Resource Dispatch & Anticipation) is our AI system...",
-                Tags = "gerda,ai,automation"
+                Tags = "gerda,ai,automation",
+                IsVerified = true
+            },
+            new KnowledgeBaseArticle
+            {
+                Title = "VPN Connection Troubleshooting",
+                Content = "If you are having trouble connecting to the VPN, try restarting your client and checking your internet connection. Ensure you are using the correct credentials.",
+                Tags = "vpn,connectivity,remote",
+                IsVerified = true
+            },
+            new KnowledgeBaseArticle
+            {
+                Title = "Password Reset Guide",
+                Content = "You can reset your password by clicking the 'Forgot Password' link on the login page. An email will be sent to your registered address with further instructions.",
+                Tags = "password,account,security",
+                IsVerified = true
             }
         };
     }

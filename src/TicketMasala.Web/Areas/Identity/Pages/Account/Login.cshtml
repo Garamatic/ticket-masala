@@ -1,4 +1,4 @@
-@page   
+@page
 @model LoginModel
 @using Microsoft.Extensions.Localization
 @using TicketMasala.Web
@@ -10,10 +10,51 @@
 @{
     ViewData["Title"] = Localizer["Sign In"];
     Layout = null; // Use custom full-page layout for login
-    var themePath = env.WebRootPath != null ? System.IO.Path.Combine(env.WebRootPath, "tenant-theme", "style.css") : null;
+
+    // Detect tenant from query parameter, header, or environment variable
+    string? tenantId = HttpContext.Request.Query["tenant"].FirstOrDefault()
+        ?? HttpContext.Request.Headers["X-Tenant"].FirstOrDefault()
+        ?? Environment.GetEnvironmentVariable("MASALA_TENANT");
+
+    // Determine tenant-specific paths
+    string tenantThemePath = "";
+    string tenantLogoPath = "~/images/logo.png"; // Default fallback
     
-    var logoFileSystemPath = env.WebRootPath != null ? System.IO.Path.Combine(env.WebRootPath, "tenant-theme", "logo.png") : null;
-    var logoUrl = (logoFileSystemPath != null && System.IO.File.Exists(logoFileSystemPath)) ? "~/tenant-theme/logo.png" : "~/images/logo.png";
+    if (!string.IsNullOrEmpty(tenantId))
+    {
+        var tenantThemeFile = env.WebRootPath != null
+            ? System.IO.Path.Combine(env.WebRootPath, "tenants", tenantId, "style.css")
+            : null;
+        var tenantLogoFile = env.WebRootPath != null
+            ? System.IO.Path.Combine(env.WebRootPath, "tenants", tenantId, "logo.png")
+            : null;
+
+        if (tenantThemeFile != null && System.IO.File.Exists(tenantThemeFile))
+        {
+            tenantThemePath = $"~/tenants/{tenantId}/style.css";
+        }
+
+        if (tenantLogoFile != null && System.IO.File.Exists(tenantLogoFile))
+        {
+            tenantLogoPath = $"~/tenants/{tenantId}/logo.png";
+        }
+    }
+    else
+    {
+        // Fallback to old tenant-theme directory for backward compatibility
+        var themePath = env.WebRootPath != null ? System.IO.Path.Combine(env.WebRootPath, "tenant-theme", "style.css") : null;
+        var logoFileSystemPath = env.WebRootPath != null ? System.IO.Path.Combine(env.WebRootPath, "tenant-theme", "logo.png") : null;
+
+        if (themePath != null && System.IO.File.Exists(themePath))
+        {
+            tenantThemePath = "~/tenant-theme/style.css";
+        }
+
+        if (logoFileSystemPath != null && System.IO.File.Exists(logoFileSystemPath))
+        {
+            tenantLogoPath = "~/tenant-theme/logo.png";
+        }
+    }
 }
 
 <!DOCTYPE html>
@@ -35,8 +76,11 @@
     <!-- Bundled CSS -->
     <link rel="stylesheet" href="~/css/bundle.css" asp-append-version="true" />
     
-    <!-- Tenant Theme -->
-    <link rel="stylesheet" href="~/tenant-theme/style.css" asp-append-version="true" />
+    <!-- Tenant Theme (if available) -->
+    @if (!string.IsNullOrEmpty(tenantThemePath))
+    {
+        <link rel="stylesheet" href="@tenantThemePath" asp-append-version="true" />
+    }
 
     <style>
         * {
@@ -351,7 +395,7 @@
         <!-- Left Branding Panel -->
         <div class="login-branding">
             <div class="branding-content">
-                <img src="@logoUrl" alt="Ticket Masala" class="branding-logo" />
+                <img src="@tenantLogoPath" alt="Ticket Masala" class="branding-logo" />
                 <h1 class="branding-title">Ticket Masala</h1>
                 <p class="branding-tagline">@Localizer["Spice up your project management with intelligent ticket handling"]</p>
                 
@@ -381,7 +425,7 @@
             <div class="login-card">
                 <!-- Mobile Logo -->
                 <div class="mobile-logo">
-                    <img src="@logoUrl" alt="Ticket Masala" />
+                    <img src="@tenantLogoPath" alt="Ticket Masala" />
                 </div>
 
                 <div class="login-header">

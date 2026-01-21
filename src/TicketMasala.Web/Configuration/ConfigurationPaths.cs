@@ -1,12 +1,18 @@
 namespace TicketMasala.Web.Configuration;
 
+using System.Collections.Concurrent;
+
 /// <summary>
 /// Centralized configuration path resolution for Ticket Masala.
 /// Supports deployment patterns via MASALA_CONFIG_PATH environment variable.
 /// </summary>
 public static class ConfigurationPaths
 {
-    private static string? _configBasePath;
+    private static readonly ConcurrentDictionary<string, string> _configBasePathByContentRoot =
+        new(GetPathComparer());
+
+    private static StringComparer GetPathComparer() =>
+        OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
 
     /// <summary>
     /// Gets the base configuration directory path.
@@ -17,35 +23,40 @@ public static class ConfigurationPaths
     /// </summary>
     public static string GetConfigBasePath(string contentRootPath)
     {
-        if (_configBasePath != null)
-            return _configBasePath;
+        var normalizedContentRootPath = Path.GetFullPath(contentRootPath);
+
+        if (_configBasePathByContentRoot.TryGetValue(normalizedContentRootPath, out var cached))
+        {
+            return cached;
+        }
 
         // Check environment variable first (Pro deployment override)
         var envPath = Environment.GetEnvironmentVariable("MASALA_CONFIG_PATH");
         if (!string.IsNullOrEmpty(envPath) && Directory.Exists(envPath))
         {
-            _configBasePath = envPath;
-            return _configBasePath;
+            _configBasePathByContentRoot[normalizedContentRootPath] = envPath;
+            return envPath;
         }
 
         // Docker container default
         if (Directory.Exists("/app/config"))
         {
-            _configBasePath = "/app/config";
-            return _configBasePath;
+            _configBasePathByContentRoot[normalizedContentRootPath] = "/app/config";
+            return "/app/config";
         }
 
         // Development fallback - Local config (Priority)
-        var localConfig = Path.Combine(contentRootPath, "config");
+        var localConfig = Path.Combine(normalizedContentRootPath, "config");
         if (Directory.Exists(localConfig))
         {
-            _configBasePath = localConfig;
-            return _configBasePath;
+            _configBasePathByContentRoot[normalizedContentRootPath] = localConfig;
+            return localConfig;
         }
 
         // Development fallback - Standard Repo Structure (Legacy)
-        _configBasePath = Path.Combine(contentRootPath, "..", "..", "config");
-        return _configBasePath;
+        var legacyRepoConfig = Path.Combine(normalizedContentRootPath, "..", "..", "config");
+        _configBasePathByContentRoot[normalizedContentRootPath] = legacyRepoConfig;
+        return legacyRepoConfig;
     }
 
     /// <summary>
@@ -62,6 +73,6 @@ public static class ConfigurationPaths
     /// </summary>
     public static void ResetCache()
     {
-        _configBasePath = null;
+        _configBasePathByContentRoot.Clear();
     }
 }

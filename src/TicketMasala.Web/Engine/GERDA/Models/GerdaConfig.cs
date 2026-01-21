@@ -76,6 +76,9 @@ public class GerdaAISettings
 
     [JsonPropertyName("Anticipation")]
     public AnticipationSettings Anticipation { get; set; } = new();
+
+    [JsonPropertyName("Knowledge")]
+    public KnowledgeSettings Knowledge { get; set; } = new();
 }
 
 /// <summary>
@@ -149,6 +152,18 @@ public class DispatchingSettings
     [JsonPropertyName("IsEnabled")]
     public bool IsEnabled { get; set; } = true;
 
+    [JsonPropertyName("AutoDispatchMinScore")]
+    public double AutoDispatchMinScore { get; set; } = 3.5;
+
+    [JsonPropertyName("ProjectManagerMaxActiveProjects")]
+    public int ProjectManagerMaxActiveProjects { get; set; } = 5;
+
+    [JsonPropertyName("ProjectManagerWorkloadWeight")]
+    public double ProjectManagerWorkloadWeight { get; set; } = 0.6;
+
+    [JsonPropertyName("ProjectManagerSuccessRateWeight")]
+    public double ProjectManagerSuccessRateWeight { get; set; } = 0.4;
+
     [JsonPropertyName("MinHistoryForAffinityMatch")]
     public int MinHistoryForAffinityMatch { get; set; } = 3;
 
@@ -182,4 +197,22 @@ public class AnticipationSettings
     [JsonPropertyName("RiskThresholdPercentage")]
     public int RiskThresholdPercentage { get; set; } = 20;
 
+}
+
+/// <summary>
+/// K - Knowledge/KB Recommendation settings
+/// </summary>
+public class KnowledgeSettings
+{
+    [JsonPropertyName("IsEnabled")]
+    public bool IsEnabled { get; set; } = true;
+
+    [JsonPropertyName("MaxSuggestions")]
+    public int MaxSuggestions { get; set; } = 3;
+
+    [JsonPropertyName("MinRelevanceScore")]
+    public double MinRelevanceScore { get; set; } = 0.2;
+
+    [JsonPropertyName("StrategyName")]
+    public string StrategyName { get; set; } = "Similarity";
 }

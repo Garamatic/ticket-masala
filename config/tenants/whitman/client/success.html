@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Melding Verzonden - Whitman Spoor</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <header class="header">
+            <img src="../whitman.png" alt="Whitman Spoor" class="logo">
+            <h1 class="main-title">MELDING VERZONDEN</h1>
+        </header>
+
+        <main class="main-content" style="padding: 2rem 1rem;">
+            <div style="text-align: center; background: white; padding: 2rem; border: 3px solid #004B87;">
+                <div
+                    style="width: 80px; height: 80px; background: #28a745; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <i class="fas fa-check" style="color: white; font-size: 2.5rem;"></i>
+                </div>
+
+                <h2 style="font-family: 'Oswald', sans-serif; font-size: 1.75rem; color: #004B87; margin-bottom: 1rem;">
+                    INTERVENTIE GEREGISTREERD</h2>
+
+                <div id="ticketNumber"
+                    style="font-family: 'Oswald', sans-serif; font-size: 2rem; color: #FF9933; padding: 1rem; background: #DDE4E8; margin: 1.5rem 0;">
+                </div>
+
+                <p style="font-size: 1.1rem; margin-bottom: 1.5rem;">Een technicus zal zo snel mogelijk worden
+                    toegewezen.</p>
+
+                <div
+                    style="background: #E8F4F8; border-left: 4px solid #004B87; padding: 1.5rem; text-align: left; margin: 2rem 0;">
+                    <h3 style="font-family: 'Oswald', sans-serif; color: #004B87; margin-bottom: 1rem;">VOLGENDE STAPPEN
+                    </h3>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="padding: 0.5rem 0; display: flex; gap: 0.75rem;">
+                            <i class="fas fa-envelope" style="color: #004B87; margin-top: 0.25rem;"></i>
+                            <span>Bevestiging per e-mail</span>
+                        </li>
+                        <li style="padding: 0.5rem 0; display: flex; gap: 0.75rem;">
+                            <i class="fas fa-user-hard-hat" style="color: #004B87; margin-top: 0.25rem;"></i>
+                            <span>Technicus wordt toegewezen</span>
+                        </li>
+                        <li style="padding: 0.5rem 0; display: flex; gap: 0.75rem;">
+                            <i class="fas fa-clock" style="color: #004B87; margin-top: 0.25rem;"></i>
+                            <span>Reactietijd: 1-4 uur</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <a href="index.html" class="submit-btn" style="margin-top: 2rem; text-decoration: none;">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>NIEUWE MELDING</span>
+                </a>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>WHITMAN SPOOR NV © 2025</p>
+        </footer>
+    </div>
+
+    <script>
+        const result = JSON.parse(sessionStorage.getItem('submissionResult') || '{}');
+        document.getElementById('ticketNumber').textContent = result.ticketNumber || 'INTERVENTIE #XXXX';
+        sessionStorage.removeItem('submissionResult');
+    </script>
+</body>
+
+</html>

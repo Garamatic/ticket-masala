@@ -46,58 +46,6 @@ public static class WebApplicationBuilderExtensions
     /// </summary>
     public static WebApplicationBuilder AddMasalaCore(this WebApplicationBuilder builder)
     {
-        // ============================================
-        // TENANT PLUGIN SYSTEM
-        // ============================================
-        var pluginPath = Environment.GetEnvironmentVariable("MASALA_PLUGINS_PATH");
-        TenantPluginLoader.LoadPlugins(builder, pluginPath ?? "");
-
-        // Database Configuration
-        var dbProvider = builder.Configuration["DatabaseProvider"];
-        var tenantConnectionResolver = new TenantConnectionResolver(builder.Configuration);
-        var connectionString = tenantConnectionResolver.GetCurrentConnectionString();
-
-        if (!builder.Environment.IsEnvironment("Testing"))
-        {
-            builder.Services.AddDbContext<MasalaDbContext>(options =>
-            {
-                if (string.Equals(dbProvider, "Sqlite", StringComparison.OrdinalIgnoreCase))
-                {
-                    if (connectionString != null)
-                    {
-                        var match = System.Text.RegularExpressions.Regex.Match(
-                            connectionString, @"Data Source=([^;]+)");
-                        if (match.Success)
-                        {
-                            var dbPath = match.Groups[1].Value;
-                            var dataDir = Path.GetDirectoryName(dbPath);
-                            if (!string.IsNullOrEmpty(dataDir) && !Directory.Exists(dataDir))
-                            {
-                                Console.WriteLine($"Creating database directory: {dataDir}");
-                                Directory.CreateDirectory(dataDir);
-                            }
-                        }
-                    }
-
-                    Console.WriteLine($"Using SQLite Provider with connection: {connectionString}");
-                    options.UseSqlite(connectionString, b => b.MigrationsAssembly("TicketMasala.Web"));
-                    options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
-                }
-                else
-                {
-                    Console.WriteLine($"Using SQL Server Provider");
-                    options.UseSqlServer(connectionString, sqlServerOptions =>
-                    {
-                        sqlServerOptions.MigrationsAssembly("TicketMasala.Web");
-                        sqlServerOptions.EnableRetryOnFailure(
-                            maxRetryCount: 5,
-                            maxRetryDelay: TimeSpan.FromSeconds(10),
-                            errorNumbersToAdd: null);
-                    });
-                }
-            });
-        }
-
         // Identity configuration
         builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
         {
@@ -123,6 +71,8 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddScoped<ITicketRepository, EfCoreTicketRepository>();
         builder.Services.AddScoped<IProjectRepository, EfCoreProjectRepository>();
         builder.Services.AddScoped<IUserRepository, EfCoreUserRepository>();
+        builder.Services.AddScoped<IKnowledgeBaseRepository, EfCoreKnowledgeBaseRepository>();
+        builder.Services.AddScoped<IKnowledgeSnippetRepository, EfCoreKnowledgeSnippetRepository>();
         builder.Services.AddScoped<IUnitOfWork, EfCoreUnitOfWork>();
 
         // ============================================
@@ -180,6 +130,7 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddScoped<ISeedStrategy, RoleSeedStrategy>();
         builder.Services.AddScoped<ISeedStrategy, UserSeedStrategy>();
         builder.Services.AddScoped<ISeedStrategy, ProjectSeedStrategy>();
+        builder.Services.AddScoped<ISeedStrategy, WorkItemSeedStrategy>();
         builder.Services.AddScoped<ISeedStrategy, KnowledgeBaseSeedStrategy>();
 
         // DbSeeder
@@ -225,6 +176,9 @@ public static class WebApplicationBuilderExtensions
                     .FromFile(modelName: "GerdaDispatchModel", filePath: modelPath, watchForChanges: true);
 
                 builder.Services.AddScoped<IRankingService, RankingService>();
+                builder.Services.AddScoped<IDispatchingStrategySelector, DomainDispatchingStrategySelector>();
+                builder.Services.AddScoped<IAutoDispatchPolicy, ScoreThresholdAutoDispatchPolicy>();
+                builder.Services.AddScoped<IProjectManagerRecommendationService, WorkloadAndSuccessProjectManagerRecommendationService>();
                 builder.Services.AddScoped<IDispatchingService, DispatchingService>();
                 builder.Services.AddScoped<IDispatchBacklogService, DispatchBacklogService>();
                 builder.Services.AddScoped<IAnticipationService, AnticipationService>();
@@ -244,14 +198,11 @@ public static class WebApplicationBuilderExtensions
             builder.Services.AddScoped<IGerdaService, NoOpGerdaService>();
         }
 
-        // Memory Cache
-        builder.Services.AddMemoryCache();
-        builder.Services.AddDistributedMemoryCache();
-
         // Rate Limiting
         builder.Services.AddRateLimiter(options =>
         {
-            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.RejectionStatusCode = Microsoft.AspNetCore.Http.StatusCodes.Status429TooManyRequests;
+
             options.AddFixedWindowLimiter("api", opt =>
             {
                 opt.PermitLimit = 100;
@@ -259,6 +210,7 @@ public static class WebApplicationBuilderExtensions
                 opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
                 opt.QueueLimit = 10;
             });
+
             options.AddSlidingWindowLimiter("login", opt =>
             {
                 opt.PermitLimit = 5;
@@ -267,6 +219,7 @@ public static class WebApplicationBuilderExtensions
                 opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
                 opt.QueueLimit = 0;
             });
+
             options.AddTokenBucketLimiter("general", opt =>
             {
                 opt.TokenLimit = 50;
@@ -277,11 +230,9 @@ public static class WebApplicationBuilderExtensions
             });
         });
 
-        // Health Checks
-        builder.Services.AddHealthChecks()
-            .AddCheck<GerdaHealthCheck>("gerda-ai")
-            .AddCheck<EmailIngestionHealthCheck>("email-ingestion")
-            .AddCheck<BackgroundQueueHealthCheck>("background-queue");
+        // Memory Cache
+        builder.Services.AddMemoryCache();
+        builder.Services.AddDistributedMemoryCache();
 
         // Data Protection
         if (builder.Environment.IsProduction())

@@ -1,5 +1,10 @@
 # Feature: SAP Snapshot Sync (On-Demand)
 
+> **Status: Partially Implemented / Roadmap**
+>
+> *Current State:* The "Snapshot" logic is implemented via CSV/Excel file uploads.
+> *Roadmap:* Direct API integration with SAP/ERP systems and Apache Parquet support are planned for future releases.
+
 The SAP Snapshot Sync is a "Read-Only Amplifier" that bridges the gap between rigid ERP systems and agile operational workflows without compromising data integrity.
 
 ---

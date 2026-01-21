@@ -1,0 +1,134 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# Liberty Systems - Software Development Configuration
+# ═══════════════════════════════════════════════════════════════════════════
+# "Cyberpunk Minimalism" - Intellectual, fast, dark mode
+
+domains:
+  DevOps:
+    display_name: "Software Development"
+    description: "Agile issue tracking, code review, and release management"
+    
+    entity_labels:
+      work_item: "Issue"
+      work_container: "Sprint"
+      work_handler: "Developer"
+    
+    work_item_types:
+      - code: BUG
+        name: "Bug"
+        icon: "fa-bug"
+        color: "#dc3545"
+        default_sla_days: 3
+      - code: FEATURE
+        name: "Feature"
+        icon: "fa-rocket"
+        color: "#E1AD01"
+        default_sla_days: 14
+      - code: TECH_DEBT
+        name: "Tech Debt"
+        icon: "fa-code"
+        color: "#6c757d"
+        default_sla_days: 21
+      - code: HOTFIX
+        name: "Hotfix"
+        icon: "fa-fire"
+        color: "#ff6b6b"
+        default_sla_days: 1
+    
+    custom_fields:
+      - name: story_points
+        label: "Story Points"
+        type: select
+        options: ["1", "2", "3", "5", "8", "13", "21"]
+        required: false
+      - name: component
+        label: "Component"
+        type: select
+        options: ["Frontend", "Backend", "API", "Database", "Infrastructure", "Mobile"]
+        required: true
+      - name: severity
+        label: "Severity"
+        type: select
+        options: ["Low", "Medium", "High", "Critical"]
+        required_for_types: [BUG, HOTFIX]
+      - name: commit_ref
+        label: "Commit Reference"
+        type: text
+        required: false
+      - name: pr_link
+        label: "Pull Request"
+        type: text
+        required: false
+    
+    workflow:
+      states:
+        - code: BACKLOG
+          name: "Backlog"
+          color: "#6c757d"
+        - code: TODO
+          name: "To Do"
+          color: "#17a2b8"
+        - code: IN_PROGRESS
+          name: "In Progress"
+          color: "#E1AD01"
+        - code: IN_REVIEW
+          name: "In Review"
+          color: "#9b59b6"
+        - code: TESTING
+          name: "Testing"
+          color: "#3498db"
+        - code: DEPLOYED
+          name: "Deployed"
+          color: "#98FF98"
+        - code: WONT_FIX
+          name: "Won't Fix"
+          color: "#95a5a6"
+      
+      transitions:
+        BACKLOG: [TODO, WONT_FIX]
+        TODO: [IN_PROGRESS, BACKLOG]
+        IN_PROGRESS: [IN_REVIEW, TODO]
+        IN_REVIEW: [TESTING, IN_PROGRESS]
+        TESTING: [DEPLOYED, IN_PROGRESS]
+        DEPLOYED: []
+        WONT_FIX: []
+    
+    ai_strategies:
+      ranking: 
+        strategy_name: "WSJF"
+        base_formula: "(business_value + time_criticality) / story_points"
+        multipliers:
+          - conditions: 
+              - field: "severity"
+                operator: "=="
+                value: "Critical"
+            value: 5.0
+          - conditions:
+              - field: "work_item_type"
+                operator: "=="
+                value: "HOTFIX"
+            value: 10.0
+      dispatching: SkillBased
+      estimating: StoryPointsLookup
+    
+    ai_prompts:
+      summarize: "Summarize this issue technically. Identify the affected component, root cause if known, and suggest a fix approach."
+      suggest_response: "Draft a technical update for the team. Include any relevant commit references."
+      rca: "Analyze recent commits and identify potential root cause for this issue."
+    
+    integrations:
+      ingestion:
+        - type: webhook
+          enabled: true
+          config:
+            endpoint: "/api/webhooks/github"
+            source: "github"
+        - type: api
+          enabled: true
+          config:
+            endpoint: "/api/v1/issues"
+
+global:
+  default_domain: "DevOps"
+  allow_domain_switching: false
+  config_reload_enabled: true

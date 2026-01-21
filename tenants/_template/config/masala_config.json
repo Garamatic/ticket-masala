@@ -12,7 +12,11 @@
             "IsEnabled": true
         },
         "Dispatching": {
-            "IsEnabled": true
+            "IsEnabled": true,
+            "AutoDispatchMinScore": 3.5,
+            "ProjectManagerMaxActiveProjects": 5,
+            "ProjectManagerWorkloadWeight": 0.6,
+            "ProjectManagerSuccessRateWeight": 0.4
         },
         "Anticipation": {
             "IsEnabled": false

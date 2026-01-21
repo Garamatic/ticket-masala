@@ -113,6 +113,27 @@ public class SeedController : Controller
     }
 
     [HttpGet]
+    public async Task<IActionResult> Debug()
+    {
+        if (!_env.IsDevelopment()) return NotFound();
+
+        var users = await _userManager.Users.ToListAsync();
+        var debugInfo = new System.Text.StringBuilder();
+        debugInfo.AppendLine($"Total Users: {users.Count}");
+        debugInfo.AppendLine("----------------------------------------");
+
+        foreach (var u in users)
+        {
+            debugInfo.AppendLine($"User: {u.UserName} | Email: {u.Email} | ID: {u.Id}");
+            var roles = await _userManager.GetRolesAsync(u);
+            debugInfo.AppendLine($"Roles: {string.Join(", ", roles)}");
+            debugInfo.AppendLine("-");
+        }
+
+        return Content(debugInfo.ToString());
+    }
+
+    [HttpGet]
     public async Task<IActionResult> Index()
     {
         if (!_env.IsDevelopment())

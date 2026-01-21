@@ -1,0 +1,16 @@
+{
+    "name": "Meldpunt Spoor - Whitman Spoor",
+    "short_name": "Whitman",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "background_color": "#DDE4E8",
+    "theme_color": "#004B87",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "../../whitman.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

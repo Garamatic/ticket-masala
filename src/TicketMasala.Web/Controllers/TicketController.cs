@@ -1,4 +1,4 @@
-﻿using TicketMasala.Web;
+using TicketMasala.Web;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
 using TicketMasala.Web.ViewModels.Tickets;
@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web.Data;
+using TicketMasala.Web.AI;
 
 namespace TicketMasala.Web.Controllers;
 
@@ -35,6 +36,7 @@ public class TicketController : Controller
     private readonly IProjectReadService _projectReadService;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IRuleEngineService _ruleEngine;
+    private readonly IOpenAiService _openAiService;
     private readonly ILogger<TicketController> _logger;
 
     public TicketController(
@@ -47,6 +49,7 @@ public class TicketController : Controller
         IProjectReadService projectReadService,
         IHttpContextAccessor httpContextAccessor,
         IRuleEngineService ruleEngine,
+        IOpenAiService openAiService,
         ILogger<TicketController> logger)
     {
         _gerdaService = gerdaService;
@@ -58,6 +61,7 @@ public class TicketController : Controller
         _projectReadService = projectReadService;
         _httpContextAccessor = httpContextAccessor;
         _ruleEngine = ruleEngine;
+        _openAiService = openAiService;
         _logger = logger;
     }
 
@@ -67,6 +71,8 @@ public class TicketController : Controller
 
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         var isCustomer = User.IsInRole(Constants.RoleCustomer);
+        _logger.LogInformation("DEBUG: Index Access - UserId: {UserId}, IsCustomer: {IsCustomer}, QueryCustomerId: {QueryCustId}, QueryStatus: {Status}",
+            userId, isCustomer, searchModel.CustomerId, searchModel.Status);
         if (isCustomer && !string.IsNullOrEmpty(userId)) searchModel.CustomerId = userId;
 
         var result = await _ticketReadService.SearchTicketsAsync(searchModel);
@@ -135,6 +141,32 @@ public class TicketController : Controller
             }
         }
 
+        // Get suggested KB articles (GERDA-K)
+        try
+        {
+            var knowledgeService = HttpContext.RequestServices.GetService<Engine.GERDA.Knowledge.IKnowledgeService>();
+            if (knowledgeService != null)
+            {
+                var ticket = await _ticketReadService.GetTicketForEditAsync(id.Value);
+                if (ticket != null)
+                {
+                    var suggestions = await knowledgeService.GetSuggestedArticlesAsync(ticket);
+                    viewModel.SuggestedArticles = suggestions.Select(s => new KnowledgeSuggestionInfo
+                    {
+                        ArticleId = s.Article.Id,
+                        Title = s.Article.Title,
+                        RelevanceScore = s.RelevanceScore,
+                        MatchingReason = s.MatchingReason
+                    }).ToList();
+                }
+            }
+        }
+
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to get suggested knowledge for ticket {TicketGuid}", id.Value);
+        }
+
         var domainId = viewModel.DomainId ?? _domainConfig.GetDefaultDomainId();
         ViewBag.DomainId = domainId;
         ViewBag.EntityLabels = _domainConfig.GetEntityLabels(domainId);
@@ -158,6 +190,29 @@ public class TicketController : Controller
         }
 
         return View(viewModel);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> GenerateAiSummary(Guid ticketId)
+    {
+        var ticket = await _ticketReadService.GetTicketDetailsAsync(ticketId);
+        if (ticket == null) return NotFound();
+
+        var query = $"Title: {ticket.Description} (Created: {ticket.CreationDate})\n\n" +
+                $"Status: {ticket.TicketStatus}\n\n" +
+                $"Discussion:\n" +
+                string.Join("\n", ticket.Comments.OrderBy(c => c.CreatedAt).Select(c => $"- {c.Author?.Name ?? c.Author?.UserName ?? "Unknown"} ({c.CreatedAt}): {c.Body}"));
+
+        try
+        {
+            var summary = await _openAiService.GetResponseAsync(OpenAIPrompts.Summary, query);
+            return Json(new { success = true, summary });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating AI summary for ticket {TicketId}", ticketId);
+            return Json(new { success = false, message = $"Failed to generate summary: {ex.Message}" });
+        }
     }
 
     #endregion

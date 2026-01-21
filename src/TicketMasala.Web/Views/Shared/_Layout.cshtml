@@ -137,49 +137,6 @@
                                                     <span>@Localizer["GERDA Dispatch"]</span>
                                                 </a>
                                             </li>
-
-                                            <!-- EHT Campaign Section -->
-                                            <li class="sidebar-item mt-3">
-                                                <div class="sidebar-section-header text-muted small px-3 py-2">
-                                                    <i class="fas fa-building me-2"></i>EHT CAMPAIGN
-                                                </div>
-                                            </li>
-                                            <li class="sidebar-item">
-                                                <a class="sidebar-link @(ViewContext.RouteData.Values["area"]?.ToString() == "Eht" && currentController == "Dashboard" ? "active" : "")" 
-                                       asp-area="Eht" asp-controller="Dashboard" asp-action="Index">
-                                                    <i class="fas fa-chart-pie sidebar-icon"></i>
-                                                    <span>Campaign Dashboard</span>
-                                                </a>
-                                            </li>
-                                            <li class="sidebar-item">
-                                                <a class="sidebar-link @(ViewContext.RouteData.Values["area"]?.ToString() == "Eht" && currentController == "Workbench" ? "active" : "")" 
-                                       asp-area="Eht" asp-controller="Workbench" asp-action="Index">
-                                                    <i class="fas fa-clipboard-check sidebar-icon"></i>
-                                                    <span>Manual Review</span>
-                                                </a>
-                                            </li>
-                                            <li class="sidebar-item">
-                                                <a class="sidebar-link @(ViewContext.RouteData.Values["area"]?.ToString() == "Eht" && currentController == "AddressValidation" ? "active" : "")" 
-                                       asp-area="Eht" asp-controller="AddressValidation" asp-action="Index">
-                                                    <i class="fas fa-map-marked-alt sidebar-icon"></i>
-                                                    <span>Address Validation</span>
-                                                </a>
-                                            </li>
-                                            <li class="sidebar-item">
-                                                <a class="sidebar-link @(ViewContext.RouteData.Values["area"]?.ToString() == "Eht" && currentController == "EntityClustering" ? "active" : "")" 
-                                       asp-area="Eht" asp-controller="EntityClustering" asp-action="Index">
-                                                    <i class="fas fa-project-diagram sidebar-icon"></i>
-                                                    <span>Entity Clustering</span>
-                                                </a>
-                                            </li>
-                                            <li class="sidebar-item">
-                                                <a class="sidebar-link @(ViewContext.RouteData.Values["area"]?.ToString() == "Eht" && currentController == "BpValidator" ? "active" : "")" 
-                                       asp-area="Eht" asp-controller="BpValidator" asp-action="Index">
-                                                    <i class="fas fa-id-badge sidebar-icon"></i>
-                                                    <span>BP Validator</span>
-                                                </a>
-                                            </li>
-
                                             <!-- Admin Panel Section -->
                                             <li class="sidebar-item mt-3">
                                                 <div class="sidebar-section-header text-muted small px-3 py-2">

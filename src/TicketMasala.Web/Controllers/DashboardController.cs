@@ -40,7 +40,7 @@ public class DashboardController : Controller
             viewModel.ForecastData = await _metricsService.CalculateForecastAsync();
             viewModel.AgentPerformance = await _metricsService.CalculateClosedTicketsPerAgentAsync();
 
-            return View("~/Views/Manager/TeamDashboard.cshtml", viewModel);
+            return View("~/Views/Dashboard/TeamDashboard.cshtml", viewModel);
         }
         catch (Exception ex)
         {

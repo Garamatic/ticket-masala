@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.ViewModels.Portal;
@@ -15,7 +16,8 @@ namespace TicketMasala.Web.Controllers;
 /// Supports anonymous ticket creation for demo purposes.
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/portal")]
+[AllowAnonymous]
 public class PortalsApiController : ControllerBase
 {
 

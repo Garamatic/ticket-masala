@@ -1,0 +1,176 @@
+{
+    "Admins": [
+        {
+            "UserName": "president.oseary",
+            "Email": "oseary@hennessey.fund",
+            "FirstName": "Oseary",
+            "LastName": "Fonds",
+            "Phone": "+44 20 7946 0101",
+            "Code": "PRES-01"
+        }
+    ],
+    "Employees": [
+        {
+            "UserName": "officer.eleanor",
+            "Email": "eleanor@hennessey.fund",
+            "FirstName": "Eleanor",
+            "LastName": "Banks",
+            "Team": "Grant Review Board",
+            "Level": "Lead",
+            "Language": "en-GB",
+            "Specializations": "Oceanography, Policy, International Law",
+            "MaxCapacityPoints": 40,
+            "Region": "Europe"
+        },
+        {
+            "UserName": "ethics.simone",
+            "Email": "simone@hennessey.fund",
+            "FirstName": "Simone",
+            "LastName": "Weil",
+            "Team": "Ethics Committee",
+            "Level": "Lead",
+            "Language": "fr-FR",
+            "Specializations": "Bioethics, Field Research Safety",
+            "MaxCapacityPoints": 35,
+            "Region": "Paris"
+        },
+        {
+            "UserName": "controller.ahmed",
+            "Email": "ahmed@hennessey.fund",
+            "FirstName": "Ahmed",
+            "LastName": "Mansoor",
+            "Team": "Financial Compliance",
+            "Level": "Expert",
+            "Language": "en-AE",
+            "Specializations": "Forensic Accounting, Grant Auditing",
+            "MaxCapacityPoints": 55,
+            "Region": "Dubai"
+        },
+        {
+            "UserName": "analyst.klaus",
+            "Email": "klaus@hennessey.fund",
+            "FirstName": "Klaus",
+            "LastName": "Daimler",
+            "Team": "Operations",
+            "Level": "Support",
+            "Language": "de-DE",
+            "Specializations": "Budgeting, Compliance",
+            "MaxCapacityPoints": 30,
+            "Region": "Germany"
+        },
+        {
+            "UserName": "gerda.system",
+            "Email": "gerda@ticketmasala.ai",
+            "FirstName": "GERDA",
+            "LastName": "AI",
+            "Team": "System Core",
+            "Level": "Lead",
+            "Language": "en-GB",
+            "Specializations": "Budget Compliance, Ethical Flagging, Grant Policy Matching",
+            "MaxCapacityPoints": 999,
+            "Region": "Global"
+        }
+    ],
+    "Customers": [
+        {
+            "UserName": "prof.steve",
+            "Email": "steve@zissou.edu",
+            "FirstName": "Steve",
+            "LastName": "Zissou",
+            "Phone": "+44 20 7946 9999",
+            "Code": "RES-007"
+        },
+        {
+            "UserName": "dr.indiana",
+            "Email": "jones@marshall.edu",
+            "FirstName": "Indiana",
+            "LastName": "Jones",
+            "Phone": "+1 555 4321",
+            "Code": "ARCH-01"
+        }
+    ],
+    "WorkContainers": [
+        {
+            "Name": "Expedition 'Arctic Horizon' - Grant #9088",
+            "Description": "Multi-institutional study on permafrost thawing and ancient pathogen modeling.",
+            "Status": "Active",
+            "CustomerEmail": "steve@zissou.edu",
+            "ProjectManagerEmail": "eleanor@hennessey.fund",
+            "CompletionTargetMonths": 18,
+            "WorkItems": [
+                {
+                    "Description": "Ethics Review: Biological Sample Extraction Protocol",
+                    "Status": "In_Progress",
+                    "Type": "Task",
+                    "ResponsibleEmail": "simone@hennessey.fund",
+                    "CompletionTargetDays": 14,
+                    "EstimatedEffortPoints": 13,
+                    "PriorityScore": 45,
+                    "GerdaTags": "Ethics, Biohazard, High_Risk",
+                    "Comments": [
+                        {
+                            "Body": "The protocol for core drilling in the Svalbard zone lacks clear containment plans for unknown bacterial strains.",
+                            "AuthorEmail": "simone@hennessey.fund",
+                            "CreatedDaysAgo": 3
+                        },
+                        {
+                            "Body": "🤖 **GERDA Ethics Guard**: Compliance mismatch. 'Pathogen Containment' level 4 required for this region. Recommendation: Update safety equipment budget by 15% and resubmit.",
+                            "AuthorEmail": "gerda@ticketmasala.ai",
+                            "CreatedDaysAgo": 2
+                        }
+                    ]
+                },
+                {
+                    "Description": "Financial Audit: Submersible Fuel Allocation",
+                    "Status": "In_Progress",
+                    "Type": "Task",
+                    "ResponsibleEmail": "ahmed@hennessey.fund",
+                    "CompletionTargetDays": 7,
+                    "EstimatedEffortPoints": 5,
+                    "PriorityScore": 20,
+                    "GerdaTags": "Audit, Finance"
+                }
+            ]
+        }
+    ],
+    "UnassignedWorkItems": [
+        {
+            "Description": "URGENT: Archeological Find at Permafrost Core Station",
+            "Status": "New",
+            "Type": "Incident",
+            "CustomerEmail": "steve@zissou.edu",
+            "CompletionTargetDays": 1,
+            "EstimatedEffortPoints": 34,
+            "PriorityScore": 95,
+            "GerdaTags": "Discovery, Legal_Hold, UNESCO_Protocols",
+            "Comments": [
+                {
+                    "Body": "We found structures that appear to be pre-Holocene. We need an immediate ruling on whether we can continue drilling or if the site must be preserved under UN mandate.",
+                    "AuthorEmail": "steve@zissou.edu",
+                    "CreatedDaysAgo": 0
+                },
+                {
+                    "Body": "🤖 **GERDA Policy Engine**: Automatic Halt Recommended. Coordinates match registered 'UNESCO Heritage Potential' zone. Routing to Ethics Officer and Legal Counsel Indiana Jones.",
+                    "AuthorEmail": "gerda@ticketmasala.ai",
+                    "CreatedDaysAgo": 0
+                }
+            ]
+        }
+    ],
+    "KnowledgeBaseArticles": [
+        {
+            "Title": "Arctic Sovereignty Laws (2025)",
+            "Content": "Summary of research rights in international waters.\n\n**Protocols:**\n* No permanent structures without UN approval.\n* Data sharing mandatory within 6 months of collection.\n* Environmental impact fee: $500 per ton of ice displaced.",
+            "Tags": "Law, Research, International",
+            "AuthorEmail": "eleanor@hennessey.fund",
+            "CreatedDaysAgo": 60
+        },
+        {
+            "Title": "Bio-Scrubbing Procedures",
+            "Content": "Mandatory decontamination for all field samples.\n\n**Steps:**\n1. UV-C irradiation (120 seconds).\n2. Chemical bath (Solvents A & B).\n3. Vacuum seal for transport.\n\n*Violations result in immediate grant termination.*",
+            "Tags": "Safety, Biology, Procedures",
+            "AuthorEmail": "simone@hennessey.fund",
+            "CreatedDaysAgo": 15
+        }
+    ]
+}

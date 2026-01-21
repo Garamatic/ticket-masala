@@ -1,0 +1,16 @@
+{
+    "name": "Grant Application Wizard - Fonds Hennessey",
+    "short_name": "Hennessey",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "background_color": "#f0f8ff",
+    "theme_color": "#008080",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "../../hennessey.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

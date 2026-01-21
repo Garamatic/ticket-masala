@@ -23,6 +23,9 @@ public static class WebApplicationExtensions
         // Forward headers (for reverse proxies)
         app.UseForwardedHeaders();
 
+        // CORS
+        app.UseCors("AllowAll");
+
         // Localization
         var localizationOptions = app.Services.GetRequiredService<IOptions<RequestLocalizationOptions>>().Value;
         localizationOptions.RequestCultureProviders.Clear();

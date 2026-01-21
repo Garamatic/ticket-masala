@@ -103,6 +103,19 @@
                         <span class="badge bg-secondary">@Model.Comments.Count comments</span>
                     </div>
                     <div class="card-body">
+                        <!-- AI Summary Section -->
+                        <div class="card mb-4 border-info">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0 text-info"><i class="fas fa-robot me-2"></i>AI Summary</h6>
+                                <button class="btn btn-sm btn-outline-info" id="btnGenerateSummary" onclick="generateAiSummary('@Model.Guid')">
+                                    <i class="fas fa-magic me-1"></i> Generate Summary
+                                </button>
+                            </div>
+                            <div class="card-body" id="aiSummaryContent">
+                                <p class="text-muted small mb-0">Summarize the ticket discussion and status using AI.</p>
+                            </div>
+                        </div>
+
                         <div id="commentList">
                             @await Html.PartialAsync("_CommentListPartial", Model.Comments)
                         </div>
@@ -358,7 +371,36 @@
                     </div>
                 </div>
             }
+
+            <!-- Suggested Knowledge (GERDA-K) -->
+            @if (Model.SuggestedArticles.Any())
+            {
+                <div class="card border-info mb-3">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">💡 Suggested Knowledge</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            @foreach (var article in Model.SuggestedArticles)
+                            {
+                                <a asp-controller="KnowledgeBase" asp-action="Details" asp-route-id="@article.ArticleId"
+                                   class="list-group-item list-group-item-action px-0">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1 text-primary">@article.Title</h6>
+                                        <small class="text-muted">@(Math.Round(article.RelevanceScore * 100))%</small>
+                                    </div>
+                                    <p class="mb-1 small">@article.MatchingReason</p>
+                                </a>
+                            }
+                        </div>
+                        <div class="mt-2 text-center">
+                            <a asp-controller="KnowledgeBase" asp-action="Index" class="btn btn-sm btn-link">View all articles</a>
+                        </div>
+                    </div>
+                </div>
+            }
         </div>
+
     }
 </div>
 
@@ -415,4 +457,48 @@
 @section Scripts {
 <script src="~/lib/marked/marked.min.js"></script>
 <script src="~/js/ticket-detail.js" asp-append-version="true"></script>
+<script>
+    async function generateAiSummary(ticketId) {
+        const btn = document.getElementById('btnGenerateSummary');
+        const content = document.getElementById('aiSummaryContent');
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Generating...';
+
+        try {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            const response = await fetch(`/Ticket/GenerateAiSummary?ticketId=${ticketId}`, {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': token
+                }
+            });
+
+            const raw = await response.text();
+            let data = null;
+            try { data = JSON.parse(raw); } catch { }
+
+            if (!response.ok) {
+                const message = data?.message ?? `${response.status} ${response.statusText}`;
+                content.innerHTML = `<div class="text-danger"><i class="fas fa-exclamation-circle"></i> Error: ${message}</div>`;
+                return;
+            }
+
+            if (data?.success) {
+                // Parse markdown if needed, but summary is usually plain text or simple markdown
+                // Using marked.js if available, else plain text
+                content.innerHTML = typeof marked !== 'undefined' ? marked.parse(data.summary) : data.summary;
+            } else {
+                const message = data?.message ?? 'Failed to generate summary.';
+                content.innerHTML = `<div class="text-danger"><i class="fas fa-exclamation-circle"></i> Error: ${message}</div>`;
+            }
+        } catch (error) {
+            console.error(error);
+            content.innerHTML = '<div class="text-danger"><i class="fas fa-exclamation-circle"></i> Failed to reach server.</div>';
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-magic me-1"></i> Regenerate';
+        }
+    }
+</script>
 }

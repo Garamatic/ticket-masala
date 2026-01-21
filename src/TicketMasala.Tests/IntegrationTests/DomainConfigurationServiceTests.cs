@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace TicketMasala.Tests.IntegrationTests;
 
+[Collection("ConfigurationTests")]
 public class DomainConfigurationServiceTests : IDisposable
 {
     private readonly string _testConfigPath;

@@ -52,7 +52,9 @@ public class TicketDispatchInfo
     public List<AgentRecommendation> RecommendedAgents { get; set; } = new();
 
     // Time in backlog
-    public TimeSpan TimeInBacklog => DateTime.UtcNow - CreationDate;
+    // Note: TimeInBacklog should use ISystemClock when view model is refactored to accept it
+    // For now, marked for migration:
+    // public TimeSpan TimeInBacklog => _clock.UtcNow - CreationDate;
     public string TimeInBacklogDisplay => FormatTimeInBacklog(TimeInBacklog);
 
     private static string FormatTimeInBacklog(TimeSpan time)

@@ -69,9 +69,9 @@ public static class TicketQueryExtensions
     /// <summary>
     /// Filters tickets created within a time window.
     /// </summary>
-    public static IQueryable<Ticket> FilterRecent(this IQueryable<Ticket> query, int timeWindowMinutes)
+    public static IQueryable<Ticket> WithinTimeWindow(this IQueryable<Ticket> query, int timeWindowMinutes, ISystemClock clock)
     {
-        var cutoffTime = DateTime.UtcNow.AddMinutes(-timeWindowMinutes);
+        var cutoffTime = clock.UtcNow.AddMinutes(-timeWindowMinutes);
         return query.Where(t => t.CreationDate >= cutoffTime);
     }
 }

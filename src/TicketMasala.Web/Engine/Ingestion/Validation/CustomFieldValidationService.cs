@@ -6,17 +6,21 @@ namespace TicketMasala.Web.Engine.Ingestion.Validation;
 
 /// <summary>
 /// Validates custom field data against domain configuration schema.
+/// Uses centralized IJsonParsingService to eliminate code duplication.
 /// </summary>
 public class CustomFieldValidationService : ICustomFieldValidationService
 {
     private readonly IDomainConfigurationService _domainConfig;
+    private readonly IJsonParsingService _jsonParsingService;
     private readonly ILogger<CustomFieldValidationService> _logger;
 
     public CustomFieldValidationService(
         IDomainConfigurationService domainConfig,
+        IJsonParsingService jsonParsingService,
         ILogger<CustomFieldValidationService> logger)
     {
         _domainConfig = domainConfig;
+        _jsonParsingService = jsonParsingService;
         _logger = logger;
     }
 
@@ -160,22 +164,9 @@ public class CustomFieldValidationService : ICustomFieldValidationService
 
     public Dictionary<string, object?> ParseCustomFields(string? customFieldsJson)
     {
-        if (string.IsNullOrWhiteSpace(customFieldsJson))
-            return new Dictionary<string, object?>();
-
-        try
-        {
-            var result = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(customFieldsJson);
-            return result?.ToDictionary(
-                kvp => kvp.Key,
-                kvp => (object?)ConvertJsonElement(kvp.Value)
-            ) ?? new Dictionary<string, object?>();
-        }
-        catch (JsonException ex)
-        {
-            _logger.LogWarning(ex, "Failed to parse custom fields JSON: {Json}", customFieldsJson);
-            return new Dictionary<string, object?>();
-        }
+        // Delegate to centralized JSON parsing service to eliminate duplication
+        // This was previously duplicated in 4+ places
+        return _jsonParsingService.ParseCustomFields(customFieldsJson);
     }
 
     private static object? ConvertJsonElement(JsonElement element)

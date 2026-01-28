@@ -2,6 +2,7 @@ using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Observers;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Enums;
 using TicketMasala.Web.Repositories;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
@@ -82,7 +83,7 @@ namespace TicketMasala.Web.Engine.GERDA.Tickets.Domain
 
             // Audit Log
             var userId = httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            await auditService.LogActionAsync(ticket.Guid, "Assigned", userId, "Responsible", null, agent.Name);
+            await auditService.LogActionAsync(ticket.Guid, ActivityType.Assigned.GetDisplayText(), userId, "Responsible", null, agent.Name);
 
             return true;
         }

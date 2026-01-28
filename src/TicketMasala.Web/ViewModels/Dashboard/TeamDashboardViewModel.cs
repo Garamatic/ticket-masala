@@ -104,19 +104,7 @@ public class RecentActivityItem
     public DateTime Timestamp { get; set; }
     public string TicketGuid { get; set; } = string.Empty;
     public string TicketDescription { get; set; } = string.Empty;
-    public string ActivityType { get; set; } = string.Empty; // "Created", "Assigned", "Completed"
+    public ActivityType ActivityType { get; set; } = ActivityType.Other;
     public string AgentName { get; set; } = string.Empty;
-    public string ActivityClass
-    {
-        get
-        {
-            return ActivityType switch
-            {
-                "Created" => "primary",
-                "Assigned" => "info",
-                "Completed" => "success",
-                _ => "secondary"
-            };
-        }
-    }
+    public string ActivityClass => ActivityType.GetCssClass();
 }

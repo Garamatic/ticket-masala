@@ -1,5 +1,6 @@
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Enums;
 using TicketMasala.Web.Repositories;
 
 namespace TicketMasala.Web.Engine.GERDA.Tickets;
@@ -64,7 +65,7 @@ public class TicketFactory : ITicketFactory
             Title = title,
             Description = description,
             DomainId = "IT",
-            Status = responsible != null ? "Assigned" : "New",
+            Status = responsible != null ? ActivityType.Assigned.GetDisplayText() : ActivityType.Created.GetDisplayText(),
             TicketStatus = responsible != null ? TicketMasala.Domain.Common.Status.Assigned : TicketMasala.Domain.Common.Status.Pending,
             CustomFieldsJson = "{}",
             CreatorGuid = Guid.Parse(customer.Id),

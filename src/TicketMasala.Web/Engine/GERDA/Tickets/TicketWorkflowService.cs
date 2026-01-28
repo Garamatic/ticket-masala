@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Enums;
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.Observers;
 using TicketMasala.Web.Engine.Core;
@@ -121,7 +122,7 @@ public class TicketWorkflowService : ITicketWorkflowService
             Customer = customer,
             CustomerId = customerId,
             Responsible = responsible,
-            Status = responsible != null ? "Assigned" : "New",
+            Status = responsible != null ? ActivityType.Assigned.GetDisplayText() : ActivityType.Created.GetDisplayText(),
             Title = description.Length > 50 ? description.Substring(0, 47) + "..." : description,
             DomainId = defaultDomainId,
             ConfigVersionId = currentConfigVersion,
@@ -153,7 +154,7 @@ public class TicketWorkflowService : ITicketWorkflowService
         await NotifyObserversUpdatedAsync(ticket);
 
         // Audit Log
-        await _auditService.LogActionAsync(ticket.Guid, "Created", GetCurrentUserId());
+        await _auditService.LogActionAsync(ticket.Guid, ActivityType.Created.GetDisplayText(), GetCurrentUserId());
 
         return ticket;
     }

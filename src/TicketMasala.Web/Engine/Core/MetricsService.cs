@@ -1,6 +1,7 @@
 using TicketMasala.Web.Data;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Enums;
 using TicketMasala.Web.ViewModels.Projects;
 using TicketMasala.Web.ViewModels.Tickets;
 using TicketMasala.Web.ViewModels.Customers;
@@ -232,21 +233,8 @@ public class MetricsService : IMetricsService
 
         viewModel.RecentActivity = recentTickets.Select(t =>
         {
-            string activityType;
-            DateTime timestamp = t.CreationDate;
-
-            if (t.TicketStatus == Status.Completed)
-            {
-                activityType = "Completed";
-            }
-            else if (t.ResponsibleId != null && t.TicketStatus == Status.Assigned)
-            {
-                activityType = "Assigned";
-            }
-            else
-            {
-                activityType = "Created";
-            }
+            var activityType = GetActivityType(t);
+            var timestamp = t.CreationDate;
 
             return new RecentActivityItem
             {
@@ -354,5 +342,20 @@ public class MetricsService : IMetricsService
         }
 
         return metrics.OrderByDescending(m => m.ClosedTickets).ToList();
+    }
+
+    /// <summary>
+    /// Map ticket status to ActivityType enum.
+    /// GRASP: Information Expert - MetricsService knows how to interpret ticket status.
+    /// </summary>
+    private static ActivityType GetActivityType(Ticket ticket)
+    {
+        if (ticket.TicketStatus == Status.Completed)
+            return ActivityType.Completed;
+
+        if (ticket.ResponsibleId != null && ticket.TicketStatus == Status.Assigned)
+            return ActivityType.Assigned;
+
+        return ActivityType.Created;
     }
 }

@@ -158,6 +158,7 @@ public class TicketDetailsViewModel
             : daysUntil <= 3
                 ? $"{daysUntil} days left"
                 : "On Track";
+    }
 
     /// <summary>
     /// Recommended agent from Dispatching service (if available)

@@ -89,6 +89,10 @@ public static class WebApplicationBuilderExtensions
         // ============================================
         // Register Services (CQRS + Factory Pattern)
         // ============================================
+        // System abstractions for testability
+        builder.Services.AddSingleton<TicketMasala.Web.Abstractions.ISystemClock, TicketMasala.Web.Services.SystemClock>();
+        builder.Services.AddScoped<TicketMasala.Web.Services.IJsonParsingService, TicketMasala.Web.Services.JsonParsingService>();
+        
         builder.Services.AddSingleton<RuleCompilerService>();
         builder.Services.AddScoped<TicketMasala.Web.Engine.Ingestion.Validation.ICustomFieldValidationService,
             TicketMasala.Web.Engine.Ingestion.Validation.CustomFieldValidationService>();

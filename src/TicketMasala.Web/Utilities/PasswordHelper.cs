@@ -42,10 +42,19 @@ public static class PasswordHelper
     /// <summary>
     /// Generates a simple welcome password for new customers
     /// Format: Welcome{Year}!
+    /// Note: For production use, inject ISystemClock for testability.
     /// </summary>
     public static string GenerateWelcomePassword()
     {
-        return $"Welcome{DateTime.Now.Year}!";
+        return $"Welcome{DateTime.UtcNow.Year}!";
+    }
+
+    /// <summary>
+    /// Generates a simple welcome password using injected clock (testable).
+    /// </summary>
+    public static string GenerateWelcomePassword(DateTime currentTime)
+    {
+        return $"Welcome{currentTime.Year}!";
     }
 
     private static bool HasDigit(string password)

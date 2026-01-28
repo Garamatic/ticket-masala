@@ -1,6 +1,7 @@
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Enums;
+using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Repositories;
 
 namespace TicketMasala.Web.Engine.GERDA.Tickets;
@@ -12,13 +13,16 @@ namespace TicketMasala.Web.Engine.GERDA.Tickets;
 public class TicketFactory : ITicketFactory
 {
     private readonly IUserRepository _userRepository;
+    private readonly ISystemClock _clock;
     private readonly ILogger<TicketFactory> _logger;
 
     public TicketFactory(
         IUserRepository userRepository,
+        ISystemClock clock,
         ILogger<TicketFactory> logger)
     {
         _userRepository = userRepository;
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
         _logger = logger;
     }
 
@@ -38,8 +42,8 @@ public class TicketFactory : ITicketFactory
             Status = "New", // Required
             TicketStatus = TicketMasala.Domain.Common.Status.Pending,
             CustomFieldsJson = "{}",
-            CreationDate = DateTime.UtcNow,
-            CompletionTarget = DateTime.UtcNow.AddDays(14),
+            CreationDate = _clock.UtcNow,
+            CompletionTarget = _clock.UtcNow.AddDays(14),
             PriorityScore = 50,
             EstimatedEffortPoints = 0,
             Comments = new List<TicketComment>(),
@@ -69,8 +73,8 @@ public class TicketFactory : ITicketFactory
             TicketStatus = responsible != null ? TicketMasala.Domain.Common.Status.Assigned : TicketMasala.Domain.Common.Status.Pending,
             CustomFieldsJson = "{}",
             CreatorGuid = Guid.Parse(customer.Id),
-            CreationDate = DateTime.UtcNow,
-            CompletionTarget = completionTarget ?? DateTime.UtcNow.AddDays(14),
+            CreationDate = _clock.UtcNow,
+            CompletionTarget = completionTarget ?? _clock.UtcNow.AddDays(14),
             PriorityScore = 50,
             EstimatedEffortPoints = 0,
             Comments = new List<TicketComment>(),

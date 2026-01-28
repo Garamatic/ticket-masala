@@ -1,22 +1,30 @@
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Engine.GERDA.Models;
 
 namespace TicketMasala.Web.Engine.GERDA.Ranking;
 // Minimal seasonal priority strategy used as a fallback for tests
 public class SeasonalPriorityStrategy : IJobRankingStrategy
 {
+    private readonly ISystemClock _clock;
+    
+    public SeasonalPriorityStrategy(ISystemClock clock)
+    {
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+    }
+    
     public string Name => "SeasonalPriority";
 
     public double CalculateScore(Ticket ticket, GerdaConfig config)
     {
         // Apply a simple seasonal multiplier based on month.
         // For demonstration, months in summer (6-8) increase priority for landscaping-like domains.
-        var month = DateTime.UtcNow.Month;
+        var month = _clock.UtcNow.Month;
         double seasonMultiplier = (month >= 6 && month <= 8) ? 1.5 : 1.0;
 
         // Base on a simple WSJF-like fallback using age and estimated effort
-        var ageDays = (DateTime.UtcNow - ticket.CreationDate).TotalDays;
+        var ageDays = (_clock.UtcNow - ticket.CreationDate).TotalDays;
         var jobSize = ticket.EstimatedEffortPoints > 0 ? ticket.EstimatedEffortPoints : 5;
 
         // costOfDelay simplified: age * sla weight

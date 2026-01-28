@@ -1,6 +1,7 @@
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
 using Microsoft.EntityFrameworkCore;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Repositories.Specifications;
 

@@ -1,5 +1,6 @@
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Engine.GERDA.Ranking;
 using TicketMasala.Web.Engine.GERDA.Dispatching;
 using Microsoft.EntityFrameworkCore;
@@ -14,15 +15,18 @@ namespace TicketMasala.Web.Engine.GERDA.BackgroundJobs;
 public class GerdaBackgroundService : BackgroundService
 {
     private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly ISystemClock _clock;
     private readonly ILogger<GerdaBackgroundService> _logger;
     private readonly TimeSpan _priorityRecalculationInterval = TimeSpan.FromHours(6);
     private readonly TimeSpan _modelRetrainingCheckInterval = TimeSpan.FromHours(1);
 
     public GerdaBackgroundService(
         IServiceScopeFactory serviceScopeFactory,
+        ISystemClock clock,
         ILogger<GerdaBackgroundService> logger)
     {
         _serviceScopeFactory = serviceScopeFactory;
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
         _logger = logger;
     }
 
@@ -30,14 +34,14 @@ public class GerdaBackgroundService : BackgroundService
     {
         _logger.LogInformation("GERDA Background Service started");
 
-        var lastPriorityRecalculation = DateTime.UtcNow;
-        var lastModelRetrainingDate = DateTime.UtcNow.Date;
+        var lastPriorityRecalculation = _clock.UtcNow;
+        var lastModelRetrainingDate = _clock.UtcNow.Date;
 
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
-                var now = DateTime.UtcNow;
+                var now = _clock.UtcNow;
 
                 // Priority Recalculation (every 6 hours)
                 if (now - lastPriorityRecalculation >= _priorityRecalculationInterval)

@@ -1,4 +1,5 @@
 using TicketMasala.Web.Data;
+using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Engine.GERDA.Models;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
@@ -17,6 +18,7 @@ public class AnticipationService : IAnticipationService
 {
     private readonly MasalaDbContext _context;
     private readonly GerdaConfig _config;
+    private readonly ISystemClock _clock;
     private readonly ILogger<AnticipationService> _logger;
     private readonly MLContext _mlContext;
     private ITransformer? _model;
@@ -25,10 +27,12 @@ public class AnticipationService : IAnticipationService
     public AnticipationService(
         MasalaDbContext context,
         GerdaConfig config,
+        ISystemClock clock,
         ILogger<AnticipationService> logger)
     {
         _context = context;
         _config = config;
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
         _logger = logger;
         _mlContext = new MLContext(seed: 0);
         _modelPath = Path.Combine(AppContext.BaseDirectory, "gerda_anticipation_model.zip");
@@ -81,7 +85,7 @@ public class AnticipationService : IAnticipationService
 
         // Build result with dates
         var results = new List<(DateTime Date, int PredictedCount)>();
-        var startDate = DateTime.UtcNow.Date.AddDays(1); // Forecast starts tomorrow
+        var startDate = _clock.UtcNow.Date.AddDays(1); // Forecast starts tomorrow
 
         for (int i = 0; i < horizonDays; i++)
         {
@@ -166,7 +170,7 @@ public class AnticipationService : IAnticipationService
 
             return new CapacityRiskResult
             {
-                RiskStartDate = DateTime.UtcNow.Date,
+                RiskStartDate = _clock.UtcNow.Date,
                 ForecastedInflow = weeklyPredictedInflow,
                 AvailableCapacity = weeklyCapacity,
                 RiskPercentage = riskPercentage,
@@ -188,7 +192,7 @@ public class AnticipationService : IAnticipationService
         }
 
         // Get historical data for the past 30 days
-        var thirtyDaysAgo = DateTime.UtcNow.Date.AddDays(-30);
+        var thirtyDaysAgo = _clock.UtcNow.Date.AddDays(-30);
 
         var actualCounts = await _context.Tickets
             .Where(t => t.CreationDate >= thirtyDaysAgo)

@@ -1,5 +1,6 @@
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Engine.GERDA.Estimating;
@@ -18,15 +19,18 @@ public class EmailTicketProcessor : IEmailTicketProcessor
 {
     private readonly ITicketWorkflowService _ticketWorkflowService;
     private readonly IEstimatingService _estimatingService;
+    private readonly ISystemClock _clock;
     private readonly ILogger<EmailTicketProcessor> _logger;
 
     public EmailTicketProcessor(
         ITicketWorkflowService ticketWorkflowService,
         IEstimatingService estimatingService,
+        ISystemClock clock,
         ILogger<EmailTicketProcessor> logger)
     {
         _ticketWorkflowService = ticketWorkflowService;
         _estimatingService = estimatingService;
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
         _logger = logger;
     }
 
@@ -41,7 +45,7 @@ public class EmailTicketProcessor : IEmailTicketProcessor
             customerId: "system-email", // Or look up user
             responsibleId: null,
             projectGuid: null,
-            completionTarget: DateTime.UtcNow.AddDays(7)
+            completionTarget: _clock.UtcNow.AddDays(7)
         );
 
         // Enhance with email-specific info (Update ticket returned from creation)

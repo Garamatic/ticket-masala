@@ -1,5 +1,6 @@
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Enums;
 
 namespace TicketMasala.Web.ViewModels.Dashboard;
 

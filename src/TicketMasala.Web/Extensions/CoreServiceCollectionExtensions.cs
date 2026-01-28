@@ -6,6 +6,8 @@ using TicketMasala.Web.Engine.Ingestion.Background;
 using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Engine.GERDA.Tickets.Domain;
+using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.Services;
 
 namespace TicketMasala.Web.Extensions;
 
@@ -19,6 +21,10 @@ public static class CoreServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddCoreServices(this IServiceCollection services)
     {
+        // Utilities
+        services.AddSingleton<ISystemClock, SystemClock>();
+        services.AddSingleton<IJsonParsingService, JsonParsingService>();
+
         // Custom Field Validation
         services.AddScoped<Engine.Ingestion.Validation.ICustomFieldValidationService,
             Engine.Ingestion.Validation.CustomFieldValidationService>();

@@ -1,5 +1,6 @@
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.ViewModels.Tickets;
 using TicketMasala.Web.ViewModels.GERDA;
 using TicketMasala.Web.Repositories;
@@ -23,6 +24,7 @@ public class DispatchBacklogService : IDispatchBacklogService
     private readonly ITicketRepository _ticketRepository;
     private readonly IUserRepository _userRepository;
     private readonly IProjectRepository _projectRepository;
+    private readonly ISystemClock _clock;
     private readonly IDispatchingService _dispatchingService;
     private readonly ILogger<DispatchBacklogService> _logger;
 
@@ -30,12 +32,14 @@ public class DispatchBacklogService : IDispatchBacklogService
         ITicketRepository ticketRepository,
         IUserRepository userRepository,
         IProjectRepository projectRepository,
+        ISystemClock clock,
         IDispatchingService dispatchingService,
         ILogger<DispatchBacklogService> logger)
     {
         _ticketRepository = ticketRepository;
         _userRepository = userRepository;
         _projectRepository = projectRepository;
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
         _dispatchingService = dispatchingService;
         _logger = logger;
     }
@@ -173,7 +177,7 @@ public class DispatchBacklogService : IDispatchBacklogService
         }).OrderBy(a => a.Team).ThenBy(a => a.Name).ToList();
 
         // 9. Statistics (Global, not paged)
-        var now = DateTime.UtcNow;
+        var now = _clock.UtcNow;
         var statistics = new DispatchStatistics
         {
             TotalUnassignedTickets = totalItems,

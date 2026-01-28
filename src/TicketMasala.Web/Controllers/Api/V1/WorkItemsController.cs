@@ -7,6 +7,8 @@ using TicketMasala.Web.Repositories;
 using TicketMasala.Web.Extensions;
 using System.Security.Claims;
 
+using TicketMasala.Web.Services;
+
 namespace TicketMasala.Web.Controllers.Api.V1;
 
 [ApiVersion("1.0")]
@@ -18,15 +20,18 @@ public class WorkItemsController : ControllerBase
     private readonly ITicketWorkflowService _ticketWorkflowService;
     private readonly ITicketRepository _ticketRepository;
     private readonly ILogger<WorkItemsController> _logger;
+    private readonly IJsonParsingService _jsonParsingService;
 
     public WorkItemsController(
         ITicketWorkflowService ticketWorkflowService,
         ITicketRepository ticketRepository,
-        ILogger<WorkItemsController> logger)
+        ILogger<WorkItemsController> logger,
+        IJsonParsingService jsonParsingService)
     {
         _ticketWorkflowService = ticketWorkflowService;
         _ticketRepository = ticketRepository;
         _logger = logger;
+        _jsonParsingService = jsonParsingService;
     }
 
     [HttpGet]
@@ -38,7 +43,7 @@ public class WorkItemsController : ControllerBase
             // Use Repository to get full entities for proper DTO mapping
             // (Service only returns limited ViewModels)
             var tickets = await _ticketRepository.GetAllAsync();
-            return Ok(tickets.Select(t => t.ToWorkItemDto()));
+            return Ok(tickets.Select(t => t.ToWorkItemDto(_jsonParsingService)));
         }
         catch (Exception ex)
         {
@@ -58,7 +63,7 @@ public class WorkItemsController : ControllerBase
             if (ticket == null)
                 return NotFound();
 
-            return Ok(ticket.ToWorkItemDto());
+            return Ok(ticket.ToWorkItemDto(_jsonParsingService));
         }
         catch (Exception ex)
         {
@@ -122,7 +127,7 @@ public class WorkItemsController : ControllerBase
                 await _ticketWorkflowService.UpdateTicketAsync(ticket);
             }
 
-            return CreatedAtAction(nameof(GetById), new { id = ticket.Guid, version = "1.0" }, ticket.ToWorkItemDto());
+            return CreatedAtAction(nameof(GetById), new { id = ticket.Guid, version = "1.0" }, ticket.ToWorkItemDto(_jsonParsingService));
         }
         catch (ArgumentException ex)
         {

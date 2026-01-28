@@ -100,6 +100,11 @@ public class TicketDetailsViewModel
         _ => "badge bg-secondary"
     };
 
+    // SLA Status
+    public bool IsSlaBreached { get; set; }
+    public double DaysUntilSla { get; set; }
+    public string SlaStatusLabel { get; set; } = "On Track";
+
     /// <summary>
     /// AI-generated tags (comma-separated)
     /// e.g., "Password Reset, Urgent, First-Time User"

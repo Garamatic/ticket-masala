@@ -43,7 +43,7 @@ public static class DtoMappingExtensions
             CreatedAt = ticket.CreationDate,
             CompletedAt = ticket.CompletionDate,
             CompletionTarget = ticket.CompletionTarget,
-            CustomFields = customFields,
+            CustomFields = customFields.ToDictionary(k => k.Key, v => v.Value ?? new object()),
             EstimatedEffortPoints = ticket.EstimatedEffortPoints > 0 ? ticket.EstimatedEffortPoints : null,
             PriorityScore = ticket.PriorityScore > 0 ? ticket.PriorityScore : null,
             CustomerId = ticket.CustomerId

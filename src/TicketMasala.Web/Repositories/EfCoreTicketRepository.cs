@@ -3,6 +3,7 @@ using TicketMasala.Domain.Common;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Repositories.Queries;
 using TicketMasala.Web.Repositories.Specifications;
+using TicketMasala.Web.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace TicketMasala.Web.Repositories;
@@ -15,11 +16,16 @@ public class EfCoreTicketRepository : ITicketRepository
 {
     private readonly MasalaDbContext _context;
     private readonly ILogger<EfCoreTicketRepository> _logger;
+    private readonly ISystemClock _clock;
 
-    public EfCoreTicketRepository(MasalaDbContext context, ILogger<EfCoreTicketRepository> logger)
+    public EfCoreTicketRepository(
+        MasalaDbContext context, 
+        ILogger<EfCoreTicketRepository> logger,
+        ISystemClock clock)
     {
         _context = context;
         _logger = logger;
+        _clock = clock;
     }
 
     public async Task<Ticket?> GetByIdAsync(Guid id, bool includeRelations = true)
@@ -91,7 +97,7 @@ public class EfCoreTicketRepository : ITicketRepository
     public async Task<IEnumerable<Ticket>> GetRecentAsync(int timeWindowMinutes, Guid? departmentId = null)
     {
         return await _context.Tickets
-            .FilterRecent(timeWindowMinutes)
+            .WithinTimeWindow(timeWindowMinutes, _clock)
             .FilterValid()
             .FilterByDepartment(departmentId, _context.Projects)
             .ToListAsync();

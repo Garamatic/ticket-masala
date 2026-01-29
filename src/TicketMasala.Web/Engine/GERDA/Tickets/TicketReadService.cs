@@ -16,6 +16,7 @@ using TicketMasala.Web.ViewModels.GERDA;
 using TicketMasala.Web.Engine.Security;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.GERDA.Configuration;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Engine.GERDA.Tickets;
 
@@ -49,6 +50,7 @@ public class TicketReadService : ITicketReadService
     private readonly ILogger<TicketReadService> _logger;
     private readonly IDomainConfigurationService _domainConfig;
     private readonly Domain.TicketReportingService _ticketReportingService;
+    private readonly ISystemClock _clock;
 
     public TicketReadService(
         MasalaDbContext context,
@@ -59,7 +61,8 @@ public class TicketReadService : ITicketReadService
         IHttpContextAccessor httpContextAccessor,
         ILogger<TicketReadService> logger,
         IDomainConfigurationService domainConfig,
-        Domain.TicketReportingService ticketReportingService)
+        Domain.TicketReportingService ticketReportingService,
+        ISystemClock clock)
     {
         _context = context;
         _ticketRepository = ticketRepository;
@@ -70,6 +73,7 @@ public class TicketReadService : ITicketReadService
         _logger = logger;
         _domainConfig = domainConfig;
         _ticketReportingService = ticketReportingService;
+        _clock = clock;
     }
 
     private string? GetCurrentUserId()
@@ -283,7 +287,7 @@ public class TicketReadService : ITicketReadService
     public async Task<DashboardStats> GetDashboardStatsAsync(string? userId, bool isCustomer)
     {
         var stats = new DashboardStats();
-        var now = DateTime.UtcNow;
+        var now = _clock.UtcNow;
         var weekAgo = now.AddDays(-7);
         var todayStart = now.Date;
 

@@ -14,6 +14,8 @@ using TicketMasala.Web.Observers;
 using TicketMasala.Web.ViewModels.Projects;
 using Microsoft.AspNetCore.Identity;
 
+using TicketMasala.Web.Abstractions;
+
 namespace TicketMasala.Tests.Services;
 
 public class ProjectWorkflowServiceTests
@@ -37,6 +39,7 @@ public class ProjectWorkflowServiceTests
         var mockObservers = new List<IProjectObserver>();
         var mockOpenAiService = new Mock<IOpenAiService>();
         var mockTemplateService = new Mock<IProjectTemplateService>();
+        var mockClock = new Mock<ISystemClock>();
 
         return new ProjectWorkflowService(
             context,
@@ -45,7 +48,8 @@ public class ProjectWorkflowServiceTests
             mockObservers,
             mockOpenAiService.Object,
             mockTemplateService.Object,
-            _mockLogger.Object
+            _mockLogger.Object,
+            mockClock.Object
         );
     }
 

@@ -11,17 +11,20 @@ using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Data;
 using TicketMasala.Web.Data;
 using Customer = TicketMasala.Domain.Entities.ApplicationUser;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Tests.Services;
 
 public class MetricsServiceTests
 {
     private readonly Mock<ILogger<MetricsService>> _mockLogger;
+    private readonly Mock<ISystemClock> _mockClock;
     private readonly DbContextOptions<MasalaDbContext> _dbOptions;
 
     public MetricsServiceTests()
     {
         _mockLogger = new Mock<ILogger<MetricsService>>();
+        _mockClock = new Mock<ISystemClock>();
 
         // Use in-memory database for testing
         _dbOptions = new DbContextOptionsBuilder<MasalaDbContext>()
@@ -34,7 +37,7 @@ public class MetricsServiceTests
     {
         // Arrange
         using var context = new MasalaDbContext(_dbOptions);
-        var service = new MetricsService(context, _mockLogger.Object);
+        var service = new MetricsService(context, _mockLogger.Object, _mockClock.Object);
 
         // Act
         var result = await service.CalculateTeamMetricsAsync();
@@ -101,7 +104,7 @@ public class MetricsServiceTests
 
         await context.SaveChangesAsync();
 
-        var service = new MetricsService(context, _mockLogger.Object);
+        var service = new MetricsService(context, _mockLogger.Object, _mockClock.Object);
 
         // Act
         var result = await service.CalculateTeamMetricsAsync();
@@ -150,7 +153,7 @@ public class MetricsServiceTests
 
         await context.SaveChangesAsync();
 
-        var service = new MetricsService(context, _mockLogger.Object);
+        var service = new MetricsService(context, _mockLogger.Object, _mockClock.Object);
 
         // Act
         var result = await service.CalculateTeamMetricsAsync();
@@ -211,7 +214,7 @@ public class MetricsServiceTests
 
         await context.SaveChangesAsync();
 
-        var service = new MetricsService(context, _mockLogger.Object);
+        var service = new MetricsService(context, _mockLogger.Object, _mockClock.Object);
 
         // Act
         var result = await service.CalculateTeamMetricsAsync();
@@ -264,7 +267,7 @@ public class MetricsServiceTests
 
         await context.SaveChangesAsync();
 
-        var service = new MetricsService(context, _mockLogger.Object);
+        var service = new MetricsService(context, _mockLogger.Object, _mockClock.Object);
 
         // Act
         var result = await service.CalculateTeamMetricsAsync();

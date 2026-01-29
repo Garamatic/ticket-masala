@@ -8,11 +8,13 @@ namespace TicketMasala.Web.Engine.Core;
 public class AuditService : IAuditService
 {
     private readonly MasalaDbContext _context;
+    private readonly ISystemClock _clock;
     private readonly ILogger<AuditService> _logger;
 
-    public AuditService(MasalaDbContext context, ILogger<AuditService> logger)
+    public AuditService(MasalaDbContext context, ISystemClock clock, ILogger<AuditService> logger)
     {
         _context = context;
+        _clock = clock;
         _logger = logger;
     }
 
@@ -29,7 +31,7 @@ public class AuditService : IAuditService
                 PropertyName = propertyName,
                 OldValue = oldValue,
                 NewValue = newValue,
-                Timestamp = DateTime.UtcNow
+                Timestamp = _clock.UtcNow
             };
 
             _context.AuditLogs.Add(entry);

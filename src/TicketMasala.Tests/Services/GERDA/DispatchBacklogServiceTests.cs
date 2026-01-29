@@ -38,27 +38,27 @@ public class DispatchBacklogServiceTests
     {
         // Arrange
         var service = new DispatchBacklogService(
-            _mockTicketRepo.Object, 
-            _mockUserRepo.Object, 
-            _mockProjectRepo.Object, 
+            _mockTicketRepo.Object,
+            _mockUserRepo.Object,
+            _mockProjectRepo.Object,
             new SystemClock(),
-            _mockDispatchService.Object, 
+            _mockDispatchService.Object,
             _mockLogger.Object);
 
-        var ticket = new Ticket 
-        { 
-            Guid = Guid.NewGuid(), 
-            Title = "Test Ticket", 
+        var ticket = new Ticket
+        {
+            Guid = Guid.NewGuid(),
+            Title = "Test Ticket",
             TicketStatus = Status.Pending,
             CreationDate = DateTime.UtcNow
         };
-        _mockTicketRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Ticket> { ticket });
+        _mockTicketRepo.Setup(r => r.GetAllAsync(null)).ReturnsAsync(new List<Ticket> { ticket });
         _mockTicketRepo.Setup(r => r.GetByResponsibleIdAsync(It.IsAny<string>())).ReturnsAsync(new List<Ticket>());
 
-        var agent = new Employee 
-        { 
-            Id = "agent1", 
-            FirstName = "Agent", 
+        var agent = new Employee
+        {
+            Id = "agent1",
+            FirstName = "Agent",
             LastName = "One",
             Team = "Support"
         };

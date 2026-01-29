@@ -32,7 +32,7 @@ namespace TicketMasala.Tests.Robustness
         {
             // Arrange
             var mockRepo = new Mock<ITicketRepository>();
-            mockRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Ticket>());
+            mockRepo.Setup(r => r.GetAllAsync(null)).ReturnsAsync(new List<Ticket>());
             var mockUserRepo = new Mock<IUserRepository>();
             mockUserRepo.Setup(r => r.GetAllEmployeesAsync()).ReturnsAsync(new List<Employee>());
             var mockProjectRepo = new Mock<IProjectRepository>();
@@ -176,7 +176,7 @@ namespace TicketMasala.Tests.Robustness
         {
             // Arrange
             var mockRepo = new Mock<ITicketRepository>();
-            mockRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Ticket>());
+            mockRepo.Setup(r => r.GetAllAsync(null)).ReturnsAsync(new List<Ticket>());
             var mockUserRepo = new Mock<IUserRepository>();
             mockUserRepo.Setup(r => r.GetAllEmployeesAsync()).ReturnsAsync(new List<Employee>());
             var mockProjectRepo = new Mock<IProjectRepository>();

@@ -228,7 +228,7 @@ public class ProjectReadService : IProjectReadService
                         ? $"{t.Customer.FirstName} {t.Customer.LastName}"
                         : "Unknown",
                     CompletionTarget = t.CompletionTarget,
-                    CreationDate = DateTime.UtcNow
+                    CreationDate = t.CreationDate
                 }).ToList()
             })
             .ToListAsync();
@@ -273,7 +273,7 @@ public class ProjectReadService : IProjectReadService
                         ? $"{t.Customer.FirstName} {t.Customer.LastName}"
                         : "Unknown",
                     CompletionTarget = t.CompletionTarget,
-                    CreationDate = DateTime.UtcNow
+                    CreationDate = t.CreationDate
                 }).ToList()
             })
             .ToListAsync();

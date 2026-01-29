@@ -13,12 +13,15 @@ using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Engine.Core;
 using Xunit;
 
+using TicketMasala.Web.Abstractions;
+
 namespace TicketMasala.Tests.Controllers;
 
 public class TicketAttachmentsControllerTests : IDisposable
 {
     private readonly Mock<IFileStorageService> _mockFileStorage;
     private readonly Mock<ILogger<TicketAttachmentsController>> _mockLogger;
+    private readonly Mock<ISystemClock> _mockClock;
     private readonly MasalaDbContext _context;
     private readonly TicketAttachmentsController _controller;
 
@@ -26,6 +29,7 @@ public class TicketAttachmentsControllerTests : IDisposable
     {
         _mockFileStorage = new Mock<IFileStorageService>();
         _mockLogger = new Mock<ILogger<TicketAttachmentsController>>();
+        _mockClock = new Mock<ISystemClock>();
 
         var options = new DbContextOptionsBuilder<MasalaDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -41,7 +45,8 @@ public class TicketAttachmentsControllerTests : IDisposable
         _controller = new TicketAttachmentsController(
             _mockFileStorage.Object,
             _context,
-            _mockLogger.Object
+            _mockLogger.Object,
+            _mockClock.Object
         );
 
         _controller.ControllerContext = new ControllerContext

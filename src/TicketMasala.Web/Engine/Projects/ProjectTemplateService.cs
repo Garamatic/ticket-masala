@@ -7,6 +7,7 @@ using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.AI;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Engine.Projects;
 
@@ -14,15 +15,18 @@ public class ProjectTemplateService : IProjectTemplateService
 {
     private readonly MasalaDbContext _context;
     private readonly IOpenAiService _openAiService;
+    private readonly ISystemClock _clock;
     private readonly ILogger<ProjectTemplateService> _logger;
 
     public ProjectTemplateService(
         MasalaDbContext context,
         IOpenAiService openAiService,
+        ISystemClock clock,
         ILogger<ProjectTemplateService> logger)
     {
         _context = context;
         _openAiService = openAiService;
+        _clock = clock;
         _logger = logger;
     }
 
@@ -60,7 +64,7 @@ public class ProjectTemplateService : IProjectTemplateService
                     PriorityScore = (double)templateTicket.Priority * 25,
                     TicketType = templateTicket.TicketType,
                     TicketStatus = Status.Pending,
-                    CreationDate = DateTime.UtcNow,
+                    CreationDate = _clock.UtcNow,
                     CreatorGuid = project.CreatorGuid,
                     Customer = project.Customers.FirstOrDefault(), // Use the primary customer
                     CustomerId = project.CustomerId,

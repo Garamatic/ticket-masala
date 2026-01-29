@@ -28,7 +28,7 @@ public class UserCreateViewModel
     public required string ConfirmPassword { get; set; }
 
     [Required]
-    public required string Role { get; set; } = "Customer";
+    public required string Role { get; set; }
 
     // Employee Fields
     public string? Team { get; set; }

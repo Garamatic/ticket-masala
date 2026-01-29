@@ -1,6 +1,7 @@
 using Moq;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Engine.GERDA.Estimating;
+using TicketMasala.Web.Engine.GERDA.Sentiment;
 using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Engine.Ingestion;
 using TicketMasala.Tests.TestHelpers;
@@ -16,6 +17,7 @@ public class EmailTicketProcessorTests
     private readonly DatabaseTestFixture _fixture;
     private readonly Mock<ITicketWorkflowService> _mockWorkflowService;
     private readonly Mock<IEstimatingService> _mockEstimatingService;
+    private readonly Mock<ISentimentAnalyzer> _mockSentimentAnalyzer;
     private readonly Mock<ILogger<EmailTicketProcessor>> _mockLogger;
 
     public EmailTicketProcessorTests()
@@ -23,6 +25,7 @@ public class EmailTicketProcessorTests
         _fixture = new DatabaseTestFixture();
         _mockWorkflowService = new Mock<ITicketWorkflowService>();
         _mockEstimatingService = new Mock<IEstimatingService>();
+        _mockSentimentAnalyzer = new Mock<ISentimentAnalyzer>();
         _mockLogger = new Mock<ILogger<EmailTicketProcessor>>();
     }
 
@@ -33,8 +36,11 @@ public class EmailTicketProcessorTests
         var mockTicket = new Ticket { Guid = Guid.NewGuid(), Title = "URGENT: Database Down", GerdaTags = "" };
         _mockWorkflowService.Setup(s => s.CreateTicketAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<DateTime?>()))
             .ReturnsAsync(mockTicket);
+            
+        _mockSentimentAnalyzer.Setup(a => a.Analyze(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns((4.0, "Critical"));
 
-        var processor = new EmailTicketProcessor(_mockWorkflowService.Object, _mockEstimatingService.Object, new SystemClock(), _mockLogger.Object);
+        var processor = new EmailTicketProcessor(_mockWorkflowService.Object, _mockEstimatingService.Object, _mockSentimentAnalyzer.Object, new SystemClock(), _mockLogger.Object);
         var email = new EmailContent("URGENT: Database Down", "The production database is unresponsive.", "user@test.com");
 
         // Act
@@ -62,8 +68,11 @@ public class EmailTicketProcessorTests
         var mockTicket = new Ticket { Guid = Guid.NewGuid(), Title = "Question about features", GerdaTags = "" };
         _mockWorkflowService.Setup(s => s.CreateTicketAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<DateTime?>()))
             .ReturnsAsync(mockTicket);
+            
+        _mockSentimentAnalyzer.Setup(a => a.Analyze(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns((1.0, "Normal"));
 
-        var processor = new EmailTicketProcessor(_mockWorkflowService.Object, _mockEstimatingService.Object, new SystemClock(), _mockLogger.Object);
+        var processor = new EmailTicketProcessor(_mockWorkflowService.Object, _mockEstimatingService.Object, _mockSentimentAnalyzer.Object, new SystemClock(), _mockLogger.Object);
         var email = new EmailContent("Question about features", "Can you tell me more?", "user@test.com");
 
         // Act

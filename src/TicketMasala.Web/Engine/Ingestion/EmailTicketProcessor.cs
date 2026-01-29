@@ -19,17 +19,20 @@ public class EmailTicketProcessor : IEmailTicketProcessor
 {
     private readonly ITicketWorkflowService _ticketWorkflowService;
     private readonly IEstimatingService _estimatingService;
+    private readonly ISentimentAnalyzer _sentimentAnalyzer;
     private readonly ISystemClock _clock;
     private readonly ILogger<EmailTicketProcessor> _logger;
 
     public EmailTicketProcessor(
         ITicketWorkflowService ticketWorkflowService,
         IEstimatingService estimatingService,
+        ISentimentAnalyzer sentimentAnalyzer,
         ISystemClock clock,
         ILogger<EmailTicketProcessor> logger)
     {
         _ticketWorkflowService = ticketWorkflowService;
         _estimatingService = estimatingService;
+        _sentimentAnalyzer = sentimentAnalyzer;
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
         _logger = logger;
     }
@@ -37,7 +40,7 @@ public class EmailTicketProcessor : IEmailTicketProcessor
     public async Task<Ticket> ProcessEmailAsync(EmailContent email, CancellationToken cancellationToken)
     {
         // 1. Analyze Sentiment / Urgency
-        var (urgencyScore, sentimentLabel) = SimpleSentimentAnalyzer.Analyze(email.Subject, email.Body);
+        var (urgencyScore, sentimentLabel) = _sentimentAnalyzer.Analyze(email.Subject, email.Body);
 
         // 2. Create Ticket via Workflow Service (handles observers, defaults, PII scrubbing)
         var ticket = await _ticketWorkflowService.CreateTicketAsync(

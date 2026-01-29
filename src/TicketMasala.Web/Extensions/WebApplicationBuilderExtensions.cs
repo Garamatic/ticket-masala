@@ -105,24 +105,26 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddScoped<ITicketReadService, TicketReadService>();
         builder.Services.AddScoped<ITicketWorkflowService, TicketWorkflowService>();
         builder.Services.AddScoped<ITicketBatchService, TicketBatchService>();
-#pragma warning disable CS0618 // Type or member is obsolete
-        builder.Services.AddScoped<TicketService>(); // Legacy implementation
-#pragma warning restore CS0618 // Type or member is obsolete
 
         builder.Services.AddScoped<TicketDispatchService>();
         builder.Services.AddScoped<TicketReportingService>();
         builder.Services.AddScoped<TicketNotificationService>();
         builder.Services.AddScoped<ITicketFactory, TicketFactory>();
-        builder.Services.AddScoped<IFileService, FileService>();
+        builder.Services.AddScoped<IFileStorageService, DiskFileStorageService>();
         builder.Services.AddScoped<IEmailService, EmailService>();
         builder.Services.AddScoped<INotificationService, NotificationService>();
         builder.Services.AddScoped<ISavedFilterService, SavedFilterService>();
         builder.Services.AddScoped<IProjectReadService, ProjectReadService>();
         builder.Services.AddScoped<IProjectWorkflowService, ProjectWorkflowService>();
         builder.Services.AddScoped<IProjectTemplateService, ProjectTemplateService>();
-        builder.Services.AddScoped<ProjectService>(); // Legacy
         builder.Services.AddScoped<IAuditService, AuditService>();
         builder.Services.AddScoped<ITicketImportService, TicketImportService>();
+        
+        // Ingestion & Sentiment
+        builder.Services.AddScoped<IEmailTicketProcessor, EmailTicketProcessor>();
+        builder.Services.AddScoped<TicketMasala.Web.Engine.GERDA.Sentiment.ISentimentAnalyzer, 
+            TicketMasala.Web.Engine.GERDA.Sentiment.SimpleSentimentAnalyzer>();
+
         builder.Services.AddHostedService<EmailIngestionService>();
 
         // Background Queue
@@ -131,6 +133,10 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddHostedService<QueuedHostedService>();
         builder.Services.AddHostedService<TicketGeneratorService>();
         builder.Services.AddScoped<ITicketGenerator, TicketGenerator>();
+        
+        // Enrichment
+        builder.Services.AddSingleton<TicketMasala.Web.Engine.Enrichment.IEnrichmentQueue, TicketMasala.Web.Engine.Enrichment.EnrichmentQueue>();
+        builder.Services.AddHostedService<TicketMasala.Web.Engine.Enrichment.EnrichmentBackgroundService>();
 
         // Seed Strategies (Strategy Pattern - executed in registration order)
         builder.Services.AddScoped<ISeedStrategy, RoleSeedStrategy>();

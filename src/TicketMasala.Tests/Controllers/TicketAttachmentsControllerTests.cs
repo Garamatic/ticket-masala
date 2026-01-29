@@ -17,14 +17,14 @@ namespace TicketMasala.Tests.Controllers;
 
 public class TicketAttachmentsControllerTests : IDisposable
 {
-    private readonly Mock<IFileService> _mockFileService;
+    private readonly Mock<IFileStorageService> _mockFileStorage;
     private readonly Mock<ILogger<TicketAttachmentsController>> _mockLogger;
     private readonly MasalaDbContext _context;
     private readonly TicketAttachmentsController _controller;
 
     public TicketAttachmentsControllerTests()
     {
-        _mockFileService = new Mock<IFileService>();
+        _mockFileStorage = new Mock<IFileStorageService>();
         _mockLogger = new Mock<ILogger<TicketAttachmentsController>>();
 
         var options = new DbContextOptionsBuilder<MasalaDbContext>()
@@ -39,7 +39,7 @@ public class TicketAttachmentsControllerTests : IDisposable
         }, "mock"));
 
         _controller = new TicketAttachmentsController(
-            _mockFileService.Object,
+            _mockFileStorage.Object,
             _context,
             _mockLogger.Object
         );
@@ -79,7 +79,7 @@ public class TicketAttachmentsControllerTests : IDisposable
             ContentType = "text/plain"
         };
 
-        _mockFileService.Setup(s => s.SaveFileAsync(It.IsAny<IFormFile>(), "tickets"))
+        _mockFileStorage.Setup(s => s.StoreFileAsync(It.IsAny<Stream>(), "test.txt"))
             .ReturnsAsync("stored_filename.txt");
 
         // Act
@@ -124,7 +124,7 @@ public class TicketAttachmentsControllerTests : IDisposable
         await _context.SaveChangesAsync();
 
         var stream = new MemoryStream(Encoding.UTF8.GetBytes("content"));
-        _mockFileService.Setup(s => s.GetFileStreamAsync("stored.txt", "tickets"))
+        _mockFileStorage.Setup(s => s.RetrieveFileAsync("stored.txt"))
             .ReturnsAsync(stream);
 
         // Act

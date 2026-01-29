@@ -112,7 +112,7 @@ namespace TicketMasala.Tests.Robustness
             var mockHttpContext = new Mock<IHttpContextAccessor>();
             var mockRule = new Mock<IRuleEngineService>();
             var mockOpenAi = new Mock<IOpenAiService>();
-            var mockFacade = new Mock<ITicketDetailFacade>();
+            var mockFacade = new Mock<ITicketContextFacade>();
             var mockLogger = new Mock<ILogger<TicketController>>();
 
             var controller = new TicketController(
@@ -154,7 +154,7 @@ namespace TicketMasala.Tests.Robustness
             var mockHttpContext = new Mock<IHttpContextAccessor>();
             var mockRule = new Mock<IRuleEngineService>();
             var mockOpenAi = new Mock<IOpenAiService>();
-            var mockFacade = new Mock<ITicketDetailFacade>();
+            var mockFacade = new Mock<ITicketContextFacade>();
             var mockLogger = new Mock<ILogger<TicketController>>();
 
             var controller = new TicketController(

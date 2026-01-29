@@ -81,7 +81,7 @@ builder.Services.AddHttpContextAccessor(); // Required for services that need Ht
 // builder.Services.AddMasalaSecurity(builder.Environment); // Already included in AddMasalaCore()
 builder.Services.AddMasalaApi();
 builder.Services.AddMasalaFrontend();
-builder.Services.AddScoped<TicketMasala.Web.Facades.ITicketDetailFacade, TicketMasala.Web.Facades.TicketDetailFacade>();
+builder.Services.AddScoped<TicketMasala.Web.Facades.ITicketContextFacade, TicketMasala.Web.Facades.TicketContextFacade>();
 
 // ============================================
 // CACHING & UTILITIES
@@ -89,7 +89,6 @@ builder.Services.AddScoped<TicketMasala.Web.Facades.ITicketDetailFacade, TicketM
 builder.Services.AddMemoryCache();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSingleton<TenantConnectionResolver>();
-builder.Services.AddScoped<TicketMasala.Web.Engine.Core.IFileStorageService, TicketMasala.Web.Engine.Core.LocalFileStorageService>();
 
 var app = builder.Build();
 

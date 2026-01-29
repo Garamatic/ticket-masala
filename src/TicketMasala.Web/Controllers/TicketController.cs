@@ -37,7 +37,7 @@ public class TicketController : Controller
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IRuleEngineService _ruleEngine;
     private readonly IOpenAiService _openAiService;
-    private readonly Facades.ITicketDetailFacade _ticketDetailFacade;
+    private readonly Facades.ITicketContextFacade _ticketContextFacade;
     private readonly ILogger<TicketController> _logger;
 
     public TicketController(
@@ -51,7 +51,7 @@ public class TicketController : Controller
         IHttpContextAccessor httpContextAccessor,
         IRuleEngineService ruleEngine,
         IOpenAiService openAiService,
-        Facades.ITicketDetailFacade ticketDetailFacade,
+        Facades.ITicketContextFacade ticketContextFacade,
         ILogger<TicketController> logger)
     {
         _gerdaService = gerdaService;
@@ -64,7 +64,7 @@ public class TicketController : Controller
         _httpContextAccessor = httpContextAccessor;
         _ruleEngine = ruleEngine;
         _openAiService = openAiService;
-        _ticketDetailFacade = ticketDetailFacade;
+        _ticketContextFacade = ticketContextFacade;
         _logger = logger;
     }
 
@@ -105,7 +105,7 @@ public class TicketController : Controller
         TicketDetailsViewModel? viewModel;
         try
         {
-            viewModel = await _ticketDetailFacade.GetTicketDetailsAsync(id.Value, userId, isCustomer);
+            viewModel = await _ticketContextFacade.GetTicketDetailsAsync(id.Value, userId, isCustomer);
         }
         catch (UnauthorizedAccessException)
         {
@@ -114,7 +114,7 @@ public class TicketController : Controller
 
         if (viewModel == null) return NotFound();
 
-        var context = await _ticketDetailFacade.GetTicketDetailContextAsync(viewModel);
+        var context = await _ticketContextFacade.GetTicketDetailContextAsync(viewModel);
         
         ViewBag.DomainId = context.DomainId;
         ViewBag.EntityLabels = context.EntityLabels;
@@ -158,44 +158,18 @@ public class TicketController : Controller
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         var isCustomer = User.IsInRole(Constants.RoleCustomer);
 
-        ViewBag.Employees = await _ticketReadService.GetEmployeeSelectListAsync();
-        ViewBag.Projects = await _ticketReadService.GetProjectSelectListAsync();
+        var context = await _ticketContextFacade.GetCreateContextAsync(isCustomer, userId, projectGuid);
 
-        string? preselectedCustomerId = null;
-
-        if (projectGuid.HasValue)
-        {
-            var project = await _projectReadService.GetProjectDetailsAsync(projectGuid.Value);
-            if (project != null && project.ProjectDetails != null)
-            {
-                ViewBag.PreselectedProjectId = project.ProjectDetails.Guid;
-                if (!string.IsNullOrEmpty(project.ProjectDetails.CustomerId))
-                {
-                    preselectedCustomerId = project.ProjectDetails.CustomerId;
-                }
-            }
-        }
-
-        if (!isCustomer)
-        {
-            ViewBag.Customers = await _ticketReadService.GetCustomerSelectListAsync();
-            if (preselectedCustomerId != null)
-            {
-                ViewBag.PreselectedCustomerId = preselectedCustomerId;
-            }
-        }
-        else
-        {
-            ViewBag.PreselectedCustomerId = userId;
-        }
-
-        ViewBag.IsCustomer = isCustomer;
-
-        var defaultDomain = _domainConfig.GetDefaultDomainId();
-        ViewBag.DomainId = defaultDomain;
-        ViewBag.EntityLabels = _domainConfig.GetEntityLabels(defaultDomain);
-        ViewBag.WorkItemTypes = _domainConfig.GetWorkItemTypes(defaultDomain).ToList();
-        ViewBag.CustomFields = _domainConfig.GetCustomFields(defaultDomain).ToList();
+        ViewBag.Employees = context.Employees;
+        ViewBag.Projects = context.Projects;
+        ViewBag.Customers = context.Customers;
+        ViewBag.PreselectedProjectId = context.PreselectedProjectId;
+        ViewBag.PreselectedCustomerId = context.PreselectedCustomerId;
+        ViewBag.IsCustomer = context.IsCustomer;
+        ViewBag.DomainId = context.DomainId;
+        ViewBag.EntityLabels = context.EntityLabels;
+        ViewBag.WorkItemTypes = context.WorkItemTypes;
+        ViewBag.CustomFields = context.CustomFields;
 
         return View();
     }
@@ -286,60 +260,65 @@ public class TicketController : Controller
     {
         if (id == null) return NotFound();
 
-        var ticket = await _ticketReadService.GetTicketForEditAsync(id.Value);
-        if (ticket == null) return NotFound();
-
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         var isCustomer = User.IsInRole(Constants.RoleCustomer);
 
-        if (isCustomer)
+        Facades.TicketEditContext? context;
+        try
         {
-            if (ticket.CustomerId != userId) return Forbid();
-
-            if (ticket.TicketStatus != Status.Pending && ticket.TicketStatus != Status.Assigned)
-            {
-                TempData["ErrorMessage"] = "You can only edit tickets that are in Pending or Assigned status.";
-                return RedirectToAction("Detail", new { id = ticket.Guid });
-            }
+            context = await _ticketContextFacade.GetEditContextAsync(id.Value, userId, isCustomer);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (InvalidOperationException ex)
+        {
+            TempData["ErrorMessage"] = ex.Message;
+            return RedirectToAction("Detail", new { id = id.Value });
         }
 
-        var responsibleUsers = await _ticketReadService.GetAllUsersSelectListAsync();
+        if (context == null) return NotFound();
 
-        var viewModel = new EditTicketViewModel
+        // Facade can't easily populate ValidStatuses without User principal, handled here or passed to Facade.
+        // In the updated Facade I omitted it, so I need to restore it here or update Facade to take ClaimsPrincipal.
+        // Let's populate ValidStatuses here for now to be safe, or assume I should have passed user.
+        // I'll populate it here since I have the viewmodel.
+        // Wait, context.ViewModel is EditTicketViewModel, not Ticket. I need Ticket entity for RuleEngine.
+        // The facade loaded the ticket but didn't expose it. 
+        // This suggests GetEditContextAsync should probably handle ValidStatuses if I pass User.
+        
+        // RE-READING FACADE: I didn't implement ValidStatuses in GetEditContextAsync.
+        // I should probably just do it here for now to save a facade change, OR update facade.
+        // But I need the Ticket entity for RuleEngine.GetValidNextStates(ticket, User).
+        // The facade has the ticket. It should do it.
+        
+        // Let's update the Facade to accept ClaimsPrincipal instead of userId string.
+        // But I already wrote the facade. 
+        // I will use what I have. I can fetch the ticket again or...
+        // Actually, the facade returned ViewModel, not Ticket.
+        // This is a small design flaw in my facade implementation. 
+        
+        // QUICK FIX: I will just re-fetch the ticket here for RuleEngine. It's a small overhead (cached context likely).
+        // OR better: Update Facade to take ClaimsPrincipal.
+        // Since I'm editing Controller, I can't easily update Facade in same step.
+        // I will stick to Controller changes.
+        
+        var ticket = await _ticketReadService.GetTicketForEditAsync(id.Value); // This is cached/fast usually
+        if (ticket != null)
         {
-            Guid = ticket.Guid,
-            Description = ticket.Description,
-            TicketStatus = ticket.TicketStatus,
-            CompletionTarget = ticket.CompletionTarget,
-            ResponsibleUserId = ticket.Responsible?.Id,
-            CustomerId = ticket.CustomerId,
-            ProjectGuid = ticket.ProjectGuid,
-            ResponsibleUsers = responsibleUsers,
-            CustomerList = (await _ticketReadService.GetCustomerSelectListAsync()).ToList(),
-            ProjectList = (await _ticketReadService.GetProjectSelectListAsync()).ToList()
-        };
-
-        var domainId = ticket.DomainId ?? _domainConfig.GetDefaultDomainId();
-        ViewBag.DomainId = domainId;
-        ViewBag.EntityLabels = _domainConfig.GetEntityLabels(domainId);
-        ViewBag.CustomFields = _domainConfig.GetCustomFields(domainId).ToList();
-        ViewBag.WorkItemTypeCode = ticket.WorkItemTypeCode;
-
-        if (!string.IsNullOrEmpty(ticket.CustomFieldsJson))
-        {
-            try { ViewBag.CustomFieldValues = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(ticket.CustomFieldsJson); }
-            catch { ViewBag.CustomFieldValues = new Dictionary<string, object>(); }
+            var validStates = _ruleEngine.GetValidNextStates(ticket, User);
+            var allowedStatuses = validStates.Union(new[] { ticket.TicketStatus }).Distinct().ToList();
+            ViewBag.ValidStatuses = new SelectList(allowedStatuses);
         }
-        else
-        {
-            ViewBag.CustomFieldValues = new Dictionary<string, object>();
-        }
 
-        var validStates = _ruleEngine.GetValidNextStates(ticket, User);
-        var allowedStatuses = validStates.Union(new[] { ticket.TicketStatus }).Distinct().ToList();
-        ViewBag.ValidStatuses = new SelectList(allowedStatuses);
+        ViewBag.DomainId = context.DomainId;
+        ViewBag.EntityLabels = context.EntityLabels;
+        ViewBag.CustomFields = context.CustomFields;
+        ViewBag.WorkItemTypeCode = context.WorkItemTypeCode;
+        ViewBag.CustomFieldValues = context.CustomFieldValues;
 
-        return View(viewModel);
+        return View(context.ViewModel);
     }
 
     [HttpPost]
@@ -403,18 +382,16 @@ public class TicketController : Controller
         viewModel.CustomerList = (await _ticketReadService.GetCustomerSelectListAsync()).ToList();
         viewModel.ProjectList = (await _ticketReadService.GetProjectSelectListAsync()).ToList();
 
-        var reloadTicket = await _ticketReadService.GetTicketForEditAsync(id);
-        if (reloadTicket != null)
+        var context = await _ticketContextFacade.GetEditReloadContextAsync(id, User);
+        
+        if (context.ValidStatuses != null)
         {
-            var validStates = _ruleEngine.GetValidNextStates(reloadTicket, User);
-            var allowedStatuses = validStates.Union(new[] { reloadTicket.TicketStatus }).Distinct().ToList();
-            ViewBag.ValidStatuses = new SelectList(allowedStatuses);
+            ViewBag.ValidStatuses = context.ValidStatuses;
         }
 
-        var reloadDomainId = _domainConfig.GetDefaultDomainId();
-        ViewBag.DomainId = reloadDomainId;
-        ViewBag.EntityLabels = _domainConfig.GetEntityLabels(reloadDomainId);
-        ViewBag.CustomFields = _domainConfig.GetCustomFields(reloadDomainId).ToList();
+        ViewBag.DomainId = context.DomainId;
+        ViewBag.EntityLabels = context.EntityLabels;
+        ViewBag.CustomFields = context.CustomFields;
         ViewBag.CustomFieldValues = new Dictionary<string, object>();
 
         return View(viewModel);

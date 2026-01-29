@@ -38,6 +38,7 @@ public class TicketController : Controller
     private readonly IRuleEngineService _ruleEngine;
     private readonly IOpenAiService _openAiService;
     private readonly Facades.ITicketContextFacade _ticketContextFacade;
+    private readonly ISystemClock _clock;
     private readonly ILogger<TicketController> _logger;
 
     public TicketController(
@@ -52,6 +53,7 @@ public class TicketController : Controller
         IRuleEngineService ruleEngine,
         IOpenAiService openAiService,
         Facades.ITicketContextFacade ticketContextFacade,
+        ISystemClock clock,
         ILogger<TicketController> logger)
     {
         _gerdaService = gerdaService;
@@ -65,6 +67,7 @@ public class TicketController : Controller
         _ruleEngine = ruleEngine;
         _openAiService = openAiService;
         _ticketContextFacade = ticketContextFacade;
+        _clock = clock;
         _logger = logger;
     }
 

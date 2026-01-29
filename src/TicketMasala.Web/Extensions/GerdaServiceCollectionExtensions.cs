@@ -70,6 +70,10 @@ public static class GerdaServiceCollectionExtensions
         services.AddScoped<IEstimatingService, EstimatingService>();
         services.AddScoped<IRankingService, RankingService>();
 
+        // Algorithms
+        services.AddSingleton(new Engine.GERDA.Dispatching.Configuration.WsjfConfig());
+        services.AddTransient<Engine.GERDA.Dispatching.Algorithms.WsjfEngine>();
+
         // Dispatching policies & selectors
         services.AddScoped<IDispatchingStrategySelector, DomainDispatchingStrategySelector>();
         services.AddScoped<IAutoDispatchPolicy, ScoreThresholdAutoDispatchPolicy>();

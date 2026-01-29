@@ -31,7 +31,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TicketMasala.Domain\TicketMasala.Domain.csproj" />
-    <ProjectReference Include="..\TicketMasala.Dispatch.Common\TicketMasala.Dispatch.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>

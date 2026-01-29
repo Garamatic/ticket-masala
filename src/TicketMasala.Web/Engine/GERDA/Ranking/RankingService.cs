@@ -4,7 +4,7 @@ using TicketMasala.Web.Engine.GERDA.Strategies;
 using TicketMasala.Web.Engine.GERDA.Configuration;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
-using TicketMasala.Dispatch.Common.Algorithms;
+using TicketMasala.Web.Engine.GERDA.Dispatching.Algorithms;
 using TicketMasala.Web.Engine.Common;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,7 +15,7 @@ namespace TicketMasala.Web.Engine.GERDA.Ranking;
 /// R - Ranking: WSJF (Weighted Shortest Job First) priority calculation
 /// Calculates priority score: Cost of Delay / Job Size
 /// 
-/// Now delegat to TicketMasala.Dispatch.Common.WsjfEngine for generic algorithm.
+/// Now delegates to Engine.GERDA.Dispatching.WsjfEngine for generic algorithm.
 /// Maintains backward compatibility with domain-specific strategies.
 /// </summary>
 public class RankingService : IRankingService

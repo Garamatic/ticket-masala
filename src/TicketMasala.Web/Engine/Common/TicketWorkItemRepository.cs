@@ -1,4 +1,4 @@
-using TicketMasala.Dispatch.Common.Models;
+using TicketMasala.Web.Engine.GERDA.Dispatching.Models;
 using TicketMasala.Web.Data;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
@@ -8,7 +8,7 @@ namespace TicketMasala.Web.Engine.Common;
 
 /// <summary>
 /// Repository adapter that implements IWorkItemRepository for TicketMasala Tickets.
-/// Bridges TicketMasala's EF Core data layer to the generic Dispatch.Common algorithms.
+/// Bridges TicketMasala's EF Core data layer to the generic dispatching algorithms.
 /// </summary>
 public class TicketWorkItemRepository : IWorkItemRepository
 {

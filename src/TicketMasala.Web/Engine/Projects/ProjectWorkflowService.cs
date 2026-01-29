@@ -98,6 +98,7 @@ public class ProjectWorkflowService : IProjectWorkflowService
             CreationDate = _clock.UtcNow,
             CreatorGuid = Guid.Parse(userId),
             ProjectAiRoadmap = roadmap,
+            CreationDate = _clock.UtcNow
         };
 
         // Add primary customer to stakeholders
@@ -177,6 +178,7 @@ public class ProjectWorkflowService : IProjectWorkflowService
             CreatorGuid = Guid.Parse(userId),
             ProjectManagerId = viewModel.SelectedPMId,
             ProjectAiRoadmap = roadmap,
+            CreationDate = _clock.UtcNow
         };
 
         // Add customer as stakeholder

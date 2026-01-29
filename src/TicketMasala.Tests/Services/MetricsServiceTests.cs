@@ -25,6 +25,7 @@ public class MetricsServiceTests
     {
         _mockLogger = new Mock<ILogger<MetricsService>>();
         _mockClock = new Mock<ISystemClock>();
+        _mockClock.Setup(c => c.UtcNow).Returns(DateTime.UtcNow);
 
         // Use in-memory database for testing
         _dbOptions = new DbContextOptionsBuilder<MasalaDbContext>()

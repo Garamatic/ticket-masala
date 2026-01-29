@@ -221,6 +221,14 @@ public class TicketReadService : ITicketReadService
             CustomFieldsJson = ticket.CustomFieldsJson
         };
 
+        // Calculate SLA status using ISystemClock
+        if (viewModel.CompletionTarget.HasValue)
+        {
+            viewModel.DaysUntilSla = viewModel.GetDaysUntilSla(_clock);
+            viewModel.IsSlaBreached = viewModel.IsSlaBreachedNow(_clock);
+            viewModel.SlaStatusLabel = viewModel.GetSlaStatusLabel(_clock);
+        }
+
         return viewModel;
     }
 

@@ -1,11 +1,11 @@
 using TicketMasala.Domain.Entities;
-using TicketMasala.Dispatch.Common.Models;
+using TicketMasala.Web.Engine.GERDA.Dispatching.Models;
 using System.Text.Json;
 
 namespace TicketMasala.Web.Engine.Common;
 
 /// <summary>
-/// Adapter that converts TicketMasala Ticket domain model to TicketMasala.Dispatch.Common IWorkItem interface.
+/// Adapter that converts TicketMasala Ticket domain model to IWorkItem interface.
 /// Enables generic WSJF and Agent Matching algorithms to work with TicketMasala Tickets.
 /// </summary>
 public class TicketWorkItemAdapter : IWorkItem

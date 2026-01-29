@@ -48,7 +48,7 @@ public class EfCoreTicketRepository : ITicketRepository
     public async Task<IEnumerable<Ticket>> GetAllAsync(Guid? departmentId = null)
     {
         return await _context.Tickets
-            .FilterByDepartment(departmentId, _context.Projects)
+            .FilterByDepartment(departmentId)
             .ToListAsync();
     }
 
@@ -57,7 +57,7 @@ public class EfCoreTicketRepository : ITicketRepository
         return await _context.Tickets
             .FilterValid()
             .FilterUnassigned()
-            .FilterByDepartment(departmentId, _context.Projects)
+            .FilterByDepartment(departmentId)
             .ToListAsync();
     }
 
@@ -66,7 +66,7 @@ public class EfCoreTicketRepository : ITicketRepository
         return await _context.Tickets
             .FilterByStatus(status)
             .FilterValid()
-            .FilterByDepartment(departmentId, _context.Projects)
+            .FilterByDepartment(departmentId)
             .ToListAsync();
     }
 
@@ -99,7 +99,7 @@ public class EfCoreTicketRepository : ITicketRepository
         return await _context.Tickets
             .WithinTimeWindow(timeWindowMinutes, _clock)
             .FilterValid()
-            .FilterByDepartment(departmentId, _context.Projects)
+            .FilterByDepartment(departmentId)
             .ToListAsync();
     }
 
@@ -108,7 +108,7 @@ public class EfCoreTicketRepository : ITicketRepository
         return await _context.Tickets
             .FilterPendingOrAssigned()
             .FilterValid()
-            .FilterByDepartment(departmentId, _context.Projects)
+            .FilterByDepartment(departmentId)
             .ToListAsync();
     }
 
@@ -116,7 +116,7 @@ public class EfCoreTicketRepository : ITicketRepository
     {
         var dbQuery = _context.Tickets
             .FilterValid()
-            .FilterByDepartment(query.DepartmentId, _context.Projects)
+            .FilterByDepartment(query.DepartmentId)
             .FilterBySearchTerm(query.SearchTerm);
 
         if (query.Status.HasValue)

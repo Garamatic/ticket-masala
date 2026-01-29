@@ -4,6 +4,7 @@ using System.Security.Claims;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
 using TicketMasala.Web.Abstractions;
+using TicketMasala.Domain.Configuration;
 
 namespace TicketMasala.Web.Engine.Compiler;
 
@@ -15,13 +16,15 @@ namespace TicketMasala.Web.Engine.Compiler;
 public class RuleCompilerService
 {
     private readonly ILogger<RuleCompilerService> _logger;
+    private readonly ISystemClock _clock;
 
     // Cache: "Domain:State:TargetState" -> Delegate
     private ConcurrentDictionary<string, Func<Ticket, ClaimsPrincipal, bool>> _compiledRules = new();
 
-    public RuleCompilerService(ILogger<RuleCompilerService> logger)
+    public RuleCompilerService(ILogger<RuleCompilerService> logger, ISystemClock clock)
     {
         _logger = logger;
+        _clock = clock;
     }
 
     /// <summary>
@@ -167,7 +170,9 @@ public class RuleCompilerService
             var completionTargetProp = Expression.Property(ticketParam, nameof(Ticket.CompletionTarget));
             var hasValue = Expression.Property(completionTargetProp, nameof(Nullable<DateTime>.HasValue));
             var value = Expression.Property(completionTargetProp, nameof(Nullable<DateTime>.Value));
-            var utcNow = Expression.Property(null, typeof(DateTime).GetProperty(nameof(DateTime.UtcNow))!);
+            
+            var clockConst = Expression.Constant(_clock);
+            var utcNow = Expression.Property(clockConst, nameof(ISystemClock.UtcNow));
 
             var timeSpan = Expression.Subtract(value, utcNow);
             var totalDays = Expression.Property(timeSpan, nameof(TimeSpan.TotalDays));

@@ -37,6 +37,7 @@ public class TicketController : Controller
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IRuleEngineService _ruleEngine;
     private readonly IOpenAiService _openAiService;
+    private readonly Facades.ITicketDetailFacade _ticketDetailFacade;
     private readonly ILogger<TicketController> _logger;
 
     public TicketController(
@@ -50,6 +51,7 @@ public class TicketController : Controller
         IHttpContextAccessor httpContextAccessor,
         IRuleEngineService ruleEngine,
         IOpenAiService openAiService,
+        Facades.ITicketDetailFacade ticketDetailFacade,
         ILogger<TicketController> logger)
     {
         _gerdaService = gerdaService;
@@ -62,6 +64,7 @@ public class TicketController : Controller
         _httpContextAccessor = httpContextAccessor;
         _ruleEngine = ruleEngine;
         _openAiService = openAiService;
+        _ticketDetailFacade = ticketDetailFacade;
         _logger = logger;
     }
 
@@ -96,98 +99,28 @@ public class TicketController : Controller
     {
         if (id == null) return NotFound();
 
-        var viewModel = await _ticketReadService.GetTicketDetailsAsync(id.Value);
-        if (viewModel == null) return NotFound();
-
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         var isCustomer = User.IsInRole(Constants.RoleCustomer);
 
-        if (isCustomer && viewModel.CustomerId != userId)
+        TicketDetailsViewModel? viewModel;
+        try
+        {
+            viewModel = await _ticketDetailFacade.GetTicketDetailsAsync(id.Value, userId, isCustomer);
+        }
+        catch (UnauthorizedAccessException)
         {
             return Forbid();
         }
 
-        // Get recommended agent for unassigned tickets
-        if (string.IsNullOrWhiteSpace(viewModel.ResponsibleId))
-        {
-            try
-            {
-                var dispatchingService = HttpContext.RequestServices.GetService<Engine.GERDA.Dispatching.IDispatchingService>();
-                if (dispatchingService != null)
-                {
-                    var recommendations = await dispatchingService.GetTopRecommendedAgentsAsync(id.Value, 1);
-                    if (recommendations != null && recommendations.Any())
-                    {
-                        var topRecommendation = recommendations.First();
-                        var agent = await _ticketReadService.GetEmployeeByIdAsync(topRecommendation.AgentId);
-                        if (agent != null)
-                        {
-                            var currentWorkload = await _ticketReadService.GetEmployeeCurrentWorkloadAsync(agent.Id);
-                            viewModel.RecommendedAgent = new RecommendedAgentInfo
-                            {
-                                AgentId = agent.Id,
-                                AgentName = $"{agent.FirstName} {agent.LastName}",
-                                AffinityScore = topRecommendation.Score,
-                                CurrentWorkload = currentWorkload,
-                                MaxCapacity = agent.MaxCapacityPoints
-                            };
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to get recommended agent for ticket {TicketGuid}", id.Value);
-            }
-        }
+        if (viewModel == null) return NotFound();
 
-        // Get suggested KB articles (GERDA-K)
-        try
-        {
-            var knowledgeService = HttpContext.RequestServices.GetService<Engine.GERDA.Knowledge.IKnowledgeService>();
-            if (knowledgeService != null)
-            {
-                var ticket = await _ticketReadService.GetTicketForEditAsync(id.Value);
-                if (ticket != null)
-                {
-                    var suggestions = await knowledgeService.GetSuggestedArticlesAsync(ticket);
-                    viewModel.SuggestedArticles = suggestions.Select(s => new KnowledgeSuggestionInfo
-                    {
-                        ArticleId = s.Article.Id,
-                        Title = s.Article.Title,
-                        RelevanceScore = s.RelevanceScore,
-                        MatchingReason = s.MatchingReason
-                    }).ToList();
-                }
-            }
-        }
-
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to get suggested knowledge for ticket {TicketGuid}", id.Value);
-        }
-
-        var domainId = viewModel.DomainId ?? _domainConfig.GetDefaultDomainId();
-        ViewBag.DomainId = domainId;
-        ViewBag.EntityLabels = _domainConfig.GetEntityLabels(domainId);
-        ViewBag.CustomFields = _domainConfig.GetCustomFields(domainId).ToList();
-        ViewBag.WorkItemTypeCode = viewModel.WorkItemTypeCode;
-
-        if (!string.IsNullOrEmpty(viewModel.CustomFieldsJson))
-        {
-            try
-            {
-                ViewBag.CustomFieldValues = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(viewModel.CustomFieldsJson);
-            }
-            catch
-            {
-                ViewBag.CustomFieldValues = new Dictionary<string, object>();
-            }
-        }
-        else
-        {
-            ViewBag.CustomFieldValues = new Dictionary<string, object>();
-        }
+        var context = await _ticketDetailFacade.GetTicketDetailContextAsync(viewModel);
+        
+        ViewBag.DomainId = context.DomainId;
+        ViewBag.EntityLabels = context.EntityLabels;
+        ViewBag.CustomFields = context.CustomFields;
+        ViewBag.WorkItemTypeCode = context.WorkItemTypeCode;
+        ViewBag.CustomFieldValues = context.CustomFieldValues;
 
         return View(viewModel);
     }

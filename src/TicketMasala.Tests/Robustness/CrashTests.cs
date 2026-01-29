@@ -21,6 +21,7 @@ using TicketMasala.Web.ViewModels.ApplicationUsers;
 using Microsoft.AspNetCore.Http;
 using Xunit;
 using TicketMasala.Web.Services;
+using TicketMasala.Web.Facades;
 
 namespace TicketMasala.Tests.Robustness
 {
@@ -111,13 +112,14 @@ namespace TicketMasala.Tests.Robustness
             var mockHttpContext = new Mock<IHttpContextAccessor>();
             var mockRule = new Mock<IRuleEngineService>();
             var mockOpenAi = new Mock<IOpenAiService>();
+            var mockFacade = new Mock<ITicketDetailFacade>();
             var mockLogger = new Mock<ILogger<TicketController>>();
 
             var controller = new TicketController(
                 mockGerda.Object, mockTicketWorkflowService.Object, mockTicketReadService.Object, mockAudit.Object,
                 mockNotif.Object, mockDomain.Object,
                 mockProjectService.Object, mockHttpContext.Object, mockRule.Object,
-                mockOpenAi.Object, mockLogger.Object);
+                mockOpenAi.Object, mockFacade.Object, mockLogger.Object);
 
             // Act
             // If validation is in attribute, unit test might bypass it unless we check ModelState manually or pass null
@@ -152,13 +154,14 @@ namespace TicketMasala.Tests.Robustness
             var mockHttpContext = new Mock<IHttpContextAccessor>();
             var mockRule = new Mock<IRuleEngineService>();
             var mockOpenAi = new Mock<IOpenAiService>();
+            var mockFacade = new Mock<ITicketDetailFacade>();
             var mockLogger = new Mock<ILogger<TicketController>>();
 
             var controller = new TicketController(
                 mockGerda.Object, mockTicketWorkflowService.Object, mockTicketReadService.Object, mockAudit.Object,
                 mockNotif.Object, mockDomain.Object,
                 mockProjectService.Object, mockHttpContext.Object, mockRule.Object,
-                mockOpenAi.Object, mockLogger.Object);
+                mockOpenAi.Object, mockFacade.Object, mockLogger.Object);
 
             // Act
             var result = await controller.Detail(null);

@@ -14,24 +14,18 @@ public static class TicketQueryExtensions
 {
     /// <summary>
     /// Filters tickets by department through Project relationship.
-    /// This logic was duplicated 5+ times across different repository methods.
+    /// Simplified to use navigation properties (KISS).
     /// </summary>
     public static IQueryable<Ticket> FilterByDepartment(
         this IQueryable<Ticket> query,
-        Guid? departmentId,
-        DbSet<Project> projects)
+        Guid? departmentId)
     {
         if (!departmentId.HasValue)
         {
             return query;
         }
 
-        return query.Join(projects,
-            ticket => ticket.ProjectGuid,
-            project => project.Guid,
-            (ticket, project) => new { Ticket = ticket, Project = project })
-            .Where(x => x.Project.DepartmentId == departmentId.Value)
-            .Select(x => x.Ticket);
+        return query.Where(t => t.Project != null && t.Project.DepartmentId == departmentId.Value);
     }
 
     /// <summary>

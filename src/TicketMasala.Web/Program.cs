@@ -81,6 +81,7 @@ builder.Services.AddHttpContextAccessor(); // Required for services that need Ht
 // builder.Services.AddMasalaSecurity(builder.Environment); // Already included in AddMasalaCore()
 builder.Services.AddMasalaApi();
 builder.Services.AddMasalaFrontend();
+builder.Services.AddScoped<TicketMasala.Web.Facades.ITicketDetailFacade, TicketMasala.Web.Facades.TicketDetailFacade>();
 
 // ============================================
 // CACHING & UTILITIES

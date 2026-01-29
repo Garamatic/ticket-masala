@@ -5,6 +5,7 @@ using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Configuration;
 using TicketMasala.Web.Engine.Compiler;
 using TicketMasala.Web.Engine.GERDA.Configuration;
+using TicketMasala.Web.Abstractions;
 using Microsoft.Extensions.Logging;
 using Xunit;
 
@@ -14,6 +15,7 @@ public class RuleEngineServiceTests
 {
     private readonly Mock<IDomainConfigurationService> _domainConfigMock;
     private readonly Mock<ILogger<RuleEngineService>> _loggerMock;
+    private readonly Mock<ISystemClock> _clockMock;
     private readonly RuleCompilerService _compiler;
     private readonly RuleEngineService _service;
 
@@ -21,10 +23,12 @@ public class RuleEngineServiceTests
     {
         _domainConfigMock = new Mock<IDomainConfigurationService>();
         _loggerMock = new Mock<ILogger<RuleEngineService>>();
+        _clockMock = new Mock<ISystemClock>();
+        _clockMock.Setup(c => c.UtcNow).Returns(DateTime.UtcNow);
         
         // Use real compiler for integration testing of the engine+compiler pair
         var compilerLogger = new Mock<ILogger<RuleCompilerService>>();
-        _compiler = new RuleCompilerService(compilerLogger.Object);
+        _compiler = new RuleCompilerService(compilerLogger.Object, _clockMock.Object);
 
         _service = new RuleEngineService(
             _domainConfigMock.Object,

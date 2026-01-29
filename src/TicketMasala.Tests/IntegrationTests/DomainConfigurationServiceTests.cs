@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Moq;
 using TicketMasala.Web.Engine.GERDA.Configuration;
 using TicketMasala.Web.Engine.Compiler;
+using TicketMasala.Web.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace TicketMasala.Tests.IntegrationTests;
@@ -15,6 +16,7 @@ public class DomainConfigurationServiceTests : IDisposable
     private readonly Mock<ILogger<DomainConfigurationService>> _mockLogger;
     private readonly Mock<IWebHostEnvironment> _mockEnvironment;
     private readonly Mock<IServiceScopeFactory> _mockScopeFactory;
+    private readonly Mock<ISystemClock> _mockClock;
     private readonly RuleCompilerService _ruleCompiler;
     private readonly string _originalEnvVar;
     private readonly List<DomainConfigurationService> _createdServices = new();
@@ -28,8 +30,11 @@ public class DomainConfigurationServiceTests : IDisposable
         _mockEnvironment = new Mock<IWebHostEnvironment>();
         _mockEnvironment.Setup(e => e.ContentRootPath).Returns(_testConfigPath);
 
+        _mockClock = new Mock<ISystemClock>();
+        _mockClock.Setup(c => c.UtcNow).Returns(DateTime.UtcNow);
+
         var compilerLogger = new Mock<ILogger<RuleCompilerService>>();
-        _ruleCompiler = new RuleCompilerService(compilerLogger.Object);
+        _ruleCompiler = new RuleCompilerService(compilerLogger.Object, _mockClock.Object);
         _mockScopeFactory = new Mock<IServiceScopeFactory>();
 
         // Save and set environment variable to use test path

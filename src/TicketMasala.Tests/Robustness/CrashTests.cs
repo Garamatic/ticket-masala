@@ -20,8 +20,8 @@ using TicketMasala.Web.Engine.Compiler;
 using TicketMasala.Web.ViewModels.ApplicationUsers;
 using Microsoft.AspNetCore.Http;
 using Xunit;
-using TicketMasala.Web.Services;
 using TicketMasala.Web.Facades;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Tests.Robustness
 {
@@ -41,7 +41,7 @@ namespace TicketMasala.Tests.Robustness
             var mockLogger = new Mock<ILogger<DispatchBacklogService>>();
 
             var service = new DispatchBacklogService(
-                mockRepo.Object, mockUserRepo.Object, mockProjectRepo.Object, new SystemClock(), mockDispatch.Object, mockLogger.Object);
+                mockRepo.Object, mockUserRepo.Object, mockProjectRepo.Object, new Mock<ISystemClock>().Object, mockDispatch.Object, mockLogger.Object);
 
             // Act
             // Passing 0 as pageSize usually causes DivByZero if not handled
@@ -119,7 +119,7 @@ namespace TicketMasala.Tests.Robustness
                 mockGerda.Object, mockTicketWorkflowService.Object, mockTicketReadService.Object, mockAudit.Object,
                 mockNotif.Object, mockDomain.Object,
                 mockProjectService.Object, mockHttpContext.Object, mockRule.Object,
-                mockOpenAi.Object, mockFacade.Object, mockLogger.Object);
+                mockOpenAi.Object, mockFacade.Object, new Mock<ISystemClock>().Object, mockLogger.Object);
 
             // Act
             // If validation is in attribute, unit test might bypass it unless we check ModelState manually or pass null
@@ -161,7 +161,7 @@ namespace TicketMasala.Tests.Robustness
                 mockGerda.Object, mockTicketWorkflowService.Object, mockTicketReadService.Object, mockAudit.Object,
                 mockNotif.Object, mockDomain.Object,
                 mockProjectService.Object, mockHttpContext.Object, mockRule.Object,
-                mockOpenAi.Object, mockFacade.Object, mockLogger.Object);
+                mockOpenAi.Object, mockFacade.Object, new Mock<ISystemClock>().Object, mockLogger.Object);
 
             // Act
             var result = await controller.Detail(null);
@@ -185,7 +185,7 @@ namespace TicketMasala.Tests.Robustness
             var mockLogger = new Mock<ILogger<DispatchBacklogService>>();
 
             var service = new DispatchBacklogService(
-                mockRepo.Object, mockUserRepo.Object, mockProjectRepo.Object, new SystemClock(), mockDispatch.Object, mockLogger.Object);
+                mockRepo.Object, mockUserRepo.Object, mockProjectRepo.Object, new Mock<ISystemClock>().Object, mockDispatch.Object, mockLogger.Object);
 
             // Act
             // Negative page should ideally behave like page 1 or return empty, but definitely not crash

@@ -3,6 +3,7 @@ using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
 using TicketMasala.Web.ViewModels.Api;
 using TicketMasala.Web.Services;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Extensions;
 

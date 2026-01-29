@@ -21,6 +21,9 @@ public class TicketDetailsViewModel
     public DateTime CreationDate { get; set; }
     public DateTime? CompletionTarget { get; set; }
     public DateTime? CompletionDate { get; set; }
+    public bool IsCompletionOverdue { get; set; }
+    public bool IsCompletionDueSoon { get; set; }
+    public double HoursUntilCompletionTarget { get; set; }
 
     // Relationships
     public string? CustomerName { get; set; }

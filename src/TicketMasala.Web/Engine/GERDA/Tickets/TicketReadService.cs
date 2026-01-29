@@ -221,6 +221,14 @@ public class TicketReadService : ITicketReadService
             CustomFieldsJson = ticket.CustomFieldsJson
         };
 
+        if (viewModel.CompletionTarget.HasValue && viewModel.TicketStatus != Status.Completed)
+        {
+            var timeRemaining = viewModel.CompletionTarget.Value - _clock.UtcNow;
+            viewModel.IsCompletionOverdue = timeRemaining.TotalSeconds < 0;
+            viewModel.IsCompletionDueSoon = !viewModel.IsCompletionOverdue && timeRemaining.TotalHours < 24;
+            viewModel.HoursUntilCompletionTarget = timeRemaining.TotalHours;
+        }
+
         // Calculate SLA status using ISystemClock
         if (viewModel.CompletionTarget.HasValue)
         {

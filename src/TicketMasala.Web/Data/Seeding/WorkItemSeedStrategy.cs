@@ -4,6 +4,7 @@ using TicketMasala.Domain.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using TicketMasala.Web.Configuration;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Data.Seeding;
 
@@ -15,15 +16,18 @@ public class WorkItemSeedStrategy : ISeedStrategy
     private readonly MasalaDbContext _context;
     private readonly IWebHostEnvironment _environment;
     private readonly ILogger<WorkItemSeedStrategy> _logger;
+    private readonly ISystemClock _clock;
 
     public WorkItemSeedStrategy(
         MasalaDbContext context,
         IWebHostEnvironment environment,
-        ILogger<WorkItemSeedStrategy> logger)
+        ILogger<WorkItemSeedStrategy> logger,
+        ISystemClock clock)
     {
         _context = context;
         _environment = environment;
         _logger = logger;
+        _clock = clock;
     }
 
     public async Task<bool> ShouldSeedAsync()
@@ -104,7 +108,7 @@ public class WorkItemSeedStrategy : ISeedStrategy
                 Name = containerDto.Name,
                 Description = containerDto.Description,
                 Status = containerDto.Status,
-                CreationDate = DateTime.UtcNow,
+                CreationDate = _clock.UtcNow,
             };
             
             // Resolve ProjectManager
@@ -166,7 +170,7 @@ public class WorkItemSeedStrategy : ISeedStrategy
             TicketStatus = itemDto.Status,
             Status = itemDto.Status.ToString(), // Sync field
             ProjectGuid = projectId,
-            CreationDate = DateTime.UtcNow.AddDays(-itemDto.CompletionDaysAgo ?? 0),
+            CreationDate = _clock.UtcNow.AddDays(-itemDto.CompletionDaysAgo ?? 0),
             PriorityScore = itemDto.PriorityScore ?? 0,
             EstimatedEffortPoints = (int)(itemDto.EstimatedEffortPoints ?? 0),
             GerdaTags = itemDto.GerdaTags
@@ -205,7 +209,7 @@ public class WorkItemSeedStrategy : ISeedStrategy
                 {
                     TicketId = ticket.Guid,
                     Body = commentDto.Body,
-                    CreatedAt = DateTime.UtcNow.AddDays(-commentDto.CreatedDaysAgo),
+                    CreatedAt = _clock.UtcNow.AddDays(-commentDto.CreatedDaysAgo),
                 };
                 
                  if (!string.IsNullOrEmpty(commentDto.AuthorEmail)) 

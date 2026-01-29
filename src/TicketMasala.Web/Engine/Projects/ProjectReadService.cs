@@ -11,6 +11,7 @@ using TicketMasala.Web.Data;
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.ViewModels.Projects;
 using TicketMasala.Web.ViewModels.Tickets;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Engine.Projects;
 
@@ -19,15 +20,18 @@ public class ProjectReadService : IProjectReadService
     private readonly MasalaDbContext _context;
     private readonly IProjectRepository _projectRepository;
     private readonly ILogger<ProjectReadService> _logger;
+    private readonly ISystemClock _clock;
 
     public ProjectReadService(
         MasalaDbContext context,
         IProjectRepository projectRepository,
-        ILogger<ProjectReadService> logger)
+        ILogger<ProjectReadService> logger,
+        ISystemClock clock)
     {
         _context = context;
         _projectRepository = projectRepository;
         _logger = logger;
+        _clock = clock;
     }
 
     public async Task<IEnumerable<ProjectTicketViewModel>> GetAllProjectsAsync(string? userId, bool isCustomer)
@@ -113,7 +117,7 @@ public class ProjectReadService : IProjectReadService
                     ? $"{t.Customer.FirstName} {t.Customer.LastName}"
                     : "Unknown",
                 CompletionTarget = t.CompletionTarget,
-                CreationDate = DateTime.UtcNow
+                CreationDate = t.CreationDate
             }).ToList()
         };
     }
@@ -363,7 +367,7 @@ public class ProjectReadService : IProjectReadService
             RecommendedPMId = recommendedPMId,
             RecommendedPMName = recommendedPMName,
             SelectedPMId = recommendedPMId,
-            TargetCompletionDate = DateTime.UtcNow.AddDays(30),
+            TargetCompletionDate = _clock.UtcNow.AddDays(30),
             TemplateList = new SelectList(await GetTemplateSelectListAsync(), "Value", "Text"),
             ProjectManagerList = await GetEmployeeSelectListAsync(recommendedPMId)
         };

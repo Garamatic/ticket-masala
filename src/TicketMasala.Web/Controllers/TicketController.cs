@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.AI;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Controllers;
 

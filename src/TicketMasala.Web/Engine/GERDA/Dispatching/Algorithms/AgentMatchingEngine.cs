@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using TicketMasala.Web.Engine.GERDA.Dispatching.Configuration;
 using TicketMasala.Web.Engine.GERDA.Dispatching.Models;
+using DispatchResultModel = TicketMasala.Web.Engine.GERDA.Dispatching.Models.DispatchResult;
 
 namespace TicketMasala.Web.Engine.GERDA.Dispatching.Algorithms;
 
@@ -23,11 +24,11 @@ public class AgentMatchingEngine
     /// <summary>
     /// Find the best agent for a work item.
     /// </summary>
-    public DispatchResult RecommendAgent(
+    public DispatchResultModel RecommendAgent(
         IWorkItem workItem,
         IEnumerable<Agent> agents)
     {
-        var result = new DispatchResult { WorkItemId = workItem.Id };
+        var result = new DispatchResultModel { WorkItemId = workItem.Id };
 
         try
         {

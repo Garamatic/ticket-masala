@@ -95,7 +95,6 @@ public class ProjectWorkflowService : IProjectWorkflowService
             Customer = customer,
             CustomerId = customer.Id,
             CompletionTarget = viewModel.CreationDate,
-            CreationDate = _clock.UtcNow,
             CreatorGuid = Guid.Parse(userId),
             ProjectAiRoadmap = roadmap,
             CreationDate = _clock.UtcNow

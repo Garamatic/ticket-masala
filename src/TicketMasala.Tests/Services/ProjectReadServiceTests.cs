@@ -12,6 +12,7 @@ using TicketMasala.Web.Repositories;
 using TicketMasala.Web.ViewModels.Projects;
 using TicketMasala.Web.ViewModels.Customers;
 using Microsoft.AspNetCore.Identity;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Tests.Services;
 
@@ -36,7 +37,8 @@ public class ProjectReadServiceTests
         return new ProjectReadService(
             context,
             mockProjectRepo.Object,
-            _mockLogger.Object
+            _mockLogger.Object,
+            new Mock<ISystemClock>().Object
         );
     }
 

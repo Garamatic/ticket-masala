@@ -406,9 +406,8 @@
 
 @if (Model.CompletionTarget.HasValue && Model.TicketStatus != TicketMasala.Domain.Common.Status.Completed)
 {
-    var timeRemaining = Model.CompletionTarget.Value - DateTime.UtcNow;
-    var isOverdue = timeRemaining.TotalSeconds < 0;
-    var isAtRisk = !isOverdue && timeRemaining.TotalHours < 24;
+    var isOverdue = Model.IsCompletionOverdue;
+    var isAtRisk = Model.IsCompletionDueSoon;
 
     if (isOverdue)
     {
@@ -424,7 +423,7 @@
         <div class="alert alert-warning d-flex align-items-center" role="alert">
             <i class="fas fa-exclamation-triangle me-2"></i>
             <div>
-                <strong>Due Soon!</strong> This ticket is due in @Math.Round(timeRemaining.TotalHours) hours
+                <strong>Due Soon!</strong> This ticket is due in @Math.Round(Model.HoursUntilCompletionTarget) hours
                 (@Model.CompletionTarget.Value.ToLocalTime().ToString("g")).
             </div>
         </div>

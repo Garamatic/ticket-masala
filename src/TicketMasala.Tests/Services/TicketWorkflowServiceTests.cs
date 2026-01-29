@@ -14,6 +14,7 @@ using TicketMasala.Web.Engine.Compiler;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.GERDA.Configuration;
 using TicketMasala.Web.Engine.Security;
+using TicketMasala.Web.Services;
 
 namespace TicketMasala.Tests.Services;
 
@@ -83,7 +84,8 @@ public class TicketWorkflowServiceTests
             piiScrubber.Object,
             ticketNotificationService.Object,
             logger.Object,
-            ticketDispatchService.Object
+            ticketDispatchService.Object,
+            new SystemClock()
         );
     }
 

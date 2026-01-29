@@ -105,7 +105,9 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddScoped<ITicketReadService, TicketReadService>();
         builder.Services.AddScoped<ITicketWorkflowService, TicketWorkflowService>();
         builder.Services.AddScoped<ITicketBatchService, TicketBatchService>();
+#pragma warning disable CS0618 // Type or member is obsolete
         builder.Services.AddScoped<TicketService>(); // Legacy implementation
+#pragma warning restore CS0618 // Type or member is obsolete
 
         builder.Services.AddScoped<TicketDispatchService>();
         builder.Services.AddScoped<TicketReportingService>();

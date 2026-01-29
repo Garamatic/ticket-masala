@@ -122,19 +122,9 @@ public class GerdaService : IGerdaService
 
         _logger.LogInformation("GERDA: Starting batch processing of all open tickets");
 
-        // Use Repository to get all tickets (we might need a more specific method for open tickets later)
-        // For now, fetching all and filtering in memory or adding a method to repo would be ideal.
-        // Let's assume we fetch all and filter for now, or use a new repo method if available.
-        // Checking ITicketRepository interface... it has GetAllAsync(departmentId).
-        // We want ALL open tickets regardless of department for the background job.
-        // Ideally we should add GetOpenTicketsAsync to the repository, but to avoid changing the interface too much right now,
-        // let's use GetAllAsync(null) and filter.
-
-        var allTickets = await _ticketRepository.GetAllAsync(null);
-        var openTicketGuids = allTickets
-            .Where(t => t.TicketStatus != Status.Completed && t.TicketStatus != Status.Failed)
-            .Select(t => t.Guid)
-            .ToList();
+        // Use Repository to get all open/active tickets
+        var activeTickets = await _ticketRepository.GetActiveTicketsAsync();
+        var openTicketGuids = activeTickets.Select(t => t.Guid).ToList();
 
         _logger.LogInformation("GERDA: Found {Count} open tickets to process", openTicketGuids.Count);
 

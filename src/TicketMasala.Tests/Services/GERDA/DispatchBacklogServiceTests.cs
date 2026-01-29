@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Linq;
+using TicketMasala.Web.Services;
 
 namespace TicketMasala.Tests.Services.GERDA;
 
@@ -40,6 +41,7 @@ public class DispatchBacklogServiceTests
             _mockTicketRepo.Object, 
             _mockUserRepo.Object, 
             _mockProjectRepo.Object, 
+            new SystemClock(),
             _mockDispatchService.Object, 
             _mockLogger.Object);
 

@@ -7,6 +7,7 @@ using TicketMasala.Tests.TestHelpers;
 using Xunit;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
+using TicketMasala.Web.Services;
 
 namespace TicketMasala.Tests.UnitTests.Ingestion;
 
@@ -33,7 +34,7 @@ public class EmailTicketProcessorTests
         _mockWorkflowService.Setup(s => s.CreateTicketAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<DateTime?>()))
             .ReturnsAsync(mockTicket);
 
-        var processor = new EmailTicketProcessor(_mockWorkflowService.Object, _mockEstimatingService.Object, _mockLogger.Object);
+        var processor = new EmailTicketProcessor(_mockWorkflowService.Object, _mockEstimatingService.Object, new SystemClock(), _mockLogger.Object);
         var email = new EmailContent("URGENT: Database Down", "The production database is unresponsive.", "user@test.com");
 
         // Act
@@ -62,7 +63,7 @@ public class EmailTicketProcessorTests
         _mockWorkflowService.Setup(s => s.CreateTicketAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<DateTime?>()))
             .ReturnsAsync(mockTicket);
 
-        var processor = new EmailTicketProcessor(_mockWorkflowService.Object, _mockEstimatingService.Object, _mockLogger.Object);
+        var processor = new EmailTicketProcessor(_mockWorkflowService.Object, _mockEstimatingService.Object, new SystemClock(), _mockLogger.Object);
         var email = new EmailContent("Question about features", "Can you tell me more?", "user@test.com");
 
         // Act

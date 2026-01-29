@@ -75,4 +75,22 @@ public static class TicketQueryExtensions
         var cutoffTime = clock.UtcNow.AddMinutes(-timeWindowMinutes);
         return query.Where(t => t.CreationDate >= cutoffTime);
     }
+
+    /// <summary>
+    /// Filters tickets by search term (Title, Description, Customer Name, Project Name).
+    /// </summary>
+    public static IQueryable<Ticket> FilterBySearchTerm(this IQueryable<Ticket> query, string? searchTerm)
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            return query;
+        }
+
+        var term = searchTerm.ToLower();
+        return query.Where(t =>
+            (t.Title != null && t.Title.ToLower().Contains(term)) ||
+            t.Description.ToLower().Contains(term) ||
+            (t.Customer != null && (t.Customer.FirstName.ToLower().Contains(term) || t.Customer.LastName.ToLower().Contains(term))) ||
+            (t.Project != null && t.Project.Name.ToLower().Contains(term)));
+    }
 }

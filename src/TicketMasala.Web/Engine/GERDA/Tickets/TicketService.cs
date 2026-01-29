@@ -15,6 +15,7 @@ namespace TicketMasala.Web.Engine.GERDA.Tickets;
 
 
 
+[Obsolete("Use ITicketReadService and ITicketWorkflowService instead.")]
 public class TicketService : ITicketService
 {
     private readonly ILogger<TicketService> _logger;

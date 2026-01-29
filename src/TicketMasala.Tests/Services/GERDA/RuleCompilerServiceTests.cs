@@ -87,12 +87,15 @@ namespace TicketMasala.Tests.Services.GERDA
             };
 
             var compiled = _compiler.Compile(conditions);
+            
+            var now = new DateTime(2025, 1, 10, 12, 0, 0, DateTimeKind.Utc);
+            _clockMock.Setup(c => c.UtcNow).Returns(now);
 
             // Ticket created 6 days ago (should pass)
-            var ticketPass = new Ticket { CreationDate = DateTime.UtcNow.AddDays(-6) };
+            var ticketPass = new Ticket { CreationDate = now.AddDays(-6) };
             
             // Ticket created 2 days ago (should fail)
-            var ticketFail = new Ticket { CreationDate = DateTime.UtcNow.AddDays(-2) };
+            var ticketFail = new Ticket { CreationDate = now.AddDays(-2) };
 
             // Act & Assert
             Assert.True(compiled(ticketPass, new ClaimsPrincipal()));

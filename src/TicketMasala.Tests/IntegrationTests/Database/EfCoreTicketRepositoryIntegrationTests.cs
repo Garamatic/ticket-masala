@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TicketMasala.Tests.TestHelpers;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Web.Repositories.Queries;
 using Xunit;
 
 namespace TicketMasala.Tests.IntegrationTests.Database;
@@ -22,6 +23,67 @@ public class EfCoreTicketRepositoryIntegrationTests : IDisposable
     {
         _fixture.Dispose();
     }
+
+    #region SearchAsync Tests
+
+    [Fact]
+    public async Task SearchAsync_FiltersByStatus()
+    {
+        // Arrange
+        var customer = await _fixture.SeedTestCustomerAsync();
+        await _fixture.SeedTestTicketAsync(customer: customer, status: Status.Pending, title: "Pending Ticket", description: "Desc1");
+        await _fixture.SeedTestTicketAsync(customer: customer, status: Status.Completed, title: "Completed Ticket", description: "Desc2");
+
+        var query = new TicketSearchQuery { Status = Status.Pending };
+
+        // Act
+        var (results, totalItems) = await _fixture.TicketRepository.SearchAsync(query);
+
+        // Assert
+        Assert.Single(results);
+        Assert.Equal("Desc1", results.First().Description);
+        Assert.Equal(1, totalItems);
+    }
+
+    [Fact]
+    public async Task SearchAsync_FiltersBySearchTerm()
+    {
+        // Arrange
+        var customer = await _fixture.SeedTestCustomerAsync();
+        await _fixture.SeedTestTicketAsync(customer: customer, status: Status.Pending, title: "T1", description: "Apple Problem");
+        await _fixture.SeedTestTicketAsync(customer: customer, status: Status.Pending, title: "T2", description: "Banana Issue");
+
+        var query = new TicketSearchQuery { SearchTerm = "Apple" };
+
+        // Act
+        var (results, totalItems) = await _fixture.TicketRepository.SearchAsync(query);
+
+        // Assert
+        Assert.Single(results);
+        Assert.Equal("Apple Problem", results.First().Description);
+        Assert.Equal(1, totalItems);
+    }
+
+    [Fact]
+    public async Task SearchAsync_FiltersBySearchTerm_MatchesTitle()
+    {
+        // Arrange
+        var customer = await _fixture.SeedTestCustomerAsync();
+        await _fixture.SeedTestTicketAsync(customer: customer, status: Status.Pending, title: "SpecificTitle", description: "Generic Desc");
+        await _fixture.SeedTestTicketAsync(customer: customer, status: Status.Pending, title: "OtherTitle", description: "Generic Desc");
+
+        var query = new TicketSearchQuery { SearchTerm = "SpecificTitle" };
+
+        // Act
+        var (results, totalItems) = await _fixture.TicketRepository.SearchAsync(query);
+
+        // Assert
+        Assert.Single(results);
+        Assert.Equal("SpecificTitle", results.First().Title);
+        Assert.Equal(1, totalItems);
+    }
+
+    #endregion
 
     #region AddAsync Tests
 

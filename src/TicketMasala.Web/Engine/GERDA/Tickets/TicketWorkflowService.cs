@@ -14,6 +14,7 @@ using TicketMasala.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web.Engine.Compiler;
 using TicketMasala.Web.Engine.GERDA.Configuration;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Engine.GERDA.Tickets;
 
@@ -51,6 +52,7 @@ public class TicketWorkflowService : ITicketWorkflowService
     private readonly Domain.TicketNotificationService _ticketNotificationService;
     private readonly ILogger<TicketWorkflowService> _logger;
     private readonly Domain.TicketDispatchService _ticketDispatchService;
+    private readonly ISystemClock _clock;
 
     public TicketWorkflowService(
         MasalaDbContext context,
@@ -67,7 +69,8 @@ public class TicketWorkflowService : ITicketWorkflowService
         IPiiScrubberService piiScrubber,
         Domain.TicketNotificationService ticketNotificationService,
         ILogger<TicketWorkflowService> logger,
-        Domain.TicketDispatchService ticketDispatchService)
+        Domain.TicketDispatchService ticketDispatchService,
+        ISystemClock clock)
     {
         _context = context;
         _ticketRepository = ticketRepository;
@@ -84,6 +87,7 @@ public class TicketWorkflowService : ITicketWorkflowService
         _ticketNotificationService = ticketNotificationService;
         _logger = logger;
         _ticketDispatchService = ticketDispatchService;
+        _clock = clock;
     }
 
     private string? GetCurrentUserId()
@@ -122,7 +126,7 @@ public class TicketWorkflowService : ITicketWorkflowService
             Customer = customer,
             CustomerId = customerId,
             Responsible = responsible,
-            Status = responsible != null ? ActivityType.Assigned.GetDisplayText() : ActivityType.Created.GetDisplayText(),
+            Status = responsible != null ? "Assigned" : "New",
             Title = description.Length > 50 ? description.Substring(0, 47) + "..." : description,
             DomainId = defaultDomainId,
             ConfigVersionId = currentConfigVersion,
@@ -284,7 +288,7 @@ public class TicketWorkflowService : ITicketWorkflowService
             TicketId = ticketId,
             Body = body,
             IsInternal = isInternal,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = _clock.UtcNow,
             AuthorId = authorId,
             Ticket = ticket
         };
@@ -326,7 +330,7 @@ public class TicketWorkflowService : ITicketWorkflowService
             ReviewerId = reviewerId,
             Score = score,
             Comments = feedback,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = _clock.UtcNow,
             IsApproved = approved
         };
 

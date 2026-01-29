@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 using System.Security.Claims;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
-using TicketMasala.Domain.Configuration;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Engine.Compiler;
 
@@ -196,9 +196,13 @@ public class RuleCompilerService
 
         if (condition.Field == "age_days")
         {
-            // (DateTime.UtcNow - ticket.CreationDate).TotalDays
+            // (_clock.UtcNow - ticket.CreationDate).TotalDays
             var creationDateProp = Expression.Property(ticketParam, nameof(Ticket.CreationDate));
-            var utcNow = Expression.Property(null, typeof(DateTime).GetProperty(nameof(DateTime.UtcNow))!);
+            
+            // Use _clock.UtcNow instead of DateTime.UtcNow
+            var clockConst = Expression.Constant(_clock);
+            var utcNow = Expression.Property(clockConst, nameof(ISystemClock.UtcNow));
+
             var timeSpan = Expression.Subtract(utcNow, creationDateProp);
             var totalDays = Expression.Property(timeSpan, nameof(TimeSpan.TotalDays));
 

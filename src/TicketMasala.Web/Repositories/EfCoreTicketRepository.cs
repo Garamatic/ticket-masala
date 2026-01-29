@@ -116,22 +116,8 @@ public class EfCoreTicketRepository : ITicketRepository
     {
         var dbQuery = _context.Tickets
             .FilterValid()
-            .FilterByDepartment(query.DepartmentId, _context.Projects);
-
-        // Apply filters
-        if (!string.IsNullOrWhiteSpace(query.SearchTerm))
-        {
-            var term = query.SearchTerm.ToLower();
-            // Join with Users and Projects for search
-            dbQuery = dbQuery
-                .Include(t => t.Customer)
-                .Include(t => t.Responsible)
-                .Include(t => t.Project)
-                .Where(t =>
-                    t.Description.ToLower().Contains(term) ||
-                    (t.Customer != null && (t.Customer.FirstName.ToLower().Contains(term) || t.Customer.LastName.ToLower().Contains(term))) ||
-                    (t.Project != null && t.Project.Name.ToLower().Contains(term)));
-        }
+            .FilterByDepartment(query.DepartmentId, _context.Projects)
+            .FilterBySearchTerm(query.SearchTerm);
 
         if (query.Status.HasValue)
         {

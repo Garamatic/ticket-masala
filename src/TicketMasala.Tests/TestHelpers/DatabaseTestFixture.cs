@@ -8,6 +8,7 @@ using TicketMasala.Web.Data;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
 using TicketMasala.Web.Repositories;
+using TicketMasala.Web.Services;
 
 namespace TicketMasala.Tests.TestHelpers;
 
@@ -45,7 +46,8 @@ public class DatabaseTestFixture : IDisposable
         // Initialize repositories with mock loggers
         TicketRepository = new EfCoreTicketRepository(
             Context,
-            Mock.Of<ILogger<EfCoreTicketRepository>>());
+            Mock.Of<ILogger<EfCoreTicketRepository>>(),
+            new SystemClock());
 
         ProjectRepository = new EfCoreProjectRepository(
             Context,

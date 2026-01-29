@@ -39,7 +39,7 @@ public class KnowledgeStage : IGerdaStage
         }
 
         var suggestions = await _knowledgeService.GetSuggestedArticlesAsync(ticket);
-        context.SuggestedArticles = suggestions;
+        context.SuggestedArticles = suggestions.Select(s => s.Article.Id).ToList();
         
         _logger.LogInformation(
             "GERDA-K: Found {Count} suggested articles for ticket {TicketGuid}",

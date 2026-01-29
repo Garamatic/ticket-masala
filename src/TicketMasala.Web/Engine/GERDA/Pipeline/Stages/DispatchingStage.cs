@@ -27,9 +27,9 @@ public class DispatchingStage : IGerdaStage
 
         var recommendedAgent = await _dispatchingService.GetRecommendedAgentAsync(ticketGuid);
         
-        if (recommendedAgent.HasValue)
+        if (!string.IsNullOrEmpty(recommendedAgent) && Guid.TryParse(recommendedAgent, out var agentGuid))
         {
-            context.RecommendedAgentId = recommendedAgent;
+            context.RecommendedAgentId = agentGuid;
             _logger.LogInformation(
                 "GERDA-D: Recommended agent {AgentId} for ticket {TicketGuid}",
                 recommendedAgent, ticketGuid);

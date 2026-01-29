@@ -44,7 +44,9 @@ public static class CoreServiceCollectionExtensions
         services.AddScoped<ITicketReadService, TicketReadService>(); // Read/Search
         services.AddScoped<ITicketWorkflowService, TicketWorkflowService>(); // Workflow
         services.AddScoped<ITicketBatchService, TicketBatchService>(); // Batch Operations
+#pragma warning disable CS0618 // Type or member is obsolete
         services.AddScoped<TicketService>(); // Legacy implementation
+#pragma warning restore CS0618 // Type or member is obsolete
 
         // Domain services for TicketService dependencies
         services.AddScoped<TicketDispatchService>();

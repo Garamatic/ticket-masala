@@ -13,6 +13,7 @@ using TicketMasala.Web.Engine.Ingestion;
 using TicketMasala.Web.Engine.Ingestion.Background;
 using TicketMasala.Web.Repositories;
 using System.Text.Json;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Controllers.Api;
 
@@ -34,6 +35,7 @@ public class TicketsApiController : ControllerBase
     private readonly ITicketRepository _ticketRepository;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ILogger<TicketsApiController> _logger;
+    private readonly ISystemClock _clock;
 
     public TicketsApiController(
         ITicketWorkflowService ticketWorkflowService,
@@ -42,7 +44,8 @@ public class TicketsApiController : ControllerBase
         IUserRepository userRepository,
         ITicketRepository ticketRepository,
         UserManager<ApplicationUser> userManager,
-        ILogger<TicketsApiController> logger)
+        ILogger<TicketsApiController> logger,
+        ISystemClock clock)
     {
         _ticketWorkflowService = ticketWorkflowService;
         _ticketReadService = ticketReadService;
@@ -51,6 +54,7 @@ public class TicketsApiController : ControllerBase
         _ticketRepository = ticketRepository;
         _userManager = userManager;
         _logger = logger;
+        _clock = clock;
     }
 
     /// <summary>
@@ -93,7 +97,7 @@ public class TicketsApiController : ControllerBase
                 customerId: customer.Id,
                 responsibleId: null, // GERDA will assign
                 projectGuid: null,
-                completionTarget: DateTime.UtcNow.AddDays(14)
+                completionTarget: _clock.UtcNow.AddDays(14)
             );
 
             // 3. Add external source tag
@@ -228,7 +232,7 @@ public class TicketsApiController : ControllerBase
                 customerId: request.CustomerId,
                 responsibleId: request.AssigneeId,
                 projectGuid: request.WorkContainerId,
-                completionTarget: request.CompletionTarget ?? DateTime.UtcNow.AddDays(14)
+                completionTarget: request.CompletionTarget ?? _clock.UtcNow.AddDays(14)
             );
 
             // Update domain-specific fields

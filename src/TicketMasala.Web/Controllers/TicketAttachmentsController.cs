@@ -5,6 +5,7 @@ using TicketMasala.Domain.Common;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Data;
 using Microsoft.EntityFrameworkCore;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Controllers;
 
@@ -14,15 +15,18 @@ public class TicketAttachmentsController : Controller
     private readonly IFileStorageService _fileStorage;
     private readonly MasalaDbContext _context;
     private readonly ILogger<TicketAttachmentsController> _logger;
+    private readonly ISystemClock _clock;
 
     public TicketAttachmentsController(
         IFileStorageService fileStorage,
         MasalaDbContext context,
-        ILogger<TicketAttachmentsController> logger)
+        ILogger<TicketAttachmentsController> logger,
+        ISystemClock clock)
     {
         _fileStorage = fileStorage;
         _context = context;
         _logger = logger;
+        _clock = clock;
     }
 
     [HttpPost]
@@ -47,7 +51,7 @@ public class TicketAttachmentsController : Controller
                 StoredFileName = storedFileName,
                 ContentType = file.ContentType,
                 FileSize = file.Length,
-                UploadDate = DateTime.UtcNow,
+                UploadDate = _clock.UtcNow,
                 UploaderId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value,
                 IsPublic = isPublic
             };

@@ -73,3 +73,34 @@ public Task<Stream> RetrieveFileAsync(string fileId)
 ```
 
 **Impact:** Eliminated code duplication, patched a critical security vulnerability, and improved system configurability.
+
+---
+
+### 7. Violation: Leaky Abstraction & Facade Design Flaw
+**Severity:** Medium (Maintainability)
+**Location:** `TicketController.cs`, `TicketContextFacade.cs`
+
+**Issue:**
+The `TicketController` was manually extracting `UserId` and `IsCustomer` claims and passing them as primitive types (`string`, `bool`) to the `TicketContextFacade`. This leaked low-level identity logic into the controller and forced the Facade to rely on primitives rather than the rich `ClaimsPrincipal`. Additionally, validation logic (checking if a customer owns the ticket) was duplicated or missing in some paths.
+
+**Refactoring:**
+1.  **Refined Abstraction:** Updated `ITicketContextFacade.GetEditContextAsync` to accept `ClaimsPrincipal` (the `User` object) directly.
+2.  **Centralized Logic:** Moved the claim extraction (`NameIdentifier`) and role checking (`IsInRole`) inside the Facade.
+3.  **Encapsulation:** Enforced authorization rules (e.g., "Customers can only edit their own tickets") within the Facade, throwing `UnauthorizedAccessException` or `InvalidOperationException` as appropriate.
+4.  **Cleanup:** Removed redundant claim extraction code from `TicketController.Edit` (GET action).
+
+**Code Change (Facade):**
+```csharp
+// Before
+public Task<TicketEditContext?> GetEditContextAsync(Guid ticketId, string? userId, bool isCustomer) { ... }
+
+// After
+public Task<TicketEditContext?> GetEditContextAsync(Guid ticketId, ClaimsPrincipal user)
+{
+    var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    var isCustomer = user.IsInRole(Constants.RoleCustomer);
+    // ... authorization logic ...
+}
+```
+
+**Impact:** Simplified the Controller, centralized identity logic, and made the Facade API more robust and easier to use.

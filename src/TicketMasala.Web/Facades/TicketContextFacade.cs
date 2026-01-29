@@ -177,10 +177,13 @@ public class TicketContextFacade : ITicketContextFacade
         return context;
     }
 
-    public async Task<TicketEditContext?> GetEditContextAsync(Guid ticketId, string? userId, bool isCustomer)
+    public async Task<TicketEditContext?> GetEditContextAsync(Guid ticketId, System.Security.Claims.ClaimsPrincipal user)
     {
         var ticket = await _ticketReadService.GetTicketForEditAsync(ticketId);
         if (ticket == null) return null;
+
+        var userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var isCustomer = user.IsInRole(Constants.RoleCustomer);
 
         if (isCustomer)
         {

@@ -7,6 +7,7 @@ using TicketMasala.Web.ViewModels.Tickets;
 using TicketMasala.Web.ViewModels.Customers;
 using TicketMasala.Web.ViewModels.Dashboard;
 using Microsoft.EntityFrameworkCore;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Engine.Core;
 
@@ -25,11 +26,13 @@ public class MetricsService : IMetricsService
 {
     private readonly MasalaDbContext _context;
     private readonly ILogger<MetricsService> _logger;
+    private readonly ISystemClock _clock;
 
-    public MetricsService(MasalaDbContext context, ILogger<MetricsService> logger)
+    public MetricsService(MasalaDbContext context, ILogger<MetricsService> logger, ISystemClock clock)
     {
         _context = context;
         _logger = logger;
+        _clock = clock;
     }
 
     /// <summary>
@@ -90,7 +93,7 @@ public class MetricsService : IMetricsService
         viewModel.AssignedTickets = activeTickets.Count(t => t.ResponsibleId != null && t.TicketStatus != Status.Completed);
         viewModel.CompletedTickets = allTickets.Count(t => t.TicketStatus == Status.Completed);
         viewModel.OverdueTickets = activeTickets.Count(t =>
-            t.CompletionTarget.HasValue && t.CompletionTarget.Value < DateTime.UtcNow);
+            t.CompletionTarget.HasValue && t.CompletionTarget.Value < _clock.UtcNow);
     }
 
     /// <summary>
@@ -129,8 +132,8 @@ public class MetricsService : IMetricsService
     private void CalculateSlaMetrics(TeamDashboardViewModel viewModel, List<Ticket> activeTickets)
     {
         var ticketsWithSla = activeTickets.Where(t => t.CompletionTarget.HasValue).ToList();
-        viewModel.TicketsWithinSla = ticketsWithSla.Count(t => t.CompletionTarget!.Value >= DateTime.UtcNow);
-        viewModel.TicketsBreachingSla = ticketsWithSla.Count(t => t.CompletionTarget!.Value < DateTime.UtcNow);
+        viewModel.TicketsWithinSla = ticketsWithSla.Count(t => t.CompletionTarget!.Value >= _clock.UtcNow);
+        viewModel.TicketsBreachingSla = ticketsWithSla.Count(t => t.CompletionTarget!.Value < _clock.UtcNow);
         viewModel.SlaComplianceRate = ticketsWithSla.Any()
             ? Math.Round((double)viewModel.TicketsWithinSla / ticketsWithSla.Count * 100, 1)
             : 100;

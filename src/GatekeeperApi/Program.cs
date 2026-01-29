@@ -21,11 +21,9 @@ namespace GatekeeperApi
             // Register TicketMasala services needed for ingestion
             // We use the same extensions as the Web app to ensure consistency
             builder.Services.AddMasalaDatabase(builder.Configuration, builder.Environment);
-            builder.Services.AddRepositories();
-            builder.Services.AddObservers();
-            builder.Services.AddCoreServices();
-            builder.Services.AddGerdaServices(builder.Environment,
-                TicketMasala.Web.Configuration.ConfigurationPaths.GetConfigBasePath(builder.Environment.ContentRootPath));
+            
+            // Replaced individual registrations with the core extension
+            builder.AddMasalaCore();
 
             builder.Services.AddScoped<TicketMasala.Web.Engine.Ingestion.IIngestionTemplateService,
                 TicketMasala.Web.Engine.Ingestion.IngestionTemplateService>();

@@ -19,6 +19,8 @@ using TicketMasala.Web.Repositories;
 using System.Text.Json;
 using Newtonsoft.Json;
 
+using TicketMasala.Web.Abstractions;
+
 namespace TicketMasala.Web.Controllers;
 
 [Authorize(Roles = Constants.RoleAdmin)]
@@ -27,15 +29,18 @@ public class ManagerController : Controller
     private readonly ILogger<ManagerController> _logger;
     private readonly IProjectRepository _projectRepository;
     private readonly ITicketGenerator _ticketGenerator;
+    private readonly ISystemClock _clock;
 
     public ManagerController(
         ILogger<ManagerController> logger,
         IProjectRepository projectRepository,
-        ITicketGenerator ticketGenerator)
+        ITicketGenerator ticketGenerator,
+        ISystemClock clock)
     {
         _logger = logger;
         _projectRepository = projectRepository;
         _ticketGenerator = ticketGenerator;
+        _clock = clock;
     }
 
     public async Task<IActionResult> Projects()
@@ -72,7 +77,7 @@ public class ManagerController : Controller
                     CustomerName = string.Empty,
                     Comments = t.Comments?.Select(c => c.Body).ToList() ?? new List<string>(),
                     CompletionTarget = t.CompletionTarget,
-                    CreationDate = DateTime.UtcNow
+                    CreationDate = _clock.UtcNow
                 }).ToList()
             }).ToList();
 

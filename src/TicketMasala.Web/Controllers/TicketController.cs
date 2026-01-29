@@ -260,13 +260,10 @@ public class TicketController : Controller
     {
         if (id == null) return NotFound();
 
-        var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        var isCustomer = User.IsInRole(Constants.RoleCustomer);
-
         Facades.TicketEditContext? context;
         try
         {
-            context = await _ticketContextFacade.GetEditContextAsync(id.Value, userId, isCustomer);
+            context = await _ticketContextFacade.GetEditContextAsync(id.Value, User);
         }
         catch (UnauthorizedAccessException)
         {

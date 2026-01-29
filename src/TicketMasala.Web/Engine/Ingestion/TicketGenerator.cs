@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web;
 using TicketMasala.Web.Utilities;
 using System.Text.Json;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Engine.Ingestion;
 
@@ -17,19 +18,22 @@ public class TicketGenerator : ITicketGenerator
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly MasalaDbContext _context;
     private readonly ILogger<TicketGenerator> _logger;
+    private readonly ISystemClock _clock;
 
     public TicketGenerator(
         ITicketWorkflowService ticketWorkflowService,
         ITicketReadService ticketReadService,
         UserManager<ApplicationUser> userManager,
         MasalaDbContext context,
-        ILogger<TicketGenerator> logger)
+        ILogger<TicketGenerator> logger,
+        ISystemClock clock)
     {
         _ticketWorkflowService = ticketWorkflowService;
         _ticketReadService = ticketReadService;
         _userManager = userManager;
         _context = context;
         _logger = logger;
+        _clock = clock;
     }
 
     public async Task GenerateGoldenPathDataAsync(CancellationToken cancellationToken = default)
@@ -121,8 +125,8 @@ public class TicketGenerator : ITicketGenerator
                 Description = $"{title} #{i + 1} - {desc}",
                 CreatorGuid = Guid.Parse(customer.Id),
                 ResponsibleId = agent.Id,
-                CreationDate = DateTime.UtcNow.AddDays(-30 + i), // Spread over last 30 days
-                CompletionDate = DateTime.UtcNow.AddDays(-30 + i + 1),
+                CreationDate = _clock.UtcNow.AddDays(-30 + i), // Spread over last 30 days
+                CompletionDate = _clock.UtcNow.AddDays(-30 + i + 1),
                 Status = "Completed",
                 TicketStatus = Status.Completed,
                 PriorityScore = 50,
@@ -143,7 +147,7 @@ public class TicketGenerator : ITicketGenerator
            customerId: customer.Id,
            responsibleId: null,
            projectGuid: project?.Guid ?? Guid.Empty,
-           completionTarget: DateTime.UtcNow.AddDays(2)
+           completionTarget: _clock.UtcNow.AddDays(2)
        );
     }
 
@@ -196,7 +200,7 @@ public class TicketGenerator : ITicketGenerator
             customerId: randomCustomer.Id,
             responsibleId: null, // Let GERDA or manual assignment handle this
             projectGuid: project.Guid,
-            completionTarget: DateTime.UtcNow.AddDays(new Random().Next(1, 14))
+            completionTarget: _clock.UtcNow.AddDays(new Random().Next(1, 14))
         );
 
         // Enhance with random priority

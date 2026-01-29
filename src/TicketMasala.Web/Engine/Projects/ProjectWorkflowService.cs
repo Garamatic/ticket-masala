@@ -12,6 +12,7 @@ using TicketMasala.Web.Repositories;
 using TicketMasala.Web.ViewModels.Projects;
 using TicketMasala.Web.AI;
 using TicketMasala.Web.Observers;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Engine.Projects;
 
@@ -24,6 +25,7 @@ public class ProjectWorkflowService : IProjectWorkflowService
     private readonly IOpenAiService _openAiService;
     private readonly IProjectTemplateService _templateService;
     private readonly ILogger<ProjectWorkflowService> _logger;
+    private readonly ISystemClock _clock;
 
     public ProjectWorkflowService(
         MasalaDbContext context,
@@ -32,7 +34,8 @@ public class ProjectWorkflowService : IProjectWorkflowService
         IEnumerable<IProjectObserver> observers,
         IOpenAiService openAiService,
         IProjectTemplateService templateService,
-        ILogger<ProjectWorkflowService> logger)
+        ILogger<ProjectWorkflowService> logger,
+        ISystemClock clock)
     {
         _context = context;
         _projectRepository = projectRepository;
@@ -41,6 +44,7 @@ public class ProjectWorkflowService : IProjectWorkflowService
         _openAiService = openAiService;
         _templateService = templateService;
         _logger = logger;
+        _clock = clock;
     }
 
     public async Task<Project> CreateProjectAsync(NewProject viewModel, string userId)
@@ -276,7 +280,7 @@ public class ProjectWorkflowService : IProjectWorkflowService
         project.Status = status;
         if (status == Status.Completed)
         {
-            project.CompletionDate = DateTime.UtcNow;
+            project.CompletionDate = _clock.UtcNow;
         }
 
         await _context.SaveChangesAsync();
@@ -310,7 +314,7 @@ public class ProjectWorkflowService : IProjectWorkflowService
         var project = await _context.Projects.FirstOrDefaultAsync(p => p.Guid == projectGuid);
         if (project != null)
         {
-            project.ValidUntil = DateTime.UtcNow;
+            project.ValidUntil = _clock.UtcNow;
             await _context.SaveChangesAsync();
             return true;
         }

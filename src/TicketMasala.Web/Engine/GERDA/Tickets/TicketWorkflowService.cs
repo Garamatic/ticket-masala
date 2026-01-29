@@ -131,9 +131,9 @@ public class TicketWorkflowService : ITicketWorkflowService
             DomainId = defaultDomainId,
             ConfigVersionId = currentConfigVersion,
             TicketStatus = responsible != null ? Status.Assigned : Status.Pending,
-            CompletionTarget = completionTarget ?? DateTime.UtcNow.AddDays(14),
+            CompletionTarget = completionTarget ?? _clock.UtcNow.AddDays(14),
             CreatorGuid = Guid.Parse(customer.Id),
-            CreationDate = DateTime.UtcNow,
+            CreationDate = _clock.UtcNow,
             Comments = new List<TicketComment>()
         };
 

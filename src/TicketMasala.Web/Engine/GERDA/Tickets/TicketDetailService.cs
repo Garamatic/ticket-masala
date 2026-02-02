@@ -14,7 +14,7 @@ namespace TicketMasala.Web.Engine.GERDA.Tickets;
 public interface ITicketDetailService
 {
     Task<TicketDetailsViewModel?> GetTicketDetailsAsync(Guid ticketId, string? userId, bool isCustomer);
-    Task<TicketDetailContext> GetDetailContextAsync(TicketDetailsViewModel viewModel);
+    Task<Facades.TicketDetailContext> GetDetailContextAsync(TicketDetailsViewModel viewModel);
 }
 
 public class TicketDetailService : ITicketDetailService
@@ -62,7 +62,7 @@ public class TicketDetailService : ITicketDetailService
                         viewModel.RecommendedAgent = new RecommendedAgentInfo
                         {
                             AgentId = agent.Id,
-                            AgentName = agent.ToFullName(),
+                            AgentName = $"{agent.FirstName} {agent.LastName}",
                             AffinityScore = topRecommendation.Score,
                             CurrentWorkload = currentWorkload,
                             MaxCapacity = agent.MaxCapacityPoints
@@ -100,11 +100,11 @@ public class TicketDetailService : ITicketDetailService
         return viewModel;
     }
 
-    public Task<TicketDetailContext> GetDetailContextAsync(TicketDetailsViewModel viewModel)
+    public Task<Facades.TicketDetailContext> GetDetailContextAsync(TicketDetailsViewModel viewModel)
     {
         // Domain configuration is now handled by the caller (TicketContextFacade)
         // This method is kept for potential future use
-        return Task.FromResult(new TicketDetailContext
+        return Task.FromResult(new Facades.TicketDetailContext
         {
             DomainId = viewModel.DomainId ?? string.Empty,
             WorkItemTypeCode = viewModel.WorkItemTypeCode

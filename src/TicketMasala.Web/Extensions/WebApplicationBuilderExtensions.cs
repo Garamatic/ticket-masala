@@ -92,7 +92,7 @@ public static class WebApplicationBuilderExtensions
         // System abstractions for testability
         builder.Services.AddSingleton<TicketMasala.Web.Abstractions.ISystemClock, TicketMasala.Web.Services.SystemClock>();
         builder.Services.AddScoped<TicketMasala.Web.Services.IJsonParsingService, TicketMasala.Web.Services.JsonParsingService>();
-        
+
         builder.Services.AddSingleton<RuleCompilerService>();
         builder.Services.AddScoped<TicketMasala.Web.Engine.Ingestion.Validation.ICustomFieldValidationService,
             TicketMasala.Web.Engine.Ingestion.Validation.CustomFieldValidationService>();
@@ -124,10 +124,10 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddScoped<IProjectTemplateService, ProjectTemplateService>();
         builder.Services.AddScoped<IAuditService, AuditService>();
         builder.Services.AddScoped<ITicketImportService, TicketImportService>();
-        
+
         // Ingestion & Sentiment
         builder.Services.AddScoped<IEmailTicketProcessor, EmailTicketProcessor>();
-        builder.Services.AddScoped<TicketMasala.Web.Engine.GERDA.Sentiment.ISentimentAnalyzer, 
+        builder.Services.AddScoped<TicketMasala.Web.Engine.GERDA.Sentiment.ISentimentAnalyzer,
             TicketMasala.Web.Engine.GERDA.Sentiment.SimpleSentimentAnalyzer>();
 
         builder.Services.AddHostedService<EmailIngestionService>();
@@ -138,7 +138,7 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddHostedService<QueuedHostedService>();
         builder.Services.AddHostedService<TicketGeneratorService>();
         builder.Services.AddScoped<ITicketGenerator, TicketGenerator>();
-        
+
         // Enrichment
         builder.Services.AddSingleton<TicketMasala.Web.Engine.Enrichment.IEnrichmentQueue, TicketMasala.Web.Engine.Enrichment.EnrichmentQueue>();
         builder.Services.AddHostedService<TicketMasala.Web.Engine.Enrichment.EnrichmentBackgroundService>();
@@ -208,16 +208,17 @@ public static class WebApplicationBuilderExtensions
                 Console.WriteLine("GERDA AI Services registered successfully (G+E+R+D+A + Background Jobs)");
             }
         }
-        else
-        {
-            Console.WriteLine($"Note: GERDA config not found at {gerdaConfigPath}");
-            Console.WriteLine("Application will run with basic ticketing functionality");
-            builder.Services.AddScoped<IDispatchingService, NoOpDispatchingService>();
-            builder.Services.AddScoped<IGerdaService, NoOpGerdaService>();
-        }
+        Console.WriteLine($"Note: GERDA config not found at {gerdaConfigPath}");
+        Console.WriteLine("Application will run with basic ticketing functionality");
+        // Register NoOp services to prevent DI failures
+        builder.Services.AddScoped<IDispatchingService, NoOpDispatchingService>();
+        builder.Services.AddScoped<IGerdaService, NoOpGerdaService>();
+        builder.Services.AddScoped<IEstimatingService, NoOpEstimatingService>();
+        builder.Services.AddScoped<IKnowledgeService, NoOpKnowledgeService>();
+    }
 
-        // Rate Limiting
-        builder.Services.AddRateLimiter(options =>
+    // Rate Limiting
+    builder.Services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = Microsoft.AspNetCore.Http.StatusCodes.Status429TooManyRequests;
 
@@ -238,105 +239,105 @@ public static class WebApplicationBuilderExtensions
                 opt.QueueLimit = 0;
             });
 
-            options.AddTokenBucketLimiter("general", opt =>
-            {
-                opt.TokenLimit = 50;
-                opt.TokensPerPeriod = 10;
-                opt.ReplenishmentPeriod = TimeSpan.FromSeconds(10);
-                opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-                opt.QueueLimit = 5;
-            });
+options.AddTokenBucketLimiter("general", opt =>
+{
+    opt.TokenLimit = 50;
+    opt.TokensPerPeriod = 10;
+    opt.ReplenishmentPeriod = TimeSpan.FromSeconds(10);
+    opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+    opt.QueueLimit = 5;
+});
         });
 
-        // Memory Cache
-        builder.Services.AddMemoryCache();
-        builder.Services.AddDistributedMemoryCache();
+// Memory Cache
+builder.Services.AddMemoryCache();
+builder.Services.AddDistributedMemoryCache();
 
-        // Data Protection
-        if (builder.Environment.IsProduction())
-        {
-            var keyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "keys");
-            Directory.CreateDirectory(keyPath);
-            builder.Services.AddDataProtection()
-                .PersistKeysToFileSystem(new DirectoryInfo(keyPath))
-                .SetApplicationName("ticket-masala");
-        }
-        else
-        {
-            builder.Services.AddDataProtection()
-                .SetApplicationName("ticket-masala");
-        }
+// Data Protection
+if (builder.Environment.IsProduction())
+{
+    var keyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "keys");
+    Directory.CreateDirectory(keyPath);
+    builder.Services.AddDataProtection()
+        .PersistKeysToFileSystem(new DirectoryInfo(keyPath))
+        .SetApplicationName("ticket-masala");
+}
+else
+{
+    builder.Services.AddDataProtection()
+        .SetApplicationName("ticket-masala");
+}
 
-        // WebOptimizer
-        builder.Services.AddWebOptimizer(pipeline =>
-        {
-            pipeline.AddCssBundle("/css/bundle.css",
-                "lib/bootstrap/dist/css/bootstrap.min.css",
-                "css/design-system.css",
-                "css/site.css")
-                .MinifyCss();
-            pipeline.AddJavaScriptBundle("/js/bundle.js",
-                "lib/jquery/dist/jquery.min.js",
-                "lib/bootstrap/dist/js/bootstrap.bundle.min.js",
-                "js/site.js",
-                "js/toast.js")
-                .MinifyJavaScript();
-        });
+// WebOptimizer
+builder.Services.AddWebOptimizer(pipeline =>
+{
+    pipeline.AddCssBundle("/css/bundle.css",
+        "lib/bootstrap/dist/css/bootstrap.min.css",
+        "css/design-system.css",
+        "css/site.css")
+        .MinifyCss();
+    pipeline.AddJavaScriptBundle("/js/bundle.js",
+        "lib/jquery/dist/jquery.min.js",
+        "lib/bootstrap/dist/js/bootstrap.bundle.min.js",
+        "js/site.js",
+        "js/toast.js")
+        .MinifyJavaScript();
+});
 
-        // Authorization
-        builder.Services.AddAuthorization(options =>
-        {
-            options.AddPolicy("AllowAnonymous", policy => policy.RequireAssertion(_ => true));
-            if (!builder.Environment.IsDevelopment())
-            {
-                options.FallbackPolicy = new AuthorizationPolicyBuilder()
-                    .RequireAuthenticatedUser()
-                    .Build();
-            }
-        });
+// Authorization
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AllowAnonymous", policy => policy.RequireAssertion(_ => true));
+    if (!builder.Environment.IsDevelopment())
+    {
+        options.FallbackPolicy = new AuthorizationPolicyBuilder()
+            .RequireAuthenticatedUser()
+            .Build();
+    }
+});
 
-        builder.Services.ConfigureApplicationCookie(options =>
-        {
-            options.Cookie.HttpOnly = true;
-            options.ExpireTimeSpan = TimeSpan.FromHours(8);
-            options.LoginPath = "/Identity/Account/Login";
-            options.AccessDeniedPath = "/Identity/Account/AccessDenied";
-            options.SlidingExpiration = true;
-        });
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.ExpireTimeSpan = TimeSpan.FromHours(8);
+    options.LoginPath = "/Identity/Account/Login";
+    options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+    options.SlidingExpiration = true;
+});
 
-        // Localization & CORS
-        builder.Services.AddLocalization();
-        builder.Services.AddCors(options =>
-        {
-            options.AddPolicy("AllowAll",
-                b => b.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
-        });
+// Localization & CORS
+builder.Services.AddLocalization();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        b => b.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+});
 
-        builder.Services.AddControllersWithViews()
-            .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix)
-            .AddDataAnnotationsLocalization();
+builder.Services.AddControllersWithViews()
+    .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix)
+    .AddDataAnnotationsLocalization();
 
-        builder.Services.Configure<RazorViewEngineOptions>(options =>
-        {
-            options.ViewLocationExpanders.Add(new TenantViewLocationExpander());
-        });
+builder.Services.Configure<RazorViewEngineOptions>(options =>
+{
+    options.ViewLocationExpanders.Add(new TenantViewLocationExpander());
+});
 
-        builder.Services.AddRazorPages();
-        builder.Services.AddHealthChecks();
-        builder.Services.AddSingleton<TenantConnectionResolver>();
+builder.Services.AddRazorPages();
+builder.Services.AddHealthChecks();
+builder.Services.AddSingleton<TenantConnectionResolver>();
 
-        // Swagger
-        builder.Services.AddEndpointsApiExplorer();
+// Swagger
+builder.Services.AddEndpointsApiExplorer();
 
-        // Forwarded Headers
-        builder.Services.Configure<ForwardedHeadersOptions>(options =>
-        {
-            options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor |
-                                       Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
-            options.KnownIPNetworks.Clear();
-            options.KnownProxies.Clear();
-        });
+// Forwarded Headers
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor |
+                               Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
-        return builder;
+return builder;
     }
 }

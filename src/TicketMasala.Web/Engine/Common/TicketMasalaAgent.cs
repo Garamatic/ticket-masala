@@ -51,6 +51,9 @@ public class TicketMasalaAgent : Agent
     /// <summary>Maximum work items this agent can handle</summary>
     public new int MaxCapacity { get; set; }
 
+    [JsonIgnore]
+    public List<AgentDomainStats> DomainStats { get; set; } = new();
+
     /// <summary>Availability as percentage (0.0 to 1.0)</summary>
     public decimal AvailabilityPercentage { get; set; } = 1.0m;
 

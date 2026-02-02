@@ -17,9 +17,14 @@ public class NullRankingService : IRankingService
         return Task.FromResult(0.0);
     }
 
-    public Task<Dictionary<string, double>> CalculateBatchPriorityScoresAsync(IEnumerable<Guid> ticketGuids)
+    public Task RecalculateAllPrioritiesAsync()
     {
-        return Task.FromResult(new Dictionary<string, double>());
+        return Task.CompletedTask;
+    }
+
+    public Task<List<Guid>> GetPrioritizedTicketGuidsAsync(Guid? projectGuid = null)
+    {
+        return Task.FromResult(new List<Guid>());
     }
 }
 

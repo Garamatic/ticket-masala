@@ -106,6 +106,11 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddScoped<ITicketWorkflowService, TicketWorkflowService>();
         builder.Services.AddScoped<ITicketBatchService, TicketBatchService>();
 
+        // Ticket View Services (Facade decomposition for SRP)
+        builder.Services.AddScoped<ITicketDetailService, TicketDetailService>();
+        builder.Services.AddScoped<ITicketCreateService, TicketCreateService>();
+        builder.Services.AddScoped<ITicketEditService, TicketEditService>();
+
         builder.Services.AddScoped<TicketDispatchService>();
         builder.Services.AddScoped<TicketReportingService>();
         builder.Services.AddScoped<TicketNotificationService>();

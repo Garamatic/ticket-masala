@@ -77,7 +77,7 @@ public class ProjectsApiController : ControllerBase
         {
             _logger.LogError(ex, "API: Error getting all projects");
             return StatusCode(500, ApiResponse<IEnumerable<ProjectTicketViewModel>>.ErrorResponse(
-                "An error occurred while retrieving projects"));
+                "An error occurred while retrieving projects", _clock.UtcNow));
         }
     }
 

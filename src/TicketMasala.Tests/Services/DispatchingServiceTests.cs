@@ -3,6 +3,8 @@ using Moq;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web.Engine.GERDA.Dispatching;
+using TicketMasala.Web.Engine.GERDA.Dispatching.Algorithms;
+using TicketMasala.Web.Engine.GERDA.Dispatching.Configuration;
 using TicketMasala.Web.Engine.GERDA.Models;
 using TicketMasala.Web.Engine.GERDA.Strategies;
 using TicketMasala.Web.Engine.GERDA.Configuration;
@@ -63,6 +65,7 @@ public class DispatchingServiceTests
         strategySelector.Setup(x => x.GetDefaultStrategyName())
             .Returns("MatrixFactorization");
 
+        var mockAgentMatchingEngine = new Mock<AgentMatchingEngine>(new DispatchingConfig(), new Mock<ILogger<AgentMatchingEngine>>().Object);
         var service = new DispatchingService(
             context,
             _config,
@@ -70,6 +73,7 @@ public class DispatchingServiceTests
             strategySelector.Object,
             autoDispatchPolicy.Object,
             pmRecommendationService.Object,
+            mockAgentMatchingEngine.Object,
             _mockLogger.Object);
 
         var customer = new ApplicationUser
@@ -149,6 +153,7 @@ public class DispatchingServiceTests
         strategySelector.Setup(x => x.GetDefaultStrategyName())
             .Returns("MatrixFactorization");
 
+        var mockAgentMatchingEngine = new Mock<AgentMatchingEngine>(new DispatchingConfig(), new Mock<ILogger<AgentMatchingEngine>>().Object);
         var service = new DispatchingService(
             context,
             _config,
@@ -156,6 +161,7 @@ public class DispatchingServiceTests
             strategySelector.Object,
             autoDispatchPolicy.Object,
             pmRecommendationService.Object,
+            mockAgentMatchingEngine.Object,
             _mockLogger.Object);
 
         var customer = new ApplicationUser
@@ -248,6 +254,7 @@ public class DispatchingServiceTests
         strategySelector.Setup(x => x.GetDefaultStrategyName())
             .Returns("MatrixFactorization");
 
+        var mockAgentMatchingEngine = new Mock<AgentMatchingEngine>(new DispatchingConfig(), new Mock<ILogger<AgentMatchingEngine>>().Object);
         var service = new DispatchingService(
             context,
             _config,
@@ -255,6 +262,7 @@ public class DispatchingServiceTests
             strategySelector.Object,
             autoDispatchPolicy.Object,
             pmRecommendationService.Object,
+            mockAgentMatchingEngine.Object,
             _mockLogger.Object);
 
         // Act

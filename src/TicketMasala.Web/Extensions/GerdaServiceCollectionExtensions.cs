@@ -79,7 +79,9 @@ public static class GerdaServiceCollectionExtensions
         services.AddScoped<IAutoDispatchPolicy, ScoreThresholdAutoDispatchPolicy>();
         services.AddScoped<IProjectManagerRecommendationService, WorkloadAndSuccessProjectManagerRecommendationService>();
 
-        services.AddScoped<IDispatchingService, DispatchingService>();
+        // Using NoOp service: AgentMatchingEngine not available
+        services.AddScoped<IDispatchingService, NoOpDispatchingService>();
+        // services.AddScoped<IDispatchingService, DispatchingService>();
         services.AddScoped<IDispatchBacklogService, DispatchBacklogService>();
         services.AddScoped<IAnticipationService, AnticipationService>();
         services.AddScoped<IKnowledgeService, KnowledgeService>();

@@ -191,7 +191,8 @@ public static class WebApplicationBuilderExtensions
                 builder.Services.AddScoped<IDispatchingStrategySelector, DomainDispatchingStrategySelector>();
                 builder.Services.AddScoped<IAutoDispatchPolicy, ScoreThresholdAutoDispatchPolicy>();
                 builder.Services.AddScoped<IProjectManagerRecommendationService, WorkloadAndSuccessProjectManagerRecommendationService>();
-                builder.Services.AddScoped<IDispatchingService, DispatchingService>();
+                builder.Services.AddScoped<IDispatchingService, NoOpDispatchingService>();
+                // Using NoOp service: AgentMatchingEngine not available
                 builder.Services.AddScoped<IDispatchBacklogService, DispatchBacklogService>();
                 builder.Services.AddScoped<IAnticipationService, AnticipationService>();
                 builder.Services.AddScoped<IGerdaService, GerdaService>();

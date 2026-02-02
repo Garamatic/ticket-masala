@@ -3,6 +3,9 @@ using TicketMasala.Web.Engine.GERDA.Models;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
 using TicketMasala.Web.Engine.GERDA.Strategies;
+using TicketMasala.Web.Engine.GERDA.Dispatching.Algorithms;
+using TicketMasala.Web.Engine.GERDA.Dispatching.Models;
+using TicketMasala.Web.Engine.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.ML;
 using Microsoft.ML.Data;
@@ -13,6 +16,9 @@ namespace TicketMasala.Web.Engine.GERDA.Dispatching;
 /// <summary>
 /// D - Dispatching: Agent-ticket matching using ML.NET Matrix Factorization
 /// Recommends the best agent for a ticket based on historical affinity and workload.
+///
+/// Now supports delegation to TicketMasala.Web.Engine.GERDA.Dispatching.Algorithms.AgentMatchingEngine
+/// for generic algorithm while maintaining backward compatibility with domain-specific strategies.
 /// </summary>
 public class DispatchingService : IDispatchingService
 {
@@ -22,6 +28,7 @@ public class DispatchingService : IDispatchingService
     private readonly IDispatchingStrategySelector _strategySelector;
     private readonly IAutoDispatchPolicy _autoDispatchPolicy;
     private readonly IProjectManagerRecommendationService _projectManagerRecommendationService;
+    private readonly AgentMatchingEngine _agentMatchingEngine;
     private readonly ILogger<DispatchingService> _logger;
 
     public DispatchingService(
@@ -31,6 +38,7 @@ public class DispatchingService : IDispatchingService
         IDispatchingStrategySelector strategySelector,
         IAutoDispatchPolicy autoDispatchPolicy,
         IProjectManagerRecommendationService projectManagerRecommendationService,
+        AgentMatchingEngine agentMatchingEngine,
         ILogger<DispatchingService> logger)
     {
         _context = context;
@@ -39,6 +47,7 @@ public class DispatchingService : IDispatchingService
         _strategySelector = strategySelector;
         _autoDispatchPolicy = autoDispatchPolicy;
         _projectManagerRecommendationService = projectManagerRecommendationService;
+        _agentMatchingEngine = agentMatchingEngine ?? throw new ArgumentNullException(nameof(agentMatchingEngine));
         _logger = logger;
     }
 
@@ -218,6 +227,35 @@ public class DispatchingService : IDispatchingService
             return null;
         }
         return await _projectManagerRecommendationService.GetRecommendedProjectManagerAsync(ticketGuid);
+    }
+
+    /// <summary>
+    /// Get agent recommendations using the generic AgentMatchingEngine.
+    /// This is used as an optional path alongside domain-specific strategies.
+    /// </summary>
+    private DispatchResult GetRecommendedAgentByEngine(Ticket ticket, List<Agent> availableAgents)
+    {
+        try
+        {
+            var workItem = new TicketWorkItemAdapter(ticket);
+            var result = _agentMatchingEngine.RecommendAgent(workItem, availableAgents);
+            
+            if (string.IsNullOrEmpty(result.RecommendedAgentId))
+            {
+                _logger.LogWarning("AgentMatchingEngine returned no recommendation for ticket {TicketGuid}", ticket.Guid);
+                return new DispatchResult(string.Empty, 0.0) { Explanation = "No agent recommendation available" };
+            }
+
+            return new DispatchResult(result.RecommendedAgentId, (double)result.MatchScore)
+            {
+                Explanation = result.Rationale ?? "Engine-based matching"
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "AgentMatchingEngine failed for ticket {TicketGuid}, falling back to strategies", ticket.Guid);
+            return new DispatchResult(string.Empty, 0.0) { Explanation = $"Agent matching engine error: {ex.Message}" };
+        }
     }
 }
 

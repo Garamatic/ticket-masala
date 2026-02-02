@@ -30,10 +30,10 @@ public class UserSeedStrategy : ISeedStrategy
         _employeeTypeAliases = LoadEmployeeTypeAliases();
     }
 
-    public async Task<bool> ShouldSeedAsync()
+    public Task<bool> ShouldSeedAsync()
     {
         Console.WriteLine("DEBUG: UserSeedStrategy.ShouldSeedAsync called");
-        return true;
+        return Task.FromResult(true);
     }
 
     public async Task SeedAsync()

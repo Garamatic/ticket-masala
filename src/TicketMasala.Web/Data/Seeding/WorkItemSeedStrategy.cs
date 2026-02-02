@@ -30,10 +30,10 @@ public class WorkItemSeedStrategy : ISeedStrategy
         _clock = clock;
     }
 
-    public async Task<bool> ShouldSeedAsync()
+    public Task<bool> ShouldSeedAsync()
     {
         // Always run to ensure new items from config are added
-        return true;
+        return Task.FromResult(true);
     }
 
     public async Task SeedAsync()
@@ -72,7 +72,7 @@ public class WorkItemSeedStrategy : ISeedStrategy
         var seedFilePath = ConfigurationPaths.GetConfigFilePath(
             _environment.ContentRootPath,
             "seed_data.json");
-        
+
         if (!File.Exists(seedFilePath))
         {
             return null;
@@ -110,7 +110,7 @@ public class WorkItemSeedStrategy : ISeedStrategy
                 Status = containerDto.Status,
                 CreationDate = _clock.UtcNow,
             };
-            
+
             // Resolve ProjectManager
             if (!string.IsNullOrEmpty(containerDto.ProjectManagerEmail))
             {
@@ -150,7 +150,7 @@ public class WorkItemSeedStrategy : ISeedStrategy
     {
         // Use Description as Title since Title is missing in JSON
         var title = itemDto.Description.Length > 50 ? itemDto.Description.Substring(0, 47) + "..." : itemDto.Description;
-        
+
         // Check for existence 
         // Note: We use Title match. If duplicate descriptions exist, this might skip.
         var exists = await _context.Tickets
@@ -185,20 +185,20 @@ public class WorkItemSeedStrategy : ISeedStrategy
                 ticket.ResponsibleId = user.Id;
             }
         }
-        
+
         // Resolve Customer (Reporter)
-        if (!string.IsNullOrEmpty(itemDto.CustomerEmail)) 
+        if (!string.IsNullOrEmpty(itemDto.CustomerEmail))
         {
-             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == itemDto.CustomerEmail);
-             if (user != null)
-             {
-                 ticket.CustomerId = user.Id;
-             }
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == itemDto.CustomerEmail);
+            if (user != null)
+            {
+                ticket.CustomerId = user.Id;
+            }
         }
 
         _context.Tickets.Add(ticket);
         _logger.LogInformation("Creating ticket: {Title}", ticket.Title);
-        
+
         await SaveChangesWithRetryAsync();
 
         if (itemDto.Comments?.Count > 0)
@@ -211,16 +211,16 @@ public class WorkItemSeedStrategy : ISeedStrategy
                     Body = commentDto.Body,
                     CreatedAt = _clock.UtcNow.AddDays(-commentDto.CreatedDaysAgo),
                 };
-                
-                 if (!string.IsNullOrEmpty(commentDto.AuthorEmail)) 
+
+                if (!string.IsNullOrEmpty(commentDto.AuthorEmail))
                 {
-                     var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == commentDto.AuthorEmail);
-                     if (user != null)
-                     {
-                         comment.AuthorId = user.Id;
-                     }
+                    var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == commentDto.AuthorEmail);
+                    if (user != null)
+                    {
+                        comment.AuthorId = user.Id;
+                    }
                 }
-                
+
                 _context.TicketComments.Add(comment);
             }
             await SaveChangesWithRetryAsync();

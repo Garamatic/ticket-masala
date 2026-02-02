@@ -21,6 +21,7 @@ using TicketMasala.Web.Engine.GERDA.Dispatching;
 using TicketMasala.Web.Engine.GERDA.Anticipation;
 using TicketMasala.Web.Engine.GERDA.BackgroundJobs;
 using TicketMasala.Web.Engine.GERDA.Knowledge;
+using TicketMasala.Web.Orchestrators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
@@ -201,6 +202,7 @@ public static class WebApplicationBuilderExtensions
                 // Using NoOp service: AgentMatchingEngine not available
                 builder.Services.AddScoped<IDispatchBacklogService, DispatchBacklogService>();
                 builder.Services.AddScoped<IAnticipationService, AnticipationService>();
+                builder.Services.AddScoped<IKnowledgeService, KnowledgeService>();
                 builder.Services.AddScoped<IGerdaService, GerdaService>();
                 builder.Services.AddHostedService<GerdaBackgroundService>();
 
@@ -242,12 +244,12 @@ public static class WebApplicationBuilderExtensions
 
                 options.AddTokenBucketLimiter("general", opt =>
             {
-        opt.TokenLimit = 50;
-        opt.TokensPerPeriod = 10;
-        opt.ReplenishmentPeriod = TimeSpan.FromSeconds(10);
-        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        opt.QueueLimit = 5;
-    });
+                opt.TokenLimit = 50;
+                opt.TokensPerPeriod = 10;
+                opt.ReplenishmentPeriod = TimeSpan.FromSeconds(10);
+                opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                opt.QueueLimit = 5;
+            });
             });
 
         // Memory Cache

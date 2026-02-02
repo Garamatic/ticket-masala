@@ -54,7 +54,7 @@ public class TicketFactory : ITicketFactory
     /// <summary>
     /// Create a ticket from form submission data
     /// </summary>
-    public async Task<Ticket> CreateTicketAsync(
+    public Task<Ticket> CreateTicketAsync(
         string title,
         string description,
         ApplicationUser customer,
@@ -98,7 +98,7 @@ public class TicketFactory : ITicketFactory
             description?.Substring(0, Math.Min(50, description?.Length ?? 0)),
             ticket.ContentHash);
 
-        return ticket;
+        return Task.FromResult(ticket);
     }
 
     /// <summary>

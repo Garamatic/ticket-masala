@@ -34,6 +34,10 @@ public static class GerdaServiceCollectionExtensions
         services.AddSingleton<Engine.GERDA.Configuration.IDomainConfigurationService,
             Engine.GERDA.Configuration.DomainConfigurationService>();
 
+        // Domain UI Service (Scoped because it depends on IHttpContextAccessor)
+        services.AddScoped<Engine.GERDA.Configuration.IDomainUiService,
+            Engine.GERDA.Configuration.DomainUiService>();
+
         // Rule Compiler (global)
         services.AddSingleton<RuleCompilerService>();
 

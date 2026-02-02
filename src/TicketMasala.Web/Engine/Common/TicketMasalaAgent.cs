@@ -32,9 +32,6 @@ public class TicketMasalaAgent : Agent
         return masalaAgent;
     }
 
-    /// <summary>
-    /// Create a standard Agent from a TicketMasalaAgent.
-    /// </summary>
     // Method commented out: Agent type not available
     // public Agent ToAgent() => new()
     // {

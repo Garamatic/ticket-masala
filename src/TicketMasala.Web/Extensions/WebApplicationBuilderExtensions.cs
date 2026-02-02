@@ -113,6 +113,9 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddScoped<ITicketCreateService, TicketCreateService>();
         builder.Services.AddScoped<ITicketEditService, TicketEditService>();
 
+        // Orchestrators
+        builder.Services.AddScoped<ITicketOrchestrator, TicketOrchestrator>();
+
         builder.Services.AddScoped<TicketDispatchService>();
         builder.Services.AddScoped<TicketReportingService>();
         builder.Services.AddScoped<TicketNotificationService>();

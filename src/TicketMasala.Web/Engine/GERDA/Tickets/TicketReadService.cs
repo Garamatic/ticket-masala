@@ -189,9 +189,7 @@ public class TicketReadService : ITicketReadService
 
             ResponsibleName = ticket.Responsible?.ToFullName(),
             ResponsibleId = ticket.Responsible?.Id,
-            CustomerName = ticket.Customer != null
-                ? $"{ticket.Customer.FirstName} {ticket.Customer.LastName}"
-                : null,
+            CustomerName = ticket.Customer?.ToFullName(),
             CustomerId = ticket.Customer?.Id,
             ParentTicketGuid = ticket.ParentTicket?.Guid,
             ProjectGuid = ticketProject?.Guid,

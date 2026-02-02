@@ -2,7 +2,7 @@ using TicketMasala.Web.Engine.GERDA.Dispatching;
 using TicketMasala.Web.Engine.GERDA.Knowledge;
 using TicketMasala.Web.ViewModels.Tickets;
 using TicketMasala.Web.Engine.Core;
-using TicketMasala.Web.Facades;
+using TicketMasala.Web.Utilities;
 
 namespace TicketMasala.Web.Engine.GERDA.Tickets;
 
@@ -62,7 +62,7 @@ public class TicketDetailService : ITicketDetailService
                         viewModel.RecommendedAgent = new RecommendedAgentInfo
                         {
                             AgentId = agent.Id,
-                            AgentName = $"{agent.FirstName} {agent.LastName}",
+                            AgentName = agent.ToFullName(),
                             AffinityScore = topRecommendation.Score,
                             CurrentWorkload = currentWorkload,
                             MaxCapacity = agent.MaxCapacityPoints
@@ -106,7 +106,7 @@ public class TicketDetailService : ITicketDetailService
         // This method is kept for potential future use
         return Task.FromResult(new TicketDetailContext
         {
-            DomainId = viewModel.DomainId,
+            DomainId = viewModel.DomainId ?? string.Empty,
             WorkItemTypeCode = viewModel.WorkItemTypeCode
         });
     }

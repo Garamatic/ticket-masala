@@ -63,17 +63,17 @@ public class TicketMasalaAgent : Agent
     /// <summary>
     /// Get utilization ratio: CurrentWorkload / MaxCapacity (0.0 to 1.0+)
     /// </summary>
-    public decimal GetUtilization() => MaxCapacity > 0 
-        ? (decimal)CurrentWorkload / MaxCapacity 
+    public decimal GetUtilization() => MaxCapacity > 0
+        ? (decimal)CurrentWorkload / MaxCapacity
         : 0m;
 
     /// <summary>
     /// Check if agent has capacity for more work
     /// </summary>
-    public bool HasCapacity() => CurrentWorkload < MaxCapacity;
+    public bool HasCapacity => CurrentWorkload < MaxCapacity;
 
     /// <summary>
     /// Check if agent is available (has capacity AND is available percentage > 0)
     /// </summary>
-    public new bool IsAvailable() => HasCapacity() && AvailabilityPercentage > 0;
+    public new bool IsAvailable => HasCapacity && AvailabilityPercentage > 0;
 }

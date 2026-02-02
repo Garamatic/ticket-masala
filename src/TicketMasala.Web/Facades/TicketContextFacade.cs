@@ -40,7 +40,7 @@ public class TicketContextFacade : ITicketContextFacade
     public async Task<TicketDetailContext> GetTicketDetailContextAsync(TicketDetailsViewModel viewModel)
     {
         var domainId = viewModel.DomainId ?? _domainConfig.GetDefaultDomainId();
-        
+
         var context = new TicketDetailContext
         {
             DomainId = domainId,
@@ -51,14 +51,14 @@ public class TicketContextFacade : ITicketContextFacade
 
         if (!string.IsNullOrEmpty(viewModel.CustomFieldsJson))
         {
-            try 
-            { 
-                context.CustomFieldValues = JsonSerializer.Deserialize<Dictionary<string, object>>(viewModel.CustomFieldsJson) 
-                    ?? new Dictionary<string, object>(); 
+            try
+            {
+                context.CustomFieldValues = JsonSerializer.Deserialize<Dictionary<string, object>>(viewModel.CustomFieldsJson)
+                    ?? new Dictionary<string, object>();
             }
-            catch 
-            { 
-                context.CustomFieldValues = new Dictionary<string, object>(); 
+            catch
+            {
+                context.CustomFieldValues = new Dictionary<string, object>();
             }
         }
 
@@ -68,7 +68,7 @@ public class TicketContextFacade : ITicketContextFacade
     public async Task<TicketCreateContext> GetCreateContextAsync(bool isCustomer, string? preselectedCustomerId = null, Guid? projectGuid = null)
     {
         var context = await _createService.GetCreateContextAsync(isCustomer, preselectedCustomerId, projectGuid);
-        
+
         // Domain configuration is still handled here as it's configuration, not data
         var defaultDomain = _domainConfig.GetDefaultDomainId();
         context.DomainId = defaultDomain;
@@ -82,7 +82,7 @@ public class TicketContextFacade : ITicketContextFacade
     public async Task<TicketEditContext?> GetEditContextAsync(Guid ticketId, System.Security.Claims.ClaimsPrincipal user)
     {
         var context = await _editService.GetEditContextAsync(ticketId, user);
-        
+
         if (context != null)
         {
             // Domain configuration is still handled here as it's configuration, not data
@@ -91,18 +91,18 @@ public class TicketContextFacade : ITicketContextFacade
             context.DomainId = domainId;
             context.EntityLabels = _domainConfig.GetEntityLabels(domainId);
             context.CustomFields = _domainConfig.GetCustomFields(domainId).ToList();
-            
+
             if (context.ViewModel != null && !string.IsNullOrEmpty(context.ViewModel.Guid.ToString()))
             {
                 try
                 {
-                    var customFieldsJson = context.CustomFieldValues != null 
-                        ? JsonSerializer.Serialize(context.CustomFieldValues) 
+                    var customFieldsJson = context.CustomFieldValues != null
+                        ? JsonSerializer.Serialize(context.CustomFieldValues)
                         : "{}";
-                    
+
                     if (!string.IsNullOrEmpty(customFieldsJson) && customFieldsJson != "{}")
                     {
-                        context.CustomFieldValues = JsonSerializer.Deserialize<Dictionary<string, object>>(customFieldsJson);
+                        context.CustomFieldValues = JsonSerializer.Deserialize<Dictionary<string, object>>(customFieldsJson) ?? new Dictionary<string, object>();
                     }
                 }
                 catch { /* Ignore JSON parsing errors */ }
@@ -115,12 +115,12 @@ public class TicketContextFacade : ITicketContextFacade
     public async Task<TicketEditContext> GetEditReloadContextAsync(Guid ticketId, System.Security.Claims.ClaimsPrincipal user)
     {
         var context = await _editService.GetEditReloadContextAsync(ticketId, user);
-        
+
         var reloadDomainId = _domainConfig.GetDefaultDomainId();
         context.DomainId = reloadDomainId;
         context.EntityLabels = _domainConfig.GetEntityLabels(reloadDomainId);
         context.CustomFields = _domainConfig.GetCustomFields(reloadDomainId).ToList();
-        
+
         return context;
     }
 }

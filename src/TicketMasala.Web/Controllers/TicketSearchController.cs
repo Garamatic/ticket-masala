@@ -6,24 +6,25 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web.Engine.Core;
+using TicketMasala.Web.Orchestrators;
 
 namespace TicketMasala.Web.Controllers;
 
 [Authorize]
 public class TicketSearchController : Controller
 {
-    private readonly ITicketReadService _ticketReadService;
+    private readonly ITicketOrchestrator _orchestrator;
     private readonly ISavedFilterService _savedFilterService;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<TicketSearchController> _logger;
 
     public TicketSearchController(
-        ITicketReadService ticketReadService,
+        ITicketOrchestrator orchestrator,
         ISavedFilterService savedFilterService,
         IHttpContextAccessor httpContextAccessor,
         ILogger<TicketSearchController> logger)
     {
-        _ticketReadService = ticketReadService;
+        _orchestrator = orchestrator;
         _savedFilterService = savedFilterService;
         _httpContextAccessor = httpContextAccessor;
         _logger = logger;
@@ -34,28 +35,11 @@ public class TicketSearchController : Controller
     {
         try
         {
-            if (searchModel == null) searchModel = new TicketSearchViewModel();
-
-            var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            var isCustomer = User.IsInRole(Constants.RoleCustomer);
-
-            if (isCustomer && !string.IsNullOrEmpty(userId))
-            {
-                searchModel.CustomerId = userId;
-            }
-
-            var result = await _ticketReadService.SearchTicketsAsync(searchModel);
-
-            result.Customers = await _ticketReadService.GetCustomerSelectListAsync();
-            result.Employees = await _ticketReadService.GetEmployeeSelectListAsync();
-            result.Projects = await _ticketReadService.GetProjectSelectListAsync();
-
-            if (!string.IsNullOrEmpty(userId))
-            {
-                ViewBag.SavedFilters = await _savedFilterService.GetFiltersForUserAsync(userId);
-            }
-
-            ViewBag.IsCustomer = isCustomer;
+            var result = await _orchestrator.SearchTicketsAsync(searchModel, User);
+            
+            // Orchestrator populates SavedFilters in the result now
+            ViewBag.SavedFilters = result.SavedFilters;
+            ViewBag.IsCustomer = User.IsInRole(Constants.RoleCustomer);
 
             return View(result);
         }

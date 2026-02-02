@@ -15,6 +15,7 @@ using TicketMasala.Web.AI;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
 using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.Engine.Core;
 
 namespace TicketMasala.Web.Orchestrators;
 
@@ -27,6 +28,7 @@ public class TicketOrchestrator : ITicketOrchestrator
     private readonly IRuleEngineService _ruleEngine;
     private readonly IOpenAiService _openAiService;
     private readonly ITicketContextFacade _ticketContextFacade;
+    private readonly ISavedFilterService _savedFilterService;
     private readonly ILogger<TicketOrchestrator> _logger;
     private readonly IServiceProvider _serviceProvider;
 
@@ -38,6 +40,7 @@ public class TicketOrchestrator : ITicketOrchestrator
         IRuleEngineService ruleEngine,
         IOpenAiService openAiService,
         ITicketContextFacade ticketContextFacade,
+        ISavedFilterService savedFilterService,
         ILogger<TicketOrchestrator> logger,
         IServiceProvider serviceProvider)
     {
@@ -48,6 +51,7 @@ public class TicketOrchestrator : ITicketOrchestrator
         _ruleEngine = ruleEngine;
         _openAiService = openAiService;
         _ticketContextFacade = ticketContextFacade;
+        _savedFilterService = savedFilterService;
         _logger = logger;
         _serviceProvider = serviceProvider;
     }
@@ -58,7 +62,7 @@ public class TicketOrchestrator : ITicketOrchestrator
 
         var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var isCustomer = user.IsInRole(Constants.RoleCustomer);
-        
+
         if (isCustomer && !string.IsNullOrEmpty(userId)) searchModel.CustomerId = userId;
 
         var result = await _ticketReadService.SearchTicketsAsync(searchModel);
@@ -68,20 +72,10 @@ public class TicketOrchestrator : ITicketOrchestrator
 
         if (!string.IsNullOrEmpty(userId))
         {
-            var savedFilterService = _serviceProvider.GetService<ISavedFilterService>();
-            if (savedFilterService != null)
-                // Note: Orchestrator returns data, Controller puts it in ViewBag or ViewModel
-                // Since SavedFilters is usually in ViewBag, we might need to handle it differently or add to ViewModel.
-                // For now, let's stick to the core ViewModel return. 
-                // To properly handle ViewBag data, we should probably expand the ViewModel or return a composite object.
-                // But looking at Controller, it puts it in ViewBag.SavedFilters.
-                // I will skip this side-effect here and let Controller handle it if needed, or better, add it to ViewModel.
-                // Ideally TicketSearchViewModel should have SavedFilters property.
-                // I'll assume for now the Controller might still need to do small UI things, or we can refactor ViewModel later.
-                // Let's keep the Orchestrator focused on the main data.
-                {} 
+            var filters = await _savedFilterService.GetFiltersForUserAsync(userId);
+            result.SavedFilters = filters;
         }
-        
+
         return result;
     }
 
@@ -128,14 +122,14 @@ public class TicketOrchestrator : ITicketOrchestrator
     }
 
     public async Task<Result<Guid>> CreateTicketAsync(
-        string description, 
-        string customerId, 
-        string? responsibleId, 
-        Guid? projectGuid, 
-        DateTime? completionTarget, 
-        string? domainId, 
-        string? workItemTypeCode, 
-        IFormCollection form, 
+        string description,
+        string customerId,
+        string? responsibleId,
+        Guid? projectGuid,
+        DateTime? completionTarget,
+        string? domainId,
+        string? workItemTypeCode,
+        IFormCollection form,
         ClaimsPrincipal user)
     {
         var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -165,27 +159,27 @@ public class TicketOrchestrator : ITicketOrchestrator
             var entityLabel = _domainConfig.GetEntityLabels(ticket.DomainId).WorkItem;
             _logger.LogInformation("GERDA processing completed for ticket {TicketGuid}", ticket.Guid);
             
-            return Result<Guid>.Success(ticket.Guid, $"{entityLabel} created successfully! GERDA AI has processed the {entityLabel.ToLower()}.");
+            return Result.Success(ticket.Guid, $"{entityLabel} created successfully! GERDA AI has processed the {entityLabel.ToLower()}.");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating or processing ticket");
-            return Result<Guid>.Failure("Creation encountered an error. Please try again.");
+            return Result.Failure<Guid>("Creation encountered an error. Please try again.");
         }
     }
 
     public async Task<TicketEditContext?> GetEditContextAsync(Guid id, ClaimsPrincipal user)
     {
         var context = await _ticketContextFacade.GetEditContextAsync(id, user);
-        
+
         // Populate ValidStatuses if needed (logic from Controller)
         // Since Facade doesn't return Ticket entity, we re-fetch if needed, or Facade should have done it.
         // We will mimic Controller logic here for now.
         if (context != null)
         {
-             var ticket = await _ticketReadService.GetTicketForEditAsync(id);
-             if (ticket != null)
-             {
+            var ticket = await _ticketReadService.GetTicketForEditAsync(id);
+            if (ticket != null)
+            {
                 var validStates = _ruleEngine.GetValidNextStates(ticket, user);
                 // We need to pass this back. But TicketEditContext usually has ViewModel. 
                 // We might need to extend Context or ViewModel. 
@@ -195,7 +189,7 @@ public class TicketOrchestrator : ITicketOrchestrator
                 // Assuming we can't easily change TicketEditContext right now, we will leave this to Controller or add to ViewModel if possible.
                 // But wait, GetEditReloadContextAsync has ValidStatuses!
                 // Let's see if GetEditContextAsync has it. 
-             }
+            }
         }
         return context;
     }

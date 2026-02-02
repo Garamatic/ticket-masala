@@ -44,14 +44,7 @@ public class TicketController : Controller
     {
         var result = await _orchestrator.SearchTicketsAsync(searchModel, User);
         
-        // TODO: Move SavedFilters to ViewModel or Orchestrator if strictly needed in View,
-        // but for now keeping it simple as it was side-loaded in original controller.
-        // Assuming the View can handle it or we accept missing saved filters for a moment 
-        // until we add it to ViewModel.
-        // If strictly needed, I should have injected ISavedFilterService here or in Orchestrator.
-        // Orchestrator has it but didn't return it.
-        // Let's rely on standard ViewModel data for now.
-        
+        ViewBag.SavedFilters = result.SavedFilters;
         ViewBag.IsCustomer = User.IsInRole(Constants.RoleCustomer);
         return View("~/Views/TicketSearch/Index.cshtml", result);
     }

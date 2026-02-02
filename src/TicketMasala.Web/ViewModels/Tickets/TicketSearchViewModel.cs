@@ -39,4 +39,7 @@ public class TicketSearchViewModel
 
     // Results
     public List<TicketSearchResultDto> Results { get; set; } = new();
+
+    // Saved Filters
+    public List<SavedFilter> SavedFilters { get; set; } = new();
 }

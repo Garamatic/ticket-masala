@@ -9,6 +9,8 @@ public class Result
     public bool IsSuccess { get; }
     public bool IsFailure => !IsSuccess;
     public string? Error { get; }
+    public string? SuccessMessage => IsSuccess ? "Operation successful." : null;
+    public string? ErrorMessage => Error;
 
     protected Result(bool isSuccess, string? error)
     {
@@ -25,6 +27,7 @@ public class Result
     public static Result Failure(string error) => new(false, error);
 
     public static Result<T> Success<T>(T value) => new(value, true, null);
+    public static Result<T> Success<T>(T value, string message) => new(value, true, message);
     public static Result<T> Failure<T>(string error) => new(default, false, error);
 }
 

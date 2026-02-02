@@ -17,6 +17,7 @@ using TicketMasala.Web.Engine.Security;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.GERDA.Configuration;
 using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.Utilities;
 
 namespace TicketMasala.Web.Engine.GERDA.Tickets;
 
@@ -101,7 +102,7 @@ public class TicketReadService : ITicketReadService
         return customers.Select(c => new SelectListItem
         {
             Value = c.Id,
-            Text = $"{c.FirstName} {c.LastName}"
+            Text = c.ToFullName()
         }).ToList();
     }
 
@@ -111,7 +112,7 @@ public class TicketReadService : ITicketReadService
         return employees.Select(e => new SelectListItem
         {
             Value = e.Id,
-            Text = $"{e.FirstName} {e.LastName}"
+            Text = e.ToFullName()
         }).ToList();
     }
 
@@ -149,12 +150,8 @@ public class TicketReadService : ITicketReadService
             TicketStatus = t.TicketStatus,
             CreationDate = t.CreationDate,
             CompletionTarget = t.CompletionTarget,
-            ResponsibleName = t.Responsible != null
-                ? $"{t.Responsible.FirstName} {t.Responsible.LastName}"
-                : "Not Assigned",
-            CustomerName = t.Customer != null
-                ? $"{t.Customer.FirstName} {t.Customer.LastName}"
-                : "Unknown",
+            ResponsibleName = t.Responsible?.ToFullName() ?? "Not Assigned",
+            CustomerName = t.Customer?.ToFullName() ?? "Unknown",
             GerdaTags = t.GerdaTags
         }).ToList();
     }
@@ -190,9 +187,7 @@ public class TicketReadService : ITicketReadService
             QualityReviews = reviews.ToList(),
             AuditLogs = logs,
 
-            ResponsibleName = ticket.Responsible != null
-                ? $"{ticket.Responsible.FirstName} {ticket.Responsible.LastName}"
-                : null,
+            ResponsibleName = ticket.Responsible?.ToFullName(),
             ResponsibleId = ticket.Responsible?.Id,
             CustomerName = ticket.Customer != null
                 ? $"{ticket.Customer.FirstName} {ticket.Customer.LastName}"
@@ -257,7 +252,7 @@ public class TicketReadService : ITicketReadService
         return users.Select(u => new SelectListItem
         {
             Value = u.Id,
-            Text = $"{u.FirstName} {u.LastName}"
+            Text = u.ToFullName()
         }).ToList();
     }
 
@@ -390,12 +385,8 @@ public class TicketReadService : ITicketReadService
             TicketStatus = t.TicketStatus,
             CreationDate = t.CreationDate,
             CompletionTarget = t.CompletionTarget,
-            ResponsibleName = t.Responsible != null
-                ? $"{t.Responsible.FirstName} {t.Responsible.LastName}"
-                : "Unassigned",
-            CustomerName = t.Customer != null
-                ? $"{t.Customer.FirstName} {t.Customer.LastName}"
-                : "Unknown",
+            ResponsibleName = t.Responsible?.ToFullName() ?? "Unassigned",
+            CustomerName = t.Customer?.ToFullName() ?? "Unknown",
             GerdaTags = t.GerdaTags
         }).ToList();
     }

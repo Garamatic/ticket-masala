@@ -49,7 +49,7 @@ public class TicketMasalaAgent : Agent
     public int CurrentWorkload { get; set; }
 
     /// <summary>Maximum work items this agent can handle</summary>
-    public int MaxCapacity { get; set; }
+    public new int MaxCapacity { get; set; }
 
     /// <summary>Availability as percentage (0.0 to 1.0)</summary>
     public decimal AvailabilityPercentage { get; set; } = 1.0m;
@@ -58,7 +58,7 @@ public class TicketMasalaAgent : Agent
     public decimal? HistoricalSuccessRate { get; set; }
 
     /// <summary>Average resolution time in hours for this agent's domain</summary>
-    public decimal? AverageResolutionTimeHours { get; set; }
+    public new decimal? AverageResolutionTimeHours { get; set; }
 
     /// <summary>
     /// Get utilization ratio: CurrentWorkload / MaxCapacity (0.0 to 1.0+)
@@ -75,5 +75,5 @@ public class TicketMasalaAgent : Agent
     /// <summary>
     /// Check if agent is available (has capacity AND is available percentage > 0)
     /// </summary>
-    public bool IsAvailable() => HasCapacity() && AvailabilityPercentage > 0;
+    public new bool IsAvailable() => HasCapacity() && AvailabilityPercentage > 0;
 }

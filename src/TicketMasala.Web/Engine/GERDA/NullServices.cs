@@ -36,46 +36,31 @@ public class NullDispatchingService : IDispatchingService
 {
     public bool IsEnabled => false;
 
-    public Task<AgentRecommendation?> GetRecommendedAgentAsync(Guid ticketGuid)
+    public DateTime? LastModelTrainingTime => null;
+
+    public Task<string?> GetRecommendedAgentAsync(Guid ticketGuid)
     {
-        return Task.FromResult<AgentRecommendation?>(null);
+        return Task.FromResult<string?>(null);
     }
 
-    public Task<List<AgentRecommendation>> GetTopRecommendedAgentsAsync(Guid ticketGuid, int count)
+    public Task<List<DispatchResult>> GetTopRecommendedAgentsAsync(Guid ticketGuid, int count = 3)
     {
-        return Task.FromResult(new List<AgentRecommendation>());
+        return Task.FromResult(new List<DispatchResult>());
     }
 
-    public Task<List<AgentRecommendation>> GetRecommendedAgentsByTeamAsync(Guid ticketGuid, string teamCode, int count)
+    public Task<bool> AutoDispatchTicketAsync(Guid ticketGuid)
     {
-        return Task.FromResult(new List<AgentRecommendation>());
+        return Task.FromResult(false);
     }
 
-    public Task<DispatchingAnalysis> AnalyzeDispatchingAsync(Guid ticketGuid, string agentId)
-    {
-        return Task.FromResult(new DispatchingAnalysis
-        {
-            TicketGuid = ticketGuid,
-            AgentId = agentId,
-            Score = 0,
-            Recommendation = "Auto-dispatching is disabled"
-        });
-    }
-
-    public Task AutoDispatchAsync(Guid ticketGuid, string agentId)
+    public Task RetrainModelAsync()
     {
         return Task.CompletedTask;
     }
 
-    public Task<CapacityAnalysis> GetCapacityAnalysisAsync(string agentId)
+    public Task<string?> GetRecommendedProjectManagerAsync(Guid ticketGuid)
     {
-        return Task.FromResult(new CapacityAnalysis
-        {
-            AgentId = agentId,
-            CurrentWorkload = 0,
-            MaxCapacity = 0,
-            AvailableCapacity = 0
-        });
+        return Task.FromResult<string?>(null);
     }
 }
 
@@ -85,18 +70,8 @@ public class NullDispatchingService : IDispatchingService
 /// </summary>
 public class NullKnowledgeService : IKnowledgeService
 {
-    public Task<List<KnowledgeArticleMatch>> GetSuggestedArticlesAsync(TicketMasala.Domain.Entities.Ticket ticket)
+    public Task<List<KnowledgeSuggestion>> GetSuggestedArticlesAsync(TicketMasala.Domain.Entities.Ticket ticket, int maxSuggestions = 3)
     {
-        return Task.FromResult(new List<KnowledgeArticleMatch>());
-    }
-
-    public Task<List<KnowledgeArticleMatch>> SearchArticlesAsync(string query, int maxResults = 5)
-    {
-        return Task.FromResult(new List<KnowledgeArticleMatch>());
-    }
-
-    public Task<KnowledgeArticle?> GetArticleByIdAsync(Guid articleId)
-    {
-        return Task.FromResult<KnowledgeArticle?>(null);
+        return Task.FromResult(new List<KnowledgeSuggestion>());
     }
 }

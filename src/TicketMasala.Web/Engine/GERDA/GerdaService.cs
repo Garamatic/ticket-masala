@@ -23,9 +23,9 @@ public class GerdaService : IGerdaService
     private readonly ILogger<GerdaService> _logger;
     private readonly IGroupingService _groupingService;
     private readonly IEstimatingService _estimatingService;
-    private readonly IRankingService? _rankingService;
-    private readonly IDispatchingService? _dispatchingService;
-    private readonly IKnowledgeService? _knowledgeService;
+    private readonly IRankingService _rankingService;
+    private readonly IDispatchingService _dispatchingService;
+    private readonly IKnowledgeService _knowledgeService;
     private readonly IAnticipationService? _anticipationService;
 
     public GerdaService(
@@ -44,9 +44,10 @@ public class GerdaService : IGerdaService
         _logger = logger;
         _groupingService = groupingService;
         _estimatingService = estimatingService;
-        _rankingService = rankingService;
-        _dispatchingService = dispatchingService;
-        _knowledgeService = knowledgeService;
+        // Use Null Object pattern to avoid null checks throughout the code
+        _rankingService = rankingService ?? new NullRankingService();
+        _dispatchingService = dispatchingService ?? new NullDispatchingService();
+        _knowledgeService = knowledgeService ?? new NullKnowledgeService();
         _anticipationService = anticipationService;
     }
 
@@ -75,15 +76,15 @@ public class GerdaService : IGerdaService
             var effortPoints = await _estimatingService.EstimateComplexityAsync(ticketGuid);
             _logger.LogInformation("GERDA-E: Ticket {TicketGuid} estimated at {Points} effort points", ticketGuid, effortPoints);
 
-            // R - Ranking: Calculate priority score (if service is available)
-            if (_rankingService != null && _rankingService.IsEnabled)
+            // R - Ranking: Calculate priority score (if service is enabled)
+            if (_rankingService.IsEnabled)
             {
                 var priorityScore = await _rankingService.CalculatePriorityScoreAsync(ticketGuid);
                 _logger.LogInformation("GERDA-R: Ticket {TicketGuid} priority score: {Score}", ticketGuid, priorityScore);
             }
 
-            // D - Dispatching: Recommend agent (if service is available)
-            if (_dispatchingService != null && _dispatchingService.IsEnabled)
+            // D - Dispatching: Recommend agent (if service is enabled)
+            if (_dispatchingService.IsEnabled)
             {
                 var recommendedAgent = await _dispatchingService.GetRecommendedAgentAsync(ticketGuid);
                 if (recommendedAgent != null)
@@ -92,15 +93,12 @@ public class GerdaService : IGerdaService
                 }
             }
 
-            // K - Knowledge: Suggest KB articles (if service is available)
-            if (_knowledgeService != null)
+            // K - Knowledge: Suggest KB articles
+            var ticket = await _ticketRepository.GetByIdAsync(ticketGuid);
+            if (ticket != null)
             {
-                var ticket = await _ticketRepository.GetByIdAsync(ticketGuid);
-                if (ticket != null)
-                {
-                    var suggestions = await _knowledgeService.GetSuggestedArticlesAsync(ticket);
-                    _logger.LogInformation("GERDA-K: Found {Count} suggested articles for ticket {TicketGuid}", suggestions.Count, ticketGuid);
-                }
+                var suggestions = await _knowledgeService.GetSuggestedArticlesAsync(ticket);
+                _logger.LogInformation("GERDA-K: Found {Count} suggested articles for ticket {TicketGuid}", suggestions.Count, ticketGuid);
             }
 
             _logger.LogInformation("GERDA: Completed processing ticket {TicketGuid}", ticketGuid);

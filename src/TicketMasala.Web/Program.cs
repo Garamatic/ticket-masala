@@ -77,8 +77,6 @@ builder.Services.AddScoped<TicketMasala.Domain.Services.IExplainabilityService, 
 // INFRASTRUCTURE & SECURITY
 // ============================================
 builder.Services.AddHttpContextAccessor(); // Required for services that need HttpContext
-// builder.Services.AddMasalaMonitoring(); // Already included in AddMasalaCore()
-// builder.Services.AddMasalaSecurity(builder.Environment); // Already included in AddMasalaCore()
 builder.Services.AddMasalaApi();
 builder.Services.AddMasalaFrontend();
 builder.Services.AddScoped<TicketMasala.Web.Facades.ITicketContextFacade, TicketMasala.Web.Facades.TicketContextFacade>();

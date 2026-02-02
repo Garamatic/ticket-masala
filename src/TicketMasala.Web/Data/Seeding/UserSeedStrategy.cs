@@ -38,6 +38,8 @@ public class UserSeedStrategy : ISeedStrategy
 
     public async Task SeedAsync()
     {
+        await Task.CompletedTask;
+        // if (context.Users.Any()) return; // context is not available here, need to rethink if needed or use injected context
         Console.WriteLine("DEBUG: UserSeedStrategy.SeedAsync called!");
         _logger.LogInformation("Seeding users and employees...");
 
@@ -78,7 +80,7 @@ public class UserSeedStrategy : ISeedStrategy
         var seedFilePath = TicketMasala.Web.Configuration.ConfigurationPaths.GetConfigFilePath(
             _environment.ContentRootPath,
             "seed_data.json");
-        
+
         Console.WriteLine($"Attempting to load seed data from: {seedFilePath}");
         _logger.LogInformation("Attempting to load seed data from: {Path}", seedFilePath);
 
@@ -94,7 +96,7 @@ public class UserSeedStrategy : ISeedStrategy
                 var files = Directory.GetFiles(directory);
                 Console.WriteLine($"Files in {directory}: {string.Join(", ", files.Select(Path.GetFileName))}");
             }
-            else 
+            else
             {
                 Console.WriteLine($"Directory NOT FOUND: {directory}");
             }

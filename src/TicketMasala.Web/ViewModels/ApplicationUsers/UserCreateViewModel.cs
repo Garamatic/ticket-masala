@@ -8,27 +8,27 @@ public class UserCreateViewModel
 {
     [Required]
     [EmailAddress]
-    public required string Email { get; set; }
+    public string Email { get; set; } = string.Empty;
 
     [Required]
-    public required string FirstName { get; set; }
+    public string FirstName { get; set; } = string.Empty;
 
     [Required]
-    public required string LastName { get; set; }
+    public string LastName { get; set; } = string.Empty;
 
     public string? Phone { get; set; }
 
     [Required]
     [DataType(DataType.Password)]
-    public required string Password { get; set; }
+    public string Password { get; set; } = string.Empty;
 
     [Required]
     [DataType(DataType.Password)]
     [Compare("Password", ErrorMessage = "Passwords do not match.")]
-    public required string ConfirmPassword { get; set; }
+    public string ConfirmPassword { get; set; } = string.Empty;
 
     [Required]
-    public required string Role { get; set; }
+    public string Role { get; set; } = string.Empty;
 
     // Employee Fields
     public string? Team { get; set; }

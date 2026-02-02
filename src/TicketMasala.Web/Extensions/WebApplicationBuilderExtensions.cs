@@ -20,6 +20,7 @@ using TicketMasala.Web.Engine.GERDA.Ranking;
 using TicketMasala.Web.Engine.GERDA.Dispatching;
 using TicketMasala.Web.Engine.GERDA.Anticipation;
 using TicketMasala.Web.Engine.GERDA.BackgroundJobs;
+using TicketMasala.Web.Engine.GERDA.Knowledge;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
@@ -208,136 +209,136 @@ public static class WebApplicationBuilderExtensions
                 Console.WriteLine("GERDA AI Services registered successfully (G+E+R+D+A + Background Jobs)");
             }
         }
-        Console.WriteLine($"Note: GERDA config not found at {gerdaConfigPath}");
-        Console.WriteLine("Application will run with basic ticketing functionality");
-        // Register NoOp services to prevent DI failures
-        builder.Services.AddScoped<IDispatchingService, NoOpDispatchingService>();
-        builder.Services.AddScoped<IGerdaService, NoOpGerdaService>();
-        builder.Services.AddScoped<IEstimatingService, NoOpEstimatingService>();
-        builder.Services.AddScoped<IKnowledgeService, NoOpKnowledgeService>();
-    }
-
-    // Rate Limiting
-    builder.Services.AddRateLimiter(options =>
+        else
         {
-            options.RejectionStatusCode = Microsoft.AspNetCore.Http.StatusCodes.Status429TooManyRequests;
+            Console.WriteLine($"Note: GERDA config not found at {gerdaConfigPath}");
+            Console.WriteLine("Application will run with basic ticketing functionality");
+            builder.Services.AddScoped<IDispatchingService, NoOpDispatchingService>();
+            builder.Services.AddScoped<IKnowledgeService, NoOpKnowledgeService>();
+            builder.Services.AddScoped<IGerdaService, NoOpGerdaService>();
+        }
 
-            options.AddFixedWindowLimiter("api", opt =>
+        // Rate Limiting
+        builder.Services.AddRateLimiter(options =>
             {
-                opt.PermitLimit = 100;
-                opt.Window = TimeSpan.FromMinutes(1);
-                opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-                opt.QueueLimit = 10;
+                options.RejectionStatusCode = Microsoft.AspNetCore.Http.StatusCodes.Status429TooManyRequests;
+
+                options.AddFixedWindowLimiter("api", opt =>
+                {
+                    opt.PermitLimit = 100;
+                    opt.Window = TimeSpan.FromMinutes(1);
+                    opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                    opt.QueueLimit = 10;
+                });
+
+                options.AddSlidingWindowLimiter("login", opt =>
+                {
+                    opt.PermitLimit = 5;
+                    opt.Window = TimeSpan.FromMinutes(15);
+                    opt.SegmentsPerWindow = 3;
+                    opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                    opt.QueueLimit = 0;
+                });
+
+                options.AddTokenBucketLimiter("general", opt =>
+            {
+        opt.TokenLimit = 50;
+        opt.TokensPerPeriod = 10;
+        opt.ReplenishmentPeriod = TimeSpan.FromSeconds(10);
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit = 5;
+    });
             });
 
-            options.AddSlidingWindowLimiter("login", opt =>
-            {
-                opt.PermitLimit = 5;
-                opt.Window = TimeSpan.FromMinutes(15);
-                opt.SegmentsPerWindow = 3;
-                opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-                opt.QueueLimit = 0;
-            });
+        // Memory Cache
+        builder.Services.AddMemoryCache();
+        builder.Services.AddDistributedMemoryCache();
 
-options.AddTokenBucketLimiter("general", opt =>
-{
-    opt.TokenLimit = 50;
-    opt.TokensPerPeriod = 10;
-    opt.ReplenishmentPeriod = TimeSpan.FromSeconds(10);
-    opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-    opt.QueueLimit = 5;
-});
+        // Data Protection
+        if (builder.Environment.IsProduction())
+        {
+            var keyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "keys");
+            Directory.CreateDirectory(keyPath);
+            builder.Services.AddDataProtection()
+                .PersistKeysToFileSystem(new DirectoryInfo(keyPath))
+                .SetApplicationName("ticket-masala");
+        }
+        else
+        {
+            builder.Services.AddDataProtection()
+                .SetApplicationName("ticket-masala");
+        }
+
+        // WebOptimizer
+        builder.Services.AddWebOptimizer(pipeline =>
+        {
+            pipeline.AddCssBundle("/css/bundle.css",
+                "lib/bootstrap/dist/css/bootstrap.min.css",
+                "css/design-system.css",
+                "css/site.css")
+                .MinifyCss();
+            pipeline.AddJavaScriptBundle("/js/bundle.js",
+                "lib/jquery/dist/jquery.min.js",
+                "lib/bootstrap/dist/js/bootstrap.bundle.min.js",
+                "js/site.js",
+                "js/toast.js")
+                .MinifyJavaScript();
         });
 
-// Memory Cache
-builder.Services.AddMemoryCache();
-builder.Services.AddDistributedMemoryCache();
+        // Authorization
+        builder.Services.AddAuthorization(options =>
+        {
+            options.AddPolicy("AllowAnonymous", policy => policy.RequireAssertion(_ => true));
+            if (!builder.Environment.IsDevelopment())
+            {
+                options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .Build();
+            }
+        });
 
-// Data Protection
-if (builder.Environment.IsProduction())
-{
-    var keyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "keys");
-    Directory.CreateDirectory(keyPath);
-    builder.Services.AddDataProtection()
-        .PersistKeysToFileSystem(new DirectoryInfo(keyPath))
-        .SetApplicationName("ticket-masala");
-}
-else
-{
-    builder.Services.AddDataProtection()
-        .SetApplicationName("ticket-masala");
-}
+        builder.Services.ConfigureApplicationCookie(options =>
+        {
+            options.Cookie.HttpOnly = true;
+            options.ExpireTimeSpan = TimeSpan.FromHours(8);
+            options.LoginPath = "/Identity/Account/Login";
+            options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+            options.SlidingExpiration = true;
+        });
 
-// WebOptimizer
-builder.Services.AddWebOptimizer(pipeline =>
-{
-    pipeline.AddCssBundle("/css/bundle.css",
-        "lib/bootstrap/dist/css/bootstrap.min.css",
-        "css/design-system.css",
-        "css/site.css")
-        .MinifyCss();
-    pipeline.AddJavaScriptBundle("/js/bundle.js",
-        "lib/jquery/dist/jquery.min.js",
-        "lib/bootstrap/dist/js/bootstrap.bundle.min.js",
-        "js/site.js",
-        "js/toast.js")
-        .MinifyJavaScript();
-});
+        // Localization & CORS
+        builder.Services.AddLocalization();
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("AllowAll",
+                b => b.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+        });
 
-// Authorization
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("AllowAnonymous", policy => policy.RequireAssertion(_ => true));
-    if (!builder.Environment.IsDevelopment())
-    {
-        options.FallbackPolicy = new AuthorizationPolicyBuilder()
-            .RequireAuthenticatedUser()
-            .Build();
-    }
-});
+        builder.Services.AddControllersWithViews()
+            .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix)
+            .AddDataAnnotationsLocalization();
 
-builder.Services.ConfigureApplicationCookie(options =>
-{
-    options.Cookie.HttpOnly = true;
-    options.ExpireTimeSpan = TimeSpan.FromHours(8);
-    options.LoginPath = "/Identity/Account/Login";
-    options.AccessDeniedPath = "/Identity/Account/AccessDenied";
-    options.SlidingExpiration = true;
-});
+        builder.Services.Configure<RazorViewEngineOptions>(options =>
+        {
+            options.ViewLocationExpanders.Add(new TenantViewLocationExpander());
+        });
 
-// Localization & CORS
-builder.Services.AddLocalization();
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll",
-        b => b.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
-});
+        builder.Services.AddRazorPages();
+        builder.Services.AddHealthChecks();
+        builder.Services.AddSingleton<TenantConnectionResolver>();
 
-builder.Services.AddControllersWithViews()
-    .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix)
-    .AddDataAnnotationsLocalization();
+        // Swagger
+        builder.Services.AddEndpointsApiExplorer();
 
-builder.Services.Configure<RazorViewEngineOptions>(options =>
-{
-    options.ViewLocationExpanders.Add(new TenantViewLocationExpander());
-});
+        // Forwarded Headers
+        builder.Services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor |
+                                       Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+            options.KnownIPNetworks.Clear();
+            options.KnownProxies.Clear();
+        });
 
-builder.Services.AddRazorPages();
-builder.Services.AddHealthChecks();
-builder.Services.AddSingleton<TenantConnectionResolver>();
-
-// Swagger
-builder.Services.AddEndpointsApiExplorer();
-
-// Forwarded Headers
-builder.Services.Configure<ForwardedHeadersOptions>(options =>
-{
-    options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor |
-                               Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
-    options.KnownIPNetworks.Clear();
-    options.KnownProxies.Clear();
-});
-
-return builder;
+        return builder;
     }
 }

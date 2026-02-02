@@ -2,6 +2,9 @@
 
 using TicketMasala.Web.Engine.GERDA.Dispatching.Models;
 
+using System.Text.Json.Serialization;
+using TicketMasala.Web.Engine.GERDA.Configuration;
+
 namespace TicketMasala.Web.Engine.Common;
 
 /// <summary>
@@ -47,12 +50,6 @@ public class TicketMasalaAgent : Agent
 
     /// <summary>Current number of assigned work items</summary>
     public int CurrentWorkload { get; set; }
-
-    /// <summary>Maximum work items this agent can handle</summary>
-    public new int MaxCapacity { get; set; }
-
-    [JsonIgnore]
-    public List<AgentDomainStats> DomainStats { get; set; } = new();
 
     /// <summary>Availability as percentage (0.0 to 1.0)</summary>
     public decimal AvailabilityPercentage { get; set; } = 1.0m;

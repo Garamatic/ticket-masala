@@ -49,6 +49,7 @@ public static class GerdaServiceCollectionExtensions
             services.AddScoped<IDispatchingService, NoOpDispatchingService>();
             services.AddScoped<IGerdaService, NoOpGerdaService>();
             services.AddScoped<IEstimatingService, NoOpEstimatingService>();
+            services.AddScoped<IKnowledgeService, NoOpKnowledgeService>();
             return services;
         }
 

@@ -7,14 +7,6 @@
     <AllowMissingPrunePackageData>true</AllowMissingPrunePackageData>
   </PropertyGroup>
 
-  <!--
-    GatekeeperApi is a lightweight ingestion microservice.
-    It can be deployed independently and either:
-    1. Publish to a message bus for async processing
-    2. Call TicketMasala.Web API directly
-    3. Load TicketMasala.Domain as a plugin for local processing
-  -->
-
   <ItemGroup>
     <ProjectReference Include="..\TicketMasala.Domain\TicketMasala.Domain.csproj" />
   </ItemGroup>

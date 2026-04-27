@@ -1,5 +1,4 @@
 using System.IO;
-using System.Threading.Channels;
 
 namespace GatekeeperApi;
 
@@ -14,13 +13,8 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Register the ingestion queue (bounded to prevent memory exhaustion)
         builder.Services.AddSingleton(_ => new IngestionQueue(capacity: 10000));
         builder.Services.AddHostedService<IngestionWorker>();
-
-        // Note: ITicketWorkflowService implementation is loaded from plugin or external reference
-        // In standalone mode, this service processes items locally
-        // In microservices mode, this calls the main TicketMasala API
 
         var app = builder.Build();
 
@@ -32,11 +26,23 @@ public class Program
         }
 
         // Configure request size limit (10MB to prevent abuse)
+        // FileBufferingReadStream buffers large requests to disk instead of memory
         app.Use(async (context, next) =>
         {
-            context.Request.Body = new Microsoft.AspNetCore.WebUtilities.FileBufferingReadStream(
-                context.Request.Body, 10 * 1024 * 1024, null, Path.GetTempPath());
-            await next();
+            var originalBody = context.Request.Body;
+            var bufferedStream = new Microsoft.AspNetCore.WebUtilities.FileBufferingReadStream(
+                originalBody, 10 * 1024 * 1024, null, Path.GetTempPath());
+            
+            context.Request.Body = bufferedStream;
+            try
+            {
+                await next();
+            }
+            finally
+            {
+                context.Request.Body = originalBody;
+                await bufferedStream.DisposeAsync();
+            }
         });
 
         app.MapPost("/api/ingest", async (HttpContext context, IngestionQueue queue, ILogger<Program> logger) =>

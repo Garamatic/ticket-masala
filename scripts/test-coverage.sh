@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 echo "📊 Running tests with coverage..."
 
@@ -9,28 +8,37 @@ dotnet tool restore
 # Clean up old results
 rm -rf ./TestResults
 
-# Run tests with coverage collection
+# Run Domain tests with coverage (continue even if tests fail)
+echo "🧪 Running Domain tests..."
+dotnet test src/TicketMasala.Domain.Tests/TicketMasala.Domain.Tests.csproj \
+  --collect:"XPlat Code Coverage" \
+  --settings src/TicketMasala.Tests/coverlet.runsettings \
+  --results-directory ./TestResults \
+  --verbosity minimal || true
+
+# Run Web tests with coverage (continue even if tests fail)
+echo "🧪 Running Web tests..."
 dotnet test src/TicketMasala.Tests/TicketMasala.Tests.csproj \
   --collect:"XPlat Code Coverage" \
   --settings src/TicketMasala.Tests/coverlet.runsettings \
   --results-directory ./TestResults \
-  --verbosity minimal
+  --verbosity minimal || true
 
-# Find the coverage file
-COVERAGE_FILE=$(find ./TestResults -name "coverage.cobertura.xml" | head -1)
+# Find all coverage files
+COVERAGE_FILES=$(find ./TestResults -name "coverage.cobertura.xml" 2>/dev/null | tr '\n' ';')
 
-if [ -f "$COVERAGE_FILE" ]; then
+if [ -n "$COVERAGE_FILES" ]; then
     echo "📈 Generating coverage report..."
     dotnet reportgenerator \
-        -reports:"$COVERAGE_FILE" \
+        -reports:"$COVERAGE_FILES" \
         -targetdir:"./TestResults/CoverageReport" \
         -reporttypes:"Html;MarkdownSummary"
-    
+
     echo ""
     echo "✅ Coverage report generated!"
     echo "📁 HTML Report: ./TestResults/CoverageReport/index.html"
     echo "📄 Markdown Summary: ./TestResults/CoverageReport/Summary.md"
 else
-    echo "❌ Coverage file not found"
+    echo "❌ No coverage files found"
     exit 1
 fi

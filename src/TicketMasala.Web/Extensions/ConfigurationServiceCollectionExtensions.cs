@@ -46,14 +46,9 @@ public static class ConfigurationServiceCollectionExtensions
         var options = new MasalaOptions();
         configuration.GetSection(MasalaOptions.SectionName).Bind(options);
 
-        // Create a temporary validator for startup validation
-        using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-        var validatorLogger = loggerFactory.CreateLogger<ConfigurationValidator>();
-        var validator = new ConfigurationValidator(validatorLogger);
-
         try
         {
-            validator.ValidateOrThrow(options);
+            ConfigurationValidator.ValidateOrThrow(options, logger);
             logger.LogInformation("Masala configuration validated successfully");
         }
         catch (ConfigurationValidationException ex)

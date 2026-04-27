@@ -22,6 +22,7 @@ using Microsoft.AspNetCore.Http;
 using Xunit;
 using TicketMasala.Web.Facades;
 using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.Orchestrators;
 
 namespace TicketMasala.Tests.Robustness
 {
@@ -97,29 +98,11 @@ namespace TicketMasala.Tests.Robustness
         public async Task TicketController_Create_WithNullModel_ShouldHandleGracefully()
         {
             // Arrange
-            var mockGerda = new Mock<IGerdaService>();
-            var mockTicketWorkflowService = new Mock<ITicketWorkflowService>();
-            var mockTicketReadService = new Mock<ITicketReadService>();
-            var mockAudit = new Mock<IAuditService>();
-            var mockNotif = new Mock<INotificationService>();
-            var mockDomain = new Mock<IDomainConfigurationService>();
-            mockDomain.Setup(d => d.GetEntityLabels(It.IsAny<string>())).Returns(new TicketMasala.Domain.Configuration.EntityLabels());
-            mockDomain.Setup(d => d.GetWorkItemTypes(It.IsAny<string>())).Returns(new List<TicketMasala.Domain.Configuration.WorkItemTypeDefinition>());
-            mockDomain.Setup(d => d.GetCustomFields(It.IsAny<string>())).Returns(new List<TicketMasala.Domain.Configuration.CustomFieldDefinition>());
-
-            var mockSavedFilter = new Mock<ISavedFilterService>();
-            var mockProjectService = new Mock<IProjectReadService>();
-            var mockHttpContext = new Mock<IHttpContextAccessor>();
-            var mockRule = new Mock<IRuleEngineService>();
-            var mockOpenAi = new Mock<IOpenAiService>();
-            var mockFacade = new Mock<ITicketContextFacade>();
+            var mockOrchestrator = new Mock<ITicketOrchestrator>();
             var mockLogger = new Mock<ILogger<TicketController>>();
 
             var controller = new TicketController(
-                mockGerda.Object, mockTicketWorkflowService.Object, mockTicketReadService.Object, mockAudit.Object,
-                mockNotif.Object, mockDomain.Object,
-                mockProjectService.Object, mockHttpContext.Object, mockRule.Object,
-                mockOpenAi.Object, mockFacade.Object, new Mock<ISystemClock>().Object, mockLogger.Object);
+                mockOrchestrator.Object, mockLogger.Object);
 
             // Act
             // If validation is in attribute, unit test might bypass it unless we check ModelState manually or pass null
@@ -143,25 +126,11 @@ namespace TicketMasala.Tests.Robustness
         public async Task TicketController_Detail_WithInvalidId_ShouldReturnBadRequest_OrNotFound()
         {
             // Arrange
-            var mockGerda = new Mock<IGerdaService>();
-            var mockTicketWorkflowService = new Mock<ITicketWorkflowService>();
-            var mockTicketReadService = new Mock<ITicketReadService>();
-            var mockAudit = new Mock<IAuditService>();
-            var mockNotif = new Mock<INotificationService>();
-            var mockDomain = new Mock<IDomainConfigurationService>();
-            var mockSavedFilter = new Mock<ISavedFilterService>();
-            var mockProjectService = new Mock<IProjectReadService>();
-            var mockHttpContext = new Mock<IHttpContextAccessor>();
-            var mockRule = new Mock<IRuleEngineService>();
-            var mockOpenAi = new Mock<IOpenAiService>();
-            var mockFacade = new Mock<ITicketContextFacade>();
+            var mockOrchestrator = new Mock<ITicketOrchestrator>();
             var mockLogger = new Mock<ILogger<TicketController>>();
 
             var controller = new TicketController(
-                mockGerda.Object, mockTicketWorkflowService.Object, mockTicketReadService.Object, mockAudit.Object,
-                mockNotif.Object, mockDomain.Object,
-                mockProjectService.Object, mockHttpContext.Object, mockRule.Object,
-                mockOpenAi.Object, mockFacade.Object, new Mock<ISystemClock>().Object, mockLogger.Object);
+                mockOrchestrator.Object, mockLogger.Object);
 
             // Act
             var result = await controller.Detail(null);

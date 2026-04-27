@@ -13,8 +13,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GatekeeperApi", "src\Gateke
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TicketMasala.Domain", "src\TicketMasala.Domain\TicketMasala.Domain.csproj", "{B1FF62D1-85F3-48C1-9D0C-313011DAE755}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TicketMasala.Dispatch.Common", "src\TicketMasala.Dispatch.Common\TicketMasala.Dispatch.Common.csproj", "{FA4CE49E-C05E-44D4-928E-26A820BF6B0A}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -73,18 +71,6 @@ Global
 		{B1FF62D1-85F3-48C1-9D0C-313011DAE755}.Release|x64.Build.0 = Release|Any CPU
 		{B1FF62D1-85F3-48C1-9D0C-313011DAE755}.Release|x86.ActiveCfg = Release|Any CPU
 		{B1FF62D1-85F3-48C1-9D0C-313011DAE755}.Release|x86.Build.0 = Release|Any CPU
-		{FA4CE49E-C05E-44D4-928E-26A820BF6B0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FA4CE49E-C05E-44D4-928E-26A820BF6B0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FA4CE49E-C05E-44D4-928E-26A820BF6B0A}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{FA4CE49E-C05E-44D4-928E-26A820BF6B0A}.Debug|x64.Build.0 = Debug|Any CPU
-		{FA4CE49E-C05E-44D4-928E-26A820BF6B0A}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{FA4CE49E-C05E-44D4-928E-26A820BF6B0A}.Debug|x86.Build.0 = Debug|Any CPU
-		{FA4CE49E-C05E-44D4-928E-26A820BF6B0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FA4CE49E-C05E-44D4-928E-26A820BF6B0A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FA4CE49E-C05E-44D4-928E-26A820BF6B0A}.Release|x64.ActiveCfg = Release|Any CPU
-		{FA4CE49E-C05E-44D4-928E-26A820BF6B0A}.Release|x64.Build.0 = Release|Any CPU
-		{FA4CE49E-C05E-44D4-928E-26A820BF6B0A}.Release|x86.ActiveCfg = Release|Any CPU
-		{FA4CE49E-C05E-44D4-928E-26A820BF6B0A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -94,6 +80,5 @@ Global
 		{AF49D837-10B6-46FF-BF87-0105DDA9284D} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{D88C2A2D-8053-4550-AF38-7E34EEE05928} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{B1FF62D1-85F3-48C1-9D0C-313011DAE755} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
-		{FA4CE49E-C05E-44D4-928E-26A820BF6B0A} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal

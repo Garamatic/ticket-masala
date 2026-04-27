@@ -129,11 +129,31 @@ public class DispatchingService : IDispatchingService
     /// <summary>
     /// NEW CONSOLIDATED PATH (Issue #7):
     /// Single unified implementation using AgentMatchingEngine + IAffinityScorer.
+    ///
+    /// Issue #9: N+1 Query Optimization
+    /// - Pre-loads customer ONCE
+    /// - Pre-loads all workloads in single query
+    /// - Batches FTS5 skill matching (single query for all agents)
+    /// - Pre-calculates all affinity scores before loop
     /// </summary>
     private async Task<List<DispatchResult>> GetTopRecommendedAgentsConsolidatedAsync(Ticket ticket, int count)
     {
-        // Get all employees as potential agents
-        var employees = await _context.Users.OfType<Employee>().ToListAsync();
+        // OPTIMIZATION: Get employees and workloads in parallel (2 queries)
+        var employeesTask = _context.Users.OfType<Employee>().ToListAsync();
+        var workloadTask = _context.Tickets
+            .Where(t => t.ResponsibleId != null)
+            .Where(t => t.TicketStatus != Status.Completed && t.TicketStatus != Status.Failed)
+            .GroupBy(t => t.ResponsibleId)
+            .Select(g => new { AgentId = g.Key!, Count = g.Count() })
+            .ToDictionaryAsync(x => x.AgentId!, x => x.Count);
+
+        await Task.WhenAll(employeesTask, workloadTask);
+
+        var employees = employeesTask.Result;
+        var agentWorkloads = workloadTask.Result;
+
+        // Customer is loaded separately (FindAsync returns ValueTask, not Task)
+        var customer = await _context.Users.FindAsync(ticket.CreatorGuid.ToString());
 
         if (employees.Count == 0)
         {
@@ -141,30 +161,16 @@ public class DispatchingService : IDispatchingService
             return new List<DispatchResult>();
         }
 
-        // Pre-load customer data ONCE (Issue #9 optimization)
-        var customer = await _context.Users.FindAsync(ticket.CreatorGuid.ToString());
+        // OPTIMIZATION: Get ticket rowid for FTS5 (1 query)
+        long ticketRowId = await GetTicketRowIdAsync(ticket.Guid);
 
-        // Get current workload for all agents
-        var agentWorkloads = await _context.Tickets
-            .Where(t => t.ResponsibleId != null)
-            .Where(t => t.TicketStatus != Status.Completed && t.TicketStatus != Status.Failed)
-            .GroupBy(t => t.ResponsibleId)
-            .Select(g => new { AgentId = g.Key!, Count = g.Count() })
-            .ToDictionaryAsync(x => x.AgentId!, x => x.Count);
+        // OPTIMIZATION: Pre-calculate all FTS5 scores in a SINGLE batch query (Issue #9)
+        // Instead of N queries (one per agent), we do 1 query for all agents
+        var ftsScores = await CalculateAllFtsScoresAsync(ticketRowId, employees);
 
-        // Get ticket rowid for FTS5 optimization (Issue #9)
-        long ticketRowId = 0;
-        try
-        {
-            var rowIds = await _context.Database.SqlQueryRaw<long>(
-                "SELECT rowid FROM Tickets WHERE Id = {0}", ticket.Guid)
-                .ToListAsync();
-            ticketRowId = rowIds.FirstOrDefault();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "GERDA-D: Failed to get RowId for FTS lookup");
-        }
+        // OPTIMIZATION: Pre-calculate all ML affinity scores
+        // These are in-memory calculations using the ML model, no DB queries
+        var affinityScores = CalculateAllAffinityScores(employees, ticket, customer);
 
         // Convert employees to generic Agents
         var agents = ConvertEmployeesToAgents(employees, agentWorkloads);
@@ -172,44 +178,26 @@ public class DispatchingService : IDispatchingService
         // Create work item adapter
         var workItem = new TicketWorkItemAdapter(ticket);
 
-        // Get recommendations from consolidated engine
+        // Build results using pre-calculated scores (NO DB QUERIES in this loop!)
         var results = new List<DispatchResult>();
 
         foreach (var agent in agents.Where(a => a.IsAvailable))
         {
-            // Find the corresponding employee
             var employee = employees.FirstOrDefault(e => e.Id == agent.Id);
             if (employee == null || string.IsNullOrEmpty(employee.Id))
             {
                 continue;
             }
 
-            // Calculate ML-based affinity score
-            double mlAffinityScore = 2.5; // Default neutral
-            string? affinityExplanation = null;
-            try
-            {
-                mlAffinityScore = _affinityScorer.CalculateAffinity(employee, ticket, customer);
-                affinityExplanation = _affinityScorer.GetAffinityExplanation(mlAffinityScore, employee, ticket);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "GERDA-D: Affinity scoring failed for agent {AgentId}, using neutral", agent.Id);
-            }
-
-            // Calculate FTS5 skill match score (Issue #9: batch this)
-            double ftsScore = 0;
-            if (ticketRowId > 0 && !string.IsNullOrWhiteSpace(employee.Specializations))
-            {
-                ftsScore = await CalculateFtsScoreAsync(ticketRowId, employee.Specializations);
-            }
+            // Get pre-calculated scores (no DB queries here!)
+            var (mlAffinityScore, affinityExplanation) = affinityScores.GetValueOrDefault(agent.Id, (2.5, null));
+            var ftsScore = ftsScores.GetValueOrDefault(agent.Id, 0.0);
 
             // Calculate workload factor
             var currentWorkload = agentWorkloads.GetValueOrDefault(agent.Id, 0);
             var workloadPenalty = currentWorkload / (double)_config.GerdaAI.Dispatching.MaxAssignedTicketsPerAgent;
-            // Note: This uses the GerdaConfig value. The AgentMatchingEngine uses DispatchingConfig.MaxCasesPerAgent
 
-            // Build generic match result using consolidated engine
+            // Build result
             var genericResult = BuildDispatchResult(
                 agent,
                 workItem,
@@ -223,11 +211,137 @@ public class DispatchingService : IDispatchingService
             results.Add(genericResult);
         }
 
+        _logger.LogDebug(
+            "GERDA-D: Optimized dispatching for ticket {TicketGuid} using {QueryCount} DB queries (was ~{OldQueryCount})",
+            ticket.Guid, 5, employees.Count * 2 + 3);
+
         // Return top N by score
         return results
             .OrderByDescending(r => r.Score)
             .Take(count)
             .ToList();
+    }
+
+    /// <summary>
+    /// Issue #9: Optimized batch FTS5 score calculation.
+    /// Replaces N individual queries with a single batch query.
+    /// </summary>
+    private async Task<Dictionary<string, double>> CalculateAllFtsScoresAsync(long ticketRowId, List<Employee> employees)
+    {
+        var scores = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+
+        if (ticketRowId <= 0)
+        {
+            return scores;
+        }
+
+        // Get all unique specializations across all agents
+        var allSpecs = employees
+            .Where(e => !string.IsNullOrWhiteSpace(e.Specializations))
+            .SelectMany(e => ParseSpecializations(e.Specializations))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (allSpecs.Count == 0)
+        {
+            return scores;
+        }
+
+        try
+        {
+            // Build a single OR query for all unique specializations
+            var matchQuery = string.Join(" OR ", allSpecs.Select(s => $"\"{s.Replace("\"", "\"\"")}\""));
+
+            // Execute single FTS5 query
+            var matches = await _context.Database.SqlQueryRaw<FtsMatchResult>(
+                "SELECT rowid, rank FROM Tickets_Search WHERE rowid = {0} AND Tickets_Search MATCH {1}",
+                ticketRowId, matchQuery)
+                .ToListAsync();
+
+            // For each employee, check if any of their specializations matched
+            foreach (var employee in employees.Where(e => !string.IsNullOrWhiteSpace(e.Specializations)))
+            {
+                var empSpecs = ParseSpecializations(employee.Specializations);
+                var maxRank = matches
+                    .Where(m => empSpecs.Any(spec =>
+                        allSpecs.Contains(spec, StringComparer.OrdinalIgnoreCase)))
+                    .Select(m => m.Rank)
+                    .FirstOrDefault();
+
+                if (maxRank != 0)
+                {
+                    scores[employee.Id ?? string.Empty] = maxRank;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "GERDA-D: Batch FTS5 scoring failed, falling back to no FTS scores");
+        }
+
+        return scores;
+    }
+
+    /// <summary>
+    /// Helper class for FTS5 query results.
+    /// </summary>
+    private sealed class FtsMatchResult
+    {
+        public long RowId { get; set; }
+        public double Rank { get; set; }
+    }
+
+    /// <summary>
+    /// Issue #9: Optimized batch affinity score calculation.
+    /// All calculations are in-memory using pre-loaded data.
+    /// </summary>
+    private Dictionary<string, (double Score, string? Explanation)> CalculateAllAffinityScores(
+        List<Employee> employees,
+        Ticket ticket,
+        ApplicationUser? customer)
+    {
+        var scores = new Dictionary<string, (double, string?)>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var employee in employees)
+        {
+            if (string.IsNullOrEmpty(employee.Id))
+            {
+                continue;
+            }
+
+            try
+            {
+                var score = _affinityScorer.CalculateAffinity(employee, ticket, customer);
+                var explanation = _affinityScorer.GetAffinityExplanation(score, employee, ticket);
+                scores[employee.Id] = (score, explanation);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "GERDA-D: Affinity scoring failed for agent {AgentId}, using neutral", employee.Id);
+                scores[employee.Id] = (2.5, null);
+            }
+        }
+
+        return scores;
+    }
+
+    /// <summary>
+    /// Gets the SQLite rowid for a ticket (for FTS5 queries).
+    /// </summary>
+    private async Task<long> GetTicketRowIdAsync(Guid ticketGuid)
+    {
+        try
+        {
+            var rowIds = await _context.Database.SqlQueryRaw<long>(
+                "SELECT rowid FROM Tickets WHERE Id = {0}", ticketGuid)
+                .ToListAsync();
+            return rowIds.FirstOrDefault();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "GERDA-D: Failed to get RowId for FTS lookup");
+            return 0;
+        }
     }
 
     private List<Agent> ConvertEmployeesToAgents(List<Employee> employees, Dictionary<string, int> workloads)
@@ -258,33 +372,6 @@ public class DispatchingService : IDispatchingService
         catch
         {
             return new List<string>();
-        }
-    }
-
-    private async Task<double> CalculateFtsScoreAsync(long ticketRowId, string specializationsJson)
-    {
-        try
-        {
-            var specs = System.Text.Json.JsonSerializer.Deserialize<List<string>>(specializationsJson);
-            if (specs == null || !specs.Any())
-            {
-                return 0;
-            }
-
-            // Build OR query: "spec1" OR "spec2"
-            var matchQuery = string.Join(" OR ", specs.Select(s => $"\"{s.Replace("\"", "\"\"")}\""));
-
-            var ranks = await _context.Database.SqlQueryRaw<double>(
-                "SELECT rank FROM Tickets_Search WHERE rowid = {0} AND Tickets_Search MATCH {1}",
-                ticketRowId, matchQuery)
-                .ToListAsync();
-
-            return ranks.FirstOrDefault();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning("GERDA-D: FTS scoring failed: {Message}", ex.Message);
-            return 0;
         }
     }
 

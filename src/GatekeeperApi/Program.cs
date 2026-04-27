@@ -17,8 +17,9 @@ public class Program
         builder.Services.AddSingleton<IngestionQueue<IngestionRequest>>();
         builder.Services.AddHostedService<IngestionWorker>();
 
-        // Register the ingestion processor and HTTP client
-        builder.Services.AddHttpClient<IIngestionProcessor, HttpIngestionProcessor>();
+        // Register the ingestion processor and HTTP client with resilience
+        builder.Services.AddHttpClient<IIngestionProcessor, HttpIngestionProcessor>()
+            .AddStandardResilienceHandler();
 
         var app = builder.Build();
 

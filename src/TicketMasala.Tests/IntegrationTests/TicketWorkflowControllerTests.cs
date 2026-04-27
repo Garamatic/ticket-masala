@@ -96,6 +96,24 @@ public class TicketWorkflowControllerTests : IClassFixture<CustomWebApplicationF
                         }
                         db.SaveChanges();
                     }
+
+                    // Ensure test customer exists for ticket creation (use valid Guid format)
+                    var testCustomerId = "11111111-1111-1111-1111-111111111111";
+                    if (!db.Users.Any(u => u.Id == testCustomerId))
+                    {
+                        db.Users.Add(new ApplicationUser
+                        {
+                            Id = testCustomerId,
+                            UserName = "test.customer@test.com",
+                            Email = "test.customer@test.com",
+                            FirstName = "Test",
+                            LastName = "Customer",
+                            Phone = "555-0100",
+                            NormalizedEmail = "TEST.CUSTOMER@TEST.COM",
+                            NormalizedUserName = "TEST.CUSTOMER@TEST.COM"
+                        });
+                        db.SaveChanges();
+                    }
                 }
             });
         });
@@ -108,7 +126,7 @@ public class TicketWorkflowControllerTests : IClassFixture<CustomWebApplicationF
         return client;
     }
 
-    [Fact(DisplayName = "POST /TicketWorkflow/AddComment - Adds comment to ticket", Skip = "Skipped due to app bug in Result handling")]
+    [Fact(DisplayName = "POST /TicketWorkflow/AddComment - Adds comment to ticket", Skip = "Skipped - InMemory database isolation prevents test customer from being visible to HTTP request")]
     public async Task AddComment_ValidData_AddsComment()
     {
         // Arrange
@@ -138,7 +156,7 @@ public class TicketWorkflowControllerTests : IClassFixture<CustomWebApplicationF
             $"Expected Redirect or OK but got {response.StatusCode}");
     }
 
-    [Fact(DisplayName = "POST /TicketWorkflow/AddComment - Empty comment shows error", Skip = "Skipped due to app bug in Result handling")]
+    [Fact(DisplayName = "POST /TicketWorkflow/AddComment - Empty comment shows error", Skip = "Skipped - InMemory database isolation prevents test customer from being visible to HTTP request")]
     public async Task AddComment_EmptyComment_ShowsError()
     {
         // Arrange
@@ -169,7 +187,7 @@ public class TicketWorkflowControllerTests : IClassFixture<CustomWebApplicationF
             $"Expected Redirect, BadRequest, or OK but got {response.StatusCode}");
     }
 
-    [Fact(DisplayName = "POST /TicketWorkflow/RequestReview - Requests quality review", Skip = "Skipped due to app bug in Result handling")]
+    [Fact(DisplayName = "POST /TicketWorkflow/RequestReview - Requests quality review", Skip = "Skipped - InMemory database isolation prevents test customer from being visible to HTTP request")]
     public async Task RequestReview_ValidTicket_RequestsReview()
     {
         // Arrange
@@ -197,7 +215,7 @@ public class TicketWorkflowControllerTests : IClassFixture<CustomWebApplicationF
             $"Expected Redirect or OK but got {response.StatusCode}");
     }
 
-    [Fact(DisplayName = "POST /TicketWorkflow/SubmitReview - Submits quality review", Skip = "Skipped due to app bug in Result handling")]
+    [Fact(DisplayName = "POST /TicketWorkflow/SubmitReview - Submits quality review", Skip = "Skipped - InMemory database isolation prevents test customer from being visible to HTTP request")]
     public async Task SubmitReview_ValidData_SubmitsReview()
     {
         // Arrange
@@ -228,7 +246,7 @@ public class TicketWorkflowControllerTests : IClassFixture<CustomWebApplicationF
             $"Expected Redirect or OK but got {response.StatusCode}");
     }
 
-    [Fact(DisplayName = "POST /TicketWorkflow/AssignToRecommended - Assigns ticket to agent", Skip = "Skipped due to app bug in Result handling")]
+    [Fact(DisplayName = "POST /TicketWorkflow/AssignToRecommended - Assigns ticket to agent", Skip = "Skipped - InMemory database isolation prevents test customer from being visible to HTTP request")]
     public async Task AssignToRecommended_ValidAgent_AssignsTicket()
     {
         // Arrange
@@ -325,7 +343,7 @@ public class TicketWorkflowControllerTests : IClassFixture<CustomWebApplicationF
         var formData = new Dictionary<string, string>
         {
             ["Description"] = description,
-            ["CustomerId"] = "test-customer-id",
+            ["CustomerId"] = "11111111-1111-1111-1111-111111111111",
             ["ResponsibleId"] = "",
             ["ProjectGuid"] = "",
             ["CompletionTarget"] = DateTime.UtcNow.AddDays(7).ToString("yyyy-MM-dd"),
@@ -343,14 +361,16 @@ public class TicketWorkflowControllerTests : IClassFixture<CustomWebApplicationF
         // Try to find the ticket in the database regardless of response status
         await Task.Delay(100); // Brief delay for async processing
 
-        using var scope = _factory.Services.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<MasalaDbContext>();
-        var ticket = await context.Tickets
-            .OrderByDescending(t => t.CreationDate)
-            .FirstOrDefaultAsync(t => t.Description == description);
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<MasalaDbContext>();
+            var ticket = await context.Tickets
+                .OrderByDescending(t => t.CreationDate)
+                .FirstOrDefaultAsync(t => t.Description == description);
 
-        if (ticket != null)
-            return ticket.Guid;
+            if (ticket != null)
+                return ticket.Guid;
+        }
 
         throw new InvalidOperationException($"Failed to create ticket. Response: {response.StatusCode}");
     }

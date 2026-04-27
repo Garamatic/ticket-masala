@@ -1,13 +1,12 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using Asp.Versioning;
-using TicketMasala.Web.Engine.GERDA.Tickets;
-using TicketMasala.Web.ViewModels.Api;
-using TicketMasala.Web.Repositories;
-using TicketMasala.Web.Extensions;
 using System.Security.Claims;
-
+using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.Extensions;
+using TicketMasala.Web.Repositories;
 using TicketMasala.Web.Services;
+using TicketMasala.Web.ViewModels.Api;
 
 namespace TicketMasala.Web.Controllers.Api.V1;
 
@@ -48,7 +47,7 @@ public class WorkItemsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving work items");
-            return StatusCode(500, new ApiErrorResponse { Error = "INTERNAL_ERROR", Message = ex.ToString() }); // Expose stack for debugging
+            return StatusCode(500, new ApiErrorResponse { Error = "INTERNAL_ERROR", Message = "An unexpected error occurred." });
         }
     }
 
@@ -68,7 +67,7 @@ public class WorkItemsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving work item {Id}", id);
-            return StatusCode(500, new ApiErrorResponse { Error = "INTERNAL_ERROR", Message = ex.ToString() });
+            return StatusCode(500, new ApiErrorResponse { Error = "INTERNAL_ERROR", Message = "An unexpected error occurred." });
         }
     }
 

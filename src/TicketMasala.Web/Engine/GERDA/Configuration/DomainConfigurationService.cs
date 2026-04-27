@@ -1,11 +1,11 @@
-using TicketMasala.Domain.Configuration;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
-using TicketMasala.Web.Engine.Compiler;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Hosting;
+using TicketMasala.Domain.Configuration;
+using TicketMasala.Web.Engine.Compiler;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace TicketMasala.Web.Engine.GERDA.Configuration;
 
@@ -58,7 +58,8 @@ public class DomainConfigurationService : IDomainConfigurationService, IDisposab
             var directory = Path.GetDirectoryName(_configFilePath);
             var fileName = Path.GetFileName(_configFilePath);
 
-            if (directory == null) return;
+            if (directory == null)
+                return;
 
             _fileWatcher = new FileSystemWatcher(directory, fileName)
             {
@@ -69,7 +70,18 @@ public class DomainConfigurationService : IDomainConfigurationService, IDisposab
             // Debounce: only reload if file hasn't changed in 500ms
             _fileWatcher.Changed += (_, _) =>
             {
-                Task.Delay(500).ContinueWith(_ => ReloadConfiguration());
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await Task.Delay(500);
+                        ReloadConfiguration();
+                    }
+                    catch (Exception reloadEx)
+                    {
+                        _logger.LogError(reloadEx, "Error during configuration hot reload");
+                    }
+                });
             };
 
             _logger.LogInformation("File watcher enabled for {Path}", _configFilePath);
@@ -120,8 +132,18 @@ public class DomainConfigurationService : IDomainConfigurationService, IDisposab
                 // 2. Push new config to Rule Compiler for atomic swap
                 _ruleCompiler.ReplaceRuleCache(_config);
 
-                // 3. Persist version snapshot asynchronously
-                _ = Task.Run(() => CaptureConfigSnapshotAsync(hash, yaml));
+                // 3. Persist version snapshot asynchronously (fire-and-forget with exception handling)
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await CaptureConfigSnapshotAsync(hash, yaml);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to capture config snapshot for hash {Hash}", hash);
+                    }
+                });
 
                 _logger.LogInformation(
                     "Loaded domain configuration version {Hash} with {Count} domains",
@@ -136,11 +158,10 @@ public class DomainConfigurationService : IDomainConfigurationService, IDisposab
         }
     }
 
-    private string ComputeHash(string input)
+    private static string ComputeHash(string input)
     {
-        using var sha256 = System.Security.Cryptography.SHA256.Create();
         var bytes = System.Text.Encoding.UTF8.GetBytes(input);
-        var hashBytes = sha256.ComputeHash(bytes);
+        var hashBytes = System.Security.Cryptography.SHA256.HashData(bytes);
         return Convert.ToHexString(hashBytes).ToLowerInvariant();
     }
 
@@ -351,8 +372,10 @@ public class DomainConfigurationService : IDomainConfigurationService, IDisposab
 
     private MasalaDomainsConfig? GetConfigByVersion(string versionId)
     {
-        if (string.IsNullOrEmpty(versionId)) return _config;
-        if (versionId == _currentConfigHash) return _config;
+        if (string.IsNullOrEmpty(versionId))
+            return _config;
+        if (versionId == _currentConfigHash)
+            return _config;
 
         lock (_configLock)
         {

@@ -4,10 +4,7 @@ using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Enums;
 using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Data;
-using TicketMasala.Web.ViewModels.Customers;
 using TicketMasala.Web.ViewModels.Dashboard;
-using TicketMasala.Web.ViewModels.Projects;
-using TicketMasala.Web.ViewModels.Tickets;
 
 namespace TicketMasala.Web.Engine.Core;
 
@@ -27,7 +24,7 @@ public class MetricsService : IMetricsService
     private readonly MasalaDbContext _context;
     private readonly ILogger<MetricsService> _logger;
     private readonly ISystemClock _clock;
-    private readonly Random _random = new();
+
 
     public MetricsService(MasalaDbContext context, ILogger<MetricsService> logger, ISystemClock clock)
     {
@@ -312,7 +309,7 @@ public class MetricsService : IMetricsService
             var date = today.AddDays(i);
             // Simulate weekday vs weekend variance
             var isWeekend = date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday;
-            var variance = (_random.NextDouble() * 0.4) - 0.2; // +/- 20% variance
+            var variance = (Random.Shared.NextDouble() * 0.4) - 0.2; // +/- 20% variance
             var volume = averageDailyVolume * (1 + variance);
 
             if (isWeekend)

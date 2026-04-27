@@ -1,7 +1,4 @@
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using TicketMasala.Domain.Common;
-using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Data.Seeding;
 
 namespace TicketMasala.Web.Data;

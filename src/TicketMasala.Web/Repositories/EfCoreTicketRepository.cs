@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Repositories;
 using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Data;
-using TicketMasala.Web.Repositories.Queries;
 using TicketMasala.Web.Repositories.Specifications;
 
 namespace TicketMasala.Web.Repositories;

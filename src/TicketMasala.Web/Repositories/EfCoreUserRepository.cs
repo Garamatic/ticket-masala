@@ -1,6 +1,7 @@
-using Microsoft.AspNetCore.Identity; // Added for UserManager
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Repositories;
 using TicketMasala.Web.Data;
 
 namespace TicketMasala.Web.Repositories;
@@ -66,9 +67,16 @@ public class EfCoreUserRepository : IUserRepository
         return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
     }
 
-    public async Task<IEnumerable<ApplicationUser>> GetAllUsersAsync()
+    public async Task<IList<ApplicationUser>> GetAllUsersAsync()
     {
         return await _context.Users.ToListAsync();
+    }
+
+    public async Task<IEnumerable<Employee>> GetAvailableAgentsAsync()
+    {
+        return await _context.Users.OfType<Employee>()
+            .Where(e => e.LockoutEnd == null || e.LockoutEnd < DateTimeOffset.UtcNow)
+            .ToListAsync();
     }
 
     public async Task<int> CountUsersAsync()

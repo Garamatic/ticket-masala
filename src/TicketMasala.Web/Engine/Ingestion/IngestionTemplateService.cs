@@ -38,6 +38,10 @@ public class IngestionResult
 /// </summary>
 public class IngestionTemplateService : IIngestionTemplateService
 {
+    private static readonly Regex TemplateRegex = new(
+        "\\{\\{\\s*(.*?)\\s*\\}\\}",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
     private readonly ILogger<IngestionTemplateService> _logger;
     private readonly Dictionary<string, IngestionTemplate> _templates;
 
@@ -140,7 +144,7 @@ public class IngestionTemplateService : IIngestionTemplateService
             return string.Empty;
         }
 
-        var rendered = Regex.Replace(templateText, "\\{\\{\\s*(.*?)\\s*\\}\\}", match =>
+        var rendered = TemplateRegex.Replace(templateText, match =>
         {
             var expression = match.Groups[1].Value;
             var parts = expression.Split('|', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);

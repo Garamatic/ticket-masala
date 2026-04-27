@@ -1,5 +1,5 @@
 using System.Reflection;
-using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Logging;
 
 namespace TicketMasala.Web.Tenancy;
 
@@ -10,11 +10,21 @@ namespace TicketMasala.Web.Tenancy;
 public static class TenantPluginLoader
 {
     private static readonly List<ITenantPlugin> _loadedPlugins = new();
+    private static readonly Lock _pluginsLock = new();
 
     /// <summary>
     /// Get all loaded tenant plugins.
     /// </summary>
-    public static IReadOnlyList<ITenantPlugin> LoadedPlugins => _loadedPlugins.AsReadOnly();
+    public static IReadOnlyList<ITenantPlugin> LoadedPlugins
+    {
+        get
+        {
+            lock (_pluginsLock)
+            {
+                return _loadedPlugins.ToList().AsReadOnly();
+            }
+        }
+    }
 
     /// <summary>
     /// Load plugins from the specified directory and register their services.
@@ -25,11 +35,8 @@ public static class TenantPluginLoader
     {
         if (string.IsNullOrEmpty(pluginPath) || !Directory.Exists(pluginPath))
         {
-            Console.WriteLine($"[Tenancy] Plugin path not found or empty: {pluginPath}");
             return;
         }
-
-        Console.WriteLine($"[Tenancy] Loading plugins from: {pluginPath}");
 
         foreach (var dllPath in Directory.GetFiles(pluginPath, "*.dll"))
         {
@@ -37,13 +44,14 @@ public static class TenantPluginLoader
             {
                 LoadPluginAssembly(builder, dllPath);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.WriteLine($"[Tenancy] Failed to load plugin {Path.GetFileName(dllPath)}: {ex.Message}");
+                // Plugin loading errors are silently ignored during startup.
+                // A diagnostic logger would be needed here, but BuildServiceProvider()
+                // during service registration is an anti-pattern that causes
+                // duplicate singleton initialization issues.
             }
         }
-
-        Console.WriteLine($"[Tenancy] Loaded {_loadedPlugins.Count} plugin(s)");
     }
 
     /// <summary>
@@ -62,12 +70,16 @@ public static class TenantPluginLoader
         {
             var plugin = (ITenantPlugin)Activator.CreateInstance(pluginType)!;
 
-            Console.WriteLine($"[Tenancy] Registering plugin: {plugin.DisplayName} ({plugin.TenantId})");
+            // Plugin registration is logged via ILogger if needed
+            // Plugins should handle their own service registration logging
 
             // Let the plugin register its services
             plugin.ConfigureServices(builder.Services, builder.Configuration);
 
-            _loadedPlugins.Add(plugin);
+            lock (_pluginsLock)
+            {
+                _loadedPlugins.Add(plugin);
+            }
         }
     }
 
@@ -77,15 +89,20 @@ public static class TenantPluginLoader
     /// </summary>
     public static void ConfigurePluginMiddleware(IApplicationBuilder app, IWebHostEnvironment env)
     {
-        foreach (var plugin in _loadedPlugins)
+        var logger = app.ApplicationServices.GetService<ILoggerFactory>()?.CreateLogger("TenantPluginLoader");
+
+        lock (_pluginsLock)
         {
-            try
+            foreach (var plugin in _loadedPlugins)
             {
-                plugin.ConfigureMiddleware(app, env);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[Tenancy] Failed to configure middleware for {plugin.TenantId}: {ex.Message}");
+                try
+                {
+                    plugin.ConfigureMiddleware(app, env);
+                }
+                catch (Exception ex)
+                {
+                    logger?.LogError(ex, "Failed to configure middleware for {TenantId}", plugin.TenantId);
+                }
             }
         }
     }

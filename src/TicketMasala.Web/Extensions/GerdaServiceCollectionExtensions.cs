@@ -1,3 +1,4 @@
+using System.IO;
 using Microsoft.Extensions.ML;
 using TicketMasala.Web.Engine.Compiler;
 using TicketMasala.Web.Engine.GERDA;
@@ -45,7 +46,6 @@ public static class GerdaServiceCollectionExtensions
 
         if (!File.Exists(gerdaConfigPath))
         {
-
             // Register NoOp services to prevent DI failures
             services.AddScoped<IDispatchingService, NoOpDispatchingService>();
             services.AddScoped<IGerdaService, NoOpGerdaService>();
@@ -83,7 +83,6 @@ public static class GerdaServiceCollectionExtensions
 
         // Using NoOp service: AgentMatchingEngine not available
         services.AddScoped<IDispatchingService, NoOpDispatchingService>();
-        // services.AddScoped<IDispatchingService, DispatchingService>();
         services.AddScoped<IDispatchBacklogService, DispatchBacklogService>();
         services.AddScoped<IAnticipationService, AnticipationService>();
         services.AddScoped<IKnowledgeService, KnowledgeService>();

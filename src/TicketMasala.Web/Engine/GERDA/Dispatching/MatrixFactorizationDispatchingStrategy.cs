@@ -21,7 +21,6 @@ public class MatrixFactorizationDispatchingStrategy : IDispatchingStrategy
     private readonly MasalaDbContext _context;
     private readonly GerdaConfig _config;
     private readonly ILogger<MatrixFactorizationDispatchingStrategy> _logger;
-    // private readonly MLContext _mlContext; // REMOVED: Using Pool
     private readonly PredictionEnginePool<AgentCustomerRating, RatingPrediction> _predictionEnginePool;
     private readonly IFeatureExtractor _featureExtractor;
     private readonly IDomainConfigurationService _domainConfig;

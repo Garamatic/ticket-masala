@@ -1,5 +1,3 @@
-// using TicketMasala.Web.Engine.GERDA.Dispatching.Models; // Not available
-
 using System.Text.Json.Serialization;
 using TicketMasala.Web.Engine.GERDA.Configuration;
 using TicketMasala.Web.Engine.GERDA.Dispatching.Models;
@@ -30,19 +28,6 @@ public class TicketMasalaAgent : Agent
         };
         return masalaAgent;
     }
-
-    // Method commented out: Agent type not available
-    // public Agent ToAgent() => new()
-    // {
-    //     Id = this.Id,
-    //     Name = this.Name,
-    //     Department = this.Department,
-    //     Competencies = this.Competencies,
-    //     CurrentCaseCount = this.CurrentCaseCount,
-    //     MaxCapacity = this.MaxCapacity,
-    //     SuccessRate = this.SuccessRate,
-    //     AverageResolutionTimeHours = this.AverageResolutionTimeHours
-    // };
 
     /// <summary>Current number of assigned work items</summary>
     public int CurrentWorkload { get; set; }

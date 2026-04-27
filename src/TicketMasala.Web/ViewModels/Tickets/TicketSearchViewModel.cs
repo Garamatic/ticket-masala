@@ -1,6 +1,6 @@
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Entities;
-using TicketMasala.Web.Repositories.Queries;
+using TicketMasala.Domain.Repositories;
 
 namespace TicketMasala.Web.ViewModels.Tickets;
 

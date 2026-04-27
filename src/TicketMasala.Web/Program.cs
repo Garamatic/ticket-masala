@@ -80,8 +80,6 @@ builder.Services.AddMasalaApi();
 builder.Services.AddMasalaFrontend();
 builder.Services.AddScoped<TicketMasala.Web.Facades.ITicketContextFacade, TicketMasala.Web.Facades.TicketContextFacade>();
 
-// TenantConnectionResolver is already registered by AddMasalaCore()
-
 var app = builder.Build();
 
 // ============================================

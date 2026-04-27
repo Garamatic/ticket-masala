@@ -200,7 +200,6 @@ public static class WebApplicationBuilderExtensions
                 builder.Services.AddScoped<IAutoDispatchPolicy, ScoreThresholdAutoDispatchPolicy>();
                 builder.Services.AddScoped<IProjectManagerRecommendationService, WorkloadAndSuccessProjectManagerRecommendationService>();
                 builder.Services.AddScoped<IDispatchingService, NoOpDispatchingService>();
-                // Using NoOp service: AgentMatchingEngine not available
                 builder.Services.AddScoped<IDispatchBacklogService, DispatchBacklogService>();
                 builder.Services.AddScoped<IAnticipationService, AnticipationService>();
                 builder.Services.AddScoped<IKnowledgeService, KnowledgeService>();
@@ -240,13 +239,13 @@ public static class WebApplicationBuilderExtensions
                 });
 
                 options.AddTokenBucketLimiter("general", opt =>
-            {
-                opt.TokenLimit = 50;
-                opt.TokensPerPeriod = 10;
-                opt.ReplenishmentPeriod = TimeSpan.FromSeconds(10);
-                opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-                opt.QueueLimit = 5;
-            });
+                {
+                    opt.TokenLimit = 50;
+                    opt.TokensPerPeriod = 10;
+                    opt.ReplenishmentPeriod = TimeSpan.FromSeconds(10);
+                    opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                    opt.QueueLimit = 5;
+                });
             });
 
         // Memory Cache - registered once here, used throughout the application

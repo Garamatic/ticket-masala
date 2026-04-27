@@ -67,7 +67,7 @@ public class EfCoreUserRepository : IUserRepository
         return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
     }
 
-    public async Task<IList<ApplicationUser>> GetAllUsersAsync()
+    public async Task<IEnumerable<ApplicationUser>> GetAllUsersAsync()
     {
         return await _context.Users.ToListAsync();
     }

@@ -23,6 +23,6 @@ public interface IUserRepository
     // General user operations
     Task<ApplicationUser?> GetUserByIdAsync(string id);
     Task<ApplicationUser?> GetUserByEmailAsync(string email);
-    Task<IList<ApplicationUser>> GetAllUsersAsync();
+    Task<IEnumerable<ApplicationUser>> GetAllUsersAsync();
     Task<int> CountUsersAsync();
 }

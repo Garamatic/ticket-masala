@@ -69,9 +69,11 @@ public class IngestionTemplateService : IIngestionTemplateService
 
     public IngestionResult Transform(string templateName, Dictionary<string, object> sourceData)
     {
-        if (!_templates.TryGetValue(templateName, out var template))
+        // Use requested template, or fall back to "default", or fail if no templates
+        if (!_templates.TryGetValue(templateName, out var template) &&
+            !_templates.TryGetValue("default", out template))
         {
-            template = _templates.Values.FirstOrDefault() ?? throw new InvalidOperationException("No templates configured");
+            throw new InvalidOperationException($"Template '{templateName}' not found and no 'default' template configured");
         }
 
         try

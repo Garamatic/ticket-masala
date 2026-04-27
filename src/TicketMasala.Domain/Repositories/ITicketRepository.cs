@@ -55,10 +55,10 @@ public class TicketSearchResultDto
     public Guid? ProjectGuid { get; set; }
     public string? GerdaTags { get; set; }
 
-    // Computed properties for display
-    public bool IsOverdue { get; set; }
-    public bool IsDueSoon { get; set; }
-    public double DaysUntilDue { get; set; }
+    // Computed properties for display (calculated client-side from CompletionTarget)
+    public bool IsOverdue => CompletionTarget.HasValue && CompletionTarget.Value < DateTime.UtcNow;
+    public bool IsDueSoon => CompletionTarget.HasValue && !IsOverdue && (CompletionTarget.Value - DateTime.UtcNow).TotalHours < 24;
+    public double DaysUntilDue => CompletionTarget.HasValue ? (CompletionTarget.Value - DateTime.UtcNow).TotalDays : 0;
 
     // Navigation helpers (flattened for view compatibility)
     public UserSummary? Customer => !string.IsNullOrEmpty(CustomerName) ? new UserSummary { Name = CustomerName } : null;

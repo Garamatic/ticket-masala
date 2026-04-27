@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TicketMasala.Domain\TicketMasala.Domain.csproj" />
+    <ProjectReference Include="../TicketMasala.Domain/TicketMasala.Domain.csproj" />
   </ItemGroup>
 
 </Project>

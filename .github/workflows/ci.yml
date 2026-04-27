@@ -34,12 +34,9 @@ jobs:
     - name: Test with Coverage (Web Tests)
       run: dotnet test src/TicketMasala.Tests/TicketMasala.Tests.csproj --no-build --verbosity normal --collect:"XPlat Code Coverage" --settings src/TicketMasala.Tests/coverlet.runsettings --configuration Release
       
-    - name: Install ReportGenerator
-      run: dotnet tool install -g dotnet-reportgenerator-globaltool || true
-      
     - name: Generate Coverage Report
       run: |
-        reportgenerator \
+        dotnet reportgenerator \
           -reports:"src/TicketMasala.Tests/TestResults/**/coverage.cobertura.xml" \
           -targetdir:"coveragereport" \
           -reporttypes:Html;MarkdownSummaryGithub

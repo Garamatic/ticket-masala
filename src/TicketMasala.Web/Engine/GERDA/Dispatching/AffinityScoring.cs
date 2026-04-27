@@ -1,6 +1,7 @@
 using System.Text.Json;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Engine.GERDA.Dispatching.Models;
 
 namespace TicketMasala.Web.Engine.GERDA.Dispatching;
 
@@ -141,54 +142,140 @@ public static class AffinityScoring
     /// </summary>
     public static string ExtractCategoryFromTicket(Ticket ticket)
     {
-        var description = ticket.Description?.ToLower() ?? "";
+        return ExtractCategoryFromDescription(ticket.Description);
+    }
+
+    /// <summary>
+    /// Extract category from work item (keyword matching for generic IWorkItem)
+    /// Returns standardized category name for matching against specializations
+    /// </summary>
+    public static string ExtractCategoryFromWorkItem(IWorkItem workItem)
+    {
+        // Try to extract from metadata if available
+        try
+        {
+            if (!string.IsNullOrEmpty(workItem.MetadataJson))
+            {
+                var metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(workItem.MetadataJson);
+                if (metadata?.TryGetValue("Title", out var title) == true && title != null)
+                {
+                    return ExtractCategoryFromDescription(title.ToString());
+                }
+            }
+        }
+        catch
+        {
+            // Fall through to use WorkType
+        }
+
+        // Default to WorkType as category
+        return workItem.WorkType ?? "Other";
+    }
+
+    /// <summary>
+    /// Calculate expertise score for a work item (generic version for IWorkItem)
+    /// </summary>
+    public static double CalculateExpertiseScore(IWorkItem workItem, Employee agent)
+    {
+        if (string.IsNullOrWhiteSpace(agent.Specializations))
+            return 2.5;
+
+        try
+        {
+            var specializations = JsonSerializer.Deserialize<List<string>>(agent.Specializations);
+            if (specializations == null || !specializations.Any())
+                return 2.5;
+
+            var category = ExtractCategoryFromWorkItem(workItem);
+
+            if (specializations.Any(s => s.Equals(category, StringComparison.OrdinalIgnoreCase)))
+                return 5.0;
+
+            var keywords = category.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            var matchCount = keywords.Count(keyword =>
+                specializations.Any(s => s.Contains(keyword, StringComparison.OrdinalIgnoreCase)));
+
+            if (matchCount > 0)
+                return 3.5 + (matchCount * 0.5);
+
+            return 2.0;
+        }
+        catch
+        {
+            return 2.5;
+        }
+    }
+
+    /// <summary>
+    /// Get explanation of affinity score breakdown for transparency (IWorkItem version)
+    /// </summary>
+    public static string GetScoreExplanation(
+        double mlPrediction,
+        IWorkItem workItem,
+        Employee agent,
+        ApplicationUser? customer = null)
+    {
+        var expertiseScore = CalculateExpertiseScore(workItem, agent);
+        var languageScore = CalculateLanguageScore(agent, customer);
+        var geographyScore = CalculateGeographyScore(agent, customer);
+        var category = ExtractCategoryFromWorkItem(workItem);
+
+        return $"Past Interaction: {mlPrediction:F2} (40%), " +
+               $"Expertise Match ({category}): {expertiseScore:F2} (30%), " +
+               $"Language: {languageScore:F2} (20%), " +
+               $"Geography: {geographyScore:F2} (10%)";
+    }
+
+    private static string ExtractCategoryFromDescription(string? description)
+    {
+        var desc = description?.ToLower() ?? "";
 
         // IT Support categories
-        if (description.Contains("password") || description.Contains("login"))
+        if (desc.Contains("password") || desc.Contains("login"))
             return "Password Reset";
-        if (description.Contains("hardware") || description.Contains("laptop") || description.Contains("monitor"))
+        if (desc.Contains("hardware") || desc.Contains("laptop") || desc.Contains("monitor"))
             return "Hardware Support";
-        if (description.Contains("bug") || description.Contains("error") || description.Contains("crash"))
+        if (desc.Contains("bug") || desc.Contains("error") || desc.Contains("crash"))
             return "Bug Triage";
-        if (description.Contains("outage") || description.Contains("down") || description.Contains("offline"))
+        if (desc.Contains("outage") || desc.Contains("down") || desc.Contains("offline"))
             return "System Outage";
-        if (description.Contains("network") || description.Contains("wifi") || description.Contains("connection"))
+        if (desc.Contains("network") || desc.Contains("wifi") || desc.Contains("connection"))
             return "Network Troubleshooting";
-        if (description.Contains("software") || description.Contains("app") || description.Contains("application"))
+        if (desc.Contains("software") || desc.Contains("app") || desc.Contains("application"))
             return "Software Troubleshooting";
 
         // DevOps categories
-        if (description.Contains("deployment") || description.Contains("deploy"))
+        if (desc.Contains("deployment") || desc.Contains("deploy"))
             return "DevOps";
-        if (description.Contains("security") || description.Contains("patch") || description.Contains("vulnerability"))
+        if (desc.Contains("security") || desc.Contains("patch") || desc.Contains("vulnerability"))
             return "Security Patch";
-        if (description.Contains("performance") || description.Contains("slow"))
+        if (desc.Contains("performance") || desc.Contains("slow"))
             return "Performance Issue";
-        if (description.Contains("infrastructure") || description.Contains("server"))
+        if (desc.Contains("infrastructure") || desc.Contains("server"))
             return "Infrastructure";
 
         // HR categories
-        if (description.Contains("leave") || description.Contains("vacation") || description.Contains("pto"))
+        if (desc.Contains("leave") || desc.Contains("vacation") || desc.Contains("pto"))
             return "Leave Request";
-        if (description.Contains("payroll") || description.Contains("salary") || description.Contains("payment"))
+        if (desc.Contains("payroll") || desc.Contains("salary") || desc.Contains("payment"))
             return "Payroll";
-        if (description.Contains("onboard") || description.Contains("new hire"))
+        if (desc.Contains("onboard") || desc.Contains("new hire"))
             return "Onboarding";
 
         // Finance/Tax categories
-        if (description.Contains("refund") || description.Contains("reimburs"))
+        if (desc.Contains("refund") || desc.Contains("reimburs"))
             return "Refund Request";
-        if (description.Contains("tax") || description.Contains("taxes"))
+        if (desc.Contains("tax") || desc.Contains("taxes"))
             return "Tax Processing";
-        if (description.Contains("fraud") || description.Contains("investigation"))
+        if (desc.Contains("fraud") || desc.Contains("investigation"))
             return "Fraud Investigation";
 
         // Project Management
-        if (description.Contains("project") || description.Contains("milestone"))
+        if (desc.Contains("project") || desc.Contains("milestone"))
             return "Project Management";
-        if (description.Contains("agile") || description.Contains("sprint"))
+        if (desc.Contains("agile") || desc.Contains("sprint"))
             return "Agile";
-        if (description.Contains("risk"))
+        if (desc.Contains("risk"))
             return "Risk Management";
 
         return "Other"; // Default

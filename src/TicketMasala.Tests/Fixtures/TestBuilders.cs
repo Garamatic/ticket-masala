@@ -105,17 +105,14 @@ public class TicketBuilder
     }
 
     /// <summary>
-    /// Builds the ticket, syncing CustomFieldsJson with derived properties
-    /// to match SQLite Generated Columns behavior.
-    /// MANDATE: Must replicate the logic of SQLite Generated Columns for indexed JSON fields.
+    /// Builds the ticket with configured properties.
+    /// Serializes custom fields to JSON if any were added.
     /// </summary>
     public Ticket Build()
     {
-        // Serialize custom fields to JSON
         if (_customFields.Count > 0)
         {
             _ticket.CustomFieldsJson = JsonSerializer.Serialize(_customFields);
-
         }
 
         return _ticket;

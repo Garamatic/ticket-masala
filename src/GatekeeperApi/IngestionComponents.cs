@@ -60,17 +60,18 @@ public class IngestionWorker : BackgroundService
             {
                 var request = await _queue.DequeueAsync(stoppingToken);
 
-                // In a full microservices deployment:
-                // 1. Publish to message bus (RabbitMQ, Azure Service Bus, etc.)
-                // 2. Or call TicketMasala.Web API via HTTP client
-                // 3. Or process locally if ITicketWorkflowService is registered via plugin
-
-                // For now, the request is accepted and logged. The actual processing
-                // depends on how the service is deployed.
                 _logger.LogInformation(
                     "Ingestion request dequeued: Template={Template}, Keys={KeyCount}",
                     request.Template,
                     request.Data.Count);
+
+                // In a full microservices deployment, this would:
+                // 1. Publish to message bus (RabbitMQ, Azure Service Bus, etc.)
+                // 2. Or call TicketMasala.Web API via HTTP client
+                // 3. Or process locally if ITicketWorkflowService is registered via plugin
+                //
+                // For now, requests are simply dequeued and logged. Actual processing
+                // depends on the deployment configuration.
             }
             catch (OperationCanceledException)
             {

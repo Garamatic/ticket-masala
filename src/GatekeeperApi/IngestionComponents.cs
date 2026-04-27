@@ -6,27 +6,36 @@ namespace GatekeeperApi;
 /// Thread-safe bounded queue for ingestion requests using System.Threading.Channels.
 /// Prevents memory exhaustion by limiting the number of queued items.
 /// </summary>
-public class IngestionQueue
+public class IngestionQueue<T>
 {
-    private readonly Channel<IngestionRequest> _queue;
+    private readonly Channel<T> _queue;
 
-    public IngestionQueue(int capacity = 10000)
+    public IngestionQueue(IConfiguration config)
     {
-        var options = new BoundedChannelOptions(capacity)
+        var capacity = config.GetValue<int>("Gatekeeper:QueueCapacity", 10000);
+        _queue = Channel.CreateBounded<T>(new BoundedChannelOptions(capacity)
         {
-            FullMode = BoundedChannelFullMode.DropOldest
-        };
-        _queue = Channel.CreateBounded<IngestionRequest>(options);
+            FullMode = BoundedChannelFullMode.Wait,
+            SingleReader = true, // We only have one IngestionWorker
+            SingleWriter = false // Multiple HTTP requests will write
+        });
     }
 
-    public bool TryEnqueue(IngestionRequest item)
+    public async ValueTask EnqueueAsync(T item, CancellationToken cancellationToken = default)
+    {
+        if (item == null)
+            throw new ArgumentNullException(nameof(item));
+        await _queue.Writer.WriteAsync(item, cancellationToken);
+    }
+
+    public bool TryEnqueue(T item)
     {
         if (item == null)
             throw new ArgumentNullException(nameof(item));
         return _queue.Writer.TryWrite(item);
     }
 
-    public async ValueTask<IngestionRequest> DequeueAsync(CancellationToken cancellationToken)
+    public async ValueTask<T> DequeueAsync(CancellationToken cancellationToken)
     {
         return await _queue.Reader.ReadAsync(cancellationToken);
     }
@@ -40,14 +49,17 @@ public class IngestionQueue
 public class IngestionWorker : BackgroundService
 {
     private readonly ILogger<IngestionWorker> _logger;
-    private readonly IngestionQueue _queue;
+    private readonly IngestionQueue<IngestionRequest> _queue;
+    private readonly IServiceProvider _serviceProvider;
 
     public IngestionWorker(
         ILogger<IngestionWorker> logger,
-        IngestionQueue queue)
+        IngestionQueue<IngestionRequest> queue,
+        IServiceProvider serviceProvider)
     {
         _logger = logger;
         _queue = queue;
+        _serviceProvider = serviceProvider;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -65,13 +77,12 @@ public class IngestionWorker : BackgroundService
                     request.Template,
                     request.Data.Count);
 
-                // In a full microservices deployment, this would:
-                // 1. Publish to message bus (RabbitMQ, Azure Service Bus, etc.)
-                // 2. Or call TicketMasala.Web API via HTTP client
-                // 3. Or process locally if ITicketWorkflowService is registered via plugin
-                //
-                // For now, requests are simply dequeued and logged. Actual processing
-                // depends on the deployment configuration.
+                // Use a scope for the processor if it has scoped dependencies (like HttpClient from IHttpClientFactory)
+                using (var scope = _serviceProvider.CreateScope())
+                {
+                    var processor = scope.ServiceProvider.GetRequiredService<IIngestionProcessor>();
+                    await processor.ProcessAsync(request, stoppingToken);
+                }
             }
             catch (OperationCanceledException)
             {

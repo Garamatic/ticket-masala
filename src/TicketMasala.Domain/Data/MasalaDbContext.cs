@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Entities;
 
 namespace TicketMasala.Domain.Data;
@@ -36,6 +37,9 @@ public class MasalaDbContext : IdentityDbContext<ApplicationUser, IdentityRole, 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Exclude DomainEvent from EF Core mapping (it's not a persisted entity)
+        modelBuilder.Ignore<DomainEvent>();
 
         // Detect database provider for provider-specific SQL generation
         var providerName = Database.ProviderName ?? "Microsoft.EntityFrameworkCore.Sqlite";

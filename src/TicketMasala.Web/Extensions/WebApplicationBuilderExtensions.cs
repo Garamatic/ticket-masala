@@ -246,6 +246,15 @@ public static class WebApplicationBuilderExtensions
                     opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
                     opt.QueueLimit = 5;
                 });
+
+                // Strict limiter for external ticket submissions (anti-spam)
+                options.AddFixedWindowLimiter("ExternalSubmission", opt =>
+                {
+                    opt.PermitLimit = 3; // Max 3 submissions per window
+                    opt.Window = TimeSpan.FromMinutes(5); // Per 5 minutes
+                    opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                    opt.QueueLimit = 0; // No queue, immediate 429
+                });
             });
 
         // Memory Cache - registered once here, used throughout the application

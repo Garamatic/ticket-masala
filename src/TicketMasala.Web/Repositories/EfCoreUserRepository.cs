@@ -31,12 +31,12 @@ public class EfCoreUserRepository : IUserRepository
             .FirstOrDefaultAsync(e => e.Id == id);
     }
 
-    public async Task<IEnumerable<Employee>> GetAllEmployeesAsync()
+    public async Task<IReadOnlyList<Employee>> GetAllEmployeesAsync()
     {
         return await _context.Users.OfType<Employee>().ToListAsync();
     }
 
-    public async Task<IEnumerable<Employee>> GetEmployeesByTeamAsync(string team)
+    public async Task<IReadOnlyList<Employee>> GetEmployeesByTeamAsync(string team)
     {
         return await _context.Users.OfType<Employee>()
             .Where(e => e.Team == team)
@@ -50,7 +50,7 @@ public class EfCoreUserRepository : IUserRepository
             .FirstOrDefaultAsync();
     }
 
-    public async Task<IEnumerable<ApplicationUser>> GetAllCustomersAsync()
+    public async Task<IReadOnlyList<ApplicationUser>> GetAllCustomersAsync()
     {
         return await _context.Users
             .Where(u => !(u is Employee))
@@ -67,12 +67,12 @@ public class EfCoreUserRepository : IUserRepository
         return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
     }
 
-    public async Task<IEnumerable<ApplicationUser>> GetAllUsersAsync()
+    public async Task<IReadOnlyList<ApplicationUser>> GetAllUsersAsync()
     {
         return await _context.Users.ToListAsync();
     }
 
-    public async Task<IEnumerable<Employee>> GetAvailableAgentsAsync()
+    public async Task<IReadOnlyList<Employee>> GetAvailableAgentsAsync()
     {
         return await _context.Users.OfType<Employee>()
             .Where(e => e.LockoutEnd == null || e.LockoutEnd < DateTimeOffset.UtcNow)

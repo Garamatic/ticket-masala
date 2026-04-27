@@ -35,14 +35,14 @@ public class EfCoreProjectRepository : IProjectRepository
         return await query.FirstOrDefaultAsync(p => p.Guid == id);
     }
 
-    public async Task<IEnumerable<Project>> GetAllAsync()
+    public async Task<IReadOnlyList<Project>> GetAllAsync()
     {
         return await _context.Projects
             .Where(p => p.ValidUntil == null)
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Project>> GetActiveProjectsAsync()
+    public async Task<IReadOnlyList<Project>> GetActiveProjectsAsync()
     {
         return await _context.Projects
             .Where(p => p.Status == Status.Pending || p.Status == Status.InProgress)
@@ -50,7 +50,7 @@ public class EfCoreProjectRepository : IProjectRepository
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Project>> GetByCustomerIdAsync(string customerId)
+    public async Task<IReadOnlyList<Project>> GetByCustomerIdAsync(string customerId)
     {
         return await _context.Projects
             .Where(p => p.CustomerId == customerId)

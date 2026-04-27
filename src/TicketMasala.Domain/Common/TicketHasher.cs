@@ -24,9 +24,8 @@ public static class TicketHasher
         // 2. Normalize whitespace
         var clean = WhitespaceRegex.Replace(raw, " ").Trim();
 
-        // 3. Hash
-        using var sha = SHA256.Create();
-        var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(clean));
+        // 3. Hash using modern one-shot API (more efficient, no allocation)
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(clean));
         return Convert.ToHexString(bytes);
     }
 }

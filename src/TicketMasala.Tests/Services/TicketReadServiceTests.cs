@@ -5,11 +5,11 @@ using Moq;
 using TicketMasala.Domain.Configuration;
 using TicketMasala.Domain.Data;
 using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Repositories;
 using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.GERDA.Configuration;
 using TicketMasala.Web.Engine.GERDA.Tickets;
-using TicketMasala.Domain.Repositories;
 using Xunit;
 
 namespace TicketMasala.Tests.Services;

@@ -1,15 +1,15 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.GERDA.Tickets;
-using TicketMasala.Web.Engine.Ingestion;
-using TicketMasala.Web.Engine.Ingestion.Background;
 using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.ViewModels.Api;
@@ -19,7 +19,7 @@ namespace TicketMasala.Web.Controllers.Api;
 
 /// <summary>
 /// REST API for WorkItem (Ticket) management - includes external submission endpoint.
-/// Routes: /api/v1/tickets (legacy) and /api/v1/workitems (UEM canonical)
+/// Routes: /api/v{version}/tickets (legacy) and /api/v{version}/workitems (UEM canonical)
 /// </summary>
 [ApiController]
 [ApiVersion("1.0")]
@@ -30,17 +30,20 @@ public class TicketsApiController : ControllerBase
 {
     private readonly ITicketWorkflowService _ticketWorkflowService;
     private readonly ITicketReadService _ticketReadService;
-    private readonly ITicketFactory _ticketFactory;
     private readonly IUserRepository _userRepository;
     private readonly ITicketRepository _ticketRepository;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ILogger<TicketsApiController> _logger;
     private readonly ISystemClock _clock;
 
+    // Security limits for external submissions
+    private const int MaxExternalSubjectLength = 200;
+    private const int MaxExternalDescriptionLength = 5000;
+    private const int MaxExternalNameLength = 100;
+
     public TicketsApiController(
         ITicketWorkflowService ticketWorkflowService,
         ITicketReadService ticketReadService,
-        ITicketFactory ticketFactory,
         IUserRepository userRepository,
         ITicketRepository ticketRepository,
         UserManager<ApplicationUser> userManager,
@@ -49,7 +52,6 @@ public class TicketsApiController : ControllerBase
     {
         _ticketWorkflowService = ticketWorkflowService;
         _ticketReadService = ticketReadService;
-        _ticketFactory = ticketFactory;
         _userRepository = userRepository;
         _ticketRepository = ticketRepository;
         _userManager = userManager;
@@ -58,127 +60,95 @@ public class TicketsApiController : ControllerBase
     }
 
     /// <summary>
-    /// Create a ticket from an external website (e.g., partner company site)
-    /// This endpoint allows anonymous access for demo purposes
+    /// Create a ticket from an external website (e.g., partner company site).
+    /// Rate limited to prevent abuse.
     /// </summary>
     /// <param name="request">External ticket request data</param>
     /// <returns>Ticket ID and reference number</returns>
     [HttpPost("external")]
     [AllowAnonymous]
-    public async Task<ActionResult<ExternalTicketResponse>> CreateExternalTicket([FromBody] ExternalTicketRequest request)
+    [EnableRateLimiting("ExternalSubmission")]
+    [ProducesResponseType(typeof(ExternalTicketResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ExternalTicketResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<ActionResult<ExternalTicketResponse>> CreateExternalTicket(
+        [FromBody] ExternalTicketRequest request)
     {
-        try
+        // Validate input lengths (anti-spam)
+        if (string.IsNullOrWhiteSpace(request.Subject) || request.Subject.Length > MaxExternalSubjectLength)
         {
-            _logger.LogInformation("External ticket submission from {Source} for {Email}",
-                request.SourceSite, request.CustomerEmail);
-
-            // 1. Find or create customer by email
-            var customer = await FindOrCreateCustomerAsync(request.CustomerEmail, request.CustomerName);
-
-            if (customer == null)
-            {
-                return BadRequest(new ExternalTicketResponse
-                {
-                    Success = false,
-                    Message = "Failed to create customer account"
-                });
-            }
-
-            // 2. Create the ticket
-            var description = $"**{request.Subject}**\n\n{request.Description}";
-
-            if (!string.IsNullOrEmpty(request.SourceSite))
-            {
-                description += $"\n\n---\n*Submitted via: {request.SourceSite}*";
-            }
-
-            var ticket = await _ticketWorkflowService.CreateTicketAsync(
-                description: description,
-                customerId: customer.Id,
-                responsibleId: null, // GERDA will assign
-                projectGuid: null,
-                completionTarget: _clock.UtcNow.AddDays(14)
-            );
-
-            // 3. Add external source tag
-            ticket.GerdaTags = string.IsNullOrEmpty(ticket.GerdaTags)
-                ? $"External-Request,{request.SourceSite ?? "unknown"}"
-                : $"{ticket.GerdaTags},External-Request,{request.SourceSite ?? "unknown"}";
-
-            await _ticketRepository.UpdateAsync(ticket);
-
-            _logger.LogInformation("External ticket {TicketId} created successfully", ticket.Guid);
-
-            return Ok(new ExternalTicketResponse
-            {
-                Success = true,
-                TicketId = ticket.Guid.ToString(),
-                ReferenceNumber = ticket.Guid.ToString().Substring(0, 8).ToUpper(),
-                Message = "Your request has been submitted successfully"
-            });
+            throw new ArgumentException($"Subject is required and must be less than {MaxExternalSubjectLength} characters.");
         }
-        catch (Exception ex)
+
+        if (string.IsNullOrWhiteSpace(request.Description) || request.Description.Length > MaxExternalDescriptionLength)
         {
-            _logger.LogError(ex, "Error creating external ticket");
-            return StatusCode(500, new ExternalTicketResponse
-            {
-                Success = false,
-                Message = "An error occurred processing your request"
-            });
+            throw new ArgumentException($"Description is required and must be less than {MaxExternalDescriptionLength} characters.");
         }
+
+        if (string.IsNullOrWhiteSpace(request.CustomerEmail) || !IsValidEmail(request.CustomerEmail))
+        {
+            throw new ArgumentException("Valid email address is required.");
+        }
+
+        if (!string.IsNullOrEmpty(request.CustomerName) && request.CustomerName.Length > MaxExternalNameLength)
+        {
+            throw new ArgumentException($"Name must be less than {MaxExternalNameLength} characters.");
+        }
+
+        // Sanitize inputs to prevent injection
+        var sanitizedSubject = SanitizeInput(request.Subject);
+        var sanitizedDescription = SanitizeInput(request.Description);
+        var sanitizedCustomerName = SanitizeInput(request.CustomerName ?? "External User");
+        var sanitizedSourceSite = SanitizeInput(request.SourceSite ?? "unknown");
+
+        // Find or create customer by email
+        var customer = await FindOrCreateCustomerAsync(request.CustomerEmail, sanitizedCustomerName);
+
+        if (customer == null)
+        {
+            throw new InvalidOperationException("Failed to create customer account.");
+        }
+
+        // Create the ticket
+        var description = $"**{sanitizedSubject}**\n\n{sanitizedDescription}\n\n---\n*Submitted via: {sanitizedSourceSite}*";
+
+        var ticket = await _ticketWorkflowService.CreateTicketAsync(
+            description: description,
+            customerId: customer.Id,
+            responsibleId: null, // GERDA will assign
+            projectGuid: null,
+            completionTarget: _clock.UtcNow.AddDays(14)
+        );
+
+        // Add external source tag
+        ticket.GerdaTags = string.IsNullOrEmpty(ticket.GerdaTags)
+            ? $"External-Request,{sanitizedSourceSite}"
+            : $"{ticket.GerdaTags},External-Request,{sanitizedSourceSite}";
+
+        await _ticketRepository.UpdateAsync(ticket);
+
+        _logger.LogInformation(
+            "External ticket {TicketId} created successfully for customer {CustomerId} from {Source}",
+            ticket.Guid,
+            customer.Id,
+            sanitizedSourceSite);
+
+        return Ok(new ExternalTicketResponse
+        {
+            Success = true,
+            TicketId = ticket.Guid.ToString(),
+            ReferenceNumber = ticket.Guid.ToString()[..8].ToUpper(),
+            Message = "Your request has been submitted successfully"
+        });
     }
 
     /// <summary>
-    /// Find existing customer or create a new one
-    /// </summary>
-    private async Task<ApplicationUser?> FindOrCreateCustomerAsync(string email, string name)
-    {
-        // Try to find existing customer
-        var existingUser = await _userRepository.GetUserByEmailAsync(email);
-
-        if (existingUser != null)
-        {
-            return existingUser;
-        }
-
-        // Create new customer
-        var nameParts = name.Split(' ', 2);
-        var firstName = nameParts[0];
-        var lastName = nameParts.Length > 1 ? nameParts[1] : "";
-
-        var newCustomer = new ApplicationUser
-        {
-            UserName = email,
-            Email = email,
-            FirstName = firstName,
-            LastName = lastName,
-            Phone = "", // Required property
-            EmailConfirmed = true
-        };
-
-        // Generate a secure random password for external users
-        var randomPassword = Guid.NewGuid().ToString("N") + "!A1";
-        var result = await _userManager.CreateAsync(newCustomer, randomPassword);
-
-        if (result.Succeeded)
-        {
-            await _userManager.AddToRoleAsync(newCustomer, "Customer");
-            _logger.LogInformation("Created new customer {Email} from external submission", email);
-            return newCustomer;
-        }
-
-        var errors = result.Errors?.Select(e => e.Description) ?? Array.Empty<string>();
-        _logger.LogWarning("Failed to create customer {Email}: {Errors}",
-            email, string.Join(", ", errors));
-        return null;
-    }
-
-    /// <summary>
-    /// Get all tickets (authenticated users only)
+    /// Get all tickets (authenticated users only).
     /// </summary>
     [HttpGet]
     [Authorize]
     [Obsolete("Use /api/v1/work-items endpoints instead")]
+    [ProducesResponseType(typeof(IEnumerable<TicketViewModel>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<TicketViewModel>>> GetAll()
     {
         var tickets = await _ticketReadService.GetAllTicketsAsync();
@@ -186,11 +156,13 @@ public class TicketsApiController : ControllerBase
     }
 
     /// <summary>
-    /// Get a specific ticket by ID
+    /// Get a specific ticket by ID.
     /// </summary>
     [HttpGet("{id:guid}")]
     [Authorize]
     [Obsolete("Use /api/v1/work-items endpoints instead")]
+    [ProducesResponseType(typeof(TicketDetailsViewModel), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<TicketDetailsViewModel>> GetById(Guid id)
     {
         var ticket = await _ticketReadService.GetTicketDetailsAsync(id);
@@ -211,55 +183,157 @@ public class TicketsApiController : ControllerBase
     /// <returns>Created WorkItem response</returns>
     [HttpPost("create")]
     [Authorize]
-    public async Task<ActionResult<WorkItemResponse>> CreateWorkItem([FromBody] CreateWorkItemRequest request)
+    [ProducesResponseType(typeof(WorkItemResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<WorkItemResponse>> CreateWorkItem(
+        [FromBody] CreateWorkItemRequest request)
     {
-        try
+        _logger.LogInformation("Creating WorkItem with title: {Title}, domain: {Domain}",
+            request.Title, request.DomainId);
+
+        // Validate required fields
+        if (string.IsNullOrEmpty(request.CustomerId))
         {
-            _logger.LogInformation("Creating WorkItem with title: {Title}, domain: {Domain}",
-                request.Title, request.DomainId);
-
-            // Validate required fields
-            if (string.IsNullOrEmpty(request.CustomerId))
-            {
-                return BadRequest(new { error = "CustomerId is required" });
-            }
-
-            // Map custom fields to JSON
-            var customFieldsJson = request.CustomFields != null
-                ? JsonSerializer.Serialize(request.CustomFields)
-                : "{}";
-
-            // Create the ticket using internal service
-            var ticket = await _ticketWorkflowService.CreateTicketAsync(
-                description: $"**{request.Title}**\n\n{request.Description}",
-                customerId: request.CustomerId,
-                responsibleId: request.AssigneeId,
-                projectGuid: request.WorkContainerId,
-                completionTarget: request.CompletionTarget ?? _clock.UtcNow.AddDays(14)
-            );
-
-            // Update domain-specific fields
-            ticket.DomainId = request.DomainId;
-            ticket.Title = request.Title;
-            ticket.CustomFieldsJson = customFieldsJson;
-            await _ticketRepository.UpdateAsync(ticket);
-
-            _logger.LogInformation("Created WorkItem {Id} successfully", ticket.Guid);
-
-            return CreatedAtAction(
-                nameof(GetById),
-                new { id = ticket.Guid },
-                MapToWorkItemResponse(ticket));
+            throw new ArgumentException("CustomerId is required.");
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error creating WorkItem");
-            return StatusCode(500, new { error = "An error occurred creating the work item" });
-        }
+
+        // Map custom fields to JSON
+        var customFieldsJson = request.CustomFields != null
+            ? JsonSerializer.Serialize(request.CustomFields)
+            : "{}";
+
+        // Create the ticket using internal service
+        var ticket = await _ticketWorkflowService.CreateTicketAsync(
+            description: $"**{request.Title}**\n\n{request.Description}",
+            customerId: request.CustomerId,
+            responsibleId: request.AssigneeId,
+            projectGuid: request.WorkContainerId,
+            completionTarget: request.CompletionTarget ?? _clock.UtcNow.AddDays(14)
+        );
+
+        // Update domain-specific fields
+        ticket.DomainId = request.DomainId;
+        ticket.Title = request.Title;
+        ticket.CustomFieldsJson = customFieldsJson;
+        await _ticketRepository.UpdateAsync(ticket);
+
+        _logger.LogInformation("Created WorkItem {Id} successfully", ticket.Guid);
+
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = ticket.Guid },
+            MapToWorkItemResponse(ticket));
     }
 
     /// <summary>
-    /// Maps internal Ticket entity to WorkItemResponse DTO
+    /// Find existing customer or create a new one.
+    /// </summary>
+    private async Task<ApplicationUser?> FindOrCreateCustomerAsync(string email, string name)
+    {
+        // Try to find existing customer
+        var existingUser = await _userRepository.GetUserByEmailAsync(email);
+
+        if (existingUser != null)
+        {
+            return existingUser;
+        }
+
+        // Create new customer
+        var nameParts = name.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+        var firstName = nameParts[0];
+        var lastName = nameParts.Length > 1 ? nameParts[1] : "";
+
+        var newCustomer = new ApplicationUser
+        {
+            UserName = email,
+            Email = email,
+            FirstName = firstName,
+            LastName = lastName,
+            Phone = "",
+            EmailConfirmed = true
+        };
+
+        // Generate a secure random password
+        var randomPassword = GenerateSecurePassword();
+        var result = await _userManager.CreateAsync(newCustomer, randomPassword);
+
+        if (result.Succeeded)
+        {
+            await _userManager.AddToRoleAsync(newCustomer, "Customer");
+            _logger.LogInformation("Created new customer {Email} from external submission", email);
+            return newCustomer;
+        }
+
+        var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+        _logger.LogWarning("Failed to create customer {Email}: {Errors}", email, errors);
+        return null;
+    }
+
+    /// <summary>
+    /// Generates a cryptographically secure random password.
+    /// </summary>
+    private static string GenerateSecurePassword()
+    {
+        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+        using var random = System.Security.Cryptography.RandomNumberGenerator.Create();
+        var password = new char[20];
+        var byteBuffer = new byte[sizeof(int)];
+
+        for (int i = 0; i < password.Length; i++)
+        {
+            random.GetBytes(byteBuffer);
+            var randomInt = BitConverter.ToInt32(byteBuffer, 0) & int.MaxValue;
+            password[i] = chars[randomInt % chars.Length];
+        }
+
+        return new string(password);
+    }
+
+    /// <summary>
+    /// Validates email format.
+    /// </summary>
+    private static bool IsValidEmail(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return false;
+
+        var emailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+        return Regex.IsMatch(email, emailPattern, RegexOptions.IgnoreCase);
+    }
+
+    /// <summary>
+    /// Sanitizes user input to prevent injection attacks.
+    /// </summary>
+    private static string SanitizeInput(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return input;
+
+        // Remove potentially dangerous patterns
+        var dangerousPatterns = new[]
+        {
+            "<script",
+            "</script",
+            "javascript:",
+            "onerror=",
+            "onload=",
+            "onclick=",
+            "onmouseover=",
+            "eval(",
+            "expression("
+        };
+
+        var sanitized = input;
+        foreach (var pattern in dangerousPatterns)
+        {
+            sanitized = sanitized.Replace(pattern, "", StringComparison.OrdinalIgnoreCase);
+        }
+
+        return sanitized.Trim();
+    }
+
+    /// <summary>
+    /// Maps internal Ticket entity to WorkItemResponse DTO.
     /// </summary>
     private static WorkItemResponse MapToWorkItemResponse(Ticket ticket)
     {
@@ -282,5 +356,4 @@ public class TicketsApiController : ControllerBase
             WorkContainerName = ticket.Project?.Name
         };
     }
-
 }

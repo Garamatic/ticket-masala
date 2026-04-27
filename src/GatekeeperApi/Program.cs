@@ -13,8 +13,12 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.Services.AddSingleton(_ => new IngestionQueue(capacity: 10000));
+        // Register the ingestion queue and worker
+        builder.Services.AddSingleton<IngestionQueue<IngestionRequest>>();
         builder.Services.AddHostedService<IngestionWorker>();
+
+        // Register the ingestion processor and HTTP client
+        builder.Services.AddHttpClient<IIngestionProcessor, HttpIngestionProcessor>();
 
         var app = builder.Build();
 
@@ -32,7 +36,7 @@ public class Program
             var originalBody = context.Request.Body;
             var bufferedStream = new Microsoft.AspNetCore.WebUtilities.FileBufferingReadStream(
                 originalBody, 10 * 1024 * 1024, null, Path.GetTempPath());
-            
+
             context.Request.Body = bufferedStream;
             try
             {
@@ -45,7 +49,7 @@ public class Program
             }
         });
 
-        app.MapPost("/api/ingest", async (HttpContext context, IngestionQueue queue, ILogger<Program> logger) =>
+        app.MapPost("/api/ingest", async (HttpContext context, IngestionQueue<IngestionRequest> queue, ILogger<Program> logger) =>
         {
             if (!context.Request.Headers.TryGetValue("X-Api-Key", out var extractedValue) ||
                 extractedValue != apiKey)

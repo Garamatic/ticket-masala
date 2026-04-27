@@ -26,7 +26,8 @@ public class GerdaOptions
 {
     public bool Enabled { get; set; } = true;
     public string ModelPath { get; set; } = "./models";
-    public string OpenAiModel { get; set; } = "gpt-4";
+    public string OpenAiModel { get; set; } = "openai/gpt-4o";
+    public string OpenAiModelFast { get; set; } = "openai/gpt-4o-mini";
 }
 
 public class FeatureOptions

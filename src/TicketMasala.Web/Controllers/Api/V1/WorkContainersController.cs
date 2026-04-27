@@ -9,6 +9,9 @@ using TicketMasala.Web.ViewModels.Projects;
 
 namespace TicketMasala.Web.Controllers.Api.V1;
 
+/// <summary>
+/// API for managing Work Containers (Projects) - Universal Entity Model canonical endpoints.
+/// </summary>
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/work-containers")]
 [ApiController]
@@ -16,18 +19,18 @@ public class WorkContainersController : ControllerBase
 {
     private readonly IProjectWorkflowService _projectWorkflowService;
     private readonly IProjectRepository _projectRepository;
-    private readonly ILogger<WorkContainersController> _logger;
 
     public WorkContainersController(
         IProjectWorkflowService projectWorkflowService,
-        IProjectRepository projectRepository,
-        ILogger<WorkContainersController> logger)
+        IProjectRepository projectRepository)
     {
         _projectWorkflowService = projectWorkflowService;
         _projectRepository = projectRepository;
-        _logger = logger;
     }
 
+    /// <summary>
+    /// Get all work containers.
+    /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<WorkContainerDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll()
@@ -36,94 +39,86 @@ public class WorkContainersController : ControllerBase
         return Ok(projects.Select(p => p.ToWorkContainerDto(p.Tasks?.Count ?? 0)));
     }
 
+    /// <summary>
+    /// Get a specific work container by ID.
+    /// </summary>
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(WorkContainerDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(Guid id)
     {
-        try
-        {
-            var project = await _projectRepository.GetByIdAsync(id, includeRelations: true);
-            if (project == null)
-                return NotFound();
-
-            return Ok(project.ToWorkContainerDto(project.Tasks?.Count ?? 0));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving work container {Id}", id);
+        var project = await _projectRepository.GetByIdAsync(id, includeRelations: true);
+        if (project == null)
             return NotFound();
-        }
+
+        return Ok(project.ToWorkContainerDto(project.Tasks?.Count ?? 0));
     }
 
+    /// <summary>
+    /// Create a new work container.
+    /// </summary>
     [HttpPost]
     [ProducesResponseType(typeof(WorkContainerDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Create(WorkContainerDto container)
     {
         if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+            return ValidationProblem(ModelState);
 
-        try
+        var userId = container.ManagerId ?? "SYSTEM";
+
+        var vm = new NewProject
         {
-            var userId = container.ManagerId ?? "SYSTEM";
+            Name = container.Name,
+            Description = container.Description ?? "",
+            SelectedCustomerId = container.CustomerId,
+            IsNewCustomer = false,
+            ProjectType = container.ProjectType
+        };
 
-            var vm = new NewProject
-            {
-                Name = container.Name,
-                Description = container.Description ?? "",
-                SelectedCustomerId = container.CustomerId, // Fixed: mapped to correct property
-                IsNewCustomer = false, // Fixed: Explicitly set to false for existing customer
-                ProjectType = container.ProjectType // Map if possible
-            };
+        var project = await _projectWorkflowService.CreateProjectAsync(vm, userId);
 
-            var project = await _projectWorkflowService.CreateProjectAsync(vm, userId);
-
-            // Post-creation update for extra fields not in ViewModel
-            bool needsUpdate = false;
-            if (container.Status != null && Enum.TryParse<Status>(container.Status, true, out var status) && project.Status != status)
-            {
-                project.Status = status;
-                needsUpdate = true;
-            }
-            if (container.Notes != null && project.Notes != container.Notes)
-            {
-                project.Notes = container.Notes;
-                needsUpdate = true;
-            }
-            if (container.AiRoadmap != null && project.ProjectAiRoadmap != container.AiRoadmap)
-            {
-                project.ProjectAiRoadmap = container.AiRoadmap;
-                needsUpdate = true;
-            }
-            // Handle CompletionTarget manually
-            if (container.CompletionTarget.HasValue && project.CompletionTarget != container.CompletionTarget)
-            {
-                project.CompletionTarget = container.CompletionTarget.Value;
-                needsUpdate = true;
-            }
-
-            if (needsUpdate)
-            {
-                await _projectRepository.UpdateAsync(project);
-            }
-
-            return CreatedAtAction(nameof(GetById), new { id = project.Guid, version = "1.0" }, project.ToWorkContainerDto());
-        }
-        catch (Exception ex)
+        // Post-creation update for extra fields not in ViewModel
+        bool needsUpdate = false;
+        if (container.Status != null && Enum.TryParse<Status>(container.Status, true, out var status) && project.Status != status)
         {
-            _logger.LogError(ex, "Error creating work container");
-            return StatusCode(500, new ApiErrorResponse { Error = "INTERNAL_ERROR", Message = "An error occurred creating the work container" });
+            project.Status = status;
+            needsUpdate = true;
         }
+        if (container.Notes != null && project.Notes != container.Notes)
+        {
+            project.Notes = container.Notes;
+            needsUpdate = true;
+        }
+        if (container.AiRoadmap != null && project.ProjectAiRoadmap != container.AiRoadmap)
+        {
+            project.ProjectAiRoadmap = container.AiRoadmap;
+            needsUpdate = true;
+        }
+        if (container.CompletionTarget.HasValue && project.CompletionTarget != container.CompletionTarget)
+        {
+            project.CompletionTarget = container.CompletionTarget.Value;
+            needsUpdate = true;
+        }
+
+        if (needsUpdate)
+        {
+            await _projectRepository.UpdateAsync(project);
+        }
+
+        return CreatedAtAction(nameof(GetById), new { id = project.Guid, version = "1.0" }, project.ToWorkContainerDto());
     }
 
+    /// <summary>
+    /// Update an existing work container.
+    /// </summary>
     [HttpPut("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(Guid id, WorkContainerDto container)
     {
         if (id != container.Id)
-            return BadRequest(new ApiErrorResponse { Error = "VALIDATION_ERROR", Message = "ID mismatch" });
+            throw new ArgumentException("ID mismatch between route and body");
 
         var existingProject = await _projectRepository.GetByIdAsync(id, includeRelations: true);
         if (existingProject == null)
@@ -138,6 +133,9 @@ public class WorkContainersController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Delete a work container.
+    /// </summary>
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -146,7 +144,6 @@ public class WorkContainersController : ControllerBase
         if (!await _projectRepository.ExistsAsync(id))
             return NotFound();
 
-        // Use Repository for Delete
         await _projectRepository.DeleteAsync(id);
         return NoContent();
     }

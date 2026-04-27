@@ -9,13 +9,13 @@ public interface IUserRepository
 {
     // Employee operations
     Task<Employee?> GetEmployeeByIdAsync(string id);
-    Task<IEnumerable<Employee>> GetAllEmployeesAsync();
-    Task<IEnumerable<Employee>> GetEmployeesByTeamAsync(string team);
-    Task<IEnumerable<Employee>> GetAvailableAgentsAsync();
+    Task<IReadOnlyList<Employee>> GetAllEmployeesAsync();
+    Task<IReadOnlyList<Employee>> GetEmployeesByTeamAsync(string team);
+    Task<IReadOnlyList<Employee>> GetAvailableAgentsAsync();
 
     // Customer operations
     Task<ApplicationUser?> GetCustomerByIdAsync(string id);
-    Task<IEnumerable<ApplicationUser>> GetAllCustomersAsync();
+    Task<IReadOnlyList<ApplicationUser>> GetAllCustomersAsync();
     Task<bool> UpdateCustomerAsync(ApplicationUser customer);
     Task<bool> DeleteCustomerAsync(string id);
     Task<bool> CreateCustomerAsync(ApplicationUser customer, string password);
@@ -23,6 +23,6 @@ public interface IUserRepository
     // General user operations
     Task<ApplicationUser?> GetUserByIdAsync(string id);
     Task<ApplicationUser?> GetUserByEmailAsync(string email);
-    Task<IEnumerable<ApplicationUser>> GetAllUsersAsync();
+    Task<IReadOnlyList<ApplicationUser>> GetAllUsersAsync();
     Task<int> CountUsersAsync();
 }

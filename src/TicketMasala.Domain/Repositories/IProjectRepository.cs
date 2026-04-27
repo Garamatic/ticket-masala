@@ -8,9 +8,9 @@ namespace TicketMasala.Domain.Repositories;
 public interface IProjectRepository
 {
     Task<Project?> GetByIdAsync(Guid id, bool includeRelations = true);
-    Task<IEnumerable<Project>> GetAllAsync();
-    Task<IEnumerable<Project>> GetActiveProjectsAsync();
-    Task<IEnumerable<Project>> GetByCustomerIdAsync(string customerId);
+    Task<IReadOnlyList<Project>> GetAllAsync();
+    Task<IReadOnlyList<Project>> GetActiveProjectsAsync();
+    Task<IReadOnlyList<Project>> GetByCustomerIdAsync(string customerId);
     Task<Project?> GetRecommendedProjectForCustomerAsync(string customerId);
     Task<Project> AddAsync(Project project);
     Task UpdateAsync(Project project);

@@ -45,14 +45,14 @@ public class EfCoreTicketRepository : ITicketRepository
         return await query.FirstOrDefaultAsync(t => t.Guid == id);
     }
 
-    public async Task<IEnumerable<Ticket>> GetAllAsync(Guid? departmentId = null)
+    public async Task<IReadOnlyList<Ticket>> GetAllAsync(Guid? departmentId = null)
     {
         return await _context.Tickets
             .FilterByDepartment(departmentId)
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Ticket>> GetUnassignedAsync(Guid? departmentId = null)
+    public async Task<IReadOnlyList<Ticket>> GetUnassignedAsync(Guid? departmentId = null)
     {
         return await _context.Tickets
             .FilterValid()
@@ -61,7 +61,7 @@ public class EfCoreTicketRepository : ITicketRepository
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Ticket>> GetByStatusAsync(Status status, Guid? departmentId = null)
+    public async Task<IReadOnlyList<Ticket>> GetByStatusAsync(Status status, Guid? departmentId = null)
     {
         return await _context.Tickets
             .FilterByStatus(status)
@@ -70,7 +70,7 @@ public class EfCoreTicketRepository : ITicketRepository
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Ticket>> GetByCustomerIdAsync(string customerId)
+    public async Task<IReadOnlyList<Ticket>> GetByCustomerIdAsync(string customerId)
     {
         return await _context.Tickets
             .Where(t => t.CustomerId == customerId)
@@ -78,7 +78,7 @@ public class EfCoreTicketRepository : ITicketRepository
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Ticket>> GetByResponsibleIdAsync(string responsibleId)
+    public async Task<IReadOnlyList<Ticket>> GetByResponsibleIdAsync(string responsibleId)
     {
         return await _context.Tickets
             .Where(t => t.ResponsibleId == responsibleId)
@@ -86,7 +86,7 @@ public class EfCoreTicketRepository : ITicketRepository
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Ticket>> GetByProjectGuidAsync(Guid projectGuid)
+    public async Task<IReadOnlyList<Ticket>> GetByProjectGuidAsync(Guid projectGuid)
     {
         return await _context.Tickets
             .Where(t => t.ProjectGuid == projectGuid)
@@ -94,7 +94,7 @@ public class EfCoreTicketRepository : ITicketRepository
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Ticket>> GetRecentAsync(int timeWindowMinutes, Guid? departmentId = null)
+    public async Task<IReadOnlyList<Ticket>> GetRecentAsync(int timeWindowMinutes, Guid? departmentId = null)
     {
         return await _context.Tickets
             .WithinTimeWindow(timeWindowMinutes, _clock)
@@ -103,7 +103,7 @@ public class EfCoreTicketRepository : ITicketRepository
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Ticket>> GetPendingOrAssignedAsync(Guid? departmentId = null)
+    public async Task<IReadOnlyList<Ticket>> GetPendingOrAssignedAsync(Guid? departmentId = null)
     {
         return await _context.Tickets
             .FilterPendingOrAssigned()
@@ -112,7 +112,7 @@ public class EfCoreTicketRepository : ITicketRepository
             .ToListAsync();
     }
 
-    public async Task<(IEnumerable<TicketSearchResultDto> Results, int TotalItems)> SearchAsync(TicketSearchQuery query)
+    public async Task<(IReadOnlyList<TicketSearchResultDto> Results, int TotalItems)> SearchAsync(TicketSearchQuery query)
     {
         var dbQuery = _context.Tickets
             .FilterValid()
@@ -207,7 +207,7 @@ public class EfCoreTicketRepository : ITicketRepository
         }
     }
 
-    public async Task<IEnumerable<Ticket>> GetActiveTicketsAsync()
+    public async Task<IReadOnlyList<Ticket>> GetActiveTicketsAsync()
     {
         return await _context.Tickets
             .Where(t => t.TicketStatus != Status.Completed && t.TicketStatus != Status.Failed)
@@ -215,7 +215,7 @@ public class EfCoreTicketRepository : ITicketRepository
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Ticket>> GetCompletedTicketsAsync()
+    public async Task<IReadOnlyList<Ticket>> GetCompletedTicketsAsync()
     {
         return await _context.Tickets
             .Where(t => t.TicketStatus == Status.Completed)
@@ -232,7 +232,7 @@ public class EfCoreTicketRepository : ITicketRepository
         return await _context.Tickets.AnyAsync(t => t.Guid == id);
     }
 
-    public async Task<IEnumerable<Document>> GetDocumentsForTicketAsync(Guid ticketId)
+    public async Task<IReadOnlyList<Document>> GetDocumentsForTicketAsync(Guid ticketId)
     {
         return await _context.Documents
             .Where(d => d.TicketId == ticketId)
@@ -240,7 +240,7 @@ public class EfCoreTicketRepository : ITicketRepository
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<TicketComment>> GetCommentsForTicketAsync(Guid ticketId)
+    public async Task<IReadOnlyList<TicketComment>> GetCommentsForTicketAsync(Guid ticketId)
     {
         return await _context.TicketComments
             .Include(c => c.Author)
@@ -249,7 +249,7 @@ public class EfCoreTicketRepository : ITicketRepository
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<QualityReview>> GetQualityReviewsForTicketAsync(Guid ticketId)
+    public async Task<IReadOnlyList<QualityReview>> GetQualityReviewsForTicketAsync(Guid ticketId)
     {
         return await _context.QualityReviews
             .Where(r => r.TicketId == ticketId)

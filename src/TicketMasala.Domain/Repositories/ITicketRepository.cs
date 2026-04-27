@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Entities;
 
@@ -11,19 +12,19 @@ public interface ITicketRepository
 {
     // Read operations
     Task<Ticket?> GetByIdAsync(Guid id, bool includeRelations = true);
-    Task<IEnumerable<Ticket>> GetAllAsync(Guid? departmentId = null);
-    Task<IEnumerable<Ticket>> GetUnassignedAsync(Guid? departmentId = null);
-    Task<IEnumerable<Ticket>> GetByStatusAsync(Status status, Guid? departmentId = null);
-    Task<IEnumerable<Ticket>> GetByCustomerIdAsync(string customerId);
-    Task<IEnumerable<Ticket>> GetByResponsibleIdAsync(string responsibleId);
-    Task<IEnumerable<Ticket>> GetByProjectGuidAsync(Guid projectGuid);
-    Task<IEnumerable<Ticket>> GetRecentAsync(int timeWindowMinutes, Guid? departmentId = null);
-    Task<IEnumerable<Ticket>> GetPendingOrAssignedAsync(Guid? departmentId = null);
-    Task<(IEnumerable<TicketSearchResultDto> Results, int TotalItems)> SearchAsync(TicketSearchQuery query);
+    Task<IReadOnlyList<Ticket>> GetAllAsync(Guid? departmentId = null);
+    Task<IReadOnlyList<Ticket>> GetUnassignedAsync(Guid? departmentId = null);
+    Task<IReadOnlyList<Ticket>> GetByStatusAsync(Status status, Guid? departmentId = null);
+    Task<IReadOnlyList<Ticket>> GetByCustomerIdAsync(string customerId);
+    Task<IReadOnlyList<Ticket>> GetByResponsibleIdAsync(string responsibleId);
+    Task<IReadOnlyList<Ticket>> GetByProjectGuidAsync(Guid projectGuid);
+    Task<IReadOnlyList<Ticket>> GetRecentAsync(int timeWindowMinutes, Guid? departmentId = null);
+    Task<IReadOnlyList<Ticket>> GetPendingOrAssignedAsync(Guid? departmentId = null);
+    Task<(IReadOnlyList<TicketSearchResultDto> Results, int TotalItems)> SearchAsync(TicketSearchQuery query);
 
     // Aggregate queries
-    Task<IEnumerable<Ticket>> GetActiveTicketsAsync();
-    Task<IEnumerable<Ticket>> GetCompletedTicketsAsync();
+    Task<IReadOnlyList<Ticket>> GetActiveTicketsAsync();
+    Task<IReadOnlyList<Ticket>> GetCompletedTicketsAsync();
     Task<int> CountAsync();
 
     // Write operations
@@ -33,9 +34,9 @@ public interface ITicketRepository
     Task<bool> ExistsAsync(Guid id);
 
     // Related data
-    Task<IEnumerable<Document>> GetDocumentsForTicketAsync(Guid ticketId);
-    Task<IEnumerable<TicketComment>> GetCommentsForTicketAsync(Guid ticketId);
-    Task<IEnumerable<QualityReview>> GetQualityReviewsForTicketAsync(Guid ticketId);
+    Task<IReadOnlyList<Document>> GetDocumentsForTicketAsync(Guid ticketId);
+    Task<IReadOnlyList<TicketComment>> GetCommentsForTicketAsync(Guid ticketId);
+    Task<IReadOnlyList<QualityReview>> GetQualityReviewsForTicketAsync(Guid ticketId);
 }
 
 /// <summary>
@@ -61,7 +62,10 @@ public class TicketSearchResultDto
     public double DaysUntilDue => CompletionTarget.HasValue ? (CompletionTarget.Value - DateTime.UtcNow).TotalDays : 0;
 
     // Navigation helpers (flattened for view compatibility)
+    [JsonIgnore]
     public UserSummary? Customer => !string.IsNullOrEmpty(CustomerName) ? new UserSummary { Name = CustomerName } : null;
+
+    [JsonIgnore]
     public UserSummary? Responsible => !string.IsNullOrEmpty(ResponsibleName) ? new UserSummary { Name = ResponsibleName } : null;
 }
 

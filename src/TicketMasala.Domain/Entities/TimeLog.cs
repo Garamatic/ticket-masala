@@ -15,7 +15,7 @@ public class TimeLog : BaseModel
     public string UserId { get; set; } = string.Empty;
 
     [Required]
-    [Range(0.1, 24.0, ErrorMessage = "Hours must be between 0.1 and 24")]
+    [Range(0.1, 168.0, ErrorMessage = "Hours must be between 0.1 and 168 (one week max per entry)")]
     public double Hours { get; set; }
 
     [Required]

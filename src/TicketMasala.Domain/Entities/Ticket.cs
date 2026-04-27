@@ -9,7 +9,6 @@ namespace TicketMasala.Domain.Entities;
 /// </summary>
 public class Ticket : BaseModel
 {
-    public Status TicketStatus { get; set; } = Common.Status.Pending;
     public TicketType? TicketType { get; set; }
 
     public string Description { get; set; } = string.Empty;
@@ -19,6 +18,12 @@ public class Ticket : BaseModel
 
     // GERDA AI fields
     public int EstimatedEffortPoints { get; set; } = 0;
+
+    /// <summary>
+    /// Runtime priority score calculated by GERDA AI (0-100 scale).
+    /// This is the primary property for business logic and display.
+    /// For database queries, use ComputedPriority which is generated from CustomFieldsJson.
+    /// </summary>
     public double PriorityScore { get; set; } = 0.0;
 
     [StringLength(1000)]
@@ -31,7 +36,17 @@ public class Ticket : BaseModel
     // --- RIGID COLUMNS (Indexed, Relational) ---
     public string DomainId { get; set; } = "IT"; // e.g., "IT", "LEGAL"
 
-    public string Status { get; set; } = "New"; // "New", "Triaged", "Done"
+    /// <summary>
+    /// Simplified lifecycle status for triage: "New", "Triaged", "Done".
+    /// Use this for basic status filtering. For workflow state, use TicketStatus.
+    /// </summary>
+    public string Status { get; set; } = "New";
+
+    /// <summary>
+    /// Workflow state for ticket processing (Pending, InProgress, Completed, etc.).
+    /// This is the primary status for business logic and GERDA workflow.
+    /// </summary>
+    public Status TicketStatus { get; set; } = Common.Status.Pending;
 
     public string Title { get; set; } = string.Empty;
 
@@ -94,6 +109,21 @@ public class Ticket : BaseModel
     public virtual ICollection<Ticket> SubTickets { get; set; } = new List<Ticket>();
     public virtual Ticket? ParentTicket { get; set; }
 
+    /// <summary>
+    /// Ensures Status and TicketStatus remain synchronized when TicketStatus changes.
+    /// Call this after modifying TicketStatus to update the simplified Status field.
+    /// </summary>
+    public void SyncStatus()
+    {
+        Status = TicketStatus switch
+        {
+            Common.Status.Pending => "New",
+            Common.Status.Assigned or Common.Status.InProgress => "Triaged",
+            Common.Status.Completed => "Done",
+            _ => "New"
+        };
+    }
+
     // Backwards-compatibility: ensure members have safe defaults
     public Ticket()
     {
@@ -102,6 +132,7 @@ public class Ticket : BaseModel
         DomainId = "IT";
         CustomFieldsJson = "{}";
         TicketStatus = Common.Status.Pending;
+        SyncStatus(); // Ensure Status is synchronized on creation
     }
 }
 

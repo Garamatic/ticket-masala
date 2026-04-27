@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.RateLimiting;
+using Polly;
 using Prometheus;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Web;
@@ -69,7 +70,36 @@ builder.AddMasalaCore();
 // ============================================
 var configBasePath = TicketMasala.Web.Configuration.ConfigurationPaths.GetConfigBasePath(builder.Environment.ContentRootPath);
 builder.Services.AddGerdaServices(builder.Environment, configBasePath);
-builder.Services.AddTransient<TicketMasala.Web.AI.IOpenAiService, TicketMasala.Web.AI.OpenAiService>();
+
+// Configure OpenRouter HTTP client with retry policy
+builder.Services.AddHttpClient("OpenRouter", client =>
+{
+    var apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY")
+        ?? builder.Configuration["OpenAI:ApiKey"]
+        ?? "";
+
+    var baseUrl = Environment.GetEnvironmentVariable("OPENAI_BASE_URL")
+        ?? builder.Configuration["OpenAI:BaseUrl"]
+        ?? "https://openrouter.ai/api/v1";
+
+    // Normalize base URL
+    if (!baseUrl.EndsWith("/v1", StringComparison.OrdinalIgnoreCase))
+    {
+        baseUrl = baseUrl.TrimEnd('/') + "/v1";
+    }
+
+    client.BaseAddress = new Uri(baseUrl);
+    client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
+    client.DefaultRequestHeaders.Add("HTTP-Referer", "https://ticketmasala.com");
+    client.DefaultRequestHeaders.Add("X-Title", "TicketMasala");
+    client.Timeout = TimeSpan.FromSeconds(60);
+})
+.AddTransientHttpErrorPolicy(policy => policy
+    .WaitAndRetryAsync(3, retryAttempt =>
+        TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
+
+// Register OpenAI service as singleton (reuses client, uses caching)
+builder.Services.AddSingleton<TicketMasala.Web.AI.IOpenAiService, TicketMasala.Web.AI.OpenAiService>();
 builder.Services.AddScoped<TicketMasala.Domain.Services.IExplainabilityService, TicketMasala.Web.Engine.GERDA.Explainability.ExplainabilityService>();
 
 // ============================================

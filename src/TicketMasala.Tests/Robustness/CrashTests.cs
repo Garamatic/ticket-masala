@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
 using Moq;
 using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Repositories;
 using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.AI;
 using TicketMasala.Web.Common;
@@ -23,7 +24,6 @@ using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.Facades;
 using TicketMasala.Web.Orchestrators;
-using TicketMasala.Domain.Repositories;
 using TicketMasala.Web.ViewModels.ApplicationUsers;
 using Xunit;
 

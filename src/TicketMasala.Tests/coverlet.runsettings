@@ -9,6 +9,9 @@
           <ExcludeByAttribute>GeneratedCodeAttribute,CompilerGeneratedAttribute</ExcludeByAttribute>
           <SkipAutoProps>true</SkipAutoProps>
           <DeterministicReport>false</DeterministicReport>
+          <!-- Coverage thresholds - initially disabled until coverage improves -->
+          <!-- <Threshold>50</Threshold> -->
+          <!-- <ThresholdType>line</ThresholdType> -->
         </Configuration>
       </DataCollector>
     </DataCollectors>

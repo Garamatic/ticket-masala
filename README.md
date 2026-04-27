@@ -110,7 +110,8 @@ docker-compose up --build
 ### Developer Resources
 
 - **API Documentation:** Access the Swagger UI at `http://localhost:5054/swagger`
-- **Deployment Guide:** See `docs/deployment_guide.md` for production setup.
+- **Full Documentation:** See [docs/index.md](docs/index.md) for complete documentation
+- **Deployment Guide:** See [docs/deployment_guide.md](docs/deployment_guide.md) for production setup
 
 ---
 

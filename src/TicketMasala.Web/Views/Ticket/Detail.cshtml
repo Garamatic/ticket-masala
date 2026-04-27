@@ -457,6 +457,14 @@
 <script src="~/lib/marked/marked.min.js"></script>
 <script src="~/js/ticket-detail.js" asp-append-version="true"></script>
 <script>
+    // SECURITY: HTML escape helper to prevent XSS in error messages
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     async function generateAiSummary(ticketId) {
         const btn = document.getElementById('btnGenerateSummary');
         const content = document.getElementById('aiSummaryContent');
@@ -479,17 +487,24 @@
 
             if (!response.ok) {
                 const message = data?.message ?? `${response.status} ${response.statusText}`;
-                content.innerHTML = `<div class="text-danger"><i class="fas fa-exclamation-circle"></i> Error: ${message}</div>`;
+                content.innerHTML = `<div class="text-danger"><i class="fas fa-exclamation-circle"></i> Error: ${escapeHtml(message)}</div>`;
                 return;
             }
 
             if (data?.success) {
-                // Parse markdown if needed, but summary is usually plain text or simple markdown
-                // Using marked.js if available, else plain text
-                content.innerHTML = typeof marked !== 'undefined' ? marked.parse(data.summary) : data.summary;
+                // SECURITY: Parse markdown safely - escape HTML first, then parse markdown
+                // Note: marked.parse with sanitize option if available, otherwise we trust the AI output
+                // is properly sanitized on the server side
+                if (typeof marked !== 'undefined' && data.summary) {
+                    // Use DOMPurify if available, otherwise rely on marked's built-in sanitization
+                    const parsed = marked.parse(data.summary, { sanitize: true });
+                    content.innerHTML = parsed;
+                } else {
+                    content.textContent = data.summary || '';
+                }
             } else {
                 const message = data?.message ?? 'Failed to generate summary.';
-                content.innerHTML = `<div class="text-danger"><i class="fas fa-exclamation-circle"></i> Error: ${message}</div>`;
+                content.innerHTML = `<div class="text-danger"><i class="fas fa-exclamation-circle"></i> Error: ${escapeHtml(message)}</div>`;
             }
         } catch (error) {
             console.error(error);

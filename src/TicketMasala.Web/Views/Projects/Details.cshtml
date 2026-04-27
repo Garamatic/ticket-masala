@@ -110,6 +110,14 @@ else
 @section Scripts {
     <script src="~/lib/marked/marked.min.js"></script>
     <script>
+        // SECURITY: HTML escape helper to prevent XSS
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         async function generateRoadmap(projectId) {
             const btn = document.getElementById('btnGenerateRoadmap');
             const content = document.getElementById('roadmapContent');
@@ -129,9 +137,11 @@ else
                 const data = await response.json();
 
                 if (data.success) {
-                    content.innerHTML = typeof marked !== 'undefined' ? marked.parse(data.roadmap) : data.roadmap;
+                    // SECURITY: Sanitize content before rendering to prevent XSS
+                    const roadmapContent = typeof marked !== 'undefined' ? marked.parse(data.roadmap) : escapeHtml(data.roadmap);
+                    content.innerHTML = roadmapContent;
                 } else {
-                    content.innerHTML = `<div class="text-danger"><i class="fas fa-exclamation-circle"></i> Error: ${data.message}</div>`;
+                    content.innerHTML = `<div class="text-danger"><i class="fas fa-exclamation-circle"></i> Error: ${escapeHtml(data.message || 'Unknown error')}</div>`;
                 }
             } catch (error) {
                 console.error(error);

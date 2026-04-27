@@ -31,7 +31,11 @@
                     <div class="mb-3">
                         <label class="text-muted small">Description</label>
                         <div class="p-3 bg-light rounded" style="max-height: 200px; overflow-y: auto;">
-                            @Html.Raw(Model.TicketDescription.Replace("\n", "<br/>"))
+                            @* SECURITY: Using @: preserves newlines, HTML encoding prevents XSS *@
+                            @foreach (var line in Model.TicketDescription?.Split('\n') ?? Array.Empty<string>())
+                            {
+                                @:@line<br />
+                            }
                         </div>
                     </div>
                 </div>

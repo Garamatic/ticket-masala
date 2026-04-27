@@ -1,8 +1,8 @@
-using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Common;
-using TicketMasala.Web.Data.Seeding;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Data.Seeding;
 
 namespace TicketMasala.Web.Data;
 
@@ -42,18 +42,15 @@ public class DbSeeder
 
     public async Task SeedAsync()
     {
-        Console.WriteLine("========== DATABASE SEEDING STARTED ==========");
         _logger.LogInformation("========== DATABASE SEEDING STARTED ==========");
 
         // Apply pending migrations (EF Core only)
         try
         {
-            Console.WriteLine("Applying pending database migrations...");
             _logger.LogInformation("Applying pending database migrations...");
             if (_context.Database.IsRelational())
             {
                 await _context.Database.MigrateAsync();
-                Console.WriteLine("Migrations applied successfully.");
             }
             else
             {
@@ -62,7 +59,6 @@ public class DbSeeder
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error applying migrations: {ex}");
             _logger.LogError(ex, "Error applying migrations");
         }
 
@@ -70,7 +66,6 @@ public class DbSeeder
         var userCount = await _context.Users.CountAsync();
         var kbCount = await _context.KnowledgeBaseArticles.CountAsync();
 
-        Console.WriteLine($"Current Database Status - Users: {userCount}, KB Articles: {kbCount}");
         _logger.LogInformation("Current Database Status - Users: {UserCount}, KB Articles: {KbCount}", userCount, kbCount);
 
         // We removed the global early exit here to allow individual strategies (like UserSeedStrategy)
@@ -78,10 +73,10 @@ public class DbSeeder
         // Each strategy is now responsible for its own idempotency checks.
 
         // Execute all seed strategies in order
-        Console.WriteLine($"DEBUG: DbSeeder found {_seedStrategies.Count()} strategies registered.");
+        _logger.LogDebug("DbSeeder found {Count} strategies registered", _seedStrategies.Count());
         foreach (var s in _seedStrategies)
         {
-            Console.WriteLine($"DEBUG: Registered Strategy: {s.GetType().Name}");
+            _logger.LogDebug("Registered Strategy: {Strategy}", s.GetType().Name);
         }
 
         foreach (var strategy in _seedStrategies)
@@ -92,25 +87,21 @@ public class DbSeeder
             {
                 if (await strategy.ShouldSeedAsync())
                 {
-                    Console.WriteLine($"Executing seed strategy: {strategyName}");
                     _logger.LogInformation("Executing seed strategy: {Strategy}", strategyName);
                     await strategy.SeedAsync();
                 }
                 else
                 {
-                    Console.WriteLine($"Skipping seed strategy (already seeded): {strategyName}");
                     _logger.LogDebug("Skipping seed strategy (already seeded): {Strategy}", strategyName);
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error executing seed strategy {strategyName}: {ex}");
                 _logger.LogError(ex, "Error executing seed strategy: {Strategy}", strategyName);
                 // Continue with other strategies even if one fails
             }
         }
 
-        Console.WriteLine("========== DATABASE SEEDING COMPLETED ==========");
         _logger.LogInformation("========== DATABASE SEEDING COMPLETED ==========");
     }
 }

@@ -12,12 +12,14 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.WebUtilities;
 using TicketMasala.Domain.Entities;
 
 namespace TicketMasala.Web.Areas.Identity.Pages.Account;
 
 [AllowAnonymous]
+[EnableRateLimiting("login")]
 public class ForgotPasswordModel : PageModel
 {
     private readonly UserManager<ApplicationUser> _userManager;

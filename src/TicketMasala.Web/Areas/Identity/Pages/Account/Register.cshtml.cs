@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using TicketMasala.Domain.Common;
@@ -23,6 +24,7 @@ using TicketMasala.Domain.Entities;
 namespace TicketMasala.Web.Areas.Identity.Pages.Account;
 
 [AllowAnonymous]
+[EnableRateLimiting("login")]
 public class RegisterModel : PageModel
 {
     private readonly SignInManager<ApplicationUser> _signInManager;

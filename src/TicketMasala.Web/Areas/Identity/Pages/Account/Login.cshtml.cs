@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
 using TicketMasala.Domain.Entities;
 
@@ -20,6 +21,7 @@ using TicketMasala.Domain.Entities;
 namespace TicketMasala.Web.Areas.Identity.Pages.Account;
 
 [AllowAnonymous]
+[EnableRateLimiting("login")]
 public class LoginModel : PageModel
 {
     private readonly SignInManager<ApplicationUser> _signInManager;
@@ -106,10 +108,12 @@ public class LoginModel : PageModel
         ReturnUrl = returnUrl;
 
         // Environment-based Auto-Login (for Cloud Deploys)
+        // SECURITY: Only allow auto-login in non-Production environments
         var envEmail = Environment.GetEnvironmentVariable("MASALA_AUTOLOGIN_EMAIL");
         var envPassword = Environment.GetEnvironmentVariable("MASALA_AUTOLOGIN_PASSWORD");
+        var isProduction = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production";
 
-        if (string.IsNullOrEmpty(demoEmail) && !string.IsNullOrEmpty(envEmail) && !string.IsNullOrEmpty(envPassword))
+        if (!isProduction && string.IsNullOrEmpty(demoEmail) && !string.IsNullOrEmpty(envEmail) && !string.IsNullOrEmpty(envPassword))
         {
             demoEmail = envEmail;
             demoPassword = envPassword;
@@ -117,7 +121,8 @@ public class LoginModel : PageModel
         }
 
         // DEMO: Auto-Login Logic
-        if (!string.IsNullOrEmpty(demoEmail))
+        // SECURITY: Only allow auto-login via query params in non-Production environments
+        if (!isProduction && !string.IsNullOrEmpty(demoEmail))
         {
             Input = new InputModel
             {

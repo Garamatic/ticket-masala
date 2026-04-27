@@ -42,20 +42,8 @@ public static class IdentityServiceCollectionExtensions
         return services;
     }
 
-    /// <summary>
-    /// Configures the application cookie for authentication.
-    /// </summary>
-    public static IServiceCollection ConfigureMasalaCookie(this IServiceCollection services)
-    {
-        services.ConfigureApplicationCookie(options =>
-        {
-            options.Cookie.HttpOnly = true;
-            options.ExpireTimeSpan = TimeSpan.FromHours(8);
-            options.LoginPath = "/Identity/Account/Login";
-            options.AccessDeniedPath = "/Identity/Account/AccessDenied";
-            options.SlidingExpiration = true;
-        });
-
-        return services;
-    }
+    // NOTE: Cookie configuration moved to WebApplicationBuilderExtensions.AddMasalaCore()
+    // to have access to IWebHostEnvironment for conditional SecurePolicy.
+    // This extension is kept for backward compatibility if other code references it,
+    // but new code should configure cookies in AddMasalaCore.
 }

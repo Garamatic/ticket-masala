@@ -1,13 +1,13 @@
-using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Common;
-using TicketMasala.Web.Engine.GERDA.Tickets;
-using TicketMasala.Web.Data;
+using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web;
-using TicketMasala.Web.Utilities;
-using System.Text.Json;
 using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.Data;
+using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.Utilities;
 
 namespace TicketMasala.Web.Engine.Ingestion;
 
@@ -19,6 +19,7 @@ public class TicketGenerator : ITicketGenerator
     private readonly MasalaDbContext _context;
     private readonly ILogger<TicketGenerator> _logger;
     private readonly ISystemClock _clock;
+    private readonly Random _random = new();
 
     public TicketGenerator(
         ITicketWorkflowService ticketWorkflowService,
@@ -155,9 +156,10 @@ public class TicketGenerator : ITicketGenerator
     {
         // Get a random customer
         var customers = await _userManager.GetUsersInRoleAsync(Constants.RoleCustomer);
-        if (customers.Count == 0) return;
+        if (customers.Count == 0)
+            return;
 
-        var randomCustomer = customers[new Random().Next(customers.Count)];
+        var randomCustomer = customers[_random.Next(customers.Count)];
 
         // Get a random project safely
         Project? project = null;
@@ -170,7 +172,7 @@ public class TicketGenerator : ITicketGenerator
 
         if (customerProjectIds.Any())
         {
-            var randomProjectId = customerProjectIds[new Random().Next(customerProjectIds.Count)];
+            var randomProjectId = customerProjectIds[_random.Next(customerProjectIds.Count)];
             project = await _context.Projects
                 .Include(p => p.ProjectManager)
                 .FirstOrDefaultAsync(p => p.Guid == randomProjectId, cancellationToken);
@@ -182,14 +184,15 @@ public class TicketGenerator : ITicketGenerator
             var allProjectIds = await _context.Projects.Select(p => p.Guid).ToListAsync(cancellationToken);
             if (allProjectIds.Any())
             {
-                var randomProjectId = allProjectIds[new Random().Next(allProjectIds.Count)];
+                var randomProjectId = allProjectIds[_random.Next(allProjectIds.Count)];
                 project = await _context.Projects
                    .Include(p => p.ProjectManager)
                    .FirstOrDefaultAsync(p => p.Guid == randomProjectId, cancellationToken);
             }
         }
 
-        if (project == null) return; // No projects exist
+        if (project == null)
+            return; // No projects exist
 
         var title = RandomDataHelper.GenerateTicketTitle();
         var description = RandomDataHelper.GenerateTicketDescription();
@@ -200,11 +203,11 @@ public class TicketGenerator : ITicketGenerator
             customerId: randomCustomer.Id,
             responsibleId: null, // Let GERDA or manual assignment handle this
             projectGuid: project.Guid,
-            completionTarget: _clock.UtcNow.AddDays(new Random().Next(1, 14))
+            completionTarget: _clock.UtcNow.AddDays(_random.Next(1, 14))
         );
 
         // Enhance with random priority
-        ticket.PriorityScore = new Random().NextDouble() * 100;
+        ticket.PriorityScore = _random.NextDouble() * 100;
 
         await _ticketWorkflowService.UpdateTicketAsync(ticket);
 

@@ -19,7 +19,7 @@ public class TicketGenerator : ITicketGenerator
     private readonly MasalaDbContext _context;
     private readonly ILogger<TicketGenerator> _logger;
     private readonly ISystemClock _clock;
-    private readonly Random _random = new();
+
 
     public TicketGenerator(
         ITicketWorkflowService ticketWorkflowService,
@@ -159,7 +159,7 @@ public class TicketGenerator : ITicketGenerator
         if (customers.Count == 0)
             return;
 
-        var randomCustomer = customers[_random.Next(customers.Count)];
+        var randomCustomer = customers[Random.Shared.Next(customers.Count)];
 
         // Get a random project safely
         Project? project = null;
@@ -172,7 +172,7 @@ public class TicketGenerator : ITicketGenerator
 
         if (customerProjectIds.Any())
         {
-            var randomProjectId = customerProjectIds[_random.Next(customerProjectIds.Count)];
+            var randomProjectId = customerProjectIds[Random.Shared.Next(customerProjectIds.Count)];
             project = await _context.Projects
                 .Include(p => p.ProjectManager)
                 .FirstOrDefaultAsync(p => p.Guid == randomProjectId, cancellationToken);
@@ -184,7 +184,7 @@ public class TicketGenerator : ITicketGenerator
             var allProjectIds = await _context.Projects.Select(p => p.Guid).ToListAsync(cancellationToken);
             if (allProjectIds.Any())
             {
-                var randomProjectId = allProjectIds[_random.Next(allProjectIds.Count)];
+                var randomProjectId = allProjectIds[Random.Shared.Next(allProjectIds.Count)];
                 project = await _context.Projects
                    .Include(p => p.ProjectManager)
                    .FirstOrDefaultAsync(p => p.Guid == randomProjectId, cancellationToken);
@@ -203,11 +203,11 @@ public class TicketGenerator : ITicketGenerator
             customerId: randomCustomer.Id,
             responsibleId: null, // Let GERDA or manual assignment handle this
             projectGuid: project.Guid,
-            completionTarget: _clock.UtcNow.AddDays(_random.Next(1, 14))
+            completionTarget: _clock.UtcNow.AddDays(Random.Shared.Next(1, 14))
         );
 
         // Enhance with random priority
-        ticket.PriorityScore = _random.NextDouble() * 100;
+        ticket.PriorityScore = Random.Shared.NextDouble() * 100;
 
         await _ticketWorkflowService.UpdateTicketAsync(ticket);
 

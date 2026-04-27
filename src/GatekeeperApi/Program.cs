@@ -1,3 +1,4 @@
+using System.IO;
 using System.Threading.Channels;
 
 namespace GatekeeperApi;
@@ -13,8 +14,8 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Register the ingestion queue and worker
-        builder.Services.AddSingleton<IngestionQueue<IngestionRequest>>();
+        // Register the ingestion queue (bounded to prevent memory exhaustion)
+        builder.Services.AddSingleton(_ => new IngestionQueue(capacity: 10000));
         builder.Services.AddHostedService<IngestionWorker>();
 
         // Note: ITicketWorkflowService implementation is loaded from plugin or external reference
@@ -23,23 +24,60 @@ public class Program
 
         var app = builder.Build();
 
-        var apiKey = builder.Configuration["Gatekeeper:ApiKey"] ?? "masala-secret-key";
+        var apiKey = builder.Configuration["Gatekeeper:ApiKey"];
+        if (string.IsNullOrEmpty(apiKey))
+        {
+            throw new InvalidOperationException(
+                "Gatekeeper:ApiKey must be configured. Set it via environment variable or appsettings.json");
+        }
 
-        app.MapPost("/api/ingest", async (HttpContext context, IngestionQueue<IngestionRequest> queue) =>
+        // Configure request size limit (10MB to prevent abuse)
+        app.Use(async (context, next) =>
+        {
+            context.Request.Body = new Microsoft.AspNetCore.WebUtilities.FileBufferingReadStream(
+                context.Request.Body, 10 * 1024 * 1024, null, Path.GetTempPath());
+            await next();
+        });
+
+        app.MapPost("/api/ingest", async (HttpContext context, IngestionQueue queue, ILogger<Program> logger) =>
         {
             if (!context.Request.Headers.TryGetValue("X-Api-Key", out var extractedValue) ||
                 extractedValue != apiKey)
             {
+                logger.LogWarning("Unauthorized ingestion attempt from {RemoteIp}",
+                    context.Connection.RemoteIpAddress);
                 return Results.Unauthorized();
             }
 
             var request = await context.Request.ReadFromJsonAsync<IngestionRequest>();
-            if (request == null || request.Data == null)
+            if (request == null)
             {
-                return Results.BadRequest("Invalid payload");
+                logger.LogWarning("Null ingestion request from {RemoteIp}",
+                    context.Connection.RemoteIpAddress);
+                return Results.BadRequest("Request body is required");
             }
 
-            await queue.EnqueueAsync(request);
+            if (request.Data == null || request.Data.Count == 0)
+            {
+                logger.LogWarning("Ingestion request with empty data from {RemoteIp}",
+                    context.Connection.RemoteIpAddress);
+                return Results.BadRequest("Data dictionary is required and cannot be empty");
+            }
+
+            var enqueued = await queue.EnqueueAsync(request, context.RequestAborted);
+            if (!enqueued)
+            {
+                logger.LogError("Queue full - ingestion request dropped from {RemoteIp}",
+                    context.Connection.RemoteIpAddress);
+                return Results.StatusCode(503); // Service Unavailable
+            }
+
+            logger.LogInformation(
+                "Ingestion request enqueued: Template={Template}, Keys={KeyCount}, RemoteIp={RemoteIp}",
+                request.Template,
+                request.Data.Count,
+                context.Connection.RemoteIpAddress);
+
             return Results.Accepted();
         });
 

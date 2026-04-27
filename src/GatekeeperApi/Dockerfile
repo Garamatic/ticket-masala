@@ -4,7 +4,6 @@ WORKDIR /src
 
 # Copy csproj and restore
 COPY ["src/GatekeeperApi/GatekeeperApi.csproj", "GatekeeperApi/"]
-COPY ["src/TicketMasala.Web/TicketMasala.Web.csproj", "TicketMasala.Web/"]
 COPY ["src/TicketMasala.Domain/TicketMasala.Domain.csproj", "TicketMasala.Domain/"]
 RUN dotnet restore "GatekeeperApi/GatekeeperApi.csproj"
 

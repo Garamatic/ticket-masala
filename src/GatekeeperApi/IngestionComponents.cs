@@ -3,25 +3,30 @@ using System.Threading.Channels;
 namespace GatekeeperApi;
 
 /// <summary>
-/// Thread-safe queue for ingestion requests using System.Threading.Channels.
+/// Thread-safe bounded queue for ingestion requests using System.Threading.Channels.
+/// Prevents memory exhaustion by limiting the number of queued items.
 /// </summary>
-public class IngestionQueue<T>
+public class IngestionQueue
 {
-    private readonly Channel<T> _queue;
+    private readonly Channel<IngestionRequest> _queue;
 
-    public IngestionQueue()
+    public IngestionQueue(int capacity = 10000)
     {
-        _queue = Channel.CreateUnbounded<T>();
+        var options = new BoundedChannelOptions(capacity)
+        {
+            FullMode = BoundedChannelFullMode.DropOldest
+        };
+        _queue = Channel.CreateBounded<IngestionRequest>(options);
     }
 
-    public async ValueTask EnqueueAsync(T item)
+    public ValueTask<bool> EnqueueAsync(IngestionRequest item, CancellationToken cancellationToken = default)
     {
         if (item == null)
             throw new ArgumentNullException(nameof(item));
-        await _queue.Writer.WriteAsync(item);
+        return new ValueTask<bool>(_queue.Writer.TryWrite(item));
     }
 
-    public async ValueTask<T> DequeueAsync(CancellationToken cancellationToken)
+    public async ValueTask<IngestionRequest> DequeueAsync(CancellationToken cancellationToken)
     {
         return await _queue.Reader.ReadAsync(cancellationToken);
     }
@@ -35,11 +40,11 @@ public class IngestionQueue<T>
 public class IngestionWorker : BackgroundService
 {
     private readonly ILogger<IngestionWorker> _logger;
-    private readonly IngestionQueue<IngestionRequest> _queue;
+    private readonly IngestionQueue _queue;
 
     public IngestionWorker(
         ILogger<IngestionWorker> logger,
-        IngestionQueue<IngestionRequest> queue)
+        IngestionQueue queue)
     {
         _logger = logger;
         _queue = queue;

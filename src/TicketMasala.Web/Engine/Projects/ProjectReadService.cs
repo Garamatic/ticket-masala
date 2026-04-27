@@ -5,14 +5,14 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Repositories;
+using TicketMasala.Web.Utilities;
 using TicketMasala.Web.ViewModels.Projects;
 using TicketMasala.Web.ViewModels.Tickets;
-using TicketMasala.Web.Abstractions;
-using TicketMasala.Web.Utilities;
 
 namespace TicketMasala.Web.Engine.Projects;
 
@@ -208,9 +208,7 @@ public class ProjectReadService : IProjectReadService
                     Name = p.Name,
                     Description = p.Description,
                     Status = p.Status,
-                    ProjectManagerName = p.ProjectManager != null
-                        ? $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}"
-                        : "Not Assigned",
+                    ProjectManagerName = p.ProjectManager != null ? p.ProjectManager.ToFullName() : "Not Assigned",
                     TicketCount = p.Tasks.Count
                 },
                 Tasks = p.Tasks.Select(t => new TicketViewModel
@@ -218,12 +216,8 @@ public class ProjectReadService : IProjectReadService
                     Guid = t.Guid,
                     Description = t.Description,
                     TicketStatus = t.TicketStatus,
-                    ResponsibleName = t.Responsible != null
-                        ? $"{t.Responsible.FirstName} {t.Responsible.LastName}"
-                        : "Not Assigned",
-                    CustomerName = t.Customer != null
-                        ? $"{t.Customer.FirstName} {t.Customer.LastName}"
-                        : "Unknown",
+                    ResponsibleName = t.Responsible != null ? t.Responsible.ToFullName() : "Not Assigned",
+                    CustomerName = t.Customer != null ? t.Customer.ToFullName() : "Unknown",
                     CompletionTarget = t.CompletionTarget,
                     CreationDate = t.CreationDate
                 }).ToList()
@@ -253,9 +247,7 @@ public class ProjectReadService : IProjectReadService
                     Name = p.Name,
                     Description = p.Description,
                     Status = p.Status,
-                    ProjectManagerName = p.ProjectManager != null
-                        ? $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}"
-                        : "Not Assigned",
+                    ProjectManagerName = p.ProjectManager != null ? p.ProjectManager.ToFullName() : "Not Assigned",
                     TicketCount = p.Tasks.Count
                 },
                 Tasks = p.Tasks.Select(t => new TicketViewModel
@@ -263,12 +255,8 @@ public class ProjectReadService : IProjectReadService
                     Guid = t.Guid,
                     Description = t.Description,
                     TicketStatus = t.TicketStatus,
-                    ResponsibleName = t.Responsible != null
-                        ? $"{t.Responsible.FirstName} {t.Responsible.LastName}"
-                        : "Not Assigned",
-                    CustomerName = t.Customer != null
-                        ? $"{t.Customer.FirstName} {t.Customer.LastName}"
-                        : "Unknown",
+                    ResponsibleName = t.Responsible != null ? t.Responsible.ToFullName() : "Not Assigned",
+                    CustomerName = t.Customer != null ? t.Customer.ToFullName() : "Unknown",
                     CompletionTarget = t.CompletionTarget,
                     CreationDate = t.CreationDate
                 }).ToList()
@@ -345,7 +333,8 @@ public class ProjectReadService : IProjectReadService
         }
 
         var subject = ticket.Description.Split('\n')[0];
-        if (subject.Length > 100) subject = subject.Substring(0, 100) + "...";
+        if (subject.Length > 100)
+            subject = subject.Substring(0, 100) + "...";
 
         return new CreateProjectFromTicketViewModel
         {

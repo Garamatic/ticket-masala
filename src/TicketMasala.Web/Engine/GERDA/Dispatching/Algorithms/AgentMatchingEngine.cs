@@ -41,7 +41,7 @@ public class AgentMatchingEngine
             {
                 // Fallback: try any available agent (skill mismatch but better than nothing)
                 candidates = agents.Where(a => a.IsAvailable).ToList();
-                
+
                 if (!candidates.Any())
                 {
                     result.ErrorMessage = "No available agents for assignment";
@@ -118,7 +118,7 @@ public class AgentMatchingEngine
     private decimal CalculateWorkloadBalance(Agent agent)
     {
         var utilization = agent.UtilizationRatio;
-        
+
         if (utilization < _config.OptimalUtilizationThreshold)
         {
             // Below optimal: 100 - (utilization * 50)

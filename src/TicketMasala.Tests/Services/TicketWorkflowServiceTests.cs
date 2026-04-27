@@ -1,20 +1,20 @@
-using TicketMasala.Web.Engine.GERDA.Tickets;
-using Xunit;
-using Moq;
-using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore;
-using TicketMasala.Web.Engine.Core;
-using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Common;
-using TicketMasala.Web.Repositories;
-using TicketMasala.Web.Observers;
-using TicketMasala.Domain.Data;
 using Microsoft.AspNetCore.Http;
-using TicketMasala.Web.Engine.Compiler;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Moq;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Data;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Data;
+using TicketMasala.Web.Engine.Compiler;
+using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.GERDA.Configuration;
+using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Engine.Security;
+using TicketMasala.Web.Observers;
+using TicketMasala.Web.Repositories;
 using TicketMasala.Web.Services;
+using Xunit;
 
 namespace TicketMasala.Tests.Services;
 
@@ -62,7 +62,8 @@ public class TicketWorkflowServiceTests
             .Callback((Ticket t) =>
             {
                 var existing = context.Tickets.Find(t.Guid);
-                if (existing != null) context.Entry(existing).CurrentValues.SetValues(t);
+                if (existing != null)
+                    context.Entry(existing).CurrentValues.SetValues(t);
             })
             .Returns(Task.CompletedTask);
 

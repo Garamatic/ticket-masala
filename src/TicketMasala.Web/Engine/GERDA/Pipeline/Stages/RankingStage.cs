@@ -27,7 +27,7 @@ public class RankingStage : IGerdaStage
 
         var priorityScore = await _rankingService.CalculatePriorityScoreAsync(ticketGuid);
         context.PriorityScore = priorityScore;
-        
+
         _logger.LogInformation(
             "GERDA-R: Ticket {TicketGuid} priority score: {Score}",
             ticketGuid, priorityScore);

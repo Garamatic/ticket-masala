@@ -14,7 +14,8 @@ public static class FieldExtractor
 {
     public static double GetNumber(string? json, string key)
     {
-        if (string.IsNullOrEmpty(json)) return 0;
+        if (string.IsNullOrEmpty(json))
+            return 0;
         try
         {
             using var doc = JsonDocument.Parse(json);
@@ -32,7 +33,8 @@ public static class FieldExtractor
 
     public static string? GetString(string? json, string key)
     {
-        if (string.IsNullOrEmpty(json)) return null;
+        if (string.IsNullOrEmpty(json))
+            return null;
         try
         {
             using var doc = JsonDocument.Parse(json);
@@ -50,14 +52,17 @@ public static class FieldExtractor
 
     public static bool GetBool(string? json, string key)
     {
-        if (string.IsNullOrEmpty(json)) return false;
+        if (string.IsNullOrEmpty(json))
+            return false;
         try
         {
             using var doc = JsonDocument.Parse(json);
             if (doc.RootElement.TryGetProperty(key, out var prop))
             {
-                if (prop.ValueKind == JsonValueKind.True) return true;
-                if (prop.ValueKind == JsonValueKind.False) return false;
+                if (prop.ValueKind == JsonValueKind.True)
+                    return true;
+                if (prop.ValueKind == JsonValueKind.False)
+                    return false;
 
                 // Fallback: Check if string "true"
                 if (prop.ValueKind == JsonValueKind.String)
@@ -108,7 +113,7 @@ public class CachedFieldExtractor : IDisposable
 
     public double GetNumber(string key)
     {
-        if (_doc?.RootElement.TryGetProperty(key, out var prop) == true 
+        if (_doc?.RootElement.TryGetProperty(key, out var prop) == true
             && prop.ValueKind == JsonValueKind.Number)
         {
             return prop.GetDouble();
@@ -129,8 +134,10 @@ public class CachedFieldExtractor : IDisposable
     {
         if (_doc?.RootElement.TryGetProperty(key, out var prop) == true)
         {
-            if (prop.ValueKind == JsonValueKind.True) return true;
-            if (prop.ValueKind == JsonValueKind.False) return false;
+            if (prop.ValueKind == JsonValueKind.True)
+                return true;
+            if (prop.ValueKind == JsonValueKind.False)
+                return false;
 
             if (prop.ValueKind == JsonValueKind.String)
             {
@@ -142,7 +149,8 @@ public class CachedFieldExtractor : IDisposable
 
     public void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+            return;
         _doc?.Dispose();
         _disposed = true;
     }

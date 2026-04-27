@@ -1,13 +1,13 @@
-using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Common;
-using TicketMasala.Web.Engine.GERDA.Models;
-using TicketMasala.Web.Engine.GERDA.Features;
-using TicketMasala.Web.Engine.GERDA.Configuration;
-using TicketMasala.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.ML;
 using Microsoft.ML.Data;
 using Microsoft.ML.Trainers;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Data;
+using TicketMasala.Web.Engine.GERDA.Configuration;
+using TicketMasala.Web.Engine.GERDA.Features;
+using TicketMasala.Web.Engine.GERDA.Models;
 
 namespace TicketMasala.Web.Engine.GERDA.Dispatching;
 
@@ -49,7 +49,7 @@ public class MatrixFactorizationDispatchingStrategy : IDispatchingStrategy
         _modelPath = Path.Combine(AppContext.BaseDirectory, "gerda_dispatch_model.zip");
     }
 
-    public DateTime? LastTrained 
+    public DateTime? LastTrained
     {
         get
         {
@@ -106,7 +106,6 @@ public class MatrixFactorizationDispatchingStrategy : IDispatchingStrategy
         try
         {
             // Get current workload for each agent
-            var now = DateTime.UtcNow;
             var agentWorkloads = await _context.Tickets
                 .Where(t => t.ResponsibleId != null)
                 .Where(t => t.TicketStatus != Status.Completed && t.TicketStatus != Status.Failed)
@@ -220,7 +219,7 @@ public class MatrixFactorizationDispatchingStrategy : IDispatchingStrategy
 
                 // Generate Explanations (Reasons)
                 var result = new DispatchResult(employee.Id!, adjustedScore);
-                
+
                 // 1. Workload
                 if (workloadPenalty < 0.2)
                 {
@@ -239,7 +238,7 @@ public class MatrixFactorizationDispatchingStrategy : IDispatchingStrategy
 
                 // 3. Expertise/Skill Match
                 // If FTS was used and returned a score (negative usually means match in SQLite rank, but implementation treated it as positive/existence check)
-                if (ftsScore != 0) 
+                if (ftsScore != 0)
                 {
                     result.Reasons.Add($"Skill Match (FTS Rank: {ftsScore:F2})");
                 }
@@ -272,7 +271,7 @@ public class MatrixFactorizationDispatchingStrategy : IDispatchingStrategy
                     ticket,
                     employee,
                     customer);
-                
+
                 scoredAgents.Add(result);
             }
 
@@ -374,15 +373,21 @@ public class MatrixFactorizationDispatchingStrategy : IDispatchingStrategy
 
     private float CalculateImplicitRating(Status status, DateTime? completionDate, DateTime creationDate)
     {
-        if (status == Status.Failed) return 1.0f;
-        if (!completionDate.HasValue) return 3.0f;
+        if (status == Status.Failed)
+            return 1.0f;
+        if (!completionDate.HasValue)
+            return 3.0f;
 
         var resolutionTime = (completionDate.Value - creationDate).TotalHours;
 
-        if (resolutionTime < 4) return 5.0f;
-        if (resolutionTime < 24) return 4.0f;
-        if (resolutionTime < 72) return 3.0f;
-        if (resolutionTime < 168) return 2.0f;
+        if (resolutionTime < 4)
+            return 5.0f;
+        if (resolutionTime < 24)
+            return 4.0f;
+        if (resolutionTime < 72)
+            return 3.0f;
+        if (resolutionTime < 168)
+            return 2.0f;
         return 1.0f;
     }
 
@@ -397,19 +402,21 @@ public class MatrixFactorizationDispatchingStrategy : IDispatchingStrategy
             .ToDictionaryAsync(x => x.AgentId, x => x.Count);
 
         var results = new List<DispatchResult>();
-        
-        foreach(var e in employees)
+
+        foreach (var e in employees)
         {
-            if (string.IsNullOrEmpty(e.Id)) continue;
-            
+            if (string.IsNullOrEmpty(e.Id))
+                continue;
+
             var workload = agentWorkloads.GetValueOrDefault(e.Id, 0);
             var score = 1.0 - (workload / (double)_config.GerdaAI.Dispatching.MaxAssignedTicketsPerAgent);
-            
+
             var result = new DispatchResult(e.Id, score);
             result.Reasons.Add("Workload Balancing Fallback");
-            
-            if (workload == 0) result.Reasons.Add("Fully Available");
-            
+
+            if (workload == 0)
+                result.Reasons.Add("Fully Available");
+
             results.Add(result);
         }
 
@@ -436,7 +443,8 @@ public class MatrixFactorizationDispatchingStrategy : IDispatchingStrategy
 
         foreach (var employee in employees)
         {
-            if (string.IsNullOrEmpty(employee.Id)) continue;
+            if (string.IsNullOrEmpty(employee.Id))
+                continue;
 
             var workload = agentWorkloads.GetValueOrDefault(employee.Id, 0);
             if (workload >= _config.GerdaAI.Dispatching.MaxAssignedTicketsPerAgent)

@@ -1,9 +1,9 @@
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 using TicketMasala.Web.Extensions;
 
 namespace GatekeeperApi
@@ -21,7 +21,7 @@ namespace GatekeeperApi
             // Register TicketMasala services needed for ingestion
             // We use the same extensions as the Web app to ensure consistency
             builder.Services.AddMasalaDatabase(builder.Configuration, builder.Environment);
-            
+
             // Replaced individual registrations with the core extension
             builder.AddMasalaCore();
 

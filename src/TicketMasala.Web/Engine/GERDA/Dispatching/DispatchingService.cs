@@ -1,15 +1,15 @@
-using TicketMasala.Web.Data;
-using TicketMasala.Web.Engine.GERDA.Models;
-using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Common;
-using TicketMasala.Web.Engine.GERDA.Strategies;
-using TicketMasala.Web.Engine.GERDA.Dispatching.Algorithms;
-using TicketMasala.Web.Engine.GERDA.Dispatching.Models;
-using TicketMasala.Web.Engine.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.ML;
 using Microsoft.ML.Data;
 using Microsoft.ML.Trainers;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Data;
+using TicketMasala.Web.Engine.Common;
+using TicketMasala.Web.Engine.GERDA.Dispatching.Algorithms;
+using TicketMasala.Web.Engine.GERDA.Dispatching.Models;
+using TicketMasala.Web.Engine.GERDA.Models;
+using TicketMasala.Web.Engine.GERDA.Strategies;
 
 namespace TicketMasala.Web.Engine.GERDA.Dispatching;
 
@@ -175,7 +175,7 @@ public class DispatchingService : IDispatchingService
 
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("GERDA-D: Auto-dispatched ticket {TicketGuid} to agent {AgentId} (Score: {Score:F2})", 
+        _logger.LogInformation("GERDA-D: Auto-dispatched ticket {TicketGuid} to agent {AgentId} (Score: {Score:F2})",
             ticketGuid, recommendedAgent, bestMatch.Score);
         return true;
     }
@@ -191,21 +191,9 @@ public class DispatchingService : IDispatchingService
         {
             var strategyName = _strategySelector.GetDefaultStrategyName();
             var strategy = _strategyFactory.GetStrategy<IDispatchingStrategy, List<DispatchResult>>(strategyName);
-            
-            // Fire and forget background task
-            _ = Task.Run(async () => 
-            {
-                try 
-                {
-                    await strategy.RetrainModelAsync();
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Background model retraining failed");
-                }
-            });
-            
-            await Task.CompletedTask;
+
+            // Initiate background retraining - errors are logged by the strategy
+            await strategy.RetrainModelAsync();
         }
         catch (Exception ex)
         {
@@ -239,7 +227,7 @@ public class DispatchingService : IDispatchingService
         {
             var workItem = new TicketWorkItemAdapter(ticket);
             var result = _agentMatchingEngine.RecommendAgent(workItem, availableAgents);
-            
+
             if (string.IsNullOrEmpty(result.RecommendedAgentId))
             {
                 _logger.LogWarning("AgentMatchingEngine returned no recommendation for ticket {TicketGuid}", ticket.Guid);

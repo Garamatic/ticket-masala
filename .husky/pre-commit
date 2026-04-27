@@ -1,0 +1,51 @@
+#!/bin/sh
+# .NET Pre-commit Hook
+# Runs format check, build, and unit tests before allowing commits
+
+echo "🔍 Running pre-commit checks..."
+
+# Get list of staged C# files
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep '\.cs$' || true)
+
+if [ -n "$STAGED_FILES" ]; then
+    echo "📁 Checking staged C# files..."
+fi
+
+# Check dotnet format (verify no formatting issues)
+echo "🎨 Checking code formatting..."
+dotnet format --verify-no-changes --verbosity quiet
+if [ $? -ne 0 ]; then
+    echo "❌ Code formatting issues found. Run 'dotnet format' to fix."
+    exit 1
+fi
+echo "✅ Formatting check passed"
+
+# Build the solution
+echo "🔨 Building solution..."
+dotnet build TicketMasala.sln --no-restore --verbosity quiet
+if [ $? -ne 0 ]; then
+    echo "❌ Build failed. Fix compilation errors before committing."
+    exit 1
+fi
+echo "✅ Build passed"
+
+# Run tests (excluding flaky integration tests)
+# Integration tests with external dependencies are run in CI, not pre-commit
+echo "🧪 Running unit tests..."
+dotnet test src/TicketMasala.Tests/TicketMasala.Tests.csproj \
+    --no-build \
+    --verbosity minimal \
+    --filter "FullyQualifiedName!~IntegrationTests&FullyQualifiedName!~LoginCreateVerifyFlowTests" \
+    2>&1
+
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "❌ Tests failed. Fix failing tests before committing."
+    echo "💡 To skip pre-commit hooks: git commit --no-verify"
+    exit 1
+fi
+
+echo "✅ Unit tests passed"
+echo ""
+echo "🎉 All pre-commit checks passed!"
+echo "💡 Integration tests excluded from pre-commit (run separately or in CI)"

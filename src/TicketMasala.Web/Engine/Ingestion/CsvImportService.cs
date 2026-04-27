@@ -3,8 +3,8 @@ using System.Globalization;
 using CsvHelper;
 using CsvHelper.Configuration;
 using ExcelDataReader;
-using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Data;
 
 namespace TicketMasala.Web.Engine.Ingestion;
@@ -146,8 +146,10 @@ public class TicketImportService : ITicketImportService
                 {
                     // Fallback to description
                     title = description.Split('\n')[0];
-                    if (title.Length > 100) title = title.Substring(0, 100);
-                    if (string.IsNullOrWhiteSpace(title)) title = DefaultTicketTitle;
+                    if (title.Length > 100)
+                        title = title.Substring(0, 100);
+                    if (string.IsNullOrWhiteSpace(title))
+                        title = DefaultTicketTitle;
                 }
                 var ticket = new Ticket
                 {
@@ -173,7 +175,7 @@ public class TicketImportService : ITicketImportService
                     if (!string.IsNullOrWhiteSpace(statusStr))
                     {
                         ticket.Status = statusStr;
-                        
+
                         // Try to map to Enum
                         if (Enum.TryParse<Status>(statusStr, true, out var statusEnum))
                         {

@@ -1,6 +1,6 @@
+using System.Text.Json;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Engine.GERDA.Dispatching.Models;
-using System.Text.Json;
 
 namespace TicketMasala.Web.Engine.Common;
 
@@ -28,8 +28,8 @@ public class TicketWorkItemAdapter : IWorkItem
     /// For TicketMasala, we use estimated effort points converted to notional value.
     /// Formula: EffortPoints * €1000 per point for normalization
     /// </summary>
-    public decimal FinancialValue => _ticket.EstimatedEffortPoints > 0 
-        ? _ticket.EstimatedEffortPoints * 1000m 
+    public decimal FinancialValue => _ticket.EstimatedEffortPoints > 0
+        ? _ticket.EstimatedEffortPoints * 1000m
         : 5000m; // Default: €5,000
 
     /// <summary>
@@ -102,7 +102,8 @@ public class TicketWorkItemAdapter : IWorkItem
     /// </summary>
     private static int EstimateJobSize(int effortPoints)
     {
-        if (effortPoints <= 0) return 5; // Default to medium
+        if (effortPoints <= 0)
+            return 5; // Default to medium
 
         return effortPoints switch
         {

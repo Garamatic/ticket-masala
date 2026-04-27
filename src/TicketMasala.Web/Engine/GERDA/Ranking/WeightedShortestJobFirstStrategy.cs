@@ -1,8 +1,8 @@
-using TicketMasala.Web.Engine.GERDA.Models;
 using TicketMasala.Domain.Entities;
-using TicketMasala.Web.Engine.GERDA.Configuration;
+using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Engine.Compiler;
-using System.Security.Claims;
+using TicketMasala.Web.Engine.GERDA.Configuration;
+using TicketMasala.Web.Engine.GERDA.Models;
 
 namespace TicketMasala.Web.Engine.GERDA.Ranking;
 
@@ -13,15 +13,18 @@ public class WeightedShortestJobFirstStrategy : IJobRankingStrategy
     private readonly IDomainConfigurationService _domainConfigService;
     private readonly RuleCompilerService _ruleCompiler;
     private readonly ILogger<WeightedShortestJobFirstStrategy> _logger;
+    private readonly ISystemClock _clock;
 
     public WeightedShortestJobFirstStrategy(
         IDomainConfigurationService domainConfigurationService,
         RuleCompilerService ruleCompiler,
-        ILogger<WeightedShortestJobFirstStrategy> logger)
+        ILogger<WeightedShortestJobFirstStrategy> logger,
+        ISystemClock clock)
     {
         _domainConfigService = domainConfigurationService;
         _ruleCompiler = ruleCompiler;
         _logger = logger;
+        _clock = clock;
     }
 
     public double CalculateScore(Ticket ticket, GerdaConfig config)
@@ -42,7 +45,7 @@ public class WeightedShortestJobFirstStrategy : IJobRankingStrategy
         var rankingConfig = domainConfig?.AiStrategies?.Ranking;
 
         // Base Urgency: Age-based (Older = More Urgent)
-        var now = DateTime.UtcNow;
+        var now = _clock.UtcNow;
         var age = (now - ticket.CreationDate).TotalDays;
 
         // Use configured SLA weight as base multiplier, or default 1.0
@@ -55,8 +58,10 @@ public class WeightedShortestJobFirstStrategy : IJobRankingStrategy
         if (ticket.CompletionTarget.HasValue)
         {
             var daysUntil = (ticket.CompletionTarget.Value - now).TotalDays;
-            if (daysUntil < 0) urgencyScore += 100.0; // Overdue base penalty
-            else if (daysUntil < 10) urgencyScore += (10.0 - daysUntil);
+            if (daysUntil < 0)
+                urgencyScore += 100.0; // Overdue base penalty
+            else if (daysUntil < 10)
+                urgencyScore += (10.0 - daysUntil);
         }
 
         // Apply Configured Multipliers (Dynamic Rules)

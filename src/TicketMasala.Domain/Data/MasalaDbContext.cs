@@ -1,11 +1,10 @@
-using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.EntityFrameworkCore;
-using TicketMasala.Domain.Entities;
 using System.Data.Common;
-
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using TicketMasala.Domain.Entities;
 
 namespace TicketMasala.Domain.Data;
 
@@ -199,23 +198,35 @@ public class MasalaDbContext : IdentityDbContext<ApplicationUser, IdentityRole, 
         optionsBuilder.AddInterceptors(new SQLitePragmaInterceptor());
     }
 
-    private class SQLitePragmaInterceptor : DbCommandInterceptor
+    private class SQLitePragmaInterceptor : DbConnectionInterceptor
     {
-        public override InterceptionResult<DbDataReader> ReaderExecuting(
-            DbCommand command,
-            CommandEventData eventData,
-            InterceptionResult<DbDataReader> result)
+        public override void ConnectionOpened(DbConnection connection, ConnectionEndEventData eventData)
         {
             // Only apply SQLite pragma if using SQLite connection
-            if (command.Connection is SqliteConnection sqliteConnection)
+            if (connection is SqliteConnection sqliteConnection)
             {
-                sqliteConnection.Open();
                 using var pragmaCommand = sqliteConnection.CreateCommand();
                 pragmaCommand.CommandText = "PRAGMA journal_mode=WAL;";
                 pragmaCommand.ExecuteNonQuery();
             }
 
-            return base.ReaderExecuting(command, eventData, result);
+            base.ConnectionOpened(connection, eventData);
+        }
+
+        public override async Task ConnectionOpenedAsync(
+            DbConnection connection,
+            ConnectionEndEventData eventData,
+            CancellationToken cancellationToken = default)
+        {
+            // Only apply SQLite pragma if using SQLite connection
+            if (connection is SqliteConnection sqliteConnection)
+            {
+                using var pragmaCommand = sqliteConnection.CreateCommand();
+                pragmaCommand.CommandText = "PRAGMA journal_mode=WAL;";
+                await pragmaCommand.ExecuteNonQueryAsync(cancellationToken);
+            }
+
+            await base.ConnectionOpenedAsync(connection, eventData, cancellationToken);
         }
     }
 }

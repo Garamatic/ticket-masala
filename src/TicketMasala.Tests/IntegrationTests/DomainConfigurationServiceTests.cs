@@ -1,11 +1,11 @@
-using Xunit;
-using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Hosting;
-using Moq;
-using TicketMasala.Web.Engine.GERDA.Configuration;
-using TicketMasala.Web.Engine.Compiler;
-using TicketMasala.Web.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Moq;
+using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.Engine.Compiler;
+using TicketMasala.Web.Engine.GERDA.Configuration;
+using Xunit;
 
 namespace TicketMasala.Tests.IntegrationTests;
 

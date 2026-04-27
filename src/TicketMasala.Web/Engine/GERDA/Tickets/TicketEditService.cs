@@ -1,7 +1,7 @@
-using TicketMasala.Web.ViewModels.Tickets;
-using TicketMasala.Web.Engine.Compiler;
 using TicketMasala.Domain.Common;
+using TicketMasala.Web.Engine.Compiler;
 using TicketMasala.Web.Facades;
+using TicketMasala.Web.ViewModels.Tickets;
 
 namespace TicketMasala.Web.Engine.GERDA.Tickets;
 
@@ -31,7 +31,8 @@ public class TicketEditService : ITicketEditService
     public async Task<TicketEditContext?> GetEditContextAsync(Guid ticketId, System.Security.Claims.ClaimsPrincipal user)
     {
         var ticket = await _ticketReadService.GetTicketForEditAsync(ticketId);
-        if (ticket == null) return null;
+        if (ticket == null)
+            return null;
 
         var userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         var isCustomer = user.IsInRole(Constants.RoleCustomer);
@@ -73,7 +74,7 @@ public class TicketEditService : ITicketEditService
     public async Task<TicketEditContext> GetEditReloadContextAsync(Guid ticketId, System.Security.Claims.ClaimsPrincipal user)
     {
         var context = new TicketEditContext();
-        
+
         var reloadTicket = await _ticketReadService.GetTicketForEditAsync(ticketId);
         if (reloadTicket != null)
         {
@@ -81,7 +82,7 @@ public class TicketEditService : ITicketEditService
             var allowedStatuses = validStates.Union(new[] { reloadTicket.TicketStatus }).Distinct().ToList();
             context.ValidStatuses = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(allowedStatuses);
         }
-        
+
         return context;
     }
 }

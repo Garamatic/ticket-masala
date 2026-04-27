@@ -1,10 +1,10 @@
 using System.Collections.Concurrent;
 using System.Linq.Expressions;
 using System.Security.Claims;
-using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
-using TicketMasala.Web.Abstractions;
 using TicketMasala.Domain.Configuration;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Engine.Compiler;
 
@@ -170,7 +170,7 @@ public class RuleCompilerService
             var completionTargetProp = Expression.Property(ticketParam, nameof(Ticket.CompletionTarget));
             var hasValue = Expression.Property(completionTargetProp, nameof(Nullable<DateTime>.HasValue));
             var value = Expression.Property(completionTargetProp, nameof(Nullable<DateTime>.Value));
-            
+
             var clockConst = Expression.Constant(_clock);
             var utcNow = Expression.Property(clockConst, nameof(ISystemClock.UtcNow));
 
@@ -203,7 +203,7 @@ public class RuleCompilerService
         {
             // (_clock.UtcNow - ticket.CreationDate).TotalDays
             var creationDateProp = Expression.Property(ticketParam, nameof(Ticket.CreationDate));
-            
+
             // Use _clock.UtcNow instead of DateTime.UtcNow
             var clockConst = Expression.Constant(_clock);
             var utcNow = Expression.Property(clockConst, nameof(ISystemClock.UtcNow));

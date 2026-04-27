@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Data;
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.ViewModels.Customers;
-using TicketMasala.Web.Data;
-using Microsoft.EntityFrameworkCore;
-using TicketMasala.Domain.Entities;
 
 namespace TicketMasala.Web.Controllers;
 

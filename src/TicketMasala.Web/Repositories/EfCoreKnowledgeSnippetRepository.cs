@@ -1,6 +1,6 @@
+using Microsoft.EntityFrameworkCore;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Data;
-using Microsoft.EntityFrameworkCore;
 
 namespace TicketMasala.Web.Repositories;
 
@@ -24,17 +24,17 @@ public class EfCoreKnowledgeSnippetRepository : IKnowledgeSnippetRepository
     {
         if (string.IsNullOrWhiteSpace(searchTerm))
         {
-             return await _context.KnowledgeBaseSnippets
-                .Include(s => s.Author)
-                .OrderByDescending(s => s.CreatedAt)
-                .Take(20)
-                .ToListAsync();
+            return await _context.KnowledgeBaseSnippets
+               .Include(s => s.Author)
+               .OrderByDescending(s => s.CreatedAt)
+               .Take(20)
+               .ToListAsync();
         }
 
         // FTS5 Query
         // We join the virtual table 'KnowledgeBaseSnippets_Search' with the real table using rowid.
         // This leverages the FTS5 index for fast full-text search.
-        
+
         var sql = @"
             SELECT s.* 
             FROM KnowledgeBaseSnippets s
@@ -43,7 +43,7 @@ public class EfCoreKnowledgeSnippetRepository : IKnowledgeSnippetRepository
             ORDER BY fts.rank
         ";
 
-        try 
+        try
         {
             return await _context.KnowledgeBaseSnippets
                 .FromSqlRaw(sql, searchTerm)

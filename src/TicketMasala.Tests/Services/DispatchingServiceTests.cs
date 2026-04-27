@@ -1,17 +1,17 @@
-using Xunit;
-using Moq;
-using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Moq;
+using TicketMasala.Domain.Data;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web;
+using TicketMasala.Web.Data;
+using TicketMasala.Web.Engine.GERDA.Configuration;
 using TicketMasala.Web.Engine.GERDA.Dispatching;
 using TicketMasala.Web.Engine.GERDA.Dispatching.Algorithms;
 using TicketMasala.Web.Engine.GERDA.Dispatching.Configuration;
 using TicketMasala.Web.Engine.GERDA.Models;
 using TicketMasala.Web.Engine.GERDA.Strategies;
-using TicketMasala.Web.Engine.GERDA.Configuration;
-using TicketMasala.Domain.Entities;
-using TicketMasala.Web;
-using TicketMasala.Domain.Data;
-using TicketMasala.Web.Data;
+using Xunit;
 
 namespace TicketMasala.Tests.Services;
 
@@ -244,7 +244,7 @@ public class DispatchingServiceTests
         var autoDispatchPolicy = new Mock<IAutoDispatchPolicy>();
         var pmRecommendationService = new Mock<IProjectManagerRecommendationService>();
         var expectedTime = DateTime.UtcNow.AddHours(-1);
-        
+
         var mockStrategy = new Mock<IDispatchingStrategy>();
         mockStrategy.Setup(x => x.LastTrained).Returns(expectedTime);
 

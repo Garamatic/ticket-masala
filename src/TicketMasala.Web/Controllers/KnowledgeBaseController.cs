@@ -1,10 +1,10 @@
-using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TicketMasala.Web.Repositories;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.Repositories;
 
 namespace TicketMasala.Web.Controllers;
 
@@ -29,7 +29,7 @@ public class KnowledgeBaseController : Controller
     public async Task<IActionResult> Index(string searchTerm)
     {
         IEnumerable<KnowledgeBaseArticle> articles;
-        
+
         if (string.IsNullOrWhiteSpace(searchTerm))
         {
             articles = await _repository.GetAllAsync();
@@ -46,10 +46,12 @@ public class KnowledgeBaseController : Controller
     // GET: KnowledgeBase/Details/5
     public async Task<IActionResult> Details(Guid? id)
     {
-        if (id == null) return NotFound();
+        if (id == null)
+            return NotFound();
 
         var article = await _repository.GetByIdAsync(id.Value);
-        if (article == null) return NotFound();
+        if (article == null)
+            return NotFound();
 
         // Increment MasalaRank Usage Count
         await _repository.IncrementUsageCountAsync(id.Value);
@@ -75,7 +77,7 @@ public class KnowledgeBaseController : Controller
             article.Id = Guid.NewGuid();
             article.CreatedAt = _clock.UtcNow;
             article.AuthorId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            
+
             // Set default MasalaRank values
             article.UsageCount = 0;
             article.IsVerified = false;
@@ -90,10 +92,12 @@ public class KnowledgeBaseController : Controller
     [Authorize(Roles = "Admin,Employee")]
     public async Task<IActionResult> Edit(Guid? id)
     {
-        if (id == null) return NotFound();
+        if (id == null)
+            return NotFound();
 
         var article = await _repository.GetByIdAsync(id.Value);
-        if (article == null) return NotFound();
+        if (article == null)
+            return NotFound();
 
         return View(article);
     }
@@ -104,7 +108,8 @@ public class KnowledgeBaseController : Controller
     [Authorize(Roles = "Admin,Employee")]
     public async Task<IActionResult> Edit(Guid id, [Bind("Id,Title,Content,Tags,CreatedAt,AuthorId,UsageCount,IsVerified")] KnowledgeBaseArticle article)
     {
-        if (id != article.Id) return NotFound();
+        if (id != article.Id)
+            return NotFound();
 
         if (ModelState.IsValid)
         {
@@ -115,8 +120,10 @@ public class KnowledgeBaseController : Controller
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!await _repository.ExistsAsync(article.Id)) return NotFound();
-                else throw;
+                if (!await _repository.ExistsAsync(article.Id))
+                    return NotFound();
+                else
+                    throw;
             }
             return RedirectToAction(nameof(Index));
         }

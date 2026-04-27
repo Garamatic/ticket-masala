@@ -13,18 +13,18 @@ public class PiiScrubberService : IPiiScrubberService
     // Regex Patterns
     // Email: Standard email pattern
     private static readonly Regex EmailRegex = new Regex(
-        @"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}", 
+        @"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     // Phone: Matches international formats (+32...) and local formats (04...)
     // Be careful not to match random numbers. We look for at least 9 digits with optional separators.
     private static readonly Regex PhoneRegex = new Regex(
-        @"(?:\+|00)[1-9]\d{0,3}[\s.-]?\(?0?\)?[\s.-]?\d{2,4}[\s.-]?\d{2,4}[\s.-]?\d{2,4}|\b04\d{2}[\s.-]?\d{2}[\s.-]?\d{2}[\s.-]?\d{2}\b", 
+        @"(?:\+|00)[1-9]\d{0,3}[\s.-]?\(?0?\)?[\s.-]?\d{2,4}[\s.-]?\d{2,4}[\s.-]?\d{2,4}|\b04\d{2}[\s.-]?\d{2}[\s.-]?\d{2}[\s.-]?\d{2}\b",
         RegexOptions.Compiled);
 
     // NISS (Rijksregisternummer): XX.XX.XX-XXX.XX
     private static readonly Regex NissRegex = new Regex(
-        @"\b\d{2}\.\d{2}\.\d{2}-\d{3}\.\d{2}\b", 
+        @"\b\d{2}\.\d{2}\.\d{2}-\d{3}\.\d{2}\b",
         RegexOptions.Compiled);
 
     public PiiScrubberService(ILogger<PiiScrubberService> logger)

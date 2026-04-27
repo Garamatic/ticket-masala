@@ -1,6 +1,6 @@
-using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Common;
 using Microsoft.EntityFrameworkCore;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
 
 namespace TicketMasala.Web.Extensions;
 
@@ -35,8 +35,10 @@ public static class QueryableExtensions
     /// <param name="pageSize">Number of items per page</param>
     public static IQueryable<T> Paginate<T>(this IQueryable<T> query, int pageNumber, int pageSize)
     {
-        if (pageNumber < 1) pageNumber = 1;
-        if (pageSize < 1) pageSize = 10;
+        if (pageNumber < 1)
+            pageNumber = 1;
+        if (pageSize < 1)
+            pageSize = 10;
 
         return query
             .Skip((pageNumber - 1) * pageSize)
@@ -116,11 +118,11 @@ public static class QueryableExtensions
     }
 
     /// <summary>
-    /// Returns overdue tickets
+    /// Returns overdue tickets at a specific point in time (defaults to now)
     /// </summary>
-    public static IQueryable<Domain.Entities.Ticket> WhereOverdue(this IQueryable<Domain.Entities.Ticket> query)
+    public static IQueryable<Domain.Entities.Ticket> WhereOverdue(this IQueryable<Domain.Entities.Ticket> query, DateTime? referenceTime = null)
     {
-        var now = DateTime.UtcNow;
+        var now = referenceTime ?? DateTime.UtcNow;
         return query.Where(t => t.CompletionTarget.HasValue
                              && t.CompletionTarget.Value < now
                              && t.TicketStatus != Domain.Common.Status.Completed

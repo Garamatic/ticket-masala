@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Engine.GERDA.Dispatching.Configuration;
 using TicketMasala.Web.Engine.GERDA.Dispatching.Models;
 
@@ -13,11 +14,13 @@ public class WsjfEngine
 {
     private readonly WsjfConfig _config;
     private readonly ILogger<WsjfEngine> _logger;
+    private readonly ISystemClock _clock;
 
-    public WsjfEngine(WsjfConfig config, ILogger<WsjfEngine> logger)
+    public WsjfEngine(WsjfConfig config, ILogger<WsjfEngine> logger, ISystemClock clock)
     {
         _config = config;
         _logger = logger;
+        _clock = clock;
     }
 
     /// <summary>
@@ -32,7 +35,8 @@ public class WsjfEngine
         {
             // Step 1: Extract job size
             int jobSize = workItem.EstimatedJobSize ?? _config.DefaultJobSizePoints;
-            if (jobSize <= 0) jobSize = _config.DefaultJobSizePoints;
+            if (jobSize <= 0)
+                jobSize = _config.DefaultJobSizePoints;
             result.JobSizePoints = jobSize;
 
             // Step 2: Calculate weighted cost of delay components
@@ -81,7 +85,8 @@ public class WsjfEngine
     /// </summary>
     private decimal CalculateBusinessValue(IWorkItem workItem)
     {
-        if (workItem.FinancialValue <= 0) return 0m;
+        if (workItem.FinancialValue <= 0)
+            return 0m;
         var normalized = (workItem.FinancialValue / _config.FinancialValueNormalizer) * 100m;
         return Math.Min(normalized, 100m); // Cap at 100
     }
@@ -92,7 +97,7 @@ public class WsjfEngine
     /// </summary>
     private decimal CalculateTimeCriticality(IWorkItem workItem)
     {
-        var age = (DateTime.UtcNow - workItem.CreatedAt).TotalDays;
+        var age = (_clock.UtcNow - workItem.CreatedAt).TotalDays;
 
         return age switch
         {

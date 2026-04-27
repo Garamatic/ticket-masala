@@ -1,11 +1,11 @@
-using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Common;
-using TicketMasala.Web.Abstractions;
-using TicketMasala.Web.ViewModels.Tickets;
-using TicketMasala.Web.ViewModels.GERDA;
-using TicketMasala.Web.Repositories;
-using TicketMasala.Web.Engine.GERDA.Dispatching;
 using Microsoft.EntityFrameworkCore;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.Engine.GERDA.Dispatching;
+using TicketMasala.Web.Repositories;
+using TicketMasala.Web.ViewModels.GERDA;
+using TicketMasala.Web.ViewModels.Tickets;
 
 namespace TicketMasala.Web.Engine.GERDA.Tickets;
 
@@ -128,7 +128,8 @@ public class DispatchBacklogService : IDispatchBacklogService
                         info.RecommendedAgents = recommendations
                             .Select(r =>
                             {
-                                if (!employeeMap.TryGetValue(r.AgentId, out var agent)) return null;
+                                if (!employeeMap.TryGetValue(r.AgentId, out var agent))
+                                    return null;
 
                                 var workload = agentWorkloads.GetValueOrDefault(r.AgentId, (0, 0));
 
@@ -149,7 +150,7 @@ public class DispatchBacklogService : IDispatchBacklogService
                             })
                             .Where(r => r != null)
                             .ToList()!;
-                        }
+                    }
                 }
                 catch (Exception ex)
                 {

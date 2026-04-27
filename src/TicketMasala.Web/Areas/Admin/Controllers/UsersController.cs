@@ -2,9 +2,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TicketMasala.Web.Data;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.Data;
 
 namespace TicketMasala.Web.Areas.Admin.Controllers;
 

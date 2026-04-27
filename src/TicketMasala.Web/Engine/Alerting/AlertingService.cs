@@ -92,7 +92,8 @@ public class AlertingService : IAlertingService
 
         foreach (var webhook in relevantWebhooks)
         {
-            if (string.IsNullOrEmpty(webhook.Url)) continue;
+            if (string.IsNullOrEmpty(webhook.Url))
+                continue;
 
             try
             {

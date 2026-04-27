@@ -1,7 +1,7 @@
+using Microsoft.AspNetCore.Identity; // Added for UserManager
+using Microsoft.EntityFrameworkCore;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Data;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity; // Added for UserManager
 
 namespace TicketMasala.Web.Repositories;
 

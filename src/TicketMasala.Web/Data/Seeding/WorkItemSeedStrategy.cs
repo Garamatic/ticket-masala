@@ -1,10 +1,10 @@
-using TicketMasala.Domain.Entities;
+using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Data;
-using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
-using TicketMasala.Web.Configuration;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.Configuration;
 
 namespace TicketMasala.Web.Data.Seeding;
 

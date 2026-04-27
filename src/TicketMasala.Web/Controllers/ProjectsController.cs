@@ -1,19 +1,19 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.AspNetCore.Authorization;
-using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Common;
-using TicketMasala.Web.ViewModels.Projects;
-using TicketMasala.Web.ViewModels.Tickets;
-using TicketMasala.Web.ViewModels.Customers;
-using TicketMasala.Web.Engine.Core;
-using TicketMasala.Web.Engine.GERDA.Tickets;
-using TicketMasala.Web.Engine.Projects;
-using TicketMasala.Web.Engine.Ingestion;
-using TicketMasala.Web.Engine.Ingestion.Background;
 using System.Diagnostics;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.AI;
+using TicketMasala.Web.Engine.Core;
+using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.Engine.Ingestion;
+using TicketMasala.Web.Engine.Ingestion.Background;
+using TicketMasala.Web.Engine.Projects;
+using TicketMasala.Web.ViewModels.Customers;
+using TicketMasala.Web.ViewModels.Projects;
+using TicketMasala.Web.ViewModels.Tickets;
 
 namespace TicketMasala.Web.Controllers;
 
@@ -352,7 +352,8 @@ public class ProjectsController : Controller
     public async Task<IActionResult> GenerateAiRoadmap(Guid projectId)
     {
         var project = await _projectReadService.GetProjectDetailsAsync(projectId);
-        if (project == null) return NotFound();
+        if (project == null)
+            return NotFound();
 
         var query = $"Project: {project.ProjectDetails.Name}\n" +
                 $"Description: {project.ProjectDetails.Description}\n" +

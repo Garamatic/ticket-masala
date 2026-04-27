@@ -1,10 +1,10 @@
-using TicketMasala.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Repositories.Queries;
 using TicketMasala.Web.Repositories.Specifications;
-using TicketMasala.Web.Abstractions;
-using Microsoft.EntityFrameworkCore;
 
 namespace TicketMasala.Web.Repositories;
 
@@ -19,7 +19,7 @@ public class EfCoreTicketRepository : ITicketRepository
     private readonly ISystemClock _clock;
 
     public EfCoreTicketRepository(
-        MasalaDbContext context, 
+        MasalaDbContext context,
         ILogger<EfCoreTicketRepository> logger,
         ISystemClock clock)
     {

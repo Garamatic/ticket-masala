@@ -1,20 +1,20 @@
 using System.Net;
-using System.Net.Http.Json;
 using System.Net.Http.Headers;
-using System.Text.Json;
-using System.Text.Encodings.Web;
+using System.Net.Http.Json;
 using System.Security.Claims;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
-using TicketMasala.Web.ViewModels.Api;
-using TicketMasala.Tests.IntegrationTests;
-using TicketMasala.Domain.Entities;
+using Microsoft.Extensions.Options;
 using TicketMasala.Domain.Data;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Tests.IntegrationTests;
+using TicketMasala.Web.ViewModels.Api;
 using Xunit;
 
 namespace TicketMasala.Tests.Functional;
@@ -75,10 +75,10 @@ public class WorkItemsApiFunctionalTests : IClassFixture<CustomWebApplicationFac
                 {
                     var db = scope.ServiceProvider.GetRequiredService<MasalaDbContext>();
                     var testUserId = "work-item-test-user-id";
-                    
+
                     if (!db.Users.Any(u => u.Id == testUserId))
                     {
-                        try 
+                        try
                         {
                             db.Users.Add(new ApplicationUser
                             {
@@ -92,7 +92,7 @@ public class WorkItemsApiFunctionalTests : IClassFixture<CustomWebApplicationFac
                             });
                             db.SaveChanges();
                         }
-                        catch (ArgumentException) 
+                        catch (ArgumentException)
                         {
                             // Ignore if already exists (concurrency race)
                         }
@@ -129,7 +129,7 @@ public class WorkItemsApiFunctionalTests : IClassFixture<CustomWebApplicationFac
     {
         var client = CreateAuthenticatedClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
-        
+
         var response = await client.GetAsync($"/api/v1/work-items/{Guid.NewGuid()}");
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
@@ -139,7 +139,7 @@ public class WorkItemsApiFunctionalTests : IClassFixture<CustomWebApplicationFac
     {
         var client = CreateAuthenticatedClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
-        
+
         var invalidItem = new WorkItemDto(); // Missing Title, Description, Status...
 
         var response = await client.PostAsJsonAsync("/api/v1/work-items", invalidItem);

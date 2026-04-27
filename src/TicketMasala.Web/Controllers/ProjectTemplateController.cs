@@ -1,8 +1,8 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Data;
 
 namespace TicketMasala.Web.Controllers;
@@ -43,13 +43,15 @@ public class ProjectTemplateController : Controller
 
     public async Task<IActionResult> Edit(Guid? id)
     {
-        if (id == null) return NotFound();
+        if (id == null)
+            return NotFound();
 
         var template = await _context.ProjectTemplates
             .Include(t => t.Tickets)
             .FirstOrDefaultAsync(m => m.Guid == id);
 
-        if (template == null) return NotFound();
+        if (template == null)
+            return NotFound();
         return View(template);
     }
 
@@ -57,7 +59,8 @@ public class ProjectTemplateController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(Guid id, ProjectTemplate template)
     {
-        if (id != template.Guid) return NotFound();
+        if (id != template.Guid)
+            return NotFound();
 
         if (ModelState.IsValid)
         {
@@ -68,8 +71,10 @@ public class ProjectTemplateController : Controller
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!ProjectTemplateExists(template.Guid)) return NotFound();
-                else throw;
+                if (!ProjectTemplateExists(template.Guid))
+                    return NotFound();
+                else
+                    throw;
             }
             return RedirectToAction(nameof(Index));
         }
@@ -81,7 +86,8 @@ public class ProjectTemplateController : Controller
     public async Task<IActionResult> AddTicket(Guid templateId, string description, int effort, Priority priority, TicketType type)
     {
         var template = await _context.ProjectTemplates.FindAsync(templateId);
-        if (template == null) return NotFound();
+        if (template == null)
+            return NotFound();
 
         var ticket = new TemplateTicket
         {

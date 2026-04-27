@@ -1,8 +1,8 @@
-using TicketMasala.Web.Engine.GERDA.Tickets;
-using TicketMasala.Web.ViewModels.Tickets;
+using System.Text.Json;
 using TicketMasala.Domain.Configuration;
 using TicketMasala.Web.Engine.GERDA.Configuration;
-using System.Text.Json;
+using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.ViewModels.Tickets;
 
 namespace TicketMasala.Web.Facades;
 
@@ -56,8 +56,9 @@ public class TicketContextFacade : ITicketContextFacade
                 context.CustomFieldValues = JsonSerializer.Deserialize<Dictionary<string, object>>(viewModel.CustomFieldsJson)
                     ?? new Dictionary<string, object>();
             }
-            catch
+            catch (JsonException ex)
             {
+                _logger.LogWarning(ex, "Failed to deserialize CustomFieldsJson for ticket context");
                 context.CustomFieldValues = new Dictionary<string, object>();
             }
         }
@@ -92,7 +93,7 @@ public class TicketContextFacade : ITicketContextFacade
             context.EntityLabels = _domainConfig.GetEntityLabels(domainId);
             context.CustomFields = _domainConfig.GetCustomFields(domainId).ToList();
 
-            if (context.ViewModel != null && !string.IsNullOrEmpty(context.ViewModel.Guid.ToString()))
+            if (context.ViewModel != null && context.ViewModel.Guid != Guid.Empty)
             {
                 try
                 {
@@ -105,7 +106,10 @@ public class TicketContextFacade : ITicketContextFacade
                         context.CustomFieldValues = JsonSerializer.Deserialize<Dictionary<string, object>>(customFieldsJson) ?? new Dictionary<string, object>();
                     }
                 }
-                catch { /* Ignore JSON parsing errors */ }
+                catch (JsonException ex)
+                {
+                    _logger.LogWarning(ex, "Failed to deserialize custom fields for edit context for ticket {TicketId}", context.ViewModel.Guid);
+                }
             }
         }
 

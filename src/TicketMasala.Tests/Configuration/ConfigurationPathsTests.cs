@@ -1,5 +1,5 @@
-using Xunit;
 using TicketMasala.Web.Configuration;
+using Xunit;
 
 namespace TicketMasala.Tests.Configuration;
 
@@ -13,11 +13,11 @@ public class ConfigurationPathsTests : IDisposable
     {
         // Save original environment variable
         _originalEnvVar = Environment.GetEnvironmentVariable("MASALA_CONFIG_PATH") ?? string.Empty;
-        
+
         // Create a test content root directory
         _testContentRoot = Path.Combine(Path.GetTempPath(), "ticket-masala-test", Guid.NewGuid().ToString());
         Directory.CreateDirectory(_testContentRoot);
-        
+
         // Reset cache before each test
         ConfigurationPaths.ResetCache();
     }
@@ -33,13 +33,13 @@ public class ConfigurationPathsTests : IDisposable
         {
             Environment.SetEnvironmentVariable("MASALA_CONFIG_PATH", _originalEnvVar);
         }
-        
+
         // Clean up test directory
         if (Directory.Exists(_testContentRoot))
         {
             Directory.Delete(_testContentRoot, true);
         }
-        
+
         // Reset cache after each test
         ConfigurationPaths.ResetCache();
     }
@@ -65,7 +65,7 @@ public class ConfigurationPathsTests : IDisposable
         // Arrange
         Environment.SetEnvironmentVariable("MASALA_CONFIG_PATH", null);
         var dockerPath = "/app/config";
-        
+
         // Skip this test if not running in Docker environment
         if (!Directory.Exists(dockerPath))
         {
@@ -103,7 +103,7 @@ public class ConfigurationPathsTests : IDisposable
 
         // Act
         var result1 = ConfigurationPaths.GetConfigBasePath(_testContentRoot);
-        
+
         // Change environment variable (should not affect cached result)
         Environment.SetEnvironmentVariable("MASALA_CONFIG_PATH", "/different/path");
         var result2 = ConfigurationPaths.GetConfigBasePath(_testContentRoot);
@@ -154,7 +154,7 @@ public class ConfigurationPathsTests : IDisposable
         var customPath2 = Path.Combine(_testContentRoot, "custom-config-2");
         Directory.CreateDirectory(customPath1);
         Directory.CreateDirectory(customPath2);
-        
+
         Environment.SetEnvironmentVariable("MASALA_CONFIG_PATH", customPath1);
         var result1 = ConfigurationPaths.GetConfigBasePath(_testContentRoot);
 

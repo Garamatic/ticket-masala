@@ -25,7 +25,7 @@ public class EmailService : IEmailService
         try
         {
             var smtpHost = _configuration["Email:SmtpHost"];
-            var smtpPort = int.Parse(_configuration["Email:SmtpPort"] ?? "587");
+            var smtpPortString = _configuration["Email:SmtpPort"];
             var smtpUser = _configuration["Email:SmtpUser"];
             var smtpPass = _configuration["Email:SmtpPassword"];
             var configuredFromEmail = _configuration["Email:FromEmail"];
@@ -38,6 +38,12 @@ public class EmailService : IEmailService
                 _logger.LogInformation("Email Subject: {Subject}", subject);
                 _logger.LogInformation("Email Body: {Body}", body);
                 return;
+            }
+
+            // Parse port with validation
+            if (!int.TryParse(smtpPortString, out var smtpPort))
+            {
+                smtpPort = 587;
             }
 
             var fromEmail = string.IsNullOrWhiteSpace(configuredFromEmail)

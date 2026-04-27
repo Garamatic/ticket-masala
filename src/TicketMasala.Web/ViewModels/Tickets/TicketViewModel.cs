@@ -1,7 +1,7 @@
-using TicketMasala.Web;
-using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Common;
 using System;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web;
 
 namespace TicketMasala.Web.ViewModels.Tickets;
 

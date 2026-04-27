@@ -51,7 +51,7 @@ public class EnrichmentBackgroundServiceTests
         await context.SaveChangesAsync();
 
         _mockServiceProvider.Setup(x => x.GetService(typeof(MasalaDbContext))).Returns(context);
-        
+
         // Setup Sentiment Analyzer Mock
         _mockSentimentAnalyzer.Setup(x => x.Analyze(It.IsAny<string>(), It.IsAny<string>()))
             .Returns((5.0, "Critical"));
@@ -62,10 +62,12 @@ public class EnrichmentBackgroundServiceTests
 
         int callCount = 0;
         _mockQueue.Setup(x => x.DequeueAsync(It.IsAny<CancellationToken>()))
-            .Returns((CancellationToken ct) => {
+            .Returns((CancellationToken ct) =>
+            {
                 callCount++;
-                if (callCount == 1) return new ValueTask<EnrichmentWorkItem>(workItem);
-                
+                if (callCount == 1)
+                    return new ValueTask<EnrichmentWorkItem>(workItem);
+
                 // Second call: wait until cancelled
                 return new ValueTask<EnrichmentWorkItem>(Task.Delay(500, ct).ContinueWith(t => (EnrichmentWorkItem)null!));
             });
@@ -75,7 +77,7 @@ public class EnrichmentBackgroundServiceTests
         // Act
         await service.StartAsync(cts.Token);
         await Task.Delay(200); // Allow processing to happen
-        
+
         // Trigger stop
         cts.Cancel();
         await service.StopAsync(default);

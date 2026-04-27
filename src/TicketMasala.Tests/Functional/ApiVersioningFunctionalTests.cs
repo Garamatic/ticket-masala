@@ -1,6 +1,6 @@
+using System.Net;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
-using System.Net;
 
 namespace TicketMasala.Tests.Functional;
 

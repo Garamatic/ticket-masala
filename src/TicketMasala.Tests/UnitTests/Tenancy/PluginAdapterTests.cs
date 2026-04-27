@@ -1,9 +1,9 @@
-using Xunit;
 using FluentAssertions;
-using Moq;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using TicketMasala.Web.Tenancy;
+using Xunit;
 
 namespace TicketMasala.Web.Tests.UnitTests.Tenancy;
 

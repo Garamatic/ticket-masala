@@ -1,14 +1,14 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Moq;
 using TicketMasala.Domain.Entities;
+using TicketMasala.Tests.TestHelpers;
 using TicketMasala.Web.Engine.GERDA.Estimating;
 using TicketMasala.Web.Engine.GERDA.Sentiment;
 using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Engine.Ingestion;
-using TicketMasala.Tests.TestHelpers;
-using Xunit;
-using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web.Services;
+using Xunit;
 
 namespace TicketMasala.Tests.UnitTests.Ingestion;
 
@@ -36,7 +36,7 @@ public class EmailTicketProcessorTests
         var mockTicket = new Ticket { Guid = Guid.NewGuid(), Title = "URGENT: Database Down", GerdaTags = "" };
         _mockWorkflowService.Setup(s => s.CreateTicketAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<DateTime?>()))
             .ReturnsAsync(mockTicket);
-            
+
         _mockSentimentAnalyzer.Setup(a => a.Analyze(It.IsAny<string>(), It.IsAny<string>()))
             .Returns((4.0, "Critical"));
 
@@ -68,7 +68,7 @@ public class EmailTicketProcessorTests
         var mockTicket = new Ticket { Guid = Guid.NewGuid(), Title = "Question about features", GerdaTags = "" };
         _mockWorkflowService.Setup(s => s.CreateTicketAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<DateTime?>()))
             .ReturnsAsync(mockTicket);
-            
+
         _mockSentimentAnalyzer.Setup(a => a.Analyze(It.IsAny<string>(), It.IsAny<string>()))
             .Returns((1.0, "Normal"));
 

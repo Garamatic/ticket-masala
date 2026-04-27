@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using TicketMasala.Web.Data;
 using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Data;
 using TicketMasala.Web.ViewModels.Tickets;
 
 namespace TicketMasala.Web.Engine.Core;

@@ -26,7 +26,7 @@ public class DispatchingStage : IGerdaStage
             return;
 
         var recommendedAgent = await _dispatchingService.GetRecommendedAgentAsync(ticketGuid);
-        
+
         if (!string.IsNullOrEmpty(recommendedAgent) && Guid.TryParse(recommendedAgent, out var agentGuid))
         {
             context.RecommendedAgentId = agentGuid;

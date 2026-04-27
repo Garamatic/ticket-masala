@@ -1,7 +1,7 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using TicketMasala.Domain.Common;
 using TicketMasala.Web.Engine.GERDA.Tickets;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
 
 namespace TicketMasala.Web.Controllers;
 
@@ -58,7 +58,8 @@ public class TicketWorkflowController : Controller
         }
 
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
 
         try
         {
@@ -94,7 +95,8 @@ public class TicketWorkflowController : Controller
     public async Task<IActionResult> RequestReview(Guid id)
     {
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
 
         await _ticketWorkflowService.RequestReviewAsync(id, userId);
 
@@ -112,7 +114,8 @@ public class TicketWorkflowController : Controller
     public async Task<IActionResult> SubmitReview(Guid id, int score, string feedback, bool approve)
     {
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
 
         await _ticketWorkflowService.SubmitReviewAsync(id, score, feedback, approve, userId);
 

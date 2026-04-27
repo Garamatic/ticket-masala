@@ -10,27 +10,27 @@ public enum ActivityType
     /// Ticket was created
     /// </summary>
     Created,
-    
+
     /// <summary>
     /// Ticket was assigned to an agent
     /// </summary>
     Assigned,
-    
+
     /// <summary>
     /// Ticket status was updated
     /// </summary>
     StatusChanged,
-    
+
     /// <summary>
     /// Comment was added to ticket
     /// </summary>
     CommentAdded,
-    
+
     /// <summary>
     /// Ticket was completed/closed
     /// </summary>
     Completed,
-    
+
     /// <summary>
     /// Other/unspecified activity
     /// </summary>

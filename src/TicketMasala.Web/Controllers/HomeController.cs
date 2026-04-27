@@ -1,9 +1,9 @@
 using System.Diagnostics;
-using TicketMasala.Web.ViewModels.Shared;
-using TicketMasala.Web.Engine.Core;
-using TicketMasala.Web.Engine.GERDA.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TicketMasala.Web.Engine.Core;
+using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.ViewModels.Shared;
 
 namespace TicketMasala.Web.Controllers;
 

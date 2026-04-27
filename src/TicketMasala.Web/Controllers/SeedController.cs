@@ -1,10 +1,10 @@
-using TicketMasala.Web.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Common;
 using Microsoft.EntityFrameworkCore;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Data;
 
 namespace TicketMasala.Web.Controllers;
 // Seed controller only accessible in Development environment
@@ -115,7 +115,8 @@ public class SeedController : Controller
     [HttpGet]
     public async Task<IActionResult> Debug()
     {
-        if (!_env.IsDevelopment()) return NotFound();
+        if (!_env.IsDevelopment())
+            return NotFound();
 
         var users = await _userManager.Users.ToListAsync();
         var debugInfo = new System.Text.StringBuilder();

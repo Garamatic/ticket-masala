@@ -68,8 +68,8 @@ public static class DatabaseProviderHelper
     public static bool SupportsComputedColumns(string providerName)
     {
         var provider = providerName.ToUpperInvariant();
-        return provider.Contains("SQLITE") 
-            || provider.Contains("SQLSERVER") 
+        return provider.Contains("SQLITE")
+            || provider.Contains("SQLSERVER")
             || provider.Contains("MSSQL")
             || provider.Contains("POSTGRESQL")
             || provider.Contains("NPGSQL");

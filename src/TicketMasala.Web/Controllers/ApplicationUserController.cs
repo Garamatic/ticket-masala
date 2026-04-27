@@ -1,10 +1,10 @@
-using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Common;
-using TicketMasala.Web.ViewModels.ApplicationUsers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authorization;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web.ViewModels.ApplicationUsers;
 
 namespace TicketMasala.Web.Controllers;
 
@@ -130,10 +130,12 @@ public class ApplicationUsersController : Controller
 
     public async Task<IActionResult> Edit(string id)
     {
-        if (string.IsNullOrEmpty(id)) return BadRequest();
+        if (string.IsNullOrEmpty(id))
+            return BadRequest();
 
         var user = await _userManager.FindByIdAsync(id);
-        if (user == null) return NotFound();
+        if (user == null)
+            return NotFound();
 
         var roles = await _userManager.GetRolesAsync(user);
 
@@ -171,7 +173,8 @@ public class ApplicationUsersController : Controller
         }
 
         var user = await _userManager.FindByIdAsync(model.Id);
-        if (user == null) return NotFound();
+        if (user == null)
+            return NotFound();
 
         user.FirstName = model.FirstName;
         user.LastName = model.LastName;

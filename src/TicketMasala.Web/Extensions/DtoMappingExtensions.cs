@@ -1,9 +1,9 @@
 using System.Text.Json;
-using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
-using TicketMasala.Web.ViewModels.Api;
-using TicketMasala.Web.Services;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.Services;
+using TicketMasala.Web.ViewModels.Api;
 
 namespace TicketMasala.Web.Extensions;
 

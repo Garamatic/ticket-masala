@@ -1,0 +1,65 @@
+name: CI - Build, Test, and Coverage
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET 10
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+        
+    - name: Restore tools
+      run: dotnet tool restore
+      
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+      
+    - name: Test (Unit Tests Only - Fast)
+      run: dotnet test --no-build --verbosity normal --filter "FullyQualifiedName~UnitTests|FullyQualifiedName~Domain.Tests" --configuration Release
+      
+    - name: Test with Coverage (Web Tests)
+      run: dotnet test src/TicketMasala.Tests/TicketMasala.Tests.csproj --no-build --verbosity normal --collect:"XPlat Code Coverage" --settings src/TicketMasala.Tests/coverlet.runsettings --configuration Release
+      
+    - name: Install ReportGenerator
+      run: dotnet tool install -g dotnet-reportgenerator-globaltool || true
+      
+    - name: Generate Coverage Report
+      run: |
+        reportgenerator \
+          -reports:"src/TicketMasala.Tests/TestResults/**/coverage.cobertura.xml" \
+          -targetdir:"coveragereport" \
+          -reporttypes:Html;MarkdownSummaryGithub
+          
+    - name: Upload Coverage Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: coveragereport
+        
+    - name: Comment Coverage Summary
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const summary = fs.readFileSync('coveragereport/SummaryGithub.md', 'utf8');
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '## 📊 Code Coverage Report\n\n' + summary
+          });

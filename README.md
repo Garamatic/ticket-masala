@@ -135,6 +135,45 @@ Passwords are configurable via environment variables:
 
 ---
 
+## 🧪 Testing
+
+### Running Tests
+
+```bash
+# Run all tests
+./scripts/test.sh
+
+# Run with coverage report
+./scripts/test-coverage.sh
+
+# Run specific test class
+dotnet test --filter "FullyQualifiedName~TicketTests"
+
+# Run only unit tests (fast)
+dotnet test --filter "FullyQualifiedName~UnitTests|FullyQualifiedName~Domain.Tests"
+```
+
+### Test Structure
+
+- **Unit Tests**: Fast, isolated tests using in-memory database (`UnitTests/` namespace)
+- **Integration Tests**: Full stack tests with WebApplicationFactory (`IntegrationTests/` namespace)
+- **Architecture Tests**: Enforce code structure with NetArchTest (`Architecture/` namespace)
+- **Domain Tests**: Pure domain logic tests without infrastructure (`TicketMasala.Domain.Tests/`)
+
+### Coverage
+
+Coverage reports are generated in `TestResults/CoverageReport/`. Open `index.html` to view the detailed report.
+
+### CI/CD
+
+Tests run automatically on pull requests with coverage reporting. The CI workflow:
+1. Builds the solution
+2. Runs unit tests (fast feedback)
+3. Runs all tests with coverage collection
+4. Generates and uploads coverage reports
+
+---
+
 ## 📂 Project Structure
 
 A **Modular Monolith** designed for separation of concerns:

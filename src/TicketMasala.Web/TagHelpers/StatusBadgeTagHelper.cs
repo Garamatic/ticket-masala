@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Razor.TagHelpers;
+using Microsoft.AspNetCore.Razor.TagHelpers;
 using TicketMasala.Domain.Common;
 
 namespace TicketMasala.Web.TagHelpers;

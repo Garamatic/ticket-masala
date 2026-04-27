@@ -24,7 +24,7 @@ public class EstimatingStage : IGerdaStage
     {
         var effortPoints = await _estimatingService.EstimateComplexityAsync(ticketGuid);
         context.EffortPoints = effortPoints;
-        
+
         _logger.LogInformation(
             "GERDA-E: Ticket {TicketGuid} estimated at {Points} effort points",
             ticketGuid, effortPoints);

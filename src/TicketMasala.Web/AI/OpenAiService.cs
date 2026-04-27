@@ -1,11 +1,11 @@
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
-using OpenAI;
-using OpenAI.Chat;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using OpenAI;
+using OpenAI.Chat;
 
 namespace TicketMasala.Web.AI;
 
@@ -42,7 +42,8 @@ public class OpenAiService : IOpenAiService
 
     private static string? NormalizeBaseUrl(string? baseUrl)
     {
-        if (string.IsNullOrWhiteSpace(baseUrl)) return baseUrl;
+        if (string.IsNullOrWhiteSpace(baseUrl))
+            return baseUrl;
 
         var normalized = baseUrl.TrimEnd('/');
 

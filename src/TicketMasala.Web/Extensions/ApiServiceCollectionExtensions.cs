@@ -1,7 +1,7 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Razor;
 using TicketMasala.Web.Middleware;
-using Asp.Versioning;
 
 namespace TicketMasala.Web.Extensions;
 

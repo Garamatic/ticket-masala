@@ -1,10 +1,10 @@
-using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Common;
-using TicketMasala.Web.Engine.GERDA.Tickets;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using TicketMasala.Web.ViewModels.Tickets;
+using Microsoft.AspNetCore.Mvc;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.ViewModels.Tickets;
 
 namespace TicketMasala.Web.Controllers;
 
@@ -101,7 +101,8 @@ public class TicketBatchController : Controller
     public async Task<IActionResult> LogTime(Guid id)
     {
         var ticket = await _ticketReadService.GetTicketForEditAsync(id);
-        if (ticket == null) return NotFound();
+        if (ticket == null)
+            return NotFound();
 
         ViewBag.TicketGuid = id;
         ViewBag.TicketDescription = ticket.Description;
@@ -133,7 +134,8 @@ public class TicketBatchController : Controller
         }
 
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
 
         try
         {

@@ -1,5 +1,5 @@
-using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Http;
 
 namespace TicketMasala.Web.Engine.GERDA.Configuration;
 
@@ -20,7 +20,8 @@ public class DomainUiService : IDomainUiService
     public string GetCurrentDomainId()
     {
         var context = _httpContextAccessor.HttpContext;
-        if (context == null) return _configService.GetDefaultDomainId();
+        if (context == null)
+            return _configService.GetDefaultDomainId();
 
         // 1. Try cookie
         if (context.Request.Cookies.TryGetValue(DomainCookieName, out var cookieDomainId))
@@ -35,7 +36,8 @@ public class DomainUiService : IDomainUiService
     public void SetCurrentDomainId(string domainId)
     {
         var context = _httpContextAccessor.HttpContext;
-        if (context == null) return;
+        if (context == null)
+            return;
 
         context.Response.Cookies.Append(DomainCookieName, domainId, new CookieOptions
         {
@@ -53,7 +55,8 @@ public class DomainUiService : IDomainUiService
         // Try to find in UI configuration if it exists
         // (Note: We might need to extend MasalaDomainsConfig to have a generic Labels dictionary per domain)
         // For now, let's look for specific known keys like 'DomainName'
-        if (key == "DomainName") return domain?.Ui.Label ?? domainId;
+        if (key == "DomainName")
+            return domain?.Ui.Label ?? domainId;
 
         return key; // Fallback
     }
@@ -63,7 +66,8 @@ public class DomainUiService : IDomainUiService
         domainId ??= GetCurrentDomainId();
         var domain = _configService.GetDomain(domainId);
 
-        if (key == "DomainIcon") return domain?.Ui.Icon ?? "bi-grid";
+        if (key == "DomainIcon")
+            return domain?.Ui.Icon ?? "bi-grid";
 
         return "bi-circle";
     }

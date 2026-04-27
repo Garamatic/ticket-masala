@@ -1,8 +1,8 @@
-using TicketMasala.Web.Data;
-using TicketMasala.Web.Tenancy;
-using TicketMasala.Web.Middleware;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Options;
+using TicketMasala.Web.Data;
+using TicketMasala.Web.Middleware;
+using TicketMasala.Web.Tenancy;
 
 namespace TicketMasala.Web.Extensions;
 

@@ -3,11 +3,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
-using TicketMasala.Web.Data;
-using TicketMasala.Web.AI;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.AI;
+using TicketMasala.Web.Data;
 
 namespace TicketMasala.Web.Engine.Projects;
 

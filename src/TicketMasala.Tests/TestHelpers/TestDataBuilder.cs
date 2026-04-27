@@ -1,6 +1,6 @@
-using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Common;
 using Bogus;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
 
 namespace TicketMasala.Tests.TestHelpers;
 

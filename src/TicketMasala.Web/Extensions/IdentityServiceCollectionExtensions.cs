@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
-using TicketMasala.Web.Data;
 using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Data;
 
 namespace TicketMasala.Web.Extensions;
 

@@ -1,6 +1,6 @@
-using TicketMasala.Web.ViewModels.Tickets;
-using TicketMasala.Domain.Configuration;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using TicketMasala.Domain.Configuration;
+using TicketMasala.Web.ViewModels.Tickets;
 
 namespace TicketMasala.Web.Facades;
 

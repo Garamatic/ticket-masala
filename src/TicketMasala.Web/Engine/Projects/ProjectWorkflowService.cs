@@ -5,14 +5,14 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.AI;
 using TicketMasala.Web.Data;
+using TicketMasala.Web.Observers;
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.ViewModels.Projects;
-using TicketMasala.Web.AI;
-using TicketMasala.Web.Observers;
-using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Engine.Projects;
 

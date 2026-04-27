@@ -1,8 +1,8 @@
-using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Common;
+using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
 
 namespace TicketMasala.Web.Data.Seeding;
 
@@ -32,15 +32,12 @@ public class UserSeedStrategy : ISeedStrategy
 
     public Task<bool> ShouldSeedAsync()
     {
-        Console.WriteLine("DEBUG: UserSeedStrategy.ShouldSeedAsync called");
+        _logger.LogDebug("UserSeedStrategy.ShouldSeedAsync called");
         return Task.FromResult(true);
     }
 
     public async Task SeedAsync()
     {
-        await Task.CompletedTask;
-        // if (context.Users.Any()) return; // context is not available here, need to rethink if needed or use injected context
-        Console.WriteLine("DEBUG: UserSeedStrategy.SeedAsync called!");
         _logger.LogInformation("Seeding users and employees...");
 
         var adminPassword = GetSeedPassword("MASALA_SEEDED_ADMIN_PASSWORD", "Admin123!");
@@ -81,26 +78,11 @@ public class UserSeedStrategy : ISeedStrategy
             _environment.ContentRootPath,
             "seed_data.json");
 
-        Console.WriteLine($"Attempting to load seed data from: {seedFilePath}");
         _logger.LogInformation("Attempting to load seed data from: {Path}", seedFilePath);
 
         if (!File.Exists(seedFilePath))
         {
-            Console.WriteLine($"Seed data file NOT FOUND at: {seedFilePath}");
             _logger.LogWarning("Seed data file not found at: {Path}", seedFilePath);
-
-            // List files in directory
-            var directory = Path.GetDirectoryName(seedFilePath);
-            if (Directory.Exists(directory))
-            {
-                var files = Directory.GetFiles(directory);
-                Console.WriteLine($"Files in {directory}: {string.Join(", ", files.Select(Path.GetFileName))}");
-            }
-            else
-            {
-                Console.WriteLine($"Directory NOT FOUND: {directory}");
-            }
-
             return null;
         }
 
@@ -155,8 +137,9 @@ public class UserSeedStrategy : ISeedStrategy
                 }
                 else
                 {
+                    var errorList = result.Errors?.Select(e => e.Description) ?? Array.Empty<string>();
                     _logger.LogError("Failed to create {Role} user {Email}: {Errors}",
-                        role, user.Email, string.Join(", ", result.Errors?.Select(e => e.Description) ?? new string[0]));
+                        role, user.Email, string.Join(", ", errorList));
                 }
             }
             else

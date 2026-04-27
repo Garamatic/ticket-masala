@@ -1,5 +1,5 @@
-using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Engine.GERDA.Models;
 
@@ -8,12 +8,12 @@ namespace TicketMasala.Web.Engine.GERDA.Ranking;
 public class SeasonalPriorityStrategy : IJobRankingStrategy
 {
     private readonly ISystemClock _clock;
-    
+
     public SeasonalPriorityStrategy(ISystemClock clock)
     {
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
     }
-    
+
     public string Name => "SeasonalPriority";
 
     public double CalculateScore(Ticket ticket, GerdaConfig config)

@@ -38,7 +38,6 @@ public static class StrategyAutoRegistration
                 if (!IsAlreadyRegistered(services, typeof(IJobRankingStrategy), type))
                 {
                     services.AddScoped(typeof(IJobRankingStrategy), type);
-                    Console.WriteLine($"[Tenancy] Registered ranking strategy: {type.Name}");
                 }
             }
 
@@ -48,7 +47,6 @@ public static class StrategyAutoRegistration
                 if (!IsAlreadyRegistered(services, typeof(IDispatchingStrategy), type))
                 {
                     services.AddScoped(typeof(IDispatchingStrategy), type);
-                    Console.WriteLine($"[Tenancy] Registered dispatching strategy: {type.Name}");
                 }
             }
 
@@ -58,7 +56,6 @@ public static class StrategyAutoRegistration
                 if (!IsAlreadyRegistered(services, typeof(IEstimatingStrategy), type))
                 {
                     services.AddScoped(typeof(IEstimatingStrategy), type);
-                    Console.WriteLine($"[Tenancy] Registered estimating strategy: {type.Name}");
                 }
             }
         }

@@ -1,9 +1,9 @@
-using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Common;
-using TicketMasala.Web.Abstractions;
-using TicketMasala.Web.Engine.GERDA.Ranking;
-using TicketMasala.Web.Engine.GERDA.Dispatching;
 using Microsoft.EntityFrameworkCore;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.Engine.GERDA.Dispatching;
+using TicketMasala.Web.Engine.GERDA.Ranking;
 
 namespace TicketMasala.Web.Engine.GERDA.BackgroundJobs;
 

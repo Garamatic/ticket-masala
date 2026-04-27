@@ -70,20 +70,17 @@ public static class DatabaseServiceCollectionExtensions
                 var dataDir = Path.GetDirectoryName(dbPath);
                 if (!string.IsNullOrEmpty(dataDir) && !Directory.Exists(dataDir))
                 {
-                    Console.WriteLine($"Creating database directory: {dataDir}");
                     Directory.CreateDirectory(dataDir);
                 }
             }
         }
 
-        Console.WriteLine($"Using SQLite Provider with connection: {connectionString}");
         options.UseSqlite(connectionString, b => b.MigrationsAssembly("TicketMasala.Web"));
         options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
     }
 
     private static void ConfigureSqlServer(DbContextOptionsBuilder options, string? connectionString)
     {
-        Console.WriteLine($"Using SQL Server Provider");
         options.UseSqlServer(connectionString, sqlServerOptions =>
         {
             sqlServerOptions.MigrationsAssembly("TicketMasala.Web");

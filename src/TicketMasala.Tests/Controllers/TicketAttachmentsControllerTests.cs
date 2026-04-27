@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -5,15 +6,13 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
-using System.Security.Claims;
-using TicketMasala.Web.Controllers;
 using TicketMasala.Domain.Data;
-using TicketMasala.Web.Data;
 using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.Controllers;
+using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.Core;
 using Xunit;
-
-using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Tests.Controllers;
 

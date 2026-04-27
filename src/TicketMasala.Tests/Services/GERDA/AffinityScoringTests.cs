@@ -66,11 +66,11 @@ public class AffinityScoringTests
     {
         // Arrange
         var ticket = new Ticket { Description = "Login failed" }; // Should map to "Password Reset" or similar if keywords match
-        // Wait, "Login failed" -> "Password Reset" in ExtractCategoryFromTicket
-        
-        var agent = new Employee 
-        { 
-            Specializations = "[\"Password Reset\"]" 
+                                                                  // Wait, "Login failed" -> "Password Reset" in ExtractCategoryFromTicket
+
+        var agent = new Employee
+        {
+            Specializations = "[\"Password Reset\"]"
         };
 
         // Act

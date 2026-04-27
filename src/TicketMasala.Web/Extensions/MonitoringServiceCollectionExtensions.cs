@@ -1,5 +1,5 @@
-using TicketMasala.Web.Health;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using TicketMasala.Web.Health;
 
 namespace TicketMasala.Web.Extensions;
 

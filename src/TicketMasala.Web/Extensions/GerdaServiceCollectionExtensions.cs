@@ -6,9 +6,9 @@ using TicketMasala.Web.Engine.GERDA.BackgroundJobs;
 using TicketMasala.Web.Engine.GERDA.Dispatching;
 using TicketMasala.Web.Engine.GERDA.Estimating;
 using TicketMasala.Web.Engine.GERDA.Grouping;
+using TicketMasala.Web.Engine.GERDA.Knowledge;
 using TicketMasala.Web.Engine.GERDA.Models;
 using TicketMasala.Web.Engine.GERDA.Ranking;
-using TicketMasala.Web.Engine.GERDA.Knowledge;
 using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Tenancy;
 
@@ -28,7 +28,6 @@ public static class GerdaServiceCollectionExtensions
         string configBasePath)
     {
         var gerdaConfigPath = Path.Combine(configBasePath, "masala_config.json");
-        Console.WriteLine($"Loading configuration from: {configBasePath}");
 
         // Domain Configuration Service (always available, uses defaults if no config file)
         services.AddSingleton<Engine.GERDA.Configuration.IDomainConfigurationService,
@@ -46,8 +45,6 @@ public static class GerdaServiceCollectionExtensions
 
         if (!File.Exists(gerdaConfigPath))
         {
-            Console.WriteLine($"Note: GERDA config not found at {gerdaConfigPath}");
-            Console.WriteLine("Application will run with basic ticketing functionality");
 
             // Register NoOp services to prevent DI failures
             services.AddScoped<IDispatchingService, NoOpDispatchingService>();
@@ -114,8 +111,6 @@ public static class GerdaServiceCollectionExtensions
 
         // Auto-register strategies from plugin assemblies
         StrategyAutoRegistration.RegisterPluginStrategies(services);
-
-        Console.WriteLine("GERDA AI Services registered successfully (G+E+R+D+A + Background Jobs)");
 
         return services;
     }

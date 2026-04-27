@@ -1,5 +1,5 @@
-using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Repositories.Queries;
 
 namespace TicketMasala.Web.Repositories;

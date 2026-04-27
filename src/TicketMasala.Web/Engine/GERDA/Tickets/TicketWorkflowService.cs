@@ -1,20 +1,20 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
-using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Common;
-using TicketMasala.Domain.Enums;
-using TicketMasala.Web.Repositories;
-using TicketMasala.Web.Observers;
-using TicketMasala.Web.Engine.Core;
-using TicketMasala.Web.Engine.Security;
-using TicketMasala.Web.Data;
 using Microsoft.EntityFrameworkCore;
-using TicketMasala.Web.Engine.Compiler;
-using TicketMasala.Web.Engine.GERDA.Configuration;
+using Microsoft.Extensions.Logging;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Enums;
 using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.Data;
+using TicketMasala.Web.Engine.Compiler;
+using TicketMasala.Web.Engine.Core;
+using TicketMasala.Web.Engine.GERDA.Configuration;
+using TicketMasala.Web.Engine.Security;
+using TicketMasala.Web.Observers;
+using TicketMasala.Web.Repositories;
 
 namespace TicketMasala.Web.Engine.GERDA.Tickets;
 
@@ -306,7 +306,8 @@ public class TicketWorkflowService : ITicketWorkflowService
     public async Task<bool> RequestReviewAsync(Guid ticketId, string requesterId)
     {
         var ticket = await _ticketRepository.GetByIdAsync(ticketId, includeRelations: false);
-        if (ticket == null) return false;
+        if (ticket == null)
+            return false;
 
         ticket.ReviewStatus = ReviewStatus.Pending;
         await _ticketRepository.UpdateAsync(ticket);
@@ -319,7 +320,8 @@ public class TicketWorkflowService : ITicketWorkflowService
     public async Task<bool> SubmitReviewAsync(Guid ticketId, int score, string feedback, bool approved, string reviewerId)
     {
         var ticket = await _ticketRepository.GetByIdAsync(ticketId, includeRelations: false);
-        if (ticket == null) return false;
+        if (ticket == null)
+            return false;
 
         ticket.ReviewStatus = approved ? ReviewStatus.Approved : ReviewStatus.Rejected;
 

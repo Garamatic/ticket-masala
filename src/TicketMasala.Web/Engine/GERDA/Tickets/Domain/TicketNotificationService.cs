@@ -1,10 +1,10 @@
-using TicketMasala.Web.Engine.Core;
-using TicketMasala.Domain.Entities;
-using TicketMasala.Web.Repositories;
-using TicketMasala.Domain.Common;
-using Microsoft.Extensions.Logging;
-using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Engine.Core;
+using TicketMasala.Web.Repositories;
 
 namespace TicketMasala.Web.Engine.GERDA.Tickets.Domain
 {

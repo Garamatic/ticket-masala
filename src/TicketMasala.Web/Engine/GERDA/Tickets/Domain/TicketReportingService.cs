@@ -1,9 +1,9 @@
-using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Common;
-using TicketMasala.Web.Repositories;
-using Microsoft.Extensions.Logging;
-using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Repositories;
 
 namespace TicketMasala.Web.Engine.GERDA.Tickets.Domain
 {
@@ -39,7 +39,8 @@ namespace TicketMasala.Web.Engine.GERDA.Tickets.Domain
             foreach (var t in tickets)
             {
                 var status = t.TicketStatus.ToString();
-                if (!result.ContainsKey(status)) result[status] = 0;
+                if (!result.ContainsKey(status))
+                    result[status] = 0;
                 result[status]++;
             }
             return result;

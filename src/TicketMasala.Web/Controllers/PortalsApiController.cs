@@ -1,14 +1,14 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using TicketMasala.Domain.Entities;
-using TicketMasala.Web.Data;
-using TicketMasala.Web.ViewModels.Portal;
-using TicketMasala.Web.Repositories;
-using TicketMasala.Web.Configuration;
-using TicketMasala.Web.Engine.GERDA.Configuration;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Domain.Common; // Added
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.Configuration;
+using TicketMasala.Web.Data;
+using TicketMasala.Web.Engine.GERDA.Configuration;
+using TicketMasala.Web.Repositories;
+using TicketMasala.Web.ViewModels.Portal;
 
 namespace TicketMasala.Web.Controllers;
 

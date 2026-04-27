@@ -49,7 +49,8 @@ public class TenantViewLocationExpander : IViewLocationExpander
     /// </summary>
     private static string? GetCurrentTenant(HttpContext? httpContext)
     {
-        if (httpContext == null) return null;
+        if (httpContext == null)
+            return null;
 
         // 1. Check X-Tenant header
         if (httpContext.Request.Headers.TryGetValue("X-Tenant", out var headerValue))

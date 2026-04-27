@@ -1,12 +1,12 @@
-using Xunit;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using TicketMasala.Web.Repositories;
-using TicketMasala.Web.Data;
 using TicketMasala.Domain.Data;
 using TicketMasala.Domain.Entities;
-using System;
-using System.Threading.Tasks;
-using System.Linq;
+using TicketMasala.Web.Data;
+using TicketMasala.Web.Repositories;
+using Xunit;
 
 namespace TicketMasala.Tests.Repositories;
 
@@ -29,41 +29,41 @@ public class KnowledgeBaseRepositoryTests
         var repository = new EfCoreKnowledgeBaseRepository(context);
 
         // MasalaRank = (UsageCount * 10) + (IsVerified * 50)
-        
-        var lowScore = new KnowledgeBaseArticle 
-        { 
-            Id = Guid.NewGuid(), 
-            Title = "Low Score", 
+
+        var lowScore = new KnowledgeBaseArticle
+        {
+            Id = Guid.NewGuid(),
+            Title = "Low Score",
             Content = "Content",
             UsageCount = 0,
             IsVerified = false,
             CreatedAt = DateTime.UtcNow.AddDays(-1)
         }; // Score 0
 
-        var mediumScore = new KnowledgeBaseArticle 
-        { 
-            Id = Guid.NewGuid(), 
-            Title = "Medium Score", 
+        var mediumScore = new KnowledgeBaseArticle
+        {
+            Id = Guid.NewGuid(),
+            Title = "Medium Score",
             Content = "Content",
             UsageCount = 6,
             IsVerified = false,
             CreatedAt = DateTime.UtcNow.AddDays(-1)
         }; // Score 60
 
-        var highScore = new KnowledgeBaseArticle 
-        { 
-            Id = Guid.NewGuid(), 
-            Title = "High Score", 
+        var highScore = new KnowledgeBaseArticle
+        {
+            Id = Guid.NewGuid(),
+            Title = "High Score",
             Content = "Content",
             UsageCount = 2,
             IsVerified = true,
             CreatedAt = DateTime.UtcNow.AddDays(-1)
         }; // Score 20 + 50 = 70
 
-        var highestScore = new KnowledgeBaseArticle 
-        { 
-            Id = Guid.NewGuid(), 
-            Title = "Highest Score", 
+        var highestScore = new KnowledgeBaseArticle
+        {
+            Id = Guid.NewGuid(),
+            Title = "Highest Score",
             Content = "Content",
             UsageCount = 10,
             IsVerified = true,
@@ -92,10 +92,10 @@ public class KnowledgeBaseRepositoryTests
         using var context = new MasalaDbContext(_dbOptions);
         var repository = new EfCoreKnowledgeBaseRepository(context);
 
-        var article = new KnowledgeBaseArticle 
-        { 
-            Id = Guid.NewGuid(), 
-            Title = "Test", 
+        var article = new KnowledgeBaseArticle
+        {
+            Id = Guid.NewGuid(),
+            Title = "Test",
             Content = "Test",
             UsageCount = 0,
             CreatedAt = DateTime.UtcNow

@@ -1,27 +1,4 @@
-using TicketMasala.Web.Data;
-using TicketMasala.Web.Data.Seeding;
-using TicketMasala.Domain.Entities;
-using TicketMasala.Web.Tenancy;
-using TicketMasala.Web.Repositories;
-using TicketMasala.Web.Observers;
-using TicketMasala.Web.Health;
-using TicketMasala.Web.Engine.Core;
-using TicketMasala.Web.Engine.GERDA.Tickets;
-using TicketMasala.Web.Engine.GERDA.Tickets.Domain;
-using TicketMasala.Web.Engine.Projects;
-using TicketMasala.Web.Engine.Ingestion;
-using TicketMasala.Web.Engine.Ingestion.Background;
-using TicketMasala.Web.Engine.Compiler;
-using TicketMasala.Web.Engine.GERDA;
-using TicketMasala.Web.Engine.GERDA.Models;
-using TicketMasala.Web.Engine.GERDA.Grouping;
-using TicketMasala.Web.Engine.GERDA.Estimating;
-using TicketMasala.Web.Engine.GERDA.Ranking;
-using TicketMasala.Web.Engine.GERDA.Dispatching;
-using TicketMasala.Web.Engine.GERDA.Anticipation;
-using TicketMasala.Web.Engine.GERDA.BackgroundJobs;
-using TicketMasala.Web.Engine.GERDA.Knowledge;
-using TicketMasala.Web.Orchestrators;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
@@ -29,9 +6,32 @@ using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using System.Threading.RateLimiting;
-using Microsoft.Extensions.ML;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.ML;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Data;
+using TicketMasala.Web.Data.Seeding;
+using TicketMasala.Web.Engine.Compiler;
+using TicketMasala.Web.Engine.Core;
+using TicketMasala.Web.Engine.GERDA;
+using TicketMasala.Web.Engine.GERDA.Anticipation;
+using TicketMasala.Web.Engine.GERDA.BackgroundJobs;
+using TicketMasala.Web.Engine.GERDA.Dispatching;
+using TicketMasala.Web.Engine.GERDA.Estimating;
+using TicketMasala.Web.Engine.GERDA.Grouping;
+using TicketMasala.Web.Engine.GERDA.Knowledge;
+using TicketMasala.Web.Engine.GERDA.Models;
+using TicketMasala.Web.Engine.GERDA.Ranking;
+using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.Engine.GERDA.Tickets.Domain;
+using TicketMasala.Web.Engine.Ingestion;
+using TicketMasala.Web.Engine.Ingestion.Background;
+using TicketMasala.Web.Engine.Projects;
+using TicketMasala.Web.Health;
+using TicketMasala.Web.Observers;
+using TicketMasala.Web.Orchestrators;
+using TicketMasala.Web.Repositories;
+using TicketMasala.Web.Tenancy;
 using WebOptimizer;
 
 namespace TicketMasala.Web.Extensions;
@@ -164,8 +164,6 @@ public static class WebApplicationBuilderExtensions
         var configBasePath = TicketMasala.Web.Configuration.ConfigurationPaths.GetConfigBasePath(builder.Environment.ContentRootPath);
         var gerdaConfigPath = Path.Combine(configBasePath, "masala_config.json");
 
-        Console.WriteLine($"Loading configuration from: {configBasePath}");
-
         builder.Services.AddSingleton<TicketMasala.Web.Engine.GERDA.Configuration.IDomainConfigurationService,
             TicketMasala.Web.Engine.GERDA.Configuration.DomainConfigurationService>();
         builder.Services.AddScoped<TicketMasala.Web.Engine.GERDA.Configuration.IDomainUiService,
@@ -210,14 +208,10 @@ public static class WebApplicationBuilderExtensions
                 builder.Services.AddHostedService<GerdaBackgroundService>();
 
                 StrategyAutoRegistration.RegisterPluginStrategies(builder.Services);
-
-                Console.WriteLine("GERDA AI Services registered successfully (G+E+R+D+A + Background Jobs)");
             }
         }
         else
         {
-            Console.WriteLine($"Note: GERDA config not found at {gerdaConfigPath}");
-            Console.WriteLine("Application will run with basic ticketing functionality");
             builder.Services.AddScoped<IDispatchingService, NoOpDispatchingService>();
             builder.Services.AddScoped<IKnowledgeService, NoOpKnowledgeService>();
             builder.Services.AddScoped<IGerdaService, NoOpGerdaService>();

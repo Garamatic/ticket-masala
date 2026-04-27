@@ -31,18 +31,18 @@ public interface IGerdaStage
 public class GerdaPipelineContext
 {
     public Dictionary<string, object> Data { get; } = new();
-    
+
     public Guid? ParentTicketGuid { get; set; }
     public double? EffortPoints { get; set; }
     public double? PriorityScore { get; set; }
     public Guid? RecommendedAgentId { get; set; }
     public List<Guid> SuggestedArticles { get; set; } = new();
-    
+
     /// <summary>
     /// Stores arbitrary data for custom stages.
     /// </summary>
     public void Set(string key, object value) => Data[key] = value;
-    
+
     /// <summary>
     /// Retrieves arbitrary data stored by previous stages.
     /// </summary>

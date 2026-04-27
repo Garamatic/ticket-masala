@@ -13,7 +13,7 @@ public class SimilarityKnowledgeStrategy : IKnowledgeStrategy
     public Task<List<KnowledgeSuggestion>> FindRelatedArticlesAsync(Ticket ticket, IEnumerable<KnowledgeBaseArticle> articles, int maxSuggestions)
     {
         var suggestions = new List<KnowledgeSuggestion>();
-        
+
         // Combine title and description for analysis
         var ticketContent = $"{(ticket.Title ?? "")} {ticket.Description}".ToLowerInvariant();
         var ticketTags = (ticket.GerdaTags ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
@@ -29,7 +29,7 @@ public class SimilarityKnowledgeStrategy : IKnowledgeStrategy
             var articleTags = (article.Tags ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                                                  .Select(t => t.ToLowerInvariant())
                                                  .ToList();
-            
+
             var matchingTags = ticketTags.Intersect(articleTags).ToList();
             if (matchingTags.Any())
             {

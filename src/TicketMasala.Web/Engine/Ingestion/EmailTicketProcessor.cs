@@ -1,10 +1,10 @@
-using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Data;
-using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Engine.GERDA.Estimating;
 using TicketMasala.Web.Engine.GERDA.Sentiment;
+using TicketMasala.Web.Engine.GERDA.Tickets;
 
 namespace TicketMasala.Web.Engine.Ingestion;
 
@@ -43,9 +43,10 @@ public class EmailTicketProcessor : IEmailTicketProcessor
         var (urgencyScore, sentimentLabel) = _sentimentAnalyzer.Analyze(email.Subject, email.Body);
 
         // 2. Create Ticket via Workflow Service (handles observers, defaults, PII scrubbing)
+        // TODO: Look up or create customer by email instead of using system default
         var ticket = await _ticketWorkflowService.CreateTicketAsync(
             description: email.Body ?? "(No Content)",
-            customerId: "system-email", // Or look up user
+            customerId: "system-email", // Or look up user - requires customer lookup implementation
             responsibleId: null,
             projectGuid: null,
             completionTarget: _clock.UtcNow.AddDays(7)

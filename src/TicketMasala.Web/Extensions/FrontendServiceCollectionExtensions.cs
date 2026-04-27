@@ -1,5 +1,5 @@
-using WebOptimizer;
 using Microsoft.AspNetCore.Mvc.Razor;
+using WebOptimizer;
 
 namespace TicketMasala.Web.Extensions;
 
@@ -8,7 +8,7 @@ public static class FrontendServiceCollectionExtensions
     public static IServiceCollection AddMasalaFrontend(this IServiceCollection services)
     {
         services.AddLocalization();
-        
+
         services.Configure<RequestLocalizationOptions>(options =>
         {
             var supportedCultures = new[] { "en", "fr", "nl" };

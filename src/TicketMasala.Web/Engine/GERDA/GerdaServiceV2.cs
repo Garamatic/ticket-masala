@@ -1,7 +1,7 @@
+using TicketMasala.Domain.Common;
+using TicketMasala.Web.Engine.GERDA.Anticipation;
 using TicketMasala.Web.Engine.GERDA.Models;
 using TicketMasala.Web.Engine.GERDA.Pipeline;
-using TicketMasala.Web.Engine.GERDA.Anticipation;
-using TicketMasala.Domain.Common;
 using TicketMasala.Web.Repositories;
 
 namespace TicketMasala.Web.Engine.GERDA;
@@ -49,10 +49,10 @@ public class GerdaServiceV2 : IGerdaService
         {
             // Execute pipeline - all stages run in sequence
             var context = await _pipeline.ExecuteAsync(ticketGuid);
-            
+
             _logger.LogInformation(
                 "GERDA: Completed processing ticket {TicketGuid}. Results: Parent={ParentGuid}, Effort={Effort}, Priority={Priority}, Agent={AgentId}",
-                ticketGuid, 
+                ticketGuid,
                 context.ParentTicketGuid,
                 context.EffortPoints,
                 context.PriorityScore,

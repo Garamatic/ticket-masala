@@ -1,13 +1,13 @@
-using TicketMasala.Web.AI;
-using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Common;
-using TicketMasala.Web.Engine.Core;
 using MailKit;
 using MailKit.Net.Imap;
 using MailKit.Search;
 using MimeKit;
-using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web.AI;
 using TicketMasala.Web.Data;
+using TicketMasala.Web.Engine.Core;
+using TicketMasala.Web.Engine.GERDA.Tickets;
 
 namespace TicketMasala.Web.Engine.Ingestion;
 
@@ -32,10 +32,6 @@ public class EmailIngestionService : BackgroundService
         {
             try
             {
-                using var scope = _serviceProvider.CreateScope();
-                // In a real implementation, we would resolve generic services here to create tickets
-                // e.g., var ticketService = scope.ServiceProvider.GetRequiredService<ITicketService>();
-
                 await ProcessEmailsAsync(stoppingToken);
             }
             catch (Exception ex)
@@ -93,7 +89,8 @@ public class EmailIngestionService : BackgroundService
             var uids = await inbox.SearchAsync(SearchQuery.NotSeen, stoppingToken);
             _logger.LogInformation("Found {Count} unread messages", uids.Count);
 
-            if (uids.Count == 0) return;
+            if (uids.Count == 0)
+                return;
 
             // Create scope for DB Context and Processor
             using var scope = _serviceProvider.CreateScope();

@@ -1,8 +1,8 @@
-using TicketMasala.Web.Engine.GERDA.Dispatching.Models;
-using TicketMasala.Web.Data;
-using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Common;
 using Microsoft.EntityFrameworkCore;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Data;
+using TicketMasala.Web.Engine.GERDA.Dispatching.Models;
 
 namespace TicketMasala.Web.Engine.Common;
 
@@ -31,7 +31,8 @@ public class TicketWorkItemRepository : IWorkItemRepository
         }
 
         var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.Guid == guid);
-        if (ticket == null) return null;
+        if (ticket == null)
+            return null;
 
         return new TicketWorkItemAdapter(ticket);
     }
@@ -41,7 +42,7 @@ public class TicketWorkItemRepository : IWorkItemRepository
     {
         // Open = not completed, not cancelled
         var openStatuses = new[] { "New", "Triaged", "InProgress", "OnHold" };
-        
+
         var tickets = await _context.Tickets
             .Where(t => openStatuses.Contains(t.Status))
             .ToListAsync();
@@ -69,7 +70,8 @@ public class TicketWorkItemRepository : IWorkItemRepository
                 guids.Add(guid);
         }
 
-        if (!guids.Any()) return Enumerable.Empty<IWorkItem>();
+        if (!guids.Any())
+            return Enumerable.Empty<IWorkItem>();
 
         var tickets = await _context.Tickets
             .Where(t => guids.Contains(t.Guid))

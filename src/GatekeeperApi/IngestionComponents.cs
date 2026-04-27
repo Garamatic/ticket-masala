@@ -1,9 +1,9 @@
 using System.Threading.Channels;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
-using TicketMasala.Web.Engine.Ingestion;
 using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.Engine.Ingestion;
 
 namespace GatekeeperApi
 {
@@ -18,7 +18,8 @@ namespace GatekeeperApi
 
         public async ValueTask EnqueueAsync(T item)
         {
-            if (item == null) throw new ArgumentNullException(nameof(item));
+            if (item == null)
+                throw new ArgumentNullException(nameof(item));
             await _queue.Writer.WriteAsync(item);
         }
 
@@ -35,7 +36,7 @@ namespace GatekeeperApi
         private readonly IServiceScopeFactory _scopeFactory;
 
         public IngestionWorker(
-            ILogger<IngestionWorker> logger, 
+            ILogger<IngestionWorker> logger,
             IngestionQueue<IngestionRequest> queue,
             IServiceScopeFactory scopeFactory)
         {
@@ -69,7 +70,7 @@ namespace GatekeeperApi
                     if (result.Success)
                     {
                         _logger.LogInformation("Successfully transformed data for Domain: {DomainId}", result.DomainId);
-                        
+
                         if (ticketService != null)
                         {
                             var ticket = await ticketService.CreateTicketAsync(
@@ -79,7 +80,7 @@ namespace GatekeeperApi
                                 null, // No initial project
                                 null  // Default completion target
                             );
-                            
+
                             _logger.LogInformation("Created ticket {TicketGuid} from ingestion", ticket.Guid);
                         }
                     }

@@ -1,10 +1,10 @@
+using FluentAssertions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Xunit;
-using FluentAssertions;
 using TicketMasala.Web.Tenancy;
+using Xunit;
 
 namespace TicketMasala.Web.Tests.IntegrationTests;
 
@@ -46,14 +46,14 @@ public class PluginIntegrationTests
         // Arrange
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder().Build();
-        
+
         var tenantPlugin = new TestTenantPlugin();
         var standardPlugin = new PluginAdapter(tenantPlugin);
 
         // Act
         // Simulate a host loading the plugin via the Standard interface
         standardPlugin.ConfigureServices(services, configuration);
-        
+
         var serviceProvider = services.BuildServiceProvider();
         var testService = serviceProvider.GetService<ITestService>();
 

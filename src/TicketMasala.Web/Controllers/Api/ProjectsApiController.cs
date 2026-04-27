@@ -1,18 +1,17 @@
+using System.Security.Claims;
 using Asp.Versioning;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TicketMasala.Web.ViewModels.Projects;
-using TicketMasala.Web.ViewModels.Tickets;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Entities;
-using TicketMasala.Web.Data;
-using System.Security.Claims;
-using TicketMasala.Web.Engine.Projects;
-using TicketMasala.Web.AI;
-
 using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.AI;
+using TicketMasala.Web.Data;
+using TicketMasala.Web.Engine.Projects;
+using TicketMasala.Web.ViewModels.Projects;
+using TicketMasala.Web.ViewModels.Tickets;
 
 namespace TicketMasala.Web.Controllers.Api;
 

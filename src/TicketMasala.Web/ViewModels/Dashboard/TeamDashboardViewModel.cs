@@ -1,5 +1,5 @@
-using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Enums;
 
 namespace TicketMasala.Web.ViewModels.Dashboard;
@@ -87,8 +87,10 @@ public class AgentWorkloadMetric
     {
         get
         {
-            if (UtilizationPercentage >= 90) return "danger";
-            if (UtilizationPercentage >= 80) return "warning";
+            if (UtilizationPercentage >= 90)
+                return "danger";
+            if (UtilizationPercentage >= 80)
+                return "warning";
             return "success";
         }
     }

@@ -1,12 +1,12 @@
-using Microsoft.Data.Sqlite;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
-using TicketMasala.Domain.Data;
-using TicketMasala.Web.Data;
-using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Data;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Data;
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.Services;
 

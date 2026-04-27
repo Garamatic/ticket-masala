@@ -1,5 +1,5 @@
-using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
 
 namespace TicketMasala.Web.ViewModels.GERDA;
 
@@ -58,8 +58,10 @@ public class TicketDispatchInfo
 
     private static string FormatTimeInBacklog(TimeSpan time)
     {
-        if (time.TotalHours < 1) return $"{(int)time.TotalMinutes}m";
-        if (time.TotalDays < 1) return $"{(int)time.TotalHours}h";
+        if (time.TotalHours < 1)
+            return $"{(int)time.TotalMinutes}m";
+        if (time.TotalDays < 1)
+            return $"{(int)time.TotalHours}h";
         return $"{(int)time.TotalDays}d";
     }
 }

@@ -3,19 +3,18 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
-using TicketMasala.Web.ViewModels.Tickets;
-using TicketMasala.Web.Facades;
-using TicketMasala.Web.Common;
-using TicketMasala.Web.Engine.GERDA;
-using TicketMasala.Web.Engine.GERDA.Tickets;
-using TicketMasala.Web.Engine.GERDA.Configuration;
-using TicketMasala.Web.Engine.Compiler;
-using TicketMasala.Web.AI;
-using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.AI;
+using TicketMasala.Web.Common;
+using TicketMasala.Web.Engine.Compiler;
 using TicketMasala.Web.Engine.Core;
+using TicketMasala.Web.Engine.GERDA;
+using TicketMasala.Web.Engine.GERDA.Configuration;
+using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.Facades;
+using TicketMasala.Web.ViewModels.Tickets;
 
 namespace TicketMasala.Web.Orchestrators;
 
@@ -30,7 +29,6 @@ public class TicketOrchestrator : ITicketOrchestrator
     private readonly ITicketContextFacade _ticketContextFacade;
     private readonly ISavedFilterService _savedFilterService;
     private readonly ILogger<TicketOrchestrator> _logger;
-    private readonly IServiceProvider _serviceProvider;
 
     public TicketOrchestrator(
         IGerdaService gerdaService,
@@ -41,8 +39,7 @@ public class TicketOrchestrator : ITicketOrchestrator
         IOpenAiService openAiService,
         ITicketContextFacade ticketContextFacade,
         ISavedFilterService savedFilterService,
-        ILogger<TicketOrchestrator> logger,
-        IServiceProvider serviceProvider)
+        ILogger<TicketOrchestrator> logger)
     {
         _gerdaService = gerdaService;
         _ticketWorkflowService = ticketWorkflowService;
@@ -53,17 +50,18 @@ public class TicketOrchestrator : ITicketOrchestrator
         _ticketContextFacade = ticketContextFacade;
         _savedFilterService = savedFilterService;
         _logger = logger;
-        _serviceProvider = serviceProvider;
     }
 
     public async Task<TicketSearchViewModel> SearchTicketsAsync(TicketSearchViewModel searchModel, ClaimsPrincipal user)
     {
-        if (searchModel == null) searchModel = new TicketSearchViewModel();
+        if (searchModel == null)
+            searchModel = new TicketSearchViewModel();
 
         var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var isCustomer = user.IsInRole(Constants.RoleCustomer);
 
-        if (isCustomer && !string.IsNullOrEmpty(userId)) searchModel.CustomerId = userId;
+        if (isCustomer && !string.IsNullOrEmpty(userId))
+            searchModel.CustomerId = userId;
 
         var result = await _ticketReadService.SearchTicketsAsync(searchModel);
         result.Customers = await _ticketReadService.GetCustomerSelectListAsync();
@@ -95,7 +93,8 @@ public class TicketOrchestrator : ITicketOrchestrator
     public async Task<string> GenerateAiSummaryAsync(Guid ticketId)
     {
         var ticket = await _ticketReadService.GetTicketDetailsAsync(ticketId);
-        if (ticket == null) throw new ArgumentException("Ticket not found");
+        if (ticket == null)
+            throw new ArgumentException("Ticket not found");
 
         var query = $"Title: {ticket.Description} (Created: {ticket.CreationDate})\n\n" +
                 $"Status: {ticket.TicketStatus}\n\n" +
@@ -132,12 +131,23 @@ public class TicketOrchestrator : ITicketOrchestrator
         IFormCollection form,
         ClaimsPrincipal user)
     {
+        // Input validation
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            return Result.Failure<Guid>("Description is required.");
+        }
+
         var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var isCustomer = user.IsInRole(Constants.RoleCustomer);
 
         if (isCustomer && !string.IsNullOrEmpty(userId))
         {
             customerId = userId;
+        }
+
+        if (string.IsNullOrWhiteSpace(customerId))
+        {
+            return Result.Failure<Guid>("Customer is required.");
         }
 
         try
@@ -158,7 +168,7 @@ public class TicketOrchestrator : ITicketOrchestrator
 
             var entityLabel = _domainConfig.GetEntityLabels(ticket.DomainId).WorkItem;
             _logger.LogInformation("GERDA processing completed for ticket {TicketGuid}", ticket.Guid);
-            
+
             return Result.Success(ticket.Guid, $"{entityLabel} created successfully! GERDA AI has processed the {entityLabel.ToLower()}.");
         }
         catch (Exception ex)
@@ -167,33 +177,10 @@ public class TicketOrchestrator : ITicketOrchestrator
             return Result.Failure<Guid>("Creation encountered an error. Please try again.");
         }
     }
-
     public async Task<TicketEditContext?> GetEditContextAsync(Guid id, ClaimsPrincipal user)
     {
-        var context = await _ticketContextFacade.GetEditContextAsync(id, user);
-
-        // Populate ValidStatuses if needed (logic from Controller)
-        // Since Facade doesn't return Ticket entity, we re-fetch if needed, or Facade should have done it.
-        // We will mimic Controller logic here for now.
-        if (context != null)
-        {
-            var ticket = await _ticketReadService.GetTicketForEditAsync(id);
-            if (ticket != null)
-            {
-                var validStates = _ruleEngine.GetValidNextStates(ticket, user);
-                // We need to pass this back. But TicketEditContext usually has ViewModel. 
-                // We might need to extend Context or ViewModel. 
-                // Controller used ViewBag.ValidStatuses. 
-                // We can put it in context if there's a place, or return a tuple/result.
-                // TicketEditContext class definition needs checking.
-                // Assuming we can't easily change TicketEditContext right now, we will leave this to Controller or add to ViewModel if possible.
-                // But wait, GetEditReloadContextAsync has ValidStatuses!
-                // Let's see if GetEditContextAsync has it. 
-            }
-        }
-        return context;
+        return await _ticketContextFacade.GetEditContextAsync(id, user);
     }
-
     public async Task<TicketEditContext> GetEditReloadContextAsync(Guid id, ClaimsPrincipal user)
     {
         return await _ticketContextFacade.GetEditReloadContextAsync(id, user);
@@ -202,14 +189,16 @@ public class TicketOrchestrator : ITicketOrchestrator
     public async Task<Result> UpdateTicketAsync(Guid id, EditTicketViewModel viewModel, IFormCollection form, ClaimsPrincipal user)
     {
         var ticketToUpdate = await _ticketReadService.GetTicketForEditAsync(id);
-        if (ticketToUpdate == null) return Result.Failure("Ticket not found");
+        if (ticketToUpdate == null)
+            return Result.Failure("Ticket not found");
 
         var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var isCustomer = user.IsInRole(Constants.RoleCustomer);
 
         if (isCustomer)
         {
-            if (ticketToUpdate.CustomerId != userId) return Result.Failure("Unauthorized");
+            if (ticketToUpdate.CustomerId != userId)
+                return Result.Failure("Unauthorized");
 
             if (ticketToUpdate.TicketStatus != Status.Pending && ticketToUpdate.TicketStatus != Status.Assigned)
             {

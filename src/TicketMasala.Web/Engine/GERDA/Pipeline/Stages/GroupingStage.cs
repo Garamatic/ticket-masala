@@ -23,7 +23,7 @@ public class GroupingStage : IGerdaStage
     public async Task ExecuteAsync(Guid ticketGuid, GerdaPipelineContext context)
     {
         var parentGuid = await _groupingService.CheckAndGroupTicketAsync(ticketGuid);
-        
+
         if (parentGuid.HasValue)
         {
             context.ParentTicketGuid = parentGuid;

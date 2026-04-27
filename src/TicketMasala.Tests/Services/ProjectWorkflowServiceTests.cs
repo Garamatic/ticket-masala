@@ -1,20 +1,19 @@
-using Xunit;
-using Moq;
-using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using TicketMasala.Web;
+using Microsoft.Extensions.Logging;
+using Moq;
+using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Data;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web;
+using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.AI;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.Projects;
-using TicketMasala.Web.AI;
-using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Common;
-using TicketMasala.Web.Repositories;
 using TicketMasala.Web.Observers;
+using TicketMasala.Web.Repositories;
 using TicketMasala.Web.ViewModels.Projects;
-using Microsoft.AspNetCore.Identity;
-
-using TicketMasala.Web.Abstractions;
+using Xunit;
 
 namespace TicketMasala.Tests.Services;
 

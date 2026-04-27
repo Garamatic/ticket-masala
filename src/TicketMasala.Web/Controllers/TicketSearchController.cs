@@ -1,12 +1,12 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using TicketMasala.Domain.Common;
-using TicketMasala.Web.ViewModels.Tickets;
+using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Engine.Projects;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
-using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Orchestrators;
+using TicketMasala.Web.ViewModels.Tickets;
 
 namespace TicketMasala.Web.Controllers;
 
@@ -36,7 +36,7 @@ public class TicketSearchController : Controller
         try
         {
             var result = await _orchestrator.SearchTicketsAsync(searchModel, User);
-            
+
             // Orchestrator populates SavedFilters in the result now
             ViewBag.SavedFilters = result.SavedFilters;
             ViewBag.IsCustomer = User.IsInRole(Constants.RoleCustomer);
@@ -61,7 +61,8 @@ public class TicketSearchController : Controller
         }
 
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
 
         await _savedFilterService.SaveFilterAsync(userId, name, searchModel);
 
@@ -73,7 +74,8 @@ public class TicketSearchController : Controller
     public async Task<IActionResult> LoadFilter(Guid id)
     {
         var filter = await _savedFilterService.GetFilterAsync(id);
-        if (filter == null) return NotFound();
+        if (filter == null)
+            return NotFound();
 
         var searchModel = new TicketSearchViewModel
         {
@@ -95,7 +97,8 @@ public class TicketSearchController : Controller
     public async Task<IActionResult> DeleteFilter(Guid id)
     {
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId)) return Forbid();
+        if (string.IsNullOrEmpty(userId))
+            return Forbid();
 
         try
         {

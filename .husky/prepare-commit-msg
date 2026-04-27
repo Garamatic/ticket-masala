@@ -1,0 +1,20 @@
+#!/bin/sh
+# Prepare commit message hook
+# Can be used to validate or auto-generate commit messages
+
+COMMIT_MSG_FILE=$1
+COMMIT_SOURCE=$2
+
+# Skip for merge commits, squash commits, etc.
+if [ "$COMMIT_SOURCE" = "merge" ] || [ "$COMMIT_SOURCE" = "squash" ]; then
+    exit 0
+fi
+
+# Example: Ensure commit message follows conventional commits pattern
+# Uncomment to enable:
+# COMMIT_MSG=$(head -n1 "$COMMIT_MSG_FILE")
+# if ! echo "$COMMIT_MSG" | grep -qE "^(feat|fix|docs|style|refactor|test|chore|ci|build|perf)(\(.+\))?:"; then
+#     echo "⚠️  Warning: Commit message doesn't follow conventional commits format"
+#     echo "   Expected: type(scope): description"
+#     echo "   Types: feat, fix, docs, style, refactor, test, chore, ci, build, perf"
+# fi

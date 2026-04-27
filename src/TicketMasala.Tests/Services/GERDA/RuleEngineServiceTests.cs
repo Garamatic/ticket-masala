@@ -1,12 +1,12 @@
 using System.Security.Claims;
+using Microsoft.Extensions.Logging;
 using Moq;
-using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Configuration;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Engine.Compiler;
 using TicketMasala.Web.Engine.GERDA.Configuration;
-using TicketMasala.Web.Abstractions;
-using Microsoft.Extensions.Logging;
 using Xunit;
 
 namespace TicketMasala.Tests.Services.GERDA;
@@ -25,7 +25,7 @@ public class RuleEngineServiceTests
         _loggerMock = new Mock<ILogger<RuleEngineService>>();
         _clockMock = new Mock<ISystemClock>();
         _clockMock.Setup(c => c.UtcNow).Returns(DateTime.UtcNow);
-        
+
         // Use real compiler for integration testing of the engine+compiler pair
         var compilerLogger = new Mock<ILogger<RuleCompilerService>>();
         _compiler = new RuleCompilerService(compilerLogger.Object, _clockMock.Object);
@@ -46,7 +46,7 @@ public class RuleEngineServiceTests
 
         _domainConfigMock.Setup(x => x.GetValidTransitions("IT", "Pending"))
             .Returns(new List<string> { "Assigned" });
-        
+
         // Mock domain without specific rules
         _domainConfigMock.Setup(x => x.GetDomain("IT"))
             .Returns(new DomainConfig());
@@ -79,11 +79,11 @@ public class RuleEngineServiceTests
     public void CanTransition_ShouldDeny_WhenRuleConditionFails()
     {
         // Arrange
-        var ticket = new Ticket 
-        { 
-            DomainId = "IT", 
+        var ticket = new Ticket
+        {
+            DomainId = "IT",
             TicketStatus = Status.Pending,
-            CustomFieldsJson = "{\"vip\": false}" 
+            CustomFieldsJson = "{\"vip\": false}"
         };
         var user = new ClaimsPrincipal();
 
@@ -128,11 +128,11 @@ public class RuleEngineServiceTests
     public void CanTransition_ShouldAllow_WhenRuleConditionPasses()
     {
         // Arrange
-        var ticket = new Ticket 
-        { 
-            DomainId = "IT", 
+        var ticket = new Ticket
+        {
+            DomainId = "IT",
             TicketStatus = Status.Pending,
-            CustomFieldsJson = "{\"vip\": true}" 
+            CustomFieldsJson = "{\"vip\": true}"
         };
         var user = new ClaimsPrincipal();
 

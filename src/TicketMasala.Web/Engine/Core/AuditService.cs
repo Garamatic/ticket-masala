@@ -1,7 +1,7 @@
-using TicketMasala.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using TicketMasala.Web.Data;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.Data;
 
 namespace TicketMasala.Web.Engine.Core;
 

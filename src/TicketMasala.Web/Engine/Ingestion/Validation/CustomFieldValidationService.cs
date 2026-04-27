@@ -49,22 +49,26 @@ public class CustomFieldValidationService : ICustomFieldValidationService
                 continue;
             }
 
-            if (!hasValue) continue;
+            if (!hasValue)
+                continue;
 
             // Type-specific validation
             switch (field.Type.ToLowerInvariant())
             {
                 case "number":
                 case "currency":
-                    if (!ValidateNumeric(field, value, result)) continue;
+                    if (!ValidateNumeric(field, value, result))
+                        continue;
                     break;
 
                 case "select":
-                    if (!ValidateSelect(field, value, result)) continue;
+                    if (!ValidateSelect(field, value, result))
+                        continue;
                     break;
 
                 case "multi_select":
-                    if (!ValidateMultiSelect(field, value, result)) continue;
+                    if (!ValidateMultiSelect(field, value, result))
+                        continue;
                     break;
             }
         }
@@ -110,7 +114,8 @@ public class CustomFieldValidationService : ICustomFieldValidationService
     private bool ValidateSelect(CustomFieldDefinition field, object? value, CustomFieldValidationResult result)
     {
         var stringValue = value?.ToString();
-        if (string.IsNullOrEmpty(stringValue)) return true;
+        if (string.IsNullOrEmpty(stringValue))
+            return true;
 
         if (!field.Options.Contains(stringValue, StringComparer.OrdinalIgnoreCase))
         {
@@ -127,7 +132,8 @@ public class CustomFieldValidationService : ICustomFieldValidationService
 
     private bool ValidateMultiSelect(CustomFieldDefinition field, object? value, CustomFieldValidationResult result)
     {
-        if (value is not JsonElement jsonElement) return true;
+        if (value is not JsonElement jsonElement)
+            return true;
 
         if (jsonElement.ValueKind == JsonValueKind.Array)
         {
@@ -152,8 +158,10 @@ public class CustomFieldValidationService : ICustomFieldValidationService
 
     private static bool IsEmpty(object? value)
     {
-        if (value == null) return true;
-        if (value is string s) return string.IsNullOrWhiteSpace(s);
+        if (value == null)
+            return true;
+        if (value is string s)
+            return string.IsNullOrWhiteSpace(s);
         if (value is JsonElement jsonElement)
         {
             return jsonElement.ValueKind == JsonValueKind.Null ||

@@ -1,5 +1,5 @@
-using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Extensions;
 

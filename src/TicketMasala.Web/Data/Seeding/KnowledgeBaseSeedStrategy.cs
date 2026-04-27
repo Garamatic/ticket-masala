@@ -1,6 +1,6 @@
-using TicketMasala.Domain.Entities;
-using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Data.Seeding;
@@ -45,7 +45,7 @@ public class KnowledgeBaseSeedStrategy : ISeedStrategy
 
         if (config?.KnowledgeBaseArticles?.Count > 0)
         {
-             _logger.LogInformation("Loading {Count} KB articles from configuration", config.KnowledgeBaseArticles.Count);
+            _logger.LogInformation("Loading {Count} KB articles from configuration", config.KnowledgeBaseArticles.Count);
             foreach (var dto in config.KnowledgeBaseArticles)
             {
                 articles.Add(new KnowledgeBaseArticle
@@ -61,8 +61,8 @@ public class KnowledgeBaseSeedStrategy : ISeedStrategy
         }
         else
         {
-             _logger.LogInformation("No KB config found, using defaults");
-             articles = CreateDefaultArticles();
+            _logger.LogInformation("No KB config found, using defaults");
+            articles = CreateDefaultArticles();
         }
 
         foreach (var article in articles)

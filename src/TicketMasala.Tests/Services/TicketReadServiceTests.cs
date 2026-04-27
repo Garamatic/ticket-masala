@@ -1,17 +1,16 @@
-using TicketMasala.Web.Engine.GERDA.Tickets;
-using Xunit;
-using Moq;
-using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
-using TicketMasala.Web.Engine.Core;
-using TicketMasala.Domain.Entities;
-using TicketMasala.Web.Repositories;
-using TicketMasala.Domain.Data;
-using TicketMasala.Web.Engine.GERDA.Configuration;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Moq;
 using TicketMasala.Domain.Configuration;
-
+using TicketMasala.Domain.Data;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.Engine.Core;
+using TicketMasala.Web.Engine.GERDA.Configuration;
+using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.Repositories;
+using Xunit;
 
 namespace TicketMasala.Tests.Services;
 

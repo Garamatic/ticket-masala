@@ -1,5 +1,5 @@
-using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Services;
 
 namespace TicketMasala.Web.Engine.GERDA.Explainability;
@@ -94,7 +94,7 @@ public class ExplainabilityService : IExplainabilityService
     // avoiding interface conflict for now.
     public ExplanationResult ExplainPriorityScore(Ticket ticket)
     {
-         var factors = new List<LocalExplanationFactor>();
+        var factors = new List<LocalExplanationFactor>();
         // SLA urgency logic (simplified for fix)
         factors.Add(new LocalExplanationFactor
         {

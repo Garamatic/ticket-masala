@@ -1,25 +1,25 @@
-using TicketMasala.Web;
-using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Common;
-using TicketMasala.Web.ViewModels.Tickets;
-using TicketMasala.Web.ViewModels.Projects;
-using TicketMasala.Web.ViewModels.Customers;
-using TicketMasala.Web.Engine.Core;
-using TicketMasala.Web.Engine.GERDA.Tickets;
-using TicketMasala.Web.Engine.Projects;
-using TicketMasala.Web.Engine.Ingestion;
-using TicketMasala.Web.Engine.Ingestion.Background;
-using TicketMasala.Web.Engine.GERDA;
-using TicketMasala.Web.Engine.GERDA.Configuration;
-using TicketMasala.Web.Engine.Compiler;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using TicketMasala.Web.Data;
-using TicketMasala.Web.AI;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web;
 using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.AI;
+using TicketMasala.Web.Data;
+using TicketMasala.Web.Engine.Compiler;
+using TicketMasala.Web.Engine.Core;
+using TicketMasala.Web.Engine.GERDA;
+using TicketMasala.Web.Engine.GERDA.Configuration;
+using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.Engine.Ingestion;
+using TicketMasala.Web.Engine.Ingestion.Background;
+using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.Orchestrators;
+using TicketMasala.Web.ViewModels.Customers;
+using TicketMasala.Web.ViewModels.Projects;
+using TicketMasala.Web.ViewModels.Tickets;
 
 namespace TicketMasala.Web.Controllers;
 
@@ -43,7 +43,7 @@ public class TicketController : Controller
     public async Task<IActionResult> Index(TicketSearchViewModel searchModel)
     {
         var result = await _orchestrator.SearchTicketsAsync(searchModel, User);
-        
+
         ViewBag.SavedFilters = result.SavedFilters;
         ViewBag.IsCustomer = User.IsInRole(Constants.RoleCustomer);
         return View("~/Views/TicketSearch/Index.cshtml", result);
@@ -53,7 +53,8 @@ public class TicketController : Controller
 
     public async Task<IActionResult> Detail(Guid? id)
     {
-        if (id == null) return NotFound();
+        if (id == null)
+            return NotFound();
 
         TicketDetailsViewModel? viewModel;
         try
@@ -65,10 +66,11 @@ public class TicketController : Controller
             return Forbid();
         }
 
-        if (viewModel == null) return NotFound();
+        if (viewModel == null)
+            return NotFound();
 
         var context = await _orchestrator.GetTicketDetailContextAsync(viewModel);
-        
+
         ViewBag.DomainId = context.DomainId;
         ViewBag.EntityLabels = context.EntityLabels;
         ViewBag.CustomFields = context.CustomFields;
@@ -130,17 +132,12 @@ public class TicketController : Controller
         string? domainId,
         string? workItemTypeCode)
     {
-        // Validation logic
-        if (string.IsNullOrWhiteSpace(description)) ModelState.AddModelError("description", "Description is required");
+        // Input validation for form UX (Orchestrator has defensive validation as well)
+        if (string.IsNullOrWhiteSpace(description))
+            ModelState.AddModelError("description", "Description is required");
         if (string.IsNullOrWhiteSpace(customerId))
         {
-            // If customer is creating, ID is auto-filled by Orchestrator, but here we validate form input if needed.
-            // Actually Orchestrator handles logic. We should rely on Orchestrator or minimal validation here.
-            // But original controller did validation before logic.
-            // We can keep it or move to Orchestrator. 
-            // For now, let's keep basic validation here if it depends on ViewModel binding, 
-            // but since we use raw params, we check them.
-            // If User is customer, we might not need customerId param.
+            // Only require customerId for non-customer users (customers are auto-assigned)
             if (!User.IsInRole(Constants.RoleCustomer))
             {
                 ModelState.AddModelError("customerId", "Customer is required");
@@ -157,7 +154,7 @@ public class TicketController : Controller
                 TempData["Success"] = result.SuccessMessage;
                 return RedirectToAction("Index", "TicketSearch");
             }
-            
+
             TempData["Warning"] = result.ErrorMessage;
         }
 
@@ -167,7 +164,7 @@ public class TicketController : Controller
         ViewBag.Projects = context.Projects;
         ViewBag.Customers = context.Customers;
         ViewBag.IsCustomer = context.IsCustomer;
-        
+
         // We might need to preserve the user's selected domain if possible, but for simplicity we reload default or let view handle it.
         // Context has DomainId from config/defaults.
         ViewBag.DomainId = context.DomainId;
@@ -185,7 +182,8 @@ public class TicketController : Controller
     [HttpGet]
     public async Task<IActionResult> Edit(Guid? id)
     {
-        if (id == null) return NotFound();
+        if (id == null)
+            return NotFound();
 
         Facades.TicketEditContext? context;
         try
@@ -202,7 +200,8 @@ public class TicketController : Controller
             return RedirectToAction("Detail", new { id = id.Value });
         }
 
-        if (context == null) return NotFound();
+        if (context == null)
+            return NotFound();
 
         // Pass ValidStatuses if available (Orchestrator should populate it)
         if (context.ValidStatuses != null)
@@ -223,17 +222,18 @@ public class TicketController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(Guid id, EditTicketViewModel viewModel)
     {
-        if (id != viewModel.Guid) return NotFound();
+        if (id != viewModel.Guid)
+            return NotFound();
 
         if (ModelState.IsValid)
         {
             var result = await _orchestrator.UpdateTicketAsync(id, viewModel, Request.Form, User);
-            
+
             if (result.IsSuccess)
             {
                 return RedirectToAction(nameof(Detail), new { id = id });
             }
-            
+
             ModelState.AddModelError("", result.ErrorMessage ?? "Failed to update ticket.");
         }
 
@@ -242,9 +242,9 @@ public class TicketController : Controller
         // Note: We might want a specialized Reload method in Orchestrator that returns ViewModel ready lists.
         // reusing GetCreateContextAsync for lists is a bit hacky but works for employees/projects/customers.
         // But GetEditReloadContextAsync is better.
-        
+
         var context = await _orchestrator.GetEditReloadContextAsync(id, User);
-        
+
         if (context.ValidStatuses != null)
         {
             ViewBag.ValidStatuses = context.ValidStatuses;

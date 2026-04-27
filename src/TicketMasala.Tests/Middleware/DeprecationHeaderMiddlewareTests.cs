@@ -29,7 +29,7 @@ public class DeprecationHeaderMiddlewareTests
         Assert.True(context.Response.Headers.ContainsKey("Link"));
         var linkHeader = context.Response.Headers["Link"].ToString();
         Assert.Contains($"<{expectedLinkUrl}>; rel=\"alternate\"", linkHeader);
-        
+
         Assert.True(context.Response.Headers.ContainsKey("X-API-Deprecation-Warning"));
     }
 

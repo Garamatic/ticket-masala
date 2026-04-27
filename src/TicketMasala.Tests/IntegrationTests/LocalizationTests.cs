@@ -1,13 +1,12 @@
-using TicketMasala.Web;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Xunit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Http;
-
 using TicketMasala.Tests.TestHelpers;
+using TicketMasala.Web;
+using Xunit;
 
 namespace TicketMasala.Tests.IntegrationTests;
 

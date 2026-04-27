@@ -1,10 +1,10 @@
-using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.GERDA.Tickets;
-using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.Engine.Ingestion;
 using TicketMasala.Web.Engine.Ingestion.Background;
+using TicketMasala.Web.Engine.Projects;
 
 namespace TicketMasala.Web.Observers;
 
@@ -84,7 +84,8 @@ public class NotificationTicketObserver : ITicketObserver
         try
         {
             var ticket = comment.Ticket;
-            if (ticket == null) return;
+            if (ticket == null)
+                return;
 
             if (!comment.IsInternal)
             {

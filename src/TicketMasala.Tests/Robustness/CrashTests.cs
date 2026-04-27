@@ -1,28 +1,31 @@
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
 using Moq;
-using TicketMasala.Web.Controllers;
-using TicketMasala.Web.AI;
-using TicketMasala.Web.Engine.GERDA.Dispatching;
-using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Domain.Entities;
-using TicketMasala.Web.Repositories;
+using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.AI;
+using TicketMasala.Web.Common;
+using TicketMasala.Web.Controllers;
+using TicketMasala.Web.Engine.Compiler;
 using TicketMasala.Web.Engine.Core;
-using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.Engine.GERDA;
 using TicketMasala.Web.Engine.GERDA.Configuration;
-using TicketMasala.Web.Engine.Compiler;
-using TicketMasala.Web.ViewModels.ApplicationUsers;
-using Microsoft.AspNetCore.Http;
-using Xunit;
+using TicketMasala.Web.Engine.GERDA.Dispatching;
+using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.Facades;
-using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Orchestrators;
+using TicketMasala.Web.Repositories;
+using TicketMasala.Web.ViewModels.ApplicationUsers;
+using Xunit;
 
 namespace TicketMasala.Tests.Robustness
 {
@@ -99,27 +102,34 @@ namespace TicketMasala.Tests.Robustness
         {
             // Arrange
             var mockOrchestrator = new Mock<ITicketOrchestrator>();
+            mockOrchestrator.Setup(o => o.CreateTicketAsync(
+                    It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(),
+                    It.IsAny<Guid?>(), It.IsAny<DateTime?>(), It.IsAny<string>(),
+                    It.IsAny<string>(), It.IsAny<IFormCollection>(), It.IsAny<ClaimsPrincipal>()))
+                .ReturnsAsync(Result.Failure<Guid>("Test error"));
+            mockOrchestrator.Setup(o => o.GetCreateContextAsync(It.IsAny<Guid?>(), It.IsAny<ClaimsPrincipal>()))
+                .ReturnsAsync(new TicketCreateContext { DomainId = "IT", Employees = new List<SelectListItem>(), Projects = new List<SelectListItem>() });
+
             var mockLogger = new Mock<ILogger<TicketController>>();
 
             var controller = new TicketController(
                 mockOrchestrator.Object, mockLogger.Object);
 
-            // Act
-            // If validation is in attribute, unit test might bypass it unless we check ModelState manually or pass null
-            // We want to ensure no NullRef if we pass null model
-            try
+            // Set up minimal HttpContext to avoid null reference on User and Request
+            var httpContext = new DefaultHttpContext();
+            httpContext.User = new ClaimsPrincipal(new ClaimsIdentity());
+            controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
+
+            // Act - passing null description which should trigger ModelState error, not NullRef
+            var exception = await Record.ExceptionAsync(() =>
+                controller.Create(null!, null!, null, null, null, null, null));
+
+            // Assert - Should not throw NullReferenceException (InvalidOperation or other specific exceptions are OK)
+            if (exception is NullReferenceException)
             {
-                // Create signature: Create(string description, string customerId, string? responsibleId, Guid? projectGuid, DateTime? completionTarget, string? domainId, string? workItemTypeCode)
-                await controller.Create(null!, null!, null, null, null, null, null);
+                Assert.Fail("TicketController threw NullReferenceException on null model - this indicates missing null guards");
             }
-            catch (NullReferenceException)
-            {
-                Assert.Fail("TicketController threw NullRef on null model");
-            }
-            catch (Exception)
-            {
-                // Acceptable
-            }
+            // Any other exception type is acceptable for this crash test
         }
 
         [Fact]

@@ -1,15 +1,15 @@
-using Microsoft.AspNetCore.Hosting;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System.Threading.RateLimiting;
-using TicketMasala.Web;
 using TicketMasala.Domain.Data;
+using TicketMasala.Web;
 using TicketMasala.Web.Data;
 
 namespace TicketMasala.Tests.IntegrationTests;

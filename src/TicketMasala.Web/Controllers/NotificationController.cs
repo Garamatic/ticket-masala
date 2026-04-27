@@ -1,11 +1,11 @@
-using TicketMasala.Web.Engine.Core;
-using TicketMasala.Web.Engine.GERDA.Tickets;
-using TicketMasala.Web.Engine.Projects;
-using TicketMasala.Web.Engine.Ingestion;
-using TicketMasala.Web.Engine.Ingestion.Background;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
+using TicketMasala.Web.Engine.Core;
+using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.Engine.Ingestion;
+using TicketMasala.Web.Engine.Ingestion.Background;
+using TicketMasala.Web.Engine.Projects;
 
 namespace TicketMasala.Web.Controllers;
 
@@ -22,7 +22,8 @@ public class NotificationController : Controller
     public async Task<IActionResult> Index()
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId)) return RedirectToAction("Index", "Home");
+        if (string.IsNullOrEmpty(userId))
+            return RedirectToAction("Index", "Home");
 
         var notifications = await _notificationService.GetUserNotificationsAsync(userId, 50);
         return View(notifications);

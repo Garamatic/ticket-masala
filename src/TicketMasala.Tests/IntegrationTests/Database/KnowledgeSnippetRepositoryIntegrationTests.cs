@@ -1,13 +1,13 @@
-using Xunit;
+using System;
+using System.Data.Common;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using TicketMasala.Web.Repositories;
 using TicketMasala.Domain.Data;
 using TicketMasala.Domain.Entities;
-using Microsoft.Data.Sqlite;
-using System.Data.Common;
-using System;
-using System.Threading.Tasks;
-using System.Linq;
+using TicketMasala.Web.Repositories;
+using Xunit;
 
 namespace TicketMasala.Tests.IntegrationTests.Database;
 
@@ -28,10 +28,10 @@ public class KnowledgeSnippetRepositoryIntegrationTests : IDisposable
 
         // Create the schema
         using var context = new MasalaDbContext(_contextOptions);
-        
+
         // EnsureCreated creates tables for DbSets.
         context.Database.EnsureCreated();
-        
+
         // Manually create FTS5 virtual table and triggers since EnsureCreated doesn't run migrations
         try
         {
@@ -50,7 +50,7 @@ public class KnowledgeSnippetRepositoryIntegrationTests : IDisposable
                     VALUES (new.rowid, new.Content, new.Tags);
                 END;
             ");
-            
+
             // Note: We skip Delete/Update triggers for this specific test setup for brevity, 
             // but in real migration they exist.
         }
@@ -80,7 +80,7 @@ public class KnowledgeSnippetRepositoryIntegrationTests : IDisposable
 
         Assert.Single(results);
         Assert.Equal(snippet1.Id, results.First().Id);
-        
+
         // Search for "fruit"
         var fruitResults = await repository.SearchAsync("fruit");
         Assert.Equal(2, fruitResults.Count());

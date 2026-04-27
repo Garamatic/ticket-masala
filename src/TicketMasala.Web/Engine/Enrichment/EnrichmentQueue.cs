@@ -23,7 +23,8 @@ public class EnrichmentQueue : IEnrichmentQueue
 
     public async ValueTask QueueEnrichmentAsync(EnrichmentWorkItem workItem)
     {
-        if (workItem == null) throw new ArgumentNullException(nameof(workItem));
+        if (workItem == null)
+            throw new ArgumentNullException(nameof(workItem));
         await _queue.Writer.WriteAsync(workItem);
     }
 

@@ -2,6 +2,13 @@
 obj/
 bin/
 
+# Test Results
+**/TestResults/
+**/coverage.*
+coveragereport/
+*.coverage
+*.coveragexml
+
 # OS generated files
 .DS_Store
 

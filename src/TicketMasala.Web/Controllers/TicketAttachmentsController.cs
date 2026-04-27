@@ -1,11 +1,11 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Common;
-using TicketMasala.Web.Engine.Core;
-using TicketMasala.Web.Data;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.Data;
+using TicketMasala.Web.Engine.Core;
 
 namespace TicketMasala.Web.Controllers;
 
@@ -74,7 +74,8 @@ public class TicketAttachmentsController : Controller
     public async Task<IActionResult> Download(Guid id)
     {
         var doc = await _context.Documents.FindAsync(id);
-        if (doc == null) return NotFound();
+        if (doc == null)
+            return NotFound();
 
         try
         {
@@ -91,7 +92,8 @@ public class TicketAttachmentsController : Controller
     public async Task<IActionResult> Preview(Guid id)
     {
         var doc = await _context.Documents.FindAsync(id);
-        if (doc == null) return NotFound();
+        if (doc == null)
+            return NotFound();
 
         try
         {

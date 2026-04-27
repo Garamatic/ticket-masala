@@ -1,7 +1,7 @@
 using System.Net;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Xunit;
 using TicketMasala.Web;
+using Xunit;
 
 namespace TicketMasala.Tests.IntegrationTests;
 

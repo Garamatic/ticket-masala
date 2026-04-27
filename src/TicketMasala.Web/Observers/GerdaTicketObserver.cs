@@ -1,11 +1,11 @@
-using TicketMasala.Domain.Entities;
+using Microsoft.Extensions.DependencyInjection;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Engine.GERDA;
 using TicketMasala.Web.Engine.GERDA.Tickets;
-using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.Engine.Ingestion;
 using TicketMasala.Web.Engine.Ingestion.Background;
-using Microsoft.Extensions.DependencyInjection;
+using TicketMasala.Web.Engine.Projects;
 
 namespace TicketMasala.Web.Observers;
 

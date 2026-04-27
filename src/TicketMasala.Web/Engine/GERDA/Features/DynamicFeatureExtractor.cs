@@ -1,6 +1,6 @@
 using System.Globalization;
-using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Configuration;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Engine.Compiler;
 
 namespace TicketMasala.Web.Engine.GERDA.Features;
@@ -72,12 +72,15 @@ public class DynamicFeatureExtractor : IFeatureExtractor
             float min = Convert.ToSingle(minObj);
             float max = Convert.ToSingle(maxObj);
 
-            if (max == min) return 0f;
+            if (max == min)
+                return 0f;
 
             var val = (float)value;
             // Clamp
-            if (val < min) val = min;
-            if (val > max) val = max;
+            if (val < min)
+                val = min;
+            if (val > max)
+                val = max;
 
             return (val - min) / (max - min);
         }

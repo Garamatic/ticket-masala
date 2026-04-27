@@ -1,5 +1,5 @@
-using Microsoft.AspNetCore.Diagnostics;
 using System.Text.Json;
+using Microsoft.AspNetCore.Diagnostics;
 using TicketMasala.Web.ViewModels.Api;
 
 namespace TicketMasala.Web.Middleware;

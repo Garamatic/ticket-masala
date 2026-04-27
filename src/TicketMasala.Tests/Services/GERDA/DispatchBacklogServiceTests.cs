@@ -1,18 +1,19 @@
-using Xunit;
-using Moq;
-using Microsoft.Extensions.Logging;
-using TicketMasala.Web.Engine.GERDA.Tickets;
-using TicketMasala.Web.Engine.GERDA.Dispatching;
-using TicketMasala.Web.Engine.GERDA.Models;
-using TicketMasala.Web.Repositories;
-using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Common;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Threading;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Moq;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.Engine.GERDA.Dispatching;
+using TicketMasala.Web.Engine.GERDA.Models;
+using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.Repositories;
 using TicketMasala.Web.Services;
+using Xunit;
 
 namespace TicketMasala.Tests.Services.GERDA;
 
@@ -37,11 +38,14 @@ public class DispatchBacklogServiceTests
     public async Task BuildDispatchBacklogViewModelAsync_PopulatesExplainabilityReasons()
     {
         // Arrange
+        var mockClock = new Mock<ISystemClock>();
+        mockClock.Setup(c => c.UtcNow).Returns(() => DateTime.UtcNow);
+
         var service = new DispatchBacklogService(
             _mockTicketRepo.Object,
             _mockUserRepo.Object,
             _mockProjectRepo.Object,
-            new SystemClock(),
+            mockClock.Object,
             _mockDispatchService.Object,
             _mockLogger.Object);
 

@@ -12,8 +12,8 @@ public class DiskFileStorageService : IFileStorageService
         var configPath = configuration["Storage:Path"];
         if (!string.IsNullOrEmpty(configPath))
         {
-            _storagePath = Path.IsPathRooted(configPath) 
-                ? configPath 
+            _storagePath = Path.IsPathRooted(configPath)
+                ? configPath
                 : Path.Combine(env.ContentRootPath, configPath);
         }
         else
@@ -46,7 +46,7 @@ public class DiskFileStorageService : IFileStorageService
         // Prevent directory traversal
         var fileName = Path.GetFileName(fileId);
         var filePath = Path.Combine(_storagePath, fileName);
-        
+
         if (!File.Exists(filePath))
         {
             throw new FileNotFoundException("File not found", fileId);
@@ -59,7 +59,7 @@ public class DiskFileStorageService : IFileStorageService
     {
         var fileName = Path.GetFileName(fileId);
         var filePath = Path.Combine(_storagePath, fileName);
-        
+
         if (File.Exists(filePath))
         {
             File.Delete(filePath);

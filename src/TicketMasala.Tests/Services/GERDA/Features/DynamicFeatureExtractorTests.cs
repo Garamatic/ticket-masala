@@ -1,7 +1,7 @@
-using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Configuration;
-using TicketMasala.Web.Engine.GERDA.Features;
 using Microsoft.Extensions.Logging.Abstractions;
+using TicketMasala.Domain.Configuration;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Engine.GERDA.Features;
 using Xunit;
 using Customer = TicketMasala.Domain.Entities.ApplicationUser;
 

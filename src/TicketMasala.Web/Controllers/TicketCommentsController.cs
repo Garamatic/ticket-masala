@@ -1,7 +1,7 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using TicketMasala.Web.Engine.GERDA.Tickets;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using TicketMasala.Web.Engine.GERDA.Tickets;
 
 namespace TicketMasala.Web.Controllers;
 
@@ -28,7 +28,8 @@ public class TicketCommentsController : Controller
         }
 
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
 
         try
         {
@@ -49,7 +50,8 @@ public class TicketCommentsController : Controller
     public async Task<IActionResult> RequestReview(Guid id)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
 
         try
         {
@@ -71,7 +73,8 @@ public class TicketCommentsController : Controller
     public async Task<IActionResult> SubmitReview(Guid id, int score, string feedback, bool approve)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
 
         try
         {

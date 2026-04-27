@@ -1,19 +1,19 @@
+using System.Text.Json;
 using Asp.Versioning;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using TicketMasala.Web.ViewModels.Tickets;
-using TicketMasala.Web.ViewModels.Api;
-using TicketMasala.Domain.Entities;
+using Microsoft.AspNetCore.Mvc;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.GERDA.Tickets;
-using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.Engine.Ingestion;
 using TicketMasala.Web.Engine.Ingestion.Background;
+using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.Repositories;
-using System.Text.Json;
-using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.ViewModels.Api;
+using TicketMasala.Web.ViewModels.Tickets;
 
 namespace TicketMasala.Web.Controllers.Api;
 
@@ -156,7 +156,9 @@ public class TicketsApiController : ControllerBase
             EmailConfirmed = true
         };
 
-        var result = await _userManager.CreateAsync(newCustomer, "ExternalUser123!"); // Default password
+        // Generate a secure random password for external users
+        var randomPassword = Guid.NewGuid().ToString("N") + "!A1";
+        var result = await _userManager.CreateAsync(newCustomer, randomPassword);
 
         if (result.Succeeded)
         {
@@ -165,8 +167,9 @@ public class TicketsApiController : ControllerBase
             return newCustomer;
         }
 
+        var errors = result.Errors?.Select(e => e.Description) ?? Array.Empty<string>();
         _logger.LogWarning("Failed to create customer {Email}: {Errors}",
-            email, string.Join(", ", result.Errors.Select(e => e.Description)));
+            email, string.Join(", ", errors));
         return null;
     }
 

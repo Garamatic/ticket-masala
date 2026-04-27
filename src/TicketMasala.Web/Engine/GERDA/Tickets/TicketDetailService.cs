@@ -1,8 +1,8 @@
+using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.GERDA.Dispatching;
 using TicketMasala.Web.Engine.GERDA.Knowledge;
-using TicketMasala.Web.ViewModels.Tickets;
-using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Utilities;
+using TicketMasala.Web.ViewModels.Tickets;
 
 namespace TicketMasala.Web.Engine.GERDA.Tickets;
 
@@ -39,7 +39,8 @@ public class TicketDetailService : ITicketDetailService
     public async Task<TicketDetailsViewModel?> GetTicketDetailsAsync(Guid ticketId, string? userId, bool isCustomer)
     {
         var viewModel = await _ticketReadService.GetTicketDetailsAsync(ticketId);
-        if (viewModel == null) return null;
+        if (viewModel == null)
+            return null;
 
         if (isCustomer && viewModel.CustomerId != userId)
         {

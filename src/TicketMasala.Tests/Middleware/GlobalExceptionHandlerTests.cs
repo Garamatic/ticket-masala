@@ -1,10 +1,10 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Moq;
 using TicketMasala.Web.Middleware;
 using TicketMasala.Web.ViewModels.Api;
 using Xunit;
-using Moq;
 
 namespace TicketMasala.Tests.Middleware;
 

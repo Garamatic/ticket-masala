@@ -1,8 +1,8 @@
+using Microsoft.EntityFrameworkCore;
 using TicketMasala.Domain.Data;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.GERDA.Dispatching;
 using TicketMasala.Web.Engine.GERDA.Sentiment;
-using Microsoft.EntityFrameworkCore;
 
 namespace TicketMasala.Web.Engine.Enrichment;
 
@@ -48,7 +48,7 @@ public class EnrichmentBackgroundService : BackgroundService
     {
         using var scope = _scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<MasalaDbContext>();
-        
+
         var ticket = await context.Tickets.FindAsync(new object[] { workItem.TicketId }, token);
         if (ticket == null)
         {
@@ -57,13 +57,13 @@ public class EnrichmentBackgroundService : BackgroundService
         }
 
         _logger.LogInformation("Enriching Ticket {TicketId} ({Type})...", workItem.TicketId, workItem.EnrichmentType);
-        
+
         if (workItem.EnrichmentType == "All" || workItem.EnrichmentType == "Sentiment")
         {
             // Use existing SimpleSentimentAnalyzer
             var sentimentAnalyzer = scope.ServiceProvider.GetRequiredService<ISentimentAnalyzer>();
             var (score, label) = sentimentAnalyzer.Analyze(ticket.Title, ticket.Description);
-            
+
             // Append tag
             var sentimentTag = $"Sentiment:{label}";
             if (string.IsNullOrEmpty(ticket.GerdaTags))
@@ -74,13 +74,13 @@ public class EnrichmentBackgroundService : BackgroundService
             {
                 ticket.GerdaTags += $",{sentimentTag}";
             }
-            
+
             // Adjust priority if critical (simple boost)
             if (label == "Critical" || label == "High")
             {
                 ticket.PriorityScore = Math.Max(ticket.PriorityScore, score * 10);
             }
-            
+
             _logger.LogInformation("Sentiment Analysis for Ticket {TicketId}: {Label} (Score: {Score})", workItem.TicketId, label, score);
         }
 
@@ -90,15 +90,15 @@ public class EnrichmentBackgroundService : BackgroundService
         // Auto-Dispatch
         if (workItem.EnrichmentType == "All" || workItem.EnrichmentType == "Dispatch")
         {
-             try 
-             {
-                 var dispatchService = scope.ServiceProvider.GetRequiredService<IDispatchingService>();
-                 await dispatchService.AutoDispatchTicketAsync(workItem.TicketId);
-             }
-             catch (Exception ex)
-             {
-                 _logger.LogError(ex, "Auto-dispatch failed for ticket {TicketId}", workItem.TicketId);
-             }
+            try
+            {
+                var dispatchService = scope.ServiceProvider.GetRequiredService<IDispatchingService>();
+                await dispatchService.AutoDispatchTicketAsync(workItem.TicketId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Auto-dispatch failed for ticket {TicketId}", workItem.TicketId);
+            }
         }
     }
 }

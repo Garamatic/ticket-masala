@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using TicketMasala.Domain.Common;
 
 namespace TicketMasala.Web.ViewModels.Projects;

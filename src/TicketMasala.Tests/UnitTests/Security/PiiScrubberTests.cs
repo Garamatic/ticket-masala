@@ -57,7 +57,7 @@ public class PiiScrubberTests
         // Assert
         Assert.Contains("[PHONE_REDACTED]", result1);
         Assert.DoesNotContain("+32 475 12 34 56", result1);
-        
+
         Assert.Contains("[PHONE_REDACTED]", result2);
         Assert.DoesNotContain("0475 12 34 56", result2);
     }

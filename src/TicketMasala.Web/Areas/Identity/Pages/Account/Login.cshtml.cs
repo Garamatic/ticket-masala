@@ -7,8 +7,8 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -104,7 +104,7 @@ public class LoginModel : PageModel
         ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
         ReturnUrl = returnUrl;
-        
+
         // Environment-based Auto-Login (for Cloud Deploys)
         var envEmail = Environment.GetEnvironmentVariable("MASALA_AUTOLOGIN_EMAIL");
         var envPassword = Environment.GetEnvironmentVariable("MASALA_AUTOLOGIN_PASSWORD");
@@ -139,7 +139,7 @@ public class LoginModel : PageModel
                 }
             }
         }
-        
+
         return Page();
     }
 

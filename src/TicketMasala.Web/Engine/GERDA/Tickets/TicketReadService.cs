@@ -6,18 +6,18 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Data;
-using TicketMasala.Web.Repositories;
-using TicketMasala.Web.Repositories.Queries;
-using TicketMasala.Web.ViewModels.Tickets;
-using TicketMasala.Web.ViewModels.GERDA;
-using TicketMasala.Web.Engine.Security;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.GERDA.Configuration;
-using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.Engine.Security;
+using TicketMasala.Web.Repositories;
+using TicketMasala.Web.Repositories.Queries;
 using TicketMasala.Web.Utilities;
+using TicketMasala.Web.ViewModels.GERDA;
+using TicketMasala.Web.ViewModels.Tickets;
 
 namespace TicketMasala.Web.Engine.GERDA.Tickets;
 
@@ -85,7 +85,8 @@ public class TicketReadService : ITicketReadService
     public async Task<Guid?> GetCurrentUserDepartmentIdAsync()
     {
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId)) return null;
+        if (string.IsNullOrEmpty(userId))
+            return null;
 
         var user = await _context.Users.FindAsync(userId);
         var employee = user as Employee;

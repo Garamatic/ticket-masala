@@ -1,6 +1,6 @@
-using Xunit;
 using FluentAssertions;
 using TicketMasala.Domain.Data;
+using Xunit;
 
 namespace TicketMasala.Web.Tests.UnitTests.Data;
 

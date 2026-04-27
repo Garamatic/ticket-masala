@@ -45,7 +45,7 @@ public class KnowledgeService : IKnowledgeService
         // Determine Domain and Strategy
         var domainId = ticket.DomainId ?? _domainConfigService.GetDefaultDomainId();
         var domainConfig = _domainConfigService.GetDomain(domainId);
-        
+
         // We might want to add Knowledge strategy to DomainConfig later, but for now use similarity or a default from config
         var strategyName = _config.GerdaAI.Knowledge?.StrategyName ?? "Similarity";
 
@@ -60,7 +60,7 @@ public class KnowledgeService : IKnowledgeService
             var strategy = _strategyFactory.GetStrategy<IKnowledgeStrategy, List<KnowledgeSuggestion>>(strategyName);
             var suggestions = await strategy.FindRelatedArticlesAsync(ticket, articles, maxSuggestions);
 
-            _logger.LogInformation("GERDA-K: Found {Count} suggested articles for ticket {TicketGuid} using {Strategy}", 
+            _logger.LogInformation("GERDA-K: Found {Count} suggested articles for ticket {TicketGuid} using {Strategy}",
                 suggestions.Count, ticket.Guid, strategyName);
 
             return suggestions;

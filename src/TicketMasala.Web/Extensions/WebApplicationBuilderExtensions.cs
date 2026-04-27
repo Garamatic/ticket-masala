@@ -249,7 +249,7 @@ public static class WebApplicationBuilderExtensions
             });
             });
 
-        // Memory Cache
+        // Memory Cache - registered once here, used throughout the application
         builder.Services.AddMemoryCache();
         builder.Services.AddDistributedMemoryCache();
 
@@ -329,7 +329,7 @@ public static class WebApplicationBuilderExtensions
 
         builder.Services.AddRazorPages();
         builder.Services.AddHealthChecks();
-        builder.Services.AddSingleton<TenantConnectionResolver>();
+        // Note: TenantConnectionResolver is already registered by AddMasalaDatabase()
 
         // Swagger
         builder.Services.AddEndpointsApiExplorer();

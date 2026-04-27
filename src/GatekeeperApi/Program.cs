@@ -32,7 +32,7 @@ public class Program
             var originalBody = context.Request.Body;
             var bufferedStream = new Microsoft.AspNetCore.WebUtilities.FileBufferingReadStream(
                 originalBody, 10 * 1024 * 1024, null, Path.GetTempPath());
-            
+
             context.Request.Body = bufferedStream;
             try
             {

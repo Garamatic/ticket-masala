@@ -20,32 +20,29 @@ namespace TicketMasala.Web.Orchestrators;
 
 public class TicketOrchestrator : ITicketOrchestrator
 {
-    private readonly IGerdaService _gerdaService;
+    private readonly IGerda _gerda;
     private readonly ITicketWorkflowService _ticketWorkflowService;
     private readonly ITicketReadService _ticketReadService;
     private readonly IDomainConfigurationService _domainConfig;
-    private readonly IRuleEngineService _ruleEngine;
     private readonly IOpenAiService _openAiService;
     private readonly ITicketContextFacade _ticketContextFacade;
     private readonly ISavedFilterService _savedFilterService;
     private readonly ILogger<TicketOrchestrator> _logger;
 
     public TicketOrchestrator(
-        IGerdaService gerdaService,
+        IGerda gerda,
         ITicketWorkflowService ticketWorkflowService,
         ITicketReadService ticketReadService,
         IDomainConfigurationService domainConfig,
-        IRuleEngineService ruleEngine,
         IOpenAiService openAiService,
         ITicketContextFacade ticketContextFacade,
         ISavedFilterService savedFilterService,
         ILogger<TicketOrchestrator> logger)
     {
-        _gerdaService = gerdaService;
+        _gerda = gerda;
         _ticketWorkflowService = ticketWorkflowService;
         _ticketReadService = ticketReadService;
         _domainConfig = domainConfig;
-        _ruleEngine = ruleEngine;
         _openAiService = openAiService;
         _ticketContextFacade = ticketContextFacade;
         _savedFilterService = savedFilterService;
@@ -164,7 +161,7 @@ public class TicketOrchestrator : ITicketOrchestrator
 
             _logger.LogInformation("Processing ticket {TicketGuid} with GERDA AI (Domain: {DomainId}, Type: {WorkItemTypeCode})",
                 ticket.Guid, ticket.DomainId, ticket.WorkItemTypeCode);
-            await _gerdaService.ProcessTicketAsync(ticket.Guid);
+            await _gerda.ProcessAsync(ticket.Guid);
 
             var entityLabel = _domainConfig.GetEntityLabels(ticket.DomainId).WorkItem;
             _logger.LogInformation("GERDA processing completed for ticket {TicketGuid}", ticket.Guid);

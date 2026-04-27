@@ -5,6 +5,7 @@ using Moq;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Data;
 using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Repositories;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.Compiler;
 using TicketMasala.Web.Engine.Core;
@@ -12,7 +13,6 @@ using TicketMasala.Web.Engine.GERDA.Configuration;
 using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Engine.Security;
 using TicketMasala.Web.Observers;
-using TicketMasala.Domain.Repositories;
 using TicketMasala.Web.Services;
 using Xunit;
 

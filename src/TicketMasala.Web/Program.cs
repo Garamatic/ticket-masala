@@ -65,10 +65,17 @@ builder.Services.AddMasalaDatabase(builder.Configuration, builder.Environment);
 builder.AddMasalaCore();
 
 // ============================================
-// GERDA AI SERVICES
+// GERDA AI SERVICES (Deep Module)
 // ============================================
 var configBasePath = TicketMasala.Web.Configuration.ConfigurationPaths.GetConfigBasePath(builder.Environment.ContentRootPath);
-builder.Services.AddGerdaServices(builder.Environment, configBasePath);
+builder.Services.AddGerda(options =>
+{
+    options.ConfigBasePath = configBasePath;
+    options.ModelPath = builder.Environment.ContentRootPath;
+});
+builder.Services.LogGerdaConfiguration(logger);
+
+// Register OpenAI service for explainability
 builder.Services.AddTransient<TicketMasala.Web.AI.IOpenAiService, TicketMasala.Web.AI.OpenAiService>();
 builder.Services.AddScoped<TicketMasala.Domain.Services.IExplainabilityService, TicketMasala.Web.Engine.GERDA.Explainability.ExplainabilityService>();
 

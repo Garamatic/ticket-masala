@@ -1,12 +1,12 @@
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Enums;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Observers;
-using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Common;
-using TicketMasala.Domain.Enums;
 using TicketMasala.Web.Repositories;
-using Microsoft.Extensions.Logging;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 
 namespace TicketMasala.Web.Engine.GERDA.Tickets.Domain
 {
@@ -76,7 +76,7 @@ namespace TicketMasala.Web.Engine.GERDA.Tickets.Domain
             // Send notification to agent
             await notificationService.NotifyUserAsync(
                 agentId,
-                $"You have been assigned to ticket #" + ticket.Guid.ToString().Substring(0, 8),
+                $"You have been assigned to ticket #{ticket.Guid.ToString()[..8]}",
                 $"/Ticket/Detail/{ticket.Guid}",
                 "Info"
             );

@@ -1,62 +1,58 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using TicketMasala.Web.Extensions;
+using System.Threading.Channels;
+using TicketMasala.Domain.Services;
 
-namespace GatekeeperApi
+namespace GatekeeperApi;
+
+/// <summary>
+/// Minimal API for ingesting external tickets.
+/// This is a lightweight entry point that delegates to the main TicketMasala system.
+/// For microservices deployment, this can be scaled independently.
+/// </summary>
+public class Program
 {
-    public class Program
+    public static void Main(string[] args)
     {
-        public static void Main(string[] args)
+        var builder = WebApplication.CreateBuilder(args);
+
+        // Register the ingestion queue and worker
+        builder.Services.AddSingleton<IngestionQueue<IngestionRequest>>();
+        builder.Services.AddHostedService<IngestionWorker>();
+
+        // Note: ITicketWorkflowService implementation is loaded from plugin or external reference
+        // In standalone mode, this service processes items locally
+        // In microservices mode, this calls the main TicketMasala API
+
+        var app = builder.Build();
+
+        var apiKey = builder.Configuration["Gatekeeper:ApiKey"] ?? "masala-secret-key";
+
+        app.MapPost("/api/ingest", async (HttpContext context, IngestionQueue<IngestionRequest> queue) =>
         {
-            var builder = WebApplication.CreateBuilder(args);
-
-            // Register the ingestion queue and worker
-            builder.Services.AddSingleton<IngestionQueue<IngestionRequest>>();
-            builder.Services.AddHostedService<IngestionWorker>();
-
-            // Register TicketMasala services needed for ingestion
-            // We use the same extensions as the Web app to ensure consistency
-            builder.Services.AddMasalaDatabase(builder.Configuration, builder.Environment);
-
-            // Replaced individual registrations with the core extension
-            builder.AddMasalaCore();
-
-            builder.Services.AddScoped<TicketMasala.Web.Engine.Ingestion.IIngestionTemplateService,
-                TicketMasala.Web.Engine.Ingestion.IngestionTemplateService>();
-
-            var app = builder.Build();
-
-            var apiKey = builder.Configuration["Gatekeeper:ApiKey"] ?? "masala-secret-key";
-
-            app.MapPost("/api/ingest", async (HttpContext context, IngestionQueue<IngestionRequest> queue) =>
+            if (!context.Request.Headers.TryGetValue("X-Api-Key", out var extractedValue) ||
+                extractedValue != apiKey)
             {
-                if (!context.Request.Headers.TryGetValue("X-Api-Key", out var extractedValue) ||
-                    extractedValue != apiKey)
-                {
-                    return Results.Unauthorized();
-                }
+                return Results.Unauthorized();
+            }
 
-                var request = await context.Request.ReadFromJsonAsync<IngestionRequest>();
-                if (request == null || request.Data == null)
-                {
-                    return Results.BadRequest("Invalid payload");
-                }
+            var request = await context.Request.ReadFromJsonAsync<IngestionRequest>();
+            if (request == null || request.Data == null)
+            {
+                return Results.BadRequest("Invalid payload");
+            }
 
-                await queue.EnqueueAsync(request);
-                return Results.Accepted();
-            });
+            await queue.EnqueueAsync(request);
+            return Results.Accepted();
+        });
 
-            app.Run();
-        }
+        app.Run();
     }
+}
 
-    public class IngestionRequest
-    {
-        public string Template { get; set; } = "default";
-        public Dictionary<string, object> Data { get; set; } = new();
-    }
+/// <summary>
+/// Request model for ingestion API.
+/// </summary>
+public class IngestionRequest
+{
+    public string Template { get; set; } = "default";
+    public Dictionary<string, object> Data { get; set; } = new();
 }

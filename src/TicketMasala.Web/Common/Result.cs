@@ -9,10 +9,10 @@ public class Result
     public bool IsSuccess { get; }
     public bool IsFailure => !IsSuccess;
     public string? Error { get; }
-    public string? SuccessMessage => IsSuccess ? "Operation successful." : null;
+    public string? SuccessMessage { get; }
     public string? ErrorMessage => Error;
 
-    protected Result(bool isSuccess, string? error)
+    protected Result(bool isSuccess, string? error, string? successMessage = null)
     {
         if (isSuccess && error != null)
             throw new InvalidOperationException("Success result cannot have an error.");
@@ -21,14 +21,15 @@ public class Result
 
         IsSuccess = isSuccess;
         Error = error;
+        SuccessMessage = successMessage ?? (isSuccess ? "Operation successful." : null);
     }
 
     public static Result Success() => new(true, null);
     public static Result Failure(string error) => new(false, error);
 
-    public static Result<T> Success<T>(T value) => new(value, true, null);
-    public static Result<T> Success<T>(T value, string message) => new(value, true, message);
-    public static Result<T> Failure<T>(string error) => new(default, false, error);
+    public static Result<T> Success<T>(T value) => new(value, true, null, null);
+    public static Result<T> Success<T>(T value, string message) => new(value, true, null, message);
+    public static Result<T> Failure<T>(string error) => new(default, false, error, null);
 }
 
 /// <summary>
@@ -38,8 +39,8 @@ public class Result<T> : Result
 {
     public T? Value { get; }
 
-    internal Result(T? value, bool isSuccess, string? error)
-        : base(isSuccess, error)
+    internal Result(T? value, bool isSuccess, string? error, string? successMessage = null)
+        : base(isSuccess, error, successMessage)
     {
         Value = value;
     }

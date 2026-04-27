@@ -532,7 +532,9 @@ public class LoginCreateVerifyFlowTests : IClassFixture<CustomWebApplicationFact
             ["CustomerId"] = customerId,
             ["ResponsibleId"] = string.Empty,
             ["ProjectGuid"] = string.Empty,
-            ["CompletionTarget"] = DateTime.UtcNow.AddDays(7).ToString("yyyy-MM-dd")
+            ["CompletionTarget"] = DateTime.UtcNow.AddDays(7).ToString("yyyy-MM-dd"),
+            ["WorkItemTypeCode"] = "INCIDENT",
+            ["DomainId"] = "IT"
         };
 
         if (!string.IsNullOrEmpty(antiforgeryToken))
@@ -541,7 +543,7 @@ public class LoginCreateVerifyFlowTests : IClassFixture<CustomWebApplicationFact
         }
 
         var response = await client.PostAsync("/Ticket/Create", new FormUrlEncodedContent(formData));
-        
+
         if (response.StatusCode == HttpStatusCode.OK)
         {
             var content = await response.Content.ReadAsStringAsync();

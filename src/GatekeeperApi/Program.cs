@@ -49,7 +49,18 @@ public class Program
                 return Results.Unauthorized();
             }
 
-            var request = await context.Request.ReadFromJsonAsync<IngestionRequest>();
+            IngestionRequest? request;
+            try
+            {
+                request = await context.Request.ReadFromJsonAsync<IngestionRequest>();
+            }
+            catch (System.Text.Json.JsonException ex)
+            {
+                logger.LogWarning(ex, "Malformed JSON in ingestion request from {RemoteIp}",
+                    context.Connection.RemoteIpAddress);
+                return Results.BadRequest("Invalid JSON format");
+            }
+
             if (request == null)
             {
                 logger.LogWarning("Null ingestion request from {RemoteIp}",
@@ -64,7 +75,7 @@ public class Program
                 return Results.BadRequest("Data dictionary is required and cannot be empty");
             }
 
-            var enqueued = await queue.EnqueueAsync(request, context.RequestAborted);
+            var enqueued = queue.TryEnqueue(request);
             if (!enqueued)
             {
                 logger.LogError("Queue full - ingestion request dropped from {RemoteIp}",

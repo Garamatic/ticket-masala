@@ -19,11 +19,11 @@ public class IngestionQueue
         _queue = Channel.CreateBounded<IngestionRequest>(options);
     }
 
-    public ValueTask<bool> EnqueueAsync(IngestionRequest item, CancellationToken cancellationToken = default)
+    public bool TryEnqueue(IngestionRequest item)
     {
         if (item == null)
             throw new ArgumentNullException(nameof(item));
-        return new ValueTask<bool>(_queue.Writer.TryWrite(item));
+        return _queue.Writer.TryWrite(item);
     }
 
     public async ValueTask<IngestionRequest> DequeueAsync(CancellationToken cancellationToken)
@@ -59,10 +59,6 @@ public class IngestionWorker : BackgroundService
             try
             {
                 var request = await _queue.DequeueAsync(stoppingToken);
-                _logger.LogInformation(
-                    "Queued ingestion request: Template={Template}, Keys={Keys}",
-                    request.Template,
-                    string.Join(", ", request.Data.Keys));
 
                 // In a full microservices deployment:
                 // 1. Publish to message bus (RabbitMQ, Azure Service Bus, etc.)
@@ -71,7 +67,10 @@ public class IngestionWorker : BackgroundService
 
                 // For now, the request is accepted and logged. The actual processing
                 // depends on how the service is deployed.
-                _logger.LogInformation("Ingestion request accepted and logged for template: {Template}", request.Template);
+                _logger.LogInformation(
+                    "Ingestion request dequeued: Template={Template}, Keys={KeyCount}",
+                    request.Template,
+                    request.Data.Count);
             }
             catch (OperationCanceledException)
             {

@@ -21,9 +21,13 @@ public class OpenAiService : IOpenAiService
         var configuredBaseUrl = options.Value.BaseUrl;
         var envBaseUrl = Environment.GetEnvironmentVariable("OPENAI_BASE_URL");
 
-        _apiKey = !string.IsNullOrWhiteSpace(configuredKey)
-            ? configuredKey
-            : (envKey ?? "");
+        var sanitizedConfiguredKey = string.IsNullOrWhiteSpace(configuredKey) || configuredKey == "placeholder-key"
+            ? null
+            : configuredKey;
+
+        _apiKey = !string.IsNullOrWhiteSpace(envKey)
+            ? envKey
+            : (sanitizedConfiguredKey ?? "");
         var baseUrl = !string.IsNullOrWhiteSpace(configuredBaseUrl)
             ? configuredBaseUrl
             : envBaseUrl;

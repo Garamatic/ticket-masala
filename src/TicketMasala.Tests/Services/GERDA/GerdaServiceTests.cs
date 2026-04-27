@@ -195,8 +195,11 @@ public class GerdaServiceTests
             new() { Guid = Guid.NewGuid(), Description = "Test 3", Customer = customer, TicketStatus = TicketMasala.Domain.Common.Status.Completed } // Should be excluded
         };
 
-        _ticketRepositoryMock.Setup(x => x.GetAllAsync(null))
-            .ReturnsAsync(tickets);
+        // Filter tickets to simulate repository behavior (GetActiveTicketsAsync returns only active ones)
+        var activeTickets = tickets.Where(t => t.TicketStatus != TicketMasala.Domain.Common.Status.Completed).ToList();
+
+        _ticketRepositoryMock.Setup(x => x.GetActiveTicketsAsync())
+            .ReturnsAsync(activeTickets);
         _groupingServiceMock.Setup(x => x.CheckAndGroupTicketAsync(It.IsAny<Guid>()))
             .ReturnsAsync((Guid?)null);
         _estimatingServiceMock.Setup(x => x.EstimateComplexityAsync(It.IsAny<Guid>()))

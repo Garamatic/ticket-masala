@@ -5,24 +5,28 @@ using TicketMasala.Domain.Common;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Data;
 using Microsoft.EntityFrameworkCore;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Controllers;
 
 [Authorize]
 public class TicketAttachmentsController : Controller
 {
-    private readonly IFileService _fileService;
+    private readonly IFileStorageService _fileStorage;
     private readonly MasalaDbContext _context;
     private readonly ILogger<TicketAttachmentsController> _logger;
+    private readonly ISystemClock _clock;
 
     public TicketAttachmentsController(
-        IFileService fileService,
+        IFileStorageService fileStorage,
         MasalaDbContext context,
-        ILogger<TicketAttachmentsController> logger)
+        ILogger<TicketAttachmentsController> logger,
+        ISystemClock clock)
     {
-        _fileService = fileService;
+        _fileStorage = fileStorage;
         _context = context;
         _logger = logger;
+        _clock = clock;
     }
 
     [HttpPost]
@@ -37,7 +41,7 @@ public class TicketAttachmentsController : Controller
 
         try
         {
-            var storedFileName = await _fileService.SaveFileAsync(file, "tickets");
+            var storedFileName = await _fileStorage.StoreFileAsync(file.OpenReadStream(), file.FileName);
 
             var document = new Document
             {
@@ -47,7 +51,7 @@ public class TicketAttachmentsController : Controller
                 StoredFileName = storedFileName,
                 ContentType = file.ContentType,
                 FileSize = file.Length,
-                UploadDate = DateTime.UtcNow,
+                UploadDate = _clock.UtcNow,
                 UploaderId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value,
                 IsPublic = isPublic
             };
@@ -72,10 +76,15 @@ public class TicketAttachmentsController : Controller
         var doc = await _context.Documents.FindAsync(id);
         if (doc == null) return NotFound();
 
-        var stream = await _fileService.GetFileStreamAsync(doc.StoredFileName, "tickets");
-        if (stream == null) return NotFound();
-
-        return File(stream, doc.ContentType, doc.FileName);
+        try
+        {
+            var stream = await _fileStorage.RetrieveFileAsync(doc.StoredFileName);
+            return File(stream, doc.ContentType, doc.FileName);
+        }
+        catch (FileNotFoundException)
+        {
+            return NotFound();
+        }
     }
 
     [HttpGet]
@@ -84,11 +93,16 @@ public class TicketAttachmentsController : Controller
         var doc = await _context.Documents.FindAsync(id);
         if (doc == null) return NotFound();
 
-        var stream = await _fileService.GetFileStreamAsync(doc.StoredFileName, "tickets");
-        if (stream == null) return NotFound();
-
-        // Return inline for preview
-        Response.Headers.Append("Content-Disposition", $"inline; filename=\"{doc.FileName}\"");
-        return File(stream, doc.ContentType);
+        try
+        {
+            var stream = await _fileStorage.RetrieveFileAsync(doc.StoredFileName);
+            // Return inline for preview
+            Response.Headers.Append("Content-Disposition", $"inline; filename=\"{doc.FileName}\"");
+            return File(stream, doc.ContentType);
+        }
+        catch (FileNotFoundException)
+        {
+            return NotFound();
+        }
     }
 }

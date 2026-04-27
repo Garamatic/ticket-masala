@@ -131,9 +131,16 @@ public class RuleEngineService : IRuleEngineService
         return validStates;
     }
 
+    /// <summary>
+    /// Validates that required fields are present for the target status transition.
+    /// TODO: Implement compiled check for required fields based on domain configuration.
+    /// Currently returns empty list (no validation).
+    /// </summary>
     public IEnumerable<string> ValidateRequiredFields(Ticket ticket, Status targetStatus)
     {
-        // Placeholder: Future compiled check for required fields
+        // TODO: #RULE-ENGINE - Implement required field validation
+        // This should check domain configuration for required fields based on target status
+        // and return any missing field names.
         return Enumerable.Empty<string>();
     }
 }

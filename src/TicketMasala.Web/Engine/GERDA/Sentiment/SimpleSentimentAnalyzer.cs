@@ -1,11 +1,11 @@
 namespace TicketMasala.Web.Engine.GERDA.Sentiment;
 
-public static class SimpleSentimentAnalyzer
+public class SimpleSentimentAnalyzer : ISentimentAnalyzer
 {
     private static readonly string[] UrgentKeywords = new[] { "urgent", "asap", "broken", "critical", "down", "fail", "emergency", "immediately" };
     private static readonly string[] NegativeKeywords = new[] { "disappointed", "poor", "bad", "slow", "error", "bug", "crash" };
 
-    public static (double UrgencyScore, string SentimentLabel) Analyze(string subject, string body)
+    public (double UrgencyScore, string SentimentLabel) Analyze(string subject, string body)
     {
         var text = (subject + " " + body).ToLowerInvariant();
         double score = 1.0; // Base score (Normal)

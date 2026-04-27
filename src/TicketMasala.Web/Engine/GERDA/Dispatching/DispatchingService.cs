@@ -3,7 +3,9 @@ using TicketMasala.Web.Engine.GERDA.Models;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
 using TicketMasala.Web.Engine.GERDA.Strategies;
-using TicketMasala.Web.Engine.GERDA.Configuration;
+using TicketMasala.Web.Engine.GERDA.Dispatching.Algorithms;
+using TicketMasala.Web.Engine.GERDA.Dispatching.Models;
+using TicketMasala.Web.Engine.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.ML;
 using Microsoft.ML.Data;
@@ -14,26 +16,38 @@ namespace TicketMasala.Web.Engine.GERDA.Dispatching;
 /// <summary>
 /// D - Dispatching: Agent-ticket matching using ML.NET Matrix Factorization
 /// Recommends the best agent for a ticket based on historical affinity and workload.
+///
+/// Now supports delegation to TicketMasala.Web.Engine.GERDA.Dispatching.Algorithms.AgentMatchingEngine
+/// for generic algorithm while maintaining backward compatibility with domain-specific strategies.
 /// </summary>
 public class DispatchingService : IDispatchingService
 {
     private readonly MasalaDbContext _context;
     private readonly GerdaConfig _config;
     private readonly IStrategyFactory _strategyFactory;
-    private readonly IDomainConfigurationService _domainConfigService;
+    private readonly IDispatchingStrategySelector _strategySelector;
+    private readonly IAutoDispatchPolicy _autoDispatchPolicy;
+    private readonly IProjectManagerRecommendationService _projectManagerRecommendationService;
+    private readonly AgentMatchingEngine _agentMatchingEngine;
     private readonly ILogger<DispatchingService> _logger;
 
     public DispatchingService(
         MasalaDbContext context,
         GerdaConfig config,
         IStrategyFactory strategyFactory,
-        IDomainConfigurationService domainConfigService,
+        IDispatchingStrategySelector strategySelector,
+        IAutoDispatchPolicy autoDispatchPolicy,
+        IProjectManagerRecommendationService projectManagerRecommendationService,
+        AgentMatchingEngine agentMatchingEngine,
         ILogger<DispatchingService> logger)
     {
         _context = context;
         _config = config;
         _strategyFactory = strategyFactory;
-        _domainConfigService = domainConfigService;
+        _strategySelector = strategySelector;
+        _autoDispatchPolicy = autoDispatchPolicy;
+        _projectManagerRecommendationService = projectManagerRecommendationService;
+        _agentMatchingEngine = agentMatchingEngine ?? throw new ArgumentNullException(nameof(agentMatchingEngine));
         _logger = logger;
     }
 
@@ -45,9 +59,7 @@ public class DispatchingService : IDispatchingService
         {
             try
             {
-                var defaultDomainId = _domainConfigService.GetDefaultDomainId();
-                var domainConfig = _domainConfigService.GetDomain(defaultDomainId);
-                var strategyName = domainConfig?.AiStrategies.Dispatching ?? "MatrixFactorization";
+                var strategyName = _strategySelector.GetDefaultStrategyName();
                 var strategy = _strategyFactory.GetStrategy<IDispatchingStrategy, List<DispatchResult>>(strategyName);
                 return strategy.LastTrained;
             }
@@ -108,9 +120,7 @@ public class DispatchingService : IDispatchingService
         }
 
         // Determine Domain and Strategy
-        var domainId = ticket.DomainId ?? _domainConfigService.GetDefaultDomainId();
-        var domainConfig = _domainConfigService.GetDomain(domainId);
-        var strategyName = domainConfig?.AiStrategies.Dispatching ?? "MatrixFactorization";
+        var strategyName = _strategySelector.GetStrategyNameForTicket(ticket);
 
         try
         {
@@ -135,11 +145,18 @@ public class DispatchingService : IDispatchingService
         var recommendations = await GetTopRecommendedAgentsAsync(ticketGuid, 1);
         var bestMatch = recommendations.FirstOrDefault();
 
-        // Threshold: 3.5 out of 5.0 (70% confidence)
-        if (bestMatch == null || bestMatch.Score < 3.5)
+        if (!_autoDispatchPolicy.ShouldAutoDispatch(bestMatch, out var minScore))
         {
-            _logger.LogInformation("GERDA-D: Auto-dispatch skipped for {TicketGuid}. Best score {Score:F2} below threshold 3.5", 
-                ticketGuid, bestMatch?.Score ?? 0);
+            _logger.LogInformation(
+                "GERDA-D: Auto-dispatch skipped for {TicketGuid}. Best score {Score:F2} below threshold {MinScore:F2}",
+                ticketGuid,
+                bestMatch?.Score ?? 0,
+                minScore);
+            return false;
+        }
+
+        if (bestMatch == null)
+        {
             return false;
         }
 
@@ -172,9 +189,7 @@ public class DispatchingService : IDispatchingService
 
         try
         {
-            var defaultDomainId = _domainConfigService.GetDefaultDomainId();
-            var domainConfig = _domainConfigService.GetDomain(defaultDomainId);
-            var strategyName = domainConfig?.AiStrategies.Dispatching ?? "MatrixFactorization";
+            var strategyName = _strategySelector.GetDefaultStrategyName();
             var strategy = _strategyFactory.GetStrategy<IDispatchingStrategy, List<DispatchResult>>(strategyName);
             
             // Fire and forget background task
@@ -209,120 +224,38 @@ public class DispatchingService : IDispatchingService
     {
         if (!IsEnabled)
         {
-            _logger.LogDebug("Dispatching service is disabled");
             return null;
         }
-
-        var ticket = await _context.Tickets
-            .FirstOrDefaultAsync(t => t.Guid == ticketGuid);
-
-        if (ticket == null)
-        {
-            _logger.LogWarning("Ticket {TicketGuid} not found for PM recommendation", ticketGuid);
-            return null;
-        }
-
-        // Get employees who could be project managers (all employees for now, could filter by role)
-        var employees = await _context.Users.OfType<Employee>().ToListAsync();
-
-        if (employees.Count == 0)
-        {
-            _logger.LogWarning("GERDA-D: No employees found for PM recommendation");
-            return null;
-        }
-
-        // Get current project load for each employee (projects they manage)
-        var pmProjectCounts = await _context.Projects
-            .Where(p => p.ProjectManagerId != null)
-            .Where(p => p.Status != Status.Completed && p.Status != Status.Failed)
-            .GroupBy(p => p.ProjectManagerId)
-            .Select(g => new { PMId = g.Key!, Count = g.Count() })
-            .ToDictionaryAsync(x => x.PMId, x => x.Count);
-
-        // Get historical success rate (completed projects)
-        var pmSuccessRates = await _context.Projects
-            .Where(p => p.ProjectManagerId != null)
-            .Where(p => p.Status == Status.Completed || p.Status == Status.Failed)
-            .GroupBy(p => p.ProjectManagerId)
-            .Select(g => new
-            {
-                PMId = g.Key!,
-                Total = g.Count(),
-                Completed = g.Count(p => p.Status == Status.Completed)
-            })
-            .ToDictionaryAsync(
-                x => x.PMId,
-                x => x.Total > 0 ? (double)x.Completed / x.Total : 0.5);
-
-        // Score each potential PM
-        var scoredPMs = new List<(string PMId, double Score, string Name)>();
-        const int maxProjectsPerPM = 5; // Configurable threshold
-
-        foreach (var employee in employees)
-        {
-            var currentProjects = pmProjectCounts.GetValueOrDefault(employee.Id, 0);
-
-            // Skip PMs who have too many active projects
-            if (currentProjects >= maxProjectsPerPM)
-            {
-                continue;
-            }
-
-            // Calculate score based on:
-            // 1. Workload (fewer projects = higher score)
-            var workloadScore = 1.0 - (currentProjects / (double)maxProjectsPerPM);
-
-            // 2. Historical success rate
-            var successRate = pmSuccessRates.GetValueOrDefault(employee.Id, 0.5); // Default 50% for new PMs
-
-            // 3. Combine factors (60% workload, 40% success rate)
-            var combinedScore = (workloadScore * 0.6) + (successRate * 0.4);
-
-            scoredPMs.Add((employee.Id, combinedScore, $"{employee.FirstName} {employee.LastName}"));
-
-            _logger.LogDebug(
-                "GERDA-D: PM {Name} scored {Score:F2} (workload: {Workload:F2}, success: {Success:F2})",
-                $"{employee.FirstName} {employee.LastName}",
-                combinedScore,
-                workloadScore,
-                successRate);
-        }
-
-        if (scoredPMs.Count == 0)
-        {
-            _logger.LogWarning("GERDA-D: All PMs at capacity, returning fallback");
-            return await GetFallbackAgentAsync();
-        }
-
-        var bestPM = scoredPMs.OrderByDescending(x => x.Score).First();
-
-        _logger.LogInformation(
-            "GERDA-D: Recommended PM {Name} for ticket {TicketGuid} with score {Score:F2}",
-            bestPM.Name, ticketGuid, bestPM.Score);
-
-        return bestPM.PMId;
+        return await _projectManagerRecommendationService.GetRecommendedProjectManagerAsync(ticketGuid);
     }
 
-    private async Task<string?> GetFallbackAgentAsync()
+    /// <summary>
+    /// Get agent recommendations using the generic AgentMatchingEngine.
+    /// This is used as an optional path alongside domain-specific strategies.
+    /// </summary>
+    private DispatchResult GetRecommendedAgentByEngine(Ticket ticket, List<Agent> availableAgents)
     {
-        // Fallback: assign to agent with least current workload
-        // Get all employees first
-        var employees = await _context.Users.OfType<Employee>().ToListAsync();
-        if (!employees.Any()) return null;
+        try
+        {
+            var workItem = new TicketWorkItemAdapter(ticket);
+            var result = _agentMatchingEngine.RecommendAgent(workItem, availableAgents);
+            
+            if (string.IsNullOrEmpty(result.RecommendedAgentId))
+            {
+                _logger.LogWarning("AgentMatchingEngine returned no recommendation for ticket {TicketGuid}", ticket.Guid);
+                return new DispatchResult(string.Empty, 0.0) { Explanation = "No agent recommendation available" };
+            }
 
-        var agentWorkloads = await _context.Tickets
-            .Where(t => t.ResponsibleId != null)
-            .Where(t => t.TicketStatus != Status.Completed && t.TicketStatus != Status.Failed)
-            .GroupBy(t => t.ResponsibleId)
-            .Select(g => new { AgentId = g.Key!, Count = g.Count() })
-            .ToDictionaryAsync(x => x.AgentId, x => x.Count);
-
-        var bestAgent = employees
-            .Select(e => new { AgentId = e.Id, Count = agentWorkloads.GetValueOrDefault(e.Id, 0) })
-            .OrderBy(x => x.Count)
-            .FirstOrDefault();
-
-        return bestAgent?.AgentId;
+            return new DispatchResult(result.RecommendedAgentId, (double)result.MatchScore)
+            {
+                Explanation = result.Rationale ?? "Engine-based matching"
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "AgentMatchingEngine failed for ticket {TicketGuid}, falling back to strategies", ticket.Guid);
+            return new DispatchResult(string.Empty, 0.0) { Explanation = $"Agent matching engine error: {ex.Message}" };
+        }
     }
 }
 

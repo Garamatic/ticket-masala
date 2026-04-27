@@ -1,5 +1,6 @@
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Enums;
 
 namespace TicketMasala.Web.ViewModels.Dashboard;
 
@@ -80,6 +81,8 @@ public class AgentWorkloadMetric
     public int CurrentWorkload { get; set; } // EstimatedEffortPoints sum
     public int MaxCapacity { get; set; }
     public double UtilizationPercentage { get; set; }
+    public double UtilizationPercentageCapped => Math.Min(UtilizationPercentage, 100);
+    public bool IsOverCapacity => UtilizationPercentage > 100;
     public string UtilizationClass
     {
         get
@@ -102,19 +105,7 @@ public class RecentActivityItem
     public DateTime Timestamp { get; set; }
     public string TicketGuid { get; set; } = string.Empty;
     public string TicketDescription { get; set; } = string.Empty;
-    public string ActivityType { get; set; } = string.Empty; // "Created", "Assigned", "Completed"
+    public ActivityType ActivityType { get; set; } = ActivityType.Other;
     public string AgentName { get; set; } = string.Empty;
-    public string ActivityClass
-    {
-        get
-        {
-            return ActivityType switch
-            {
-                "Created" => "primary",
-                "Assigned" => "info",
-                "Completed" => "success",
-                _ => "secondary"
-            };
-        }
-    }
+    public string ActivityClass => ActivityType.GetCssClass();
 }

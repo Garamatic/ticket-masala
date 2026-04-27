@@ -1,9 +1,11 @@
 namespace TicketMasala.Web.Utilities;
 
+/// <summary>
+/// Helper class for generating random test/demo data.
+/// Uses Random.Shared for thread-safe random number generation.
+/// </summary>
 public static class RandomDataHelper
 {
-    private static readonly Random _random = new Random();
-
     private static readonly string[] _adjectives =
     {
         "Critical", "Minor", "Urgent", "Strange", "Intermittent", "Persistent", "Unexpected", "Annoying", "Major", "Cosmetic"
@@ -36,6 +38,6 @@ public static class RandomDataHelper
 
     private static T GetRandom<T>(T[] array)
     {
-        return array[_random.Next(array.Length)];
+        return array[Random.Shared.Next(array.Length)];
     }
 }

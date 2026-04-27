@@ -26,10 +26,3 @@ public class TicketViewModel
     public string? GerdaTags { get; set; }
     public TicketMasala.Domain.Services.AiExplanation? Explanation { get; set; }
 }
-
-public class SubTicketInfo
-{
-    public Guid Guid { get; set; }
-    public Status TicketStatus { get; set; }
-    public string Description { get; set; } = string.Empty;
-}

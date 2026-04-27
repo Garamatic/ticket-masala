@@ -1,6 +1,7 @@
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
 using Microsoft.EntityFrameworkCore;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Repositories.Specifications;
 
@@ -13,24 +14,18 @@ public static class TicketQueryExtensions
 {
     /// <summary>
     /// Filters tickets by department through Project relationship.
-    /// This logic was duplicated 5+ times across different repository methods.
+    /// Simplified to use navigation properties (KISS).
     /// </summary>
     public static IQueryable<Ticket> FilterByDepartment(
         this IQueryable<Ticket> query,
-        Guid? departmentId,
-        DbSet<Project> projects)
+        Guid? departmentId)
     {
         if (!departmentId.HasValue)
         {
             return query;
         }
 
-        return query.Join(projects,
-            ticket => ticket.ProjectGuid,
-            project => project.Guid,
-            (ticket, project) => new { Ticket = ticket, Project = project })
-            .Where(x => x.Project.DepartmentId == departmentId.Value)
-            .Select(x => x.Ticket);
+        return query.Where(t => t.Project != null && t.Project.DepartmentId == departmentId.Value);
     }
 
     /// <summary>
@@ -69,9 +64,27 @@ public static class TicketQueryExtensions
     /// <summary>
     /// Filters tickets created within a time window.
     /// </summary>
-    public static IQueryable<Ticket> FilterRecent(this IQueryable<Ticket> query, int timeWindowMinutes)
+    public static IQueryable<Ticket> WithinTimeWindow(this IQueryable<Ticket> query, int timeWindowMinutes, ISystemClock clock)
     {
-        var cutoffTime = DateTime.UtcNow.AddMinutes(-timeWindowMinutes);
+        var cutoffTime = clock.UtcNow.AddMinutes(-timeWindowMinutes);
         return query.Where(t => t.CreationDate >= cutoffTime);
+    }
+
+    /// <summary>
+    /// Filters tickets by search term (Title, Description, Customer Name, Project Name).
+    /// </summary>
+    public static IQueryable<Ticket> FilterBySearchTerm(this IQueryable<Ticket> query, string? searchTerm)
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            return query;
+        }
+
+        var term = searchTerm.ToLower();
+        return query.Where(t =>
+            (t.Title != null && t.Title.ToLower().Contains(term)) ||
+            t.Description.ToLower().Contains(term) ||
+            (t.Customer != null && (t.Customer.FirstName.ToLower().Contains(term) || t.Customer.LastName.ToLower().Contains(term))) ||
+            (t.Project != null && t.Project.Name.ToLower().Contains(term)));
     }
 }

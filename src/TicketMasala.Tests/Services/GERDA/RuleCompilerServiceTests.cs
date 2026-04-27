@@ -7,6 +7,7 @@ using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Configuration;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Engine.Compiler;
+using TicketMasala.Web.Abstractions;
 using Xunit;
 
 namespace TicketMasala.Tests.Services.GERDA
@@ -14,12 +15,15 @@ namespace TicketMasala.Tests.Services.GERDA
     public class RuleCompilerServiceTests
     {
         private readonly Mock<ILogger<RuleCompilerService>> _loggerMock;
+        private readonly Mock<ISystemClock> _clockMock;
         private readonly RuleCompilerService _compiler;
 
         public RuleCompilerServiceTests()
         {
             _loggerMock = new Mock<ILogger<RuleCompilerService>>();
-            _compiler = new RuleCompilerService(_loggerMock.Object);
+            _clockMock = new Mock<ISystemClock>();
+            _clockMock.Setup(c => c.UtcNow).Returns(DateTime.UtcNow);
+            _compiler = new RuleCompilerService(_loggerMock.Object, _clockMock.Object);
         }
 
         [Fact]
@@ -65,11 +69,14 @@ namespace TicketMasala.Tests.Services.GERDA
 
             var compiled = _compiler.Compile(conditions);
 
+            var now = new DateTime(2025, 1, 10, 12, 0, 0, DateTimeKind.Utc);
+            _clockMock.Setup(c => c.UtcNow).Returns(now);
+
             // Ticket breaching in 1 day (should pass)
-            var ticketPass = new Ticket { CompletionTarget = DateTime.UtcNow.AddDays(1) };
+            var ticketPass = new Ticket { CompletionTarget = now.AddDays(1) };
             
             // Ticket breaching in 3 days (should fail)
-            var ticketFail = new Ticket { CompletionTarget = DateTime.UtcNow.AddDays(3) };
+            var ticketFail = new Ticket { CompletionTarget = now.AddDays(3) };
 
             // Act & Assert
             Assert.True(compiled(ticketPass, new ClaimsPrincipal()));
@@ -87,12 +94,15 @@ namespace TicketMasala.Tests.Services.GERDA
             };
 
             var compiled = _compiler.Compile(conditions);
+            
+            var now = new DateTime(2025, 1, 10, 12, 0, 0, DateTimeKind.Utc);
+            _clockMock.Setup(c => c.UtcNow).Returns(now);
 
             // Ticket created 6 days ago (should pass)
-            var ticketPass = new Ticket { CreationDate = DateTime.UtcNow.AddDays(-6) };
+            var ticketPass = new Ticket { CreationDate = now.AddDays(-6) };
             
             // Ticket created 2 days ago (should fail)
-            var ticketFail = new Ticket { CreationDate = DateTime.UtcNow.AddDays(-2) };
+            var ticketFail = new Ticket { CreationDate = now.AddDays(-2) };
 
             // Act & Assert
             Assert.True(compiled(ticketPass, new ClaimsPrincipal()));

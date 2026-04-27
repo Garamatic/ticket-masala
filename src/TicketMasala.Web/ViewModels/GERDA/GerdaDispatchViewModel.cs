@@ -52,7 +52,8 @@ public class TicketDispatchInfo
     public List<AgentRecommendation> RecommendedAgents { get; set; } = new();
 
     // Time in backlog
-    public TimeSpan TimeInBacklog => DateTime.UtcNow - CreationDate;
+    // Note: TimeInBacklog should be calculated by the service/controller using ISystemClock
+    public TimeSpan TimeInBacklog { get; set; }
     public string TimeInBacklogDisplay => FormatTimeInBacklog(TimeInBacklog);
 
     private static string FormatTimeInBacklog(TimeSpan time)

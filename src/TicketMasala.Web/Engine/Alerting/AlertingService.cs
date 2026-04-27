@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Engine.Alerting;
 
@@ -29,13 +30,16 @@ public class AlertingService : IAlertingService
 {
     private readonly ILogger<AlertingService> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ISystemClock _clock;
     private readonly List<WebhookConfig> _webhooks;
 
     public AlertingService(
         ILogger<AlertingService> logger,
         IHttpClientFactory httpClientFactory,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        ISystemClock clock)
     {
+        _clock = clock;
         _logger = logger;
         _httpClientFactory = httpClientFactory;
         _webhooks = LoadWebhooks(configuration);
@@ -72,7 +76,7 @@ public class AlertingService : IAlertingService
         {
             type = alertType,
             message = message,
-            timestamp = DateTime.UtcNow,
+            timestamp = _clock.UtcNow,
             data = data
         };
 

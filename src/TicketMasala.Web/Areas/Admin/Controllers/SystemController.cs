@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.GERDA.Configuration;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Areas.Admin.Controllers;
 
@@ -18,16 +19,19 @@ public class SystemController : Controller
     private readonly ILogger<SystemController> _logger;
     private readonly HealthCheckService? _healthCheckService;
     private readonly IDomainConfigurationService _domainConfigurationService;
+    private readonly ISystemClock _clock;
 
     public SystemController(
         MasalaDbContext context,
         ILogger<SystemController> logger,
         IDomainConfigurationService domainConfigurationService,
+        ISystemClock clock,
         HealthCheckService? healthCheckService = null)
     {
         _context = context;
         _logger = logger;
         _domainConfigurationService = domainConfigurationService;
+        _clock = clock;
         _healthCheckService = healthCheckService;
     }
 
@@ -36,7 +40,7 @@ public class SystemController : Controller
         var viewModel = new SystemHealthViewModel
         {
             DatabaseStatus = await CheckDatabaseAsync(),
-            ServerTime = DateTime.UtcNow,
+            ServerTime = _clock.UtcNow,
             Environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Unknown",
             DotNetVersion = Environment.Version.ToString(),
             HealthChecks = await GetHealthChecksAsync()

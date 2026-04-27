@@ -11,6 +11,8 @@ using TicketMasala.Domain.Data;
 using TicketMasala.Web.Engine.GERDA.Configuration;
 using TicketMasala.Domain.Configuration;
 
+using TicketMasala.Web.Abstractions;
+
 namespace TicketMasala.Tests.Services;
 
 public class TicketReadServiceTests
@@ -41,7 +43,8 @@ public class TicketReadServiceTests
             new Mock<IHttpContextAccessor>().Object,
             logger.Object,
             domainConfig.Object,
-            new Mock<TicketMasala.Web.Engine.GERDA.Tickets.Domain.TicketReportingService>(ticketRepo.Object, new Mock<ILogger<TicketMasala.Web.Engine.GERDA.Tickets.Domain.TicketReportingService>>().Object).Object
+            new Mock<TicketMasala.Web.Engine.GERDA.Tickets.Domain.TicketReportingService>(ticketRepo.Object, new Mock<ILogger<TicketMasala.Web.Engine.GERDA.Tickets.Domain.TicketReportingService>>().Object).Object,
+            new Mock<ISystemClock>().Object
         );
 
         // Mock Domain Config

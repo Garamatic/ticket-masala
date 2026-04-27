@@ -2,39 +2,34 @@ using System.Text.Json;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
 using TicketMasala.Web.ViewModels.Api;
+using TicketMasala.Web.Services;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Extensions;
 
 /// <summary>
 /// Extension methods for mapping between domain entities and API DTOs.
 /// Provides domain-agnostic mapping for consistent API interfaces.
+/// Supports both legacy and new centralized JSON parsing approaches.
 /// </summary>
 public static class DtoMappingExtensions
 {
     /// <summary>
     /// Maps a Ticket entity to a WorkItemDto for API responses.
+    /// Uses centralized JSON parsing service to eliminate duplication.
     /// </summary>
     /// <param name="ticket">The ticket entity to map</param>
+    /// <param name="jsonParsingService">Service for parsing custom fields JSON</param>
     /// <returns>A WorkItemDto with mapped values</returns>
-    public static WorkItemDto ToWorkItemDto(this Ticket ticket)
+    public static WorkItemDto ToWorkItemDto(this Ticket ticket, IJsonParsingService jsonParsingService)
     {
         if (ticket == null)
             throw new ArgumentNullException(nameof(ticket));
+        if (jsonParsingService == null)
+            throw new ArgumentNullException(nameof(jsonParsingService));
 
-        // Parse custom fields JSON safely
-        Dictionary<string, object>? customFields = null;
-        if (!string.IsNullOrEmpty(ticket.CustomFieldsJson) && ticket.CustomFieldsJson != "{}")
-        {
-            try
-            {
-                customFields = JsonSerializer.Deserialize<Dictionary<string, object>>(ticket.CustomFieldsJson);
-            }
-            catch (JsonException)
-            {
-                // If JSON parsing fails, leave customFields as null
-                customFields = null;
-            }
-        }
+        // Use centralized JSON parsing to eliminate duplication
+        var customFields = jsonParsingService.ParseCustomFields(ticket.CustomFieldsJson);
 
         return new WorkItemDto
         {
@@ -49,7 +44,7 @@ public static class DtoMappingExtensions
             CreatedAt = ticket.CreationDate,
             CompletedAt = ticket.CompletionDate,
             CompletionTarget = ticket.CompletionTarget,
-            CustomFields = customFields,
+            CustomFields = customFields.ToDictionary(k => k.Key, v => v.Value ?? new object()),
             EstimatedEffortPoints = ticket.EstimatedEffortPoints > 0 ? ticket.EstimatedEffortPoints : null,
             PriorityScore = ticket.PriorityScore > 0 ? ticket.PriorityScore : null,
             CustomerId = ticket.CustomerId

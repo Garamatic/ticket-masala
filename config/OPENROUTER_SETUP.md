@@ -13,7 +13,7 @@
 - **appsettings.Development.json** - Created with OpenRouter config for local development
 
 ### 3. OpenRouter Details
-- **API Key**: `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`
+- **API Key**: `REDACTED_OPENROUTER_KEY`
 - **Base URL**: `https://openrouter.ai/api/v1`
 - **Models Used**:
   - Fast responses: `openai/gpt-4o-mini` (cheaper, faster)

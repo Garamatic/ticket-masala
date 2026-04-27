@@ -1,4 +1,4 @@
-﻿using TicketMasala.Web;
+using TicketMasala.Web;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
 using TicketMasala.Web.ViewModels.Tickets;
@@ -18,6 +18,8 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.AI;
+using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.Orchestrators;
 
 namespace TicketMasala.Web.Controllers;
 
@@ -27,70 +29,23 @@ namespace TicketMasala.Web.Controllers;
 [Authorize]
 public class TicketController : Controller
 {
-    private readonly IGerdaService _gerdaService;
-    private readonly ITicketWorkflowService _ticketWorkflowService;
-    private readonly ITicketReadService _ticketReadService;
-    private readonly IAuditService _auditService;
-    private readonly INotificationService _notificationService;
-    private readonly IDomainConfigurationService _domainConfig;
-    private readonly IProjectReadService _projectReadService;
-    private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly IRuleEngineService _ruleEngine;
-    private readonly IOpenAiService _openAiService;
-    private readonly MasalaDbContext _context;
+    private readonly ITicketOrchestrator _orchestrator;
     private readonly ILogger<TicketController> _logger;
 
     public TicketController(
-        IGerdaService gerdaService,
-        ITicketWorkflowService ticketWorkflowService,
-        ITicketReadService ticketReadService,
-        IAuditService auditService,
-        INotificationService notificationService,
-        IDomainConfigurationService domainConfig,
-        IProjectReadService projectReadService,
-        IHttpContextAccessor httpContextAccessor,
-        IRuleEngineService ruleEngine,
-        IOpenAiService openAiService,
-        MasalaDbContext context,
+        ITicketOrchestrator orchestrator,
         ILogger<TicketController> logger)
     {
-        _gerdaService = gerdaService;
-        _ticketWorkflowService = ticketWorkflowService;
-        _ticketReadService = ticketReadService;
-        _auditService = auditService;
-        _notificationService = notificationService;
-        _domainConfig = domainConfig;
-        _projectReadService = projectReadService;
-        _httpContextAccessor = httpContextAccessor;
-        _ruleEngine = ruleEngine;
-        _openAiService = openAiService;
-        _context = context;
+        _orchestrator = orchestrator;
         _logger = logger;
     }
 
     public async Task<IActionResult> Index(TicketSearchViewModel searchModel)
     {
-        if (searchModel == null) searchModel = new TicketSearchViewModel();
-
-        var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        var isCustomer = User.IsInRole(Constants.RoleCustomer);
-        _logger.LogInformation("DEBUG: Index Access - UserId: {UserId}, IsCustomer: {IsCustomer}, QueryCustomerId: {QueryCustId}, QueryStatus: {Status}", 
-            userId, isCustomer, searchModel.CustomerId, searchModel.Status);
-
-        if (isCustomer && !string.IsNullOrEmpty(userId)) searchModel.CustomerId = userId;
-
-        var result = await _ticketReadService.SearchTicketsAsync(searchModel);
-        result.Customers = await _ticketReadService.GetCustomerSelectListAsync();
-        result.Employees = await _ticketReadService.GetEmployeeSelectListAsync();
-        result.Projects = await _ticketReadService.GetProjectSelectListAsync();
-
-        if (!string.IsNullOrEmpty(userId))
-        {
-            var savedFilterService = HttpContext.RequestServices.GetService<ISavedFilterService>();
-            if (savedFilterService != null)
-                ViewBag.SavedFilters = await savedFilterService.GetFiltersForUserAsync(userId);
-        }
-        ViewBag.IsCustomer = isCustomer;
+        var result = await _orchestrator.SearchTicketsAsync(searchModel, User);
+        
+        ViewBag.SavedFilters = result.SavedFilters;
+        ViewBag.IsCustomer = User.IsInRole(Constants.RoleCustomer);
         return View("~/Views/TicketSearch/Index.cshtml", result);
     }
 
@@ -100,98 +55,25 @@ public class TicketController : Controller
     {
         if (id == null) return NotFound();
 
-        var viewModel = await _ticketReadService.GetTicketDetailsAsync(id.Value);
-        if (viewModel == null) return NotFound();
-
-        var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        var isCustomer = User.IsInRole(Constants.RoleCustomer);
-
-        if (isCustomer && viewModel.CustomerId != userId)
+        TicketDetailsViewModel? viewModel;
+        try
+        {
+            viewModel = await _orchestrator.GetTicketDetailsAsync(id.Value, User);
+        }
+        catch (UnauthorizedAccessException)
         {
             return Forbid();
         }
 
-        // Get recommended agent for unassigned tickets
-        if (string.IsNullOrWhiteSpace(viewModel.ResponsibleId))
-        {
-            try
-            {
-                var dispatchingService = HttpContext.RequestServices.GetService<Engine.GERDA.Dispatching.IDispatchingService>();
-                if (dispatchingService != null)
-                {
-                    var recommendations = await dispatchingService.GetTopRecommendedAgentsAsync(id.Value, 1);
-                    if (recommendations != null && recommendations.Any())
-                    {
-                        var topRecommendation = recommendations.First();
-                        var agent = await _ticketReadService.GetEmployeeByIdAsync(topRecommendation.AgentId);
-                        if (agent != null)
-                        {
-                            var currentWorkload = await _ticketReadService.GetEmployeeCurrentWorkloadAsync(agent.Id);
-                            viewModel.RecommendedAgent = new RecommendedAgentInfo
-                            {
-                                AgentId = agent.Id,
-                                AgentName = $"{agent.FirstName} {agent.LastName}",
-                                AffinityScore = topRecommendation.Score,
-                                CurrentWorkload = currentWorkload,
-                                MaxCapacity = agent.MaxCapacityPoints
-                            };
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to get recommended agent for ticket {TicketGuid}", id.Value);
-            }
-        }
+        if (viewModel == null) return NotFound();
 
-        // Get suggested KB articles (GERDA-K)
-        try
-        {
-            var knowledgeService = HttpContext.RequestServices.GetService<Engine.GERDA.Knowledge.IKnowledgeService>();
-            if (knowledgeService != null)
-            {
-                var ticket = await _ticketReadService.GetTicketForEditAsync(id.Value);
-                if (ticket != null)
-                {
-                    var suggestions = await knowledgeService.GetSuggestedArticlesAsync(ticket);
-                    viewModel.SuggestedArticles = suggestions.Select(s => new KnowledgeSuggestionInfo
-                    {
-                        ArticleId = s.Article.Id,
-                        Title = s.Article.Title,
-                        RelevanceScore = s.RelevanceScore,
-                        MatchingReason = s.MatchingReason
-                    }).ToList();
-                }
-            }
-        }
-
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to get suggested knowledge for ticket {TicketGuid}", id.Value);
-        }
-
-        var domainId = viewModel.DomainId ?? _domainConfig.GetDefaultDomainId();
-        ViewBag.DomainId = domainId;
-        ViewBag.EntityLabels = _domainConfig.GetEntityLabels(domainId);
-        ViewBag.CustomFields = _domainConfig.GetCustomFields(domainId).ToList();
-        ViewBag.WorkItemTypeCode = viewModel.WorkItemTypeCode;
-
-        if (!string.IsNullOrEmpty(viewModel.CustomFieldsJson))
-        {
-            try
-            {
-                ViewBag.CustomFieldValues = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(viewModel.CustomFieldsJson);
-            }
-            catch
-            {
-                ViewBag.CustomFieldValues = new Dictionary<string, object>();
-            }
-        }
-        else
-        {
-            ViewBag.CustomFieldValues = new Dictionary<string, object>();
-        }
+        var context = await _orchestrator.GetTicketDetailContextAsync(viewModel);
+        
+        ViewBag.DomainId = context.DomainId;
+        ViewBag.EntityLabels = context.EntityLabels;
+        ViewBag.CustomFields = context.CustomFields;
+        ViewBag.WorkItemTypeCode = context.WorkItemTypeCode;
+        ViewBag.CustomFieldValues = context.CustomFieldValues;
 
         return View(viewModel);
     }
@@ -199,22 +81,17 @@ public class TicketController : Controller
     [HttpPost]
     public async Task<IActionResult> GenerateAiSummary(Guid ticketId)
     {
-        var ticket = await _ticketReadService.GetTicketDetailsAsync(ticketId);
-        if (ticket == null) return NotFound();
-
-        var query = $"Title: {ticket.Description} (Created: {ticket.CreationDate})\n\n" +
-                $"Status: {ticket.TicketStatus}\n\n" +
-                $"Discussion:\n" +
-                string.Join("\n", ticket.Comments.OrderBy(c => c.CreatedAt).Select(c => $"- {c.Author?.Name ?? c.Author?.UserName ?? "Unknown"} ({c.CreatedAt}): {c.Body}"));
-
         try
         {
-            var summary = await _openAiService.GetResponseAsync(OpenAIPrompts.Summary, query);
+            var summary = await _orchestrator.GenerateAiSummaryAsync(ticketId);
             return Json(new { success = true, summary });
+        }
+        catch (ArgumentException)
+        {
+            return NotFound();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating AI summary for ticket {TicketId}", ticketId);
             return Json(new { success = false, message = $"Failed to generate summary: {ex.Message}" });
         }
     }
@@ -226,47 +103,18 @@ public class TicketController : Controller
     [HttpGet]
     public async Task<IActionResult> Create(Guid? projectGuid = null)
     {
-        var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        var isCustomer = User.IsInRole(Constants.RoleCustomer);
+        var context = await _orchestrator.GetCreateContextAsync(projectGuid, User);
 
-        ViewBag.Employees = await _ticketReadService.GetEmployeeSelectListAsync();
-        ViewBag.Projects = await _ticketReadService.GetProjectSelectListAsync();
-
-        string? preselectedCustomerId = null;
-
-        if (projectGuid.HasValue)
-        {
-            var project = await _projectReadService.GetProjectDetailsAsync(projectGuid.Value);
-            if (project != null && project.ProjectDetails != null)
-            {
-                ViewBag.PreselectedProjectId = project.ProjectDetails.Guid;
-                if (!string.IsNullOrEmpty(project.ProjectDetails.CustomerId))
-                {
-                    preselectedCustomerId = project.ProjectDetails.CustomerId;
-                }
-            }
-        }
-
-        if (!isCustomer)
-        {
-            ViewBag.Customers = await _ticketReadService.GetCustomerSelectListAsync();
-            if (preselectedCustomerId != null)
-            {
-                ViewBag.PreselectedCustomerId = preselectedCustomerId;
-            }
-        }
-        else
-        {
-            ViewBag.PreselectedCustomerId = userId;
-        }
-
-        ViewBag.IsCustomer = isCustomer;
-
-        var defaultDomain = _domainConfig.GetDefaultDomainId();
-        ViewBag.DomainId = defaultDomain;
-        ViewBag.EntityLabels = _domainConfig.GetEntityLabels(defaultDomain);
-        ViewBag.WorkItemTypes = _domainConfig.GetWorkItemTypes(defaultDomain).ToList();
-        ViewBag.CustomFields = _domainConfig.GetCustomFields(defaultDomain).ToList();
+        ViewBag.Employees = context.Employees;
+        ViewBag.Projects = context.Projects;
+        ViewBag.Customers = context.Customers;
+        ViewBag.PreselectedProjectId = context.PreselectedProjectId;
+        ViewBag.PreselectedCustomerId = context.PreselectedCustomerId;
+        ViewBag.IsCustomer = context.IsCustomer;
+        ViewBag.DomainId = context.DomainId;
+        ViewBag.EntityLabels = context.EntityLabels;
+        ViewBag.WorkItemTypes = context.WorkItemTypes;
+        ViewBag.CustomFields = context.CustomFields;
 
         return View();
     }
@@ -282,70 +130,52 @@ public class TicketController : Controller
         string? domainId,
         string? workItemTypeCode)
     {
-        var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        var isCustomer = User?.IsInRole(Constants.RoleCustomer) ?? false;
-
-        if (isCustomer && !string.IsNullOrEmpty(userId))
-        {
-            customerId = userId;
-        }
-
-        if (string.IsNullOrWhiteSpace(description))
-        {
-            ModelState.AddModelError("description", "Description is required");
-        }
-
+        // Validation logic
+        if (string.IsNullOrWhiteSpace(description)) ModelState.AddModelError("description", "Description is required");
         if (string.IsNullOrWhiteSpace(customerId))
         {
-            ModelState.AddModelError("customerId", "Customer is required");
-        }
-
-        if (!ModelState.IsValid)
-        {
-            if (!isCustomer)
+            // If customer is creating, ID is auto-filled by Orchestrator, but here we validate form input if needed.
+            // Actually Orchestrator handles logic. We should rely on Orchestrator or minimal validation here.
+            // But original controller did validation before logic.
+            // We can keep it or move to Orchestrator. 
+            // For now, let's keep basic validation here if it depends on ViewModel binding, 
+            // but since we use raw params, we check them.
+            // If User is customer, we might not need customerId param.
+            if (!User.IsInRole(Constants.RoleCustomer))
             {
-                ViewBag.Customers = await _ticketReadService.GetCustomerSelectListAsync();
+                ModelState.AddModelError("customerId", "Customer is required");
             }
-            ViewBag.Employees = await _ticketReadService.GetEmployeeSelectListAsync();
-            ViewBag.Projects = await _ticketReadService.GetProjectSelectListAsync();
-            ViewBag.IsCustomer = isCustomer;
-
-            var reloadDomain = _domainConfig.GetDefaultDomainId();
-            ViewBag.DomainId = reloadDomain;
-            ViewBag.EntityLabels = _domainConfig.GetEntityLabels(reloadDomain);
-            ViewBag.WorkItemTypes = _domainConfig.GetWorkItemTypes(reloadDomain).ToList();
-            ViewBag.CustomFields = _domainConfig.GetCustomFields(reloadDomain).ToList();
-
-            return View();
         }
 
-        try
+        if (ModelState.IsValid)
         {
-            var ticket = await _ticketWorkflowService.CreateTicketAsync(description, customerId, responsibleId, projectGuid, completionTarget);
+            var result = await _orchestrator.CreateTicketAsync(
+                description, customerId, responsibleId, projectGuid, completionTarget, domainId, workItemTypeCode, Request.Form, User);
 
-            ticket.DomainId = domainId ?? _domainConfig.GetDefaultDomainId();
-            ticket.WorkItemTypeCode = workItemTypeCode;
-
-            var formDictionary = Request.Form.ToDictionary(x => x.Key, x => x.Value.ToString());
-            ticket.CustomFieldsJson = _ticketReadService.ParseCustomFields(ticket.DomainId, formDictionary);
-
-            await _ticketWorkflowService.UpdateTicketAsync(ticket);
-
-            _logger.LogInformation("Processing ticket {TicketGuid} with GERDA AI (Domain: {DomainId}, Type: {WorkItemTypeCode})",
-                ticket.Guid, ticket.DomainId, ticket.WorkItemTypeCode);
-            await _gerdaService.ProcessTicketAsync(ticket.Guid);
-
-            var entityLabel = _domainConfig.GetEntityLabels(ticket.DomainId).WorkItem;
-            TempData["Success"] = $"{entityLabel} created successfully! GERDA AI has processed the {entityLabel.ToLower()} (estimated effort, priority, and tags assigned).";
-            _logger.LogInformation("GERDA processing completed for ticket {TicketGuid}", ticket.Guid);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error creating or processing ticket");
-            TempData["Warning"] = "Creation encountered an error. Please try again.";
+            if (result.IsSuccess)
+            {
+                TempData["Success"] = result.SuccessMessage;
+                return RedirectToAction("Index", "TicketSearch");
+            }
+            
+            TempData["Warning"] = result.ErrorMessage;
         }
 
-        return RedirectToAction("Index", "TicketSearch");
+        // Reload context on failure
+        var context = await _orchestrator.GetCreateContextAsync(projectGuid, User);
+        ViewBag.Employees = context.Employees;
+        ViewBag.Projects = context.Projects;
+        ViewBag.Customers = context.Customers;
+        ViewBag.IsCustomer = context.IsCustomer;
+        
+        // We might need to preserve the user's selected domain if possible, but for simplicity we reload default or let view handle it.
+        // Context has DomainId from config/defaults.
+        ViewBag.DomainId = context.DomainId;
+        ViewBag.EntityLabels = context.EntityLabels;
+        ViewBag.WorkItemTypes = context.WorkItemTypes;
+        ViewBag.CustomFields = context.CustomFields;
+
+        return View();
     }
 
     #endregion
@@ -357,60 +187,36 @@ public class TicketController : Controller
     {
         if (id == null) return NotFound();
 
-        var ticket = await _ticketReadService.GetTicketForEditAsync(id.Value);
-        if (ticket == null) return NotFound();
-
-        var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        var isCustomer = User.IsInRole(Constants.RoleCustomer);
-
-        if (isCustomer)
+        Facades.TicketEditContext? context;
+        try
         {
-            if (ticket.CustomerId != userId) return Forbid();
-
-            if (ticket.TicketStatus != Status.Pending && ticket.TicketStatus != Status.Assigned)
-            {
-                TempData["ErrorMessage"] = "You can only edit tickets that are in Pending or Assigned status.";
-                return RedirectToAction("Detail", new { id = ticket.Guid });
-            }
+            context = await _orchestrator.GetEditContextAsync(id.Value, User);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (InvalidOperationException ex)
+        {
+            TempData["ErrorMessage"] = ex.Message;
+            return RedirectToAction("Detail", new { id = id.Value });
         }
 
-        var responsibleUsers = await _ticketReadService.GetAllUsersSelectListAsync();
+        if (context == null) return NotFound();
 
-        var viewModel = new EditTicketViewModel
+        // Pass ValidStatuses if available (Orchestrator should populate it)
+        if (context.ValidStatuses != null)
         {
-            Guid = ticket.Guid,
-            Description = ticket.Description,
-            TicketStatus = ticket.TicketStatus,
-            CompletionTarget = ticket.CompletionTarget,
-            ResponsibleUserId = ticket.Responsible?.Id,
-            CustomerId = ticket.CustomerId,
-            ProjectGuid = ticket.ProjectGuid,
-            ResponsibleUsers = responsibleUsers,
-            CustomerList = (await _ticketReadService.GetCustomerSelectListAsync()).ToList(),
-            ProjectList = (await _ticketReadService.GetProjectSelectListAsync()).ToList()
-        };
-
-        var domainId = ticket.DomainId ?? _domainConfig.GetDefaultDomainId();
-        ViewBag.DomainId = domainId;
-        ViewBag.EntityLabels = _domainConfig.GetEntityLabels(domainId);
-        ViewBag.CustomFields = _domainConfig.GetCustomFields(domainId).ToList();
-        ViewBag.WorkItemTypeCode = ticket.WorkItemTypeCode;
-
-        if (!string.IsNullOrEmpty(ticket.CustomFieldsJson))
-        {
-            try { ViewBag.CustomFieldValues = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(ticket.CustomFieldsJson); }
-            catch { ViewBag.CustomFieldValues = new Dictionary<string, object>(); }
-        }
-        else
-        {
-            ViewBag.CustomFieldValues = new Dictionary<string, object>();
+            ViewBag.ValidStatuses = context.ValidStatuses;
         }
 
-        var validStates = _ruleEngine.GetValidNextStates(ticket, User);
-        var allowedStatuses = validStates.Union(new[] { ticket.TicketStatus }).Distinct().ToList();
-        ViewBag.ValidStatuses = new SelectList(allowedStatuses);
+        ViewBag.DomainId = context.DomainId;
+        ViewBag.EntityLabels = context.EntityLabels;
+        ViewBag.CustomFields = context.CustomFields;
+        ViewBag.WorkItemTypeCode = context.WorkItemTypeCode;
+        ViewBag.CustomFieldValues = context.CustomFieldValues;
 
-        return View(viewModel);
+        return View(context.ViewModel);
     }
 
     [HttpPost]
@@ -421,72 +227,47 @@ public class TicketController : Controller
 
         if (ModelState.IsValid)
         {
-            var ticketToUpdate = await _ticketReadService.GetTicketForEditAsync(id);
-            if (ticketToUpdate == null) return NotFound();
-
-            var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            var isCustomer = User.IsInRole(Constants.RoleCustomer);
-
-            if (isCustomer)
+            var result = await _orchestrator.UpdateTicketAsync(id, viewModel, Request.Form, User);
+            
+            if (result.IsSuccess)
             {
-                if (ticketToUpdate.CustomerId != userId) return Forbid();
-
-                if (ticketToUpdate.TicketStatus != Status.Pending && ticketToUpdate.TicketStatus != Status.Assigned)
-                {
-                    TempData["ErrorMessage"] = "You can only edit tickets that are in Pending or Assigned status.";
-                    return RedirectToAction("Detail", new { id = ticketToUpdate.Guid });
-                }
+                return RedirectToAction(nameof(Detail), new { id = id });
             }
-
-            ticketToUpdate.Description = viewModel.Description;
-            ticketToUpdate.TicketStatus = viewModel.TicketStatus;
-            ticketToUpdate.CompletionTarget = viewModel.CompletionTarget;
-            ticketToUpdate.CustomerId = viewModel.CustomerId;
-            ticketToUpdate.ProjectGuid = viewModel.ProjectGuid;
-
-            var domainId = ticketToUpdate.DomainId ?? _domainConfig.GetDefaultDomainId();
-            var formDictionary = Request.Form.ToDictionary(x => x.Key, x => x.Value.ToString());
-            ticketToUpdate.CustomFieldsJson = _ticketReadService.ParseCustomFields(domainId, formDictionary);
-
-            try
-            {
-                var success = await _ticketWorkflowService.UpdateTicketAsync(ticketToUpdate);
-                if (success)
-                {
-                    return RedirectToAction(nameof(Detail), new { id = ticketToUpdate.Guid });
-                }
-                else
-                {
-                    ModelState.AddModelError("", "Failed to update ticket. Please try again.");
-                }
-            }
-            catch (DomainRuleException ex)
-            {
-                ModelState.AddModelError("", ex.Message);
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                throw;
-            }
+            
+            ModelState.AddModelError("", result.ErrorMessage ?? "Failed to update ticket.");
         }
 
-        viewModel.ResponsibleUsers = await _ticketReadService.GetAllUsersSelectListAsync();
-        viewModel.CustomerList = (await _ticketReadService.GetCustomerSelectListAsync()).ToList();
-        viewModel.ProjectList = (await _ticketReadService.GetProjectSelectListAsync()).ToList();
-
-        var reloadTicket = await _ticketReadService.GetTicketForEditAsync(id);
-        if (reloadTicket != null)
+        // Reload context
+        viewModel.ResponsibleUsers = (await _orchestrator.GetCreateContextAsync(null, User)).Employees?.ToList() ?? new List<SelectListItem>();
+        // Note: We might want a specialized Reload method in Orchestrator that returns ViewModel ready lists.
+        // reusing GetCreateContextAsync for lists is a bit hacky but works for employees/projects/customers.
+        // But GetEditReloadContextAsync is better.
+        
+        var context = await _orchestrator.GetEditReloadContextAsync(id, User);
+        
+        if (context.ValidStatuses != null)
         {
-            var validStates = _ruleEngine.GetValidNextStates(reloadTicket, User);
-            var allowedStatuses = validStates.Union(new[] { reloadTicket.TicketStatus }).Distinct().ToList();
-            ViewBag.ValidStatuses = new SelectList(allowedStatuses);
+            ViewBag.ValidStatuses = context.ValidStatuses;
         }
 
-        var reloadDomainId = _domainConfig.GetDefaultDomainId();
-        ViewBag.DomainId = reloadDomainId;
-        ViewBag.EntityLabels = _domainConfig.GetEntityLabels(reloadDomainId);
-        ViewBag.CustomFields = _domainConfig.GetCustomFields(reloadDomainId).ToList();
-        ViewBag.CustomFieldValues = new Dictionary<string, object>();
+        // We also need to repopulate lists in ViewModel if they are null.
+        // Orchestrator.UpdateTicketAsync doesn't return a ViewModel.
+        // We have to manually repopulate.
+        // Since GetEditReloadContextAsync returns context, does it have lists?
+        // TicketEditContext definition shows it DOES NOT have lists for ViewModel properties (ResponsibleUsers, etc).
+        // It has ValidStatuses.
+        // So we need to fetch lists.
+        // I'll add a helper in Orchestrator or just use GetCreateContextAsync logic here.
+        // Actually, let's just fetch them via GetCreateContextAsync for simplicity, as I did above.
+        var listsContext = await _orchestrator.GetCreateContextAsync(viewModel.ProjectGuid, User);
+        viewModel.ResponsibleUsers = listsContext.Employees?.ToList() ?? new List<SelectListItem>();
+        viewModel.CustomerList = listsContext.Customers?.ToList() ?? new List<SelectListItem>();
+        viewModel.ProjectList = listsContext.Projects?.ToList() ?? new List<SelectListItem>();
+
+        ViewBag.DomainId = context.DomainId;
+        ViewBag.EntityLabels = context.EntityLabels;
+        ViewBag.CustomFields = context.CustomFields;
+        ViewBag.CustomFieldValues = new Dictionary<string, object>(); // Reset or preserve?
 
         return View(viewModel);
     }

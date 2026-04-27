@@ -97,7 +97,8 @@ public class KnowledgeBaseRepositoryTests
             Id = Guid.NewGuid(), 
             Title = "Test", 
             Content = "Test",
-            UsageCount = 0
+            UsageCount = 0,
+            CreatedAt = DateTime.UtcNow
         };
         context.KnowledgeBaseArticles.Add(article);
         await context.SaveChangesAsync();

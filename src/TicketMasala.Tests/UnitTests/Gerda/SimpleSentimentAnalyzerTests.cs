@@ -9,11 +9,12 @@ public class SimpleSentimentAnalyzerTests
     public void Analyze_UrgentKeywords_ReturnsCriticalScore()
     {
         // Arrange
+        var analyzer = new SimpleSentimentAnalyzer();
         var subject = "System Down";
         var body = "This is a CRITICAL emergency!";
 
         // Act
-        var (score, label) = SimpleSentimentAnalyzer.Analyze(subject, body);
+        var (score, label) = analyzer.Analyze(subject, body);
 
         // Assert
         Assert.True(score >= 4.0, $"Expected score >= 4.0 but got {score}");
@@ -24,11 +25,12 @@ public class SimpleSentimentAnalyzerTests
     public void Analyze_NeutralText_ReturnsNormalScore()
     {
         // Arrange
+        var analyzer = new SimpleSentimentAnalyzer();
         var subject = "Coffee Request";
         var body = "I would like some beans please.";
 
         // Act
-        var (score, label) = SimpleSentimentAnalyzer.Analyze(subject, body);
+        var (score, label) = analyzer.Analyze(subject, body);
 
         // Assert
         Assert.Equal(1.0, score);
@@ -39,11 +41,12 @@ public class SimpleSentimentAnalyzerTests
     public void Analyze_NegativeText_ReturnsBoostedScore()
     {
         // Arrange
+        var analyzer = new SimpleSentimentAnalyzer();
         var subject = "Bug Report";
         var body = "The app crashed and I am disappointed.";
 
         // Act
-        var (score, label) = SimpleSentimentAnalyzer.Analyze(subject, body);
+        var (score, label) = analyzer.Analyze(subject, body);
 
         // Assert
         // Base 1.0 + Negative (0.5 for keyword) -> Expect > 1.0

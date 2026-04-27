@@ -4,6 +4,7 @@ using TicketMasala.Web.Engine.GERDA.Tickets;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using TicketMasala.Web.ViewModels.Tickets;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Controllers;
 
@@ -15,19 +16,22 @@ public class TicketBatchController : Controller
     private readonly ITicketWorkflowService _ticketWorkflowService;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<TicketBatchController> _logger;
+    private readonly ISystemClock _clock;
 
     public TicketBatchController(
         ITicketBatchService ticketBatchService,
         ITicketReadService ticketReadService,
         ITicketWorkflowService ticketWorkflowService,
         IHttpContextAccessor httpContextAccessor,
-        ILogger<TicketBatchController> logger)
+        ILogger<TicketBatchController> logger,
+        ISystemClock clock)
     {
         _ticketBatchService = ticketBatchService;
         _ticketReadService = ticketReadService;
         _ticketWorkflowService = ticketWorkflowService;
         _httpContextAccessor = httpContextAccessor;
         _logger = logger;
+        _clock = clock;
     }
 
     [HttpPost]
@@ -82,7 +86,7 @@ public class TicketBatchController : Controller
             }
 
             var bytes = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
-            return File(bytes, "text/csv", $"tickets-export-{DateTime.Now:yyyyMMdd}.csv");
+            return File(bytes, "text/csv", $"tickets-export-{_clock.UtcNow:yyyyMMdd}.csv");
         }
         catch (Exception ex)
         {

@@ -27,6 +27,11 @@ public class TicketSearchResultDto
     public Guid? ProjectGuid { get; set; }
 
     public string? GerdaTags { get; set; }
+
+    // Time-based status (Calculated via ISystemClock)
+    public bool IsOverdue { get; set; }
+    public bool IsDueSoon { get; set; }
+    public double DaysUntilDue { get; set; }
 }
 
 public class UserSummary

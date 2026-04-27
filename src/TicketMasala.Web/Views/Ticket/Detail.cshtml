@@ -383,7 +383,7 @@
                         <div class="list-group list-group-flush">
                             @foreach (var article in Model.SuggestedArticles)
                             {
-                                <a asp-controller="KnowledgeBase" asp-action="Details" asp-route-id="@article.ArticleId" 
+                                <a asp-controller="KnowledgeBase" asp-action="Details" asp-route-id="@article.ArticleId"
                                    class="list-group-item list-group-item-action px-0">
                                     <div class="d-flex w-100 justify-content-between">
                                         <h6 class="mb-1 text-primary">@article.Title</h6>
@@ -406,9 +406,8 @@
 
 @if (Model.CompletionTarget.HasValue && Model.TicketStatus != TicketMasala.Domain.Common.Status.Completed)
 {
-    var timeRemaining = Model.CompletionTarget.Value - DateTime.UtcNow;
-    var isOverdue = timeRemaining.TotalSeconds < 0;
-    var isAtRisk = !isOverdue && timeRemaining.TotalHours < 24;
+    var isOverdue = Model.IsCompletionOverdue;
+    var isAtRisk = Model.IsCompletionDueSoon;
 
     if (isOverdue)
     {
@@ -424,7 +423,7 @@
         <div class="alert alert-warning d-flex align-items-center" role="alert">
             <i class="fas fa-exclamation-triangle me-2"></i>
             <div>
-                <strong>Due Soon!</strong> This ticket is due in @Math.Round(timeRemaining.TotalHours) hours
+                <strong>Due Soon!</strong> This ticket is due in @Math.Round(Model.HoursUntilCompletionTarget) hours
                 (@Model.CompletionTarget.Value.ToLocalTime().ToString("g")).
             </div>
         </div>
@@ -461,10 +460,10 @@
     async function generateAiSummary(ticketId) {
         const btn = document.getElementById('btnGenerateSummary');
         const content = document.getElementById('aiSummaryContent');
-        
+
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Generating...';
-        
+
         try {
             const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
             const response = await fetch(`/Ticket/GenerateAiSummary?ticketId=${ticketId}`, {
@@ -473,7 +472,7 @@
                     'RequestVerificationToken': token
                 }
             });
-            
+
             const raw = await response.text();
             let data = null;
             try { data = JSON.parse(raw); } catch { }

@@ -3,6 +3,8 @@ using Moq;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web.Engine.GERDA.Dispatching;
+using TicketMasala.Web.Engine.GERDA.Dispatching.Algorithms;
+using TicketMasala.Web.Engine.GERDA.Dispatching.Configuration;
 using TicketMasala.Web.Engine.GERDA.Models;
 using TicketMasala.Web.Engine.GERDA.Strategies;
 using TicketMasala.Web.Engine.GERDA.Configuration;
@@ -47,7 +49,9 @@ public class DispatchingServiceTests
         // Arrange
         using var context = new MasalaDbContext(_dbOptions);
         var strategyFactory = new Mock<IStrategyFactory>();
-        var domainConfig = new Mock<IDomainConfigurationService>();
+        var strategySelector = new Mock<IDispatchingStrategySelector>();
+        var autoDispatchPolicy = new Mock<IAutoDispatchPolicy>();
+        var pmRecommendationService = new Mock<IProjectManagerRecommendationService>();
         // Mock fallback strategy
         var mockStrategy = new Mock<IDispatchingStrategy>();
         mockStrategy.Setup(x => x.GetRecommendedAgentsAsync(It.IsAny<Ticket>(), It.IsAny<int>()))
@@ -56,7 +60,21 @@ public class DispatchingServiceTests
         strategyFactory.Setup(x => x.GetStrategy<IDispatchingStrategy, List<DispatchResult>>(It.IsAny<string>()))
             .Returns(mockStrategy.Object);
 
-        var service = new DispatchingService(context, _config, strategyFactory.Object, domainConfig.Object, _mockLogger.Object);
+        strategySelector.Setup(x => x.GetStrategyNameForTicket(It.IsAny<Ticket>()))
+            .Returns("MatrixFactorization");
+        strategySelector.Setup(x => x.GetDefaultStrategyName())
+            .Returns("MatrixFactorization");
+
+        var mockAgentMatchingEngine = new Mock<AgentMatchingEngine>(new DispatchingConfig(), new Mock<ILogger<AgentMatchingEngine>>().Object);
+        var service = new DispatchingService(
+            context,
+            _config,
+            strategyFactory.Object,
+            strategySelector.Object,
+            autoDispatchPolicy.Object,
+            pmRecommendationService.Object,
+            mockAgentMatchingEngine.Object,
+            _mockLogger.Object);
 
         var customer = new ApplicationUser
         {
@@ -119,7 +137,9 @@ public class DispatchingServiceTests
         // Arrange
         using var context = new MasalaDbContext(_dbOptions);
         var strategyFactory = new Mock<IStrategyFactory>();
-        var domainConfig = new Mock<IDomainConfigurationService>();
+        var strategySelector = new Mock<IDispatchingStrategySelector>();
+        var autoDispatchPolicy = new Mock<IAutoDispatchPolicy>();
+        var pmRecommendationService = new Mock<IProjectManagerRecommendationService>();
         // Mock fallback strategy
         var mockStrategy = new Mock<IDispatchingStrategy>();
         mockStrategy.Setup(x => x.GetRecommendedAgentsAsync(It.IsAny<Ticket>(), It.IsAny<int>()))
@@ -128,7 +148,21 @@ public class DispatchingServiceTests
         strategyFactory.Setup(x => x.GetStrategy<IDispatchingStrategy, List<DispatchResult>>(It.IsAny<string>()))
             .Returns(mockStrategy.Object);
 
-        var service = new DispatchingService(context, _config, strategyFactory.Object, domainConfig.Object, _mockLogger.Object);
+        strategySelector.Setup(x => x.GetStrategyNameForTicket(It.IsAny<Ticket>()))
+            .Returns("MatrixFactorization");
+        strategySelector.Setup(x => x.GetDefaultStrategyName())
+            .Returns("MatrixFactorization");
+
+        var mockAgentMatchingEngine = new Mock<AgentMatchingEngine>(new DispatchingConfig(), new Mock<ILogger<AgentMatchingEngine>>().Object);
+        var service = new DispatchingService(
+            context,
+            _config,
+            strategyFactory.Object,
+            strategySelector.Object,
+            autoDispatchPolicy.Object,
+            pmRecommendationService.Object,
+            mockAgentMatchingEngine.Object,
+            _mockLogger.Object);
 
         var customer = new ApplicationUser
         {
@@ -206,7 +240,9 @@ public class DispatchingServiceTests
         // Arrange
         using var context = new MasalaDbContext(_dbOptions);
         var strategyFactory = new Mock<IStrategyFactory>();
-        var domainConfig = new Mock<IDomainConfigurationService>();
+        var strategySelector = new Mock<IDispatchingStrategySelector>();
+        var autoDispatchPolicy = new Mock<IAutoDispatchPolicy>();
+        var pmRecommendationService = new Mock<IProjectManagerRecommendationService>();
         var expectedTime = DateTime.UtcNow.AddHours(-1);
         
         var mockStrategy = new Mock<IDispatchingStrategy>();
@@ -215,7 +251,19 @@ public class DispatchingServiceTests
         strategyFactory.Setup(x => x.GetStrategy<IDispatchingStrategy, List<DispatchResult>>(It.IsAny<string>()))
             .Returns(mockStrategy.Object);
 
-        var service = new DispatchingService(context, _config, strategyFactory.Object, domainConfig.Object, _mockLogger.Object);
+        strategySelector.Setup(x => x.GetDefaultStrategyName())
+            .Returns("MatrixFactorization");
+
+        var mockAgentMatchingEngine = new Mock<AgentMatchingEngine>(new DispatchingConfig(), new Mock<ILogger<AgentMatchingEngine>>().Object);
+        var service = new DispatchingService(
+            context,
+            _config,
+            strategyFactory.Object,
+            strategySelector.Object,
+            autoDispatchPolicy.Object,
+            pmRecommendationService.Object,
+            mockAgentMatchingEngine.Object,
+            _mockLogger.Object);
 
         // Act
         var result = service.LastModelTrainingTime;

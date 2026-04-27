@@ -9,12 +9,12 @@ public class CreateWorkItemRequest
     /// <summary>
     /// Title/subject of the work item
     /// </summary>
-    public required string Title { get; set; }
+    public string Title { get; set; } = string.Empty;
 
     /// <summary>
     /// Detailed description of the work item
     /// </summary>
-    public required string Description { get; set; }
+    public string Description { get; set; } = string.Empty;
 
     /// <summary>
     /// The domain identifier for this work item.

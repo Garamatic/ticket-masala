@@ -1,7 +1,7 @@
 # Feature: SAP Snapshot Sync (On-Demand)
 
 > **Status: Partially Implemented / Roadmap**
-> 
+>
 > *Current State:* The "Snapshot" logic is implemented via CSV/Excel file uploads.
 > *Roadmap:* Direct API integration with SAP/ERP systems and Apache Parquet support are planned for future releases.
 

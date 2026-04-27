@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Enums;
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.Observers;
 using TicketMasala.Web.Engine.Core;
@@ -13,6 +14,7 @@ using TicketMasala.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web.Engine.Compiler;
 using TicketMasala.Web.Engine.GERDA.Configuration;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Engine.GERDA.Tickets;
 
@@ -50,6 +52,7 @@ public class TicketWorkflowService : ITicketWorkflowService
     private readonly Domain.TicketNotificationService _ticketNotificationService;
     private readonly ILogger<TicketWorkflowService> _logger;
     private readonly Domain.TicketDispatchService _ticketDispatchService;
+    private readonly ISystemClock _clock;
 
     public TicketWorkflowService(
         MasalaDbContext context,
@@ -66,7 +69,8 @@ public class TicketWorkflowService : ITicketWorkflowService
         IPiiScrubberService piiScrubber,
         Domain.TicketNotificationService ticketNotificationService,
         ILogger<TicketWorkflowService> logger,
-        Domain.TicketDispatchService ticketDispatchService)
+        Domain.TicketDispatchService ticketDispatchService,
+        ISystemClock clock)
     {
         _context = context;
         _ticketRepository = ticketRepository;
@@ -83,6 +87,7 @@ public class TicketWorkflowService : ITicketWorkflowService
         _ticketNotificationService = ticketNotificationService;
         _logger = logger;
         _ticketDispatchService = ticketDispatchService;
+        _clock = clock;
     }
 
     private string? GetCurrentUserId()
@@ -126,9 +131,9 @@ public class TicketWorkflowService : ITicketWorkflowService
             DomainId = defaultDomainId,
             ConfigVersionId = currentConfigVersion,
             TicketStatus = responsible != null ? Status.Assigned : Status.Pending,
-            CompletionTarget = completionTarget ?? DateTime.UtcNow.AddDays(14),
+            CompletionTarget = completionTarget ?? _clock.UtcNow.AddDays(14),
             CreatorGuid = Guid.Parse(customer.Id),
-            CreationDate = DateTime.UtcNow,
+            CreationDate = _clock.UtcNow,
             Comments = new List<TicketComment>()
         };
 
@@ -153,7 +158,7 @@ public class TicketWorkflowService : ITicketWorkflowService
         await NotifyObserversUpdatedAsync(ticket);
 
         // Audit Log
-        await _auditService.LogActionAsync(ticket.Guid, "Created", GetCurrentUserId());
+        await _auditService.LogActionAsync(ticket.Guid, ActivityType.Created.GetDisplayText(), GetCurrentUserId());
 
         return ticket;
     }
@@ -283,7 +288,7 @@ public class TicketWorkflowService : ITicketWorkflowService
             TicketId = ticketId,
             Body = body,
             IsInternal = isInternal,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = _clock.UtcNow,
             AuthorId = authorId,
             Ticket = ticket
         };
@@ -325,7 +330,7 @@ public class TicketWorkflowService : ITicketWorkflowService
             ReviewerId = reviewerId,
             Score = score,
             Comments = feedback,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = _clock.UtcNow,
             IsApproved = approved
         };
 

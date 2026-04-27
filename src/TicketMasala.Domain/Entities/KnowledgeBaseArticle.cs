@@ -25,7 +25,7 @@ public class KnowledgeBaseArticle
     public string? AuthorId { get; set; }
     public virtual ApplicationUser? Author { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 }
 

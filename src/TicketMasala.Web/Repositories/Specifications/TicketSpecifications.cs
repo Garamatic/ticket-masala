@@ -94,9 +94,9 @@ public class TicketsByProjectSpecification : Specification<Ticket>
 /// </summary>
 public class OverdueTicketsSpecification : Specification<Ticket>
 {
-    public OverdueTicketsSpecification()
+    public OverdueTicketsSpecification(DateTime? referenceDate = null)
     {
-        var now = DateTime.UtcNow;
+        var now = referenceDate ?? DateTime.UtcNow;
         SetCriteria(t => t.CompletionTarget < now &&
                         t.TicketStatus != Status.Completed &&
                         t.ValidUntil == null);

@@ -11,27 +11,26 @@ namespace TicketMasala.Domain.Data;
 
 public class MasalaDbContext : IdentityDbContext<ApplicationUser, IdentityRole, string>
 {
-    public DbSet<Ticket> Tickets { get; set; }
-
-    public DbSet<Project> Projects { get; set; }
+    public DbSet<Ticket> Tickets { get; set; } = null!;
+    public DbSet<Project> Projects { get; set; } = null!;
     // Users DbSet is provided by IdentityDbContext
     // public DbSet<ApplicationUser> Users { get; set; }
     // Backwards-compatible DbSets: older code expects `Customers` and `Employees`.
     // Keep these mapped to the same entity types to minimize refactor churn.
-    public DbSet<ApplicationUser> Customers { get; set; }
-    public DbSet<Employee> Employees { get; set; }
-    public DbSet<KnowledgeBaseArticle> KnowledgeBaseArticles { get; set; }
-    public DbSet<KnowledgeBaseSnippet> KnowledgeBaseSnippets { get; set; }
-    public DbSet<ProjectTemplate> ProjectTemplates { get; set; }
-    public DbSet<TemplateTicket> TemplateTickets { get; set; }
-    public DbSet<SavedFilter> SavedFilters { get; set; }
-    public DbSet<Document> Documents { get; set; }
-    public DbSet<TicketComment> TicketComments { get; set; }
-    public DbSet<QualityReview> QualityReviews { get; set; }
-    public DbSet<Notification> Notifications { get; set; }
-    public DbSet<AuditLogEntry> AuditLogs { get; set; }
-    public DbSet<TimeLog> TimeLogs { get; set; }
-    public DbSet<DomainConfigVersion> DomainConfigVersions { get; set; }
+    public DbSet<ApplicationUser> Customers { get; set; } = null!;
+    public DbSet<Employee> Employees { get; set; } = null!;
+    public DbSet<KnowledgeBaseArticle> KnowledgeBaseArticles { get; set; } = null!;
+    public DbSet<KnowledgeBaseSnippet> KnowledgeBaseSnippets { get; set; } = null!;
+    public DbSet<ProjectTemplate> ProjectTemplates { get; set; } = null!;
+    public DbSet<TemplateTicket> TemplateTickets { get; set; } = null!;
+    public DbSet<SavedFilter> SavedFilters { get; set; } = null!;
+    public DbSet<Document> Documents { get; set; } = null!;
+    public DbSet<TicketComment> TicketComments { get; set; } = null!;
+    public DbSet<QualityReview> QualityReviews { get; set; } = null!;
+    public DbSet<Notification> Notifications { get; set; } = null!;
+    public DbSet<AuditLogEntry> AuditLogs { get; set; } = null!;
+    public DbSet<TimeLog> TimeLogs { get; set; } = null!;
+    public DbSet<DomainConfigVersion> DomainConfigVersions { get; set; } = null!;
 
     public MasalaDbContext(DbContextOptions<MasalaDbContext> options) : base(options) { }
 

@@ -1,10 +1,13 @@
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.Extensions;
 
 namespace TicketMasala.Web.ViewModels.Tickets;
 
 /// <summary>
-/// View model for ticket detail page with GERDA AI insights
+/// View model for ticket detail page with GERDA AI insights.
+/// Refactored to accept ISystemClock for deterministic time-based calculations.
 /// </summary>
 public class TicketDetailsViewModel
 {
@@ -18,6 +21,9 @@ public class TicketDetailsViewModel
     public DateTime CreationDate { get; set; }
     public DateTime? CompletionTarget { get; set; }
     public DateTime? CompletionDate { get; set; }
+    public bool IsCompletionOverdue { get; set; }
+    public bool IsCompletionDueSoon { get; set; }
+    public double HoursUntilCompletionTarget { get; set; }
 
     // Relationships
     public string? CustomerName { get; set; }
@@ -97,6 +103,11 @@ public class TicketDetailsViewModel
         _ => "badge bg-secondary"
     };
 
+    // SLA Status
+    public bool IsSlaBreached { get; set; }
+    public double DaysUntilSla { get; set; }
+    public string SlaStatusLabel { get; set; } = "On Track";
+
     /// <summary>
     /// AI-generated tags (comma-separated)
     /// e.g., "Password Reset, Urgent, First-Time User"
@@ -111,27 +122,51 @@ public class TicketDetailsViewModel
         : GerdaTags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
 
     /// <summary>
-    /// Days until SLA breach (negative if already breached)
+    /// Days until SLA deadline. Use GetDaysUntilSla(clock) for testable version.
     /// </summary>
-    public int DaysUntilSla => CompletionTarget.HasValue
+    [Obsolete("Use GetDaysUntilSla(ISystemClock) instead for deterministic testing")]
+    public int DaysUntilSlaLegacy => CompletionTarget.HasValue
         ? (int)(CompletionTarget.Value - DateTime.UtcNow).TotalDays
         : int.MaxValue;
 
     /// <summary>
-    /// Is SLA already breached?
+    /// Calculates days until SLA deadline using provided clock (testable).
     /// </summary>
-    public bool IsSlaBreached => CompletionTarget.HasValue && DateTime.UtcNow > CompletionTarget.Value;
+    public int GetDaysUntilSla(ISystemClock clock)
+    {
+        return CompletionTarget.DaysUntilSla(clock);
+    }
 
     /// <summary>
-    /// SLA status label
+    /// Is SLA already breached? Use IsSlaBreachedNow(clock) for testable version.
     /// </summary>
-    public string SlaStatusLabel => IsSlaBreached
-        ? "BREACHED"
-        : DaysUntilSla <= 1
+    [Obsolete("Use IsSlaBreachedNow(ISystemClock) instead for deterministic testing")]
+    public bool IsSlaBreachedLegacy => CompletionTarget.HasValue && DateTime.UtcNow > CompletionTarget.Value;
+
+    /// <summary>
+    /// Checks if SLA has been breached using provided clock (testable).
+    /// </summary>
+    public bool IsSlaBreachedNow(ISystemClock clock)
+    {
+        return CompletionTarget.IsSlaBreached(clock);
+    }
+
+    /// <summary>
+    /// Gets SLA status label using provided clock (testable).
+    /// </summary>
+    public string GetSlaStatusLabel(ISystemClock clock)
+    {
+        var isBreached = IsSlaBreachedNow(clock);
+        var daysUntil = GetDaysUntilSla(clock);
+
+        return isBreached
+            ? "BREACHED"
+            : daysUntil <= 1
             ? "Due Today"
-            : DaysUntilSla <= 3
-                ? $"{DaysUntilSla} days left"
+            : daysUntil <= 3
+                ? $"{daysUntil} days left"
                 : "On Track";
+    }
 
     /// <summary>
     /// Recommended agent from Dispatching service (if available)

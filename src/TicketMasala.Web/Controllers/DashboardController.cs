@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using TicketMasala.Domain.Common;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.GERDA.Anticipation;
+using TicketMasala.Web.Abstractions;
 using Newtonsoft.Json;
 
 namespace TicketMasala.Web.Controllers;
@@ -13,14 +14,17 @@ public class DashboardController : Controller
     private readonly ILogger<DashboardController> _logger;
     private readonly IMetricsService _metricsService;
     private readonly IAnticipationService? _anticipationService;
+    private readonly ISystemClock _clock;
 
     public DashboardController(
         ILogger<DashboardController> logger,
         IMetricsService metricsService,
+        ISystemClock clock,
         IAnticipationService? anticipationService = null)
     {
         _logger = logger;
         _metricsService = metricsService;
+        _clock = clock;
         _anticipationService = anticipationService;
     }
 
@@ -75,7 +79,7 @@ public class DashboardController : Controller
         var inflow = new List<int>();
         var capacityList = new List<int>();
 
-        var today = DateTime.Today;
+        var today = _clock.UtcNow.Date;
 
         if (forecastData.Count == 0)
         {

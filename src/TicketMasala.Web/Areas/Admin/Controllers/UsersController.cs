@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web.Data;
 using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Areas.Admin.Controllers;
 
@@ -17,15 +18,18 @@ public class UsersController : Controller
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly ILogger<UsersController> _logger;
+    private readonly ISystemClock _clock;
 
     public UsersController(
         UserManager<ApplicationUser> userManager,
         RoleManager<IdentityRole> roleManager,
-        ILogger<UsersController> logger)
+        ILogger<UsersController> logger,
+        ISystemClock clock)
     {
         _userManager = userManager;
         _roleManager = roleManager;
         _logger = logger;
+        _clock = clock;
     }
 
     public async Task<IActionResult> Index()
@@ -42,7 +46,7 @@ public class UsersController : Controller
                 Email = user.Email ?? "",
                 UserName = user.UserName ?? "",
                 FullName = user.FullName ?? "",
-                IsLocked = user.LockoutEnd.HasValue && user.LockoutEnd > DateTime.UtcNow,
+                IsLocked = user.LockoutEnd.HasValue && user.LockoutEnd > _clock.UtcNow,
                 Roles = roles.ToList()
             });
         }
@@ -59,14 +63,14 @@ public class UsersController : Controller
             return NotFound();
         }
 
-        if (user.LockoutEnd.HasValue && user.LockoutEnd > DateTime.UtcNow)
+        if (user.LockoutEnd.HasValue && user.LockoutEnd > _clock.UtcNow)
         {
             await _userManager.SetLockoutEndDateAsync(user, null);
             _logger.LogInformation("User {UserId} unlocked by admin", id);
         }
         else
         {
-            await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddYears(100));
+            await _userManager.SetLockoutEndDateAsync(user, _clock.UtcNow.AddYears(100));
             _logger.LogInformation("User {UserId} locked by admin", id);
         }
 

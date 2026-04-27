@@ -44,8 +44,9 @@ public static class TestDataBuilder
         };
     }
 
-    public static Ticket BuildTicket(ApplicationUser? customer = null, Employee? responsible = null, Status status = Status.Pending)
+    public static Ticket BuildTicket(ApplicationUser? customer = null, Employee? responsible = null, Status status = Status.Pending, DateTime? referenceDate = null)
     {
+        var baseDate = referenceDate ?? DateTime.UtcNow;
         return new Ticket
         {
             Guid = Guid.NewGuid(),
@@ -56,14 +57,15 @@ public static class TestDataBuilder
             Responsible = responsible,
             CreatorGuid = customer != null ? Guid.Parse(customer.Id) : Guid.NewGuid(),
             ResponsibleId = responsible?.Id,
-            CompletionTarget = DateTime.UtcNow.AddDays(_faker.Random.Int(1, 30)),
+            CompletionTarget = baseDate.AddDays(_faker.Random.Int(1, 30)),
             EstimatedEffortPoints = _faker.Random.Int(1, 13),
             PriorityScore = _faker.Random.Double(0, 100)
         };
     }
 
-    public static Project BuildProject(ApplicationUser? customer = null, Employee? projectManager = null)
+    public static Project BuildProject(ApplicationUser? customer = null, Employee? projectManager = null, DateTime? referenceDate = null)
     {
+        var baseDate = referenceDate ?? DateTime.UtcNow;
         var project = new Project
         {
             Guid = Guid.NewGuid(),
@@ -72,7 +74,7 @@ public static class TestDataBuilder
             Status = Status.InProgress,
             Customer = customer ?? BuildCustomer(),
             ProjectManager = projectManager,
-            CompletionTarget = DateTime.UtcNow.AddMonths(_faker.Random.Int(1, 6)),
+            CompletionTarget = baseDate.AddMonths(_faker.Random.Int(1, 6)),
             CreatorGuid = Guid.NewGuid()
         };
 
@@ -94,8 +96,9 @@ public static class TestDataBuilder
         };
     }
 
-    public static QualityReview BuildQualityReview(Guid ticketId, string? reviewerId = null)
+    public static QualityReview BuildQualityReview(Guid ticketId, string? reviewerId = null, DateTime? referenceDate = null)
     {
+        var baseDate = referenceDate ?? DateTime.UtcNow;
         return new QualityReview
         {
             Id = Guid.NewGuid(),
@@ -104,8 +107,8 @@ public static class TestDataBuilder
             Comments = _faker.Lorem.Paragraph(),
             Feedback = _faker.Lorem.Sentence(),
             Score = _faker.Random.Int(0, 100),
-            CreatedAt = DateTime.UtcNow,
-            ReviewDate = DateTime.UtcNow
+            CreatedAt = baseDate,
+            ReviewDate = baseDate
         };
     }
 }

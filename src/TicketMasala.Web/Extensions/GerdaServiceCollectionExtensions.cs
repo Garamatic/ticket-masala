@@ -34,6 +34,10 @@ public static class GerdaServiceCollectionExtensions
         services.AddSingleton<Engine.GERDA.Configuration.IDomainConfigurationService,
             Engine.GERDA.Configuration.DomainConfigurationService>();
 
+        // Domain UI Service (Scoped because it depends on IHttpContextAccessor)
+        services.AddScoped<Engine.GERDA.Configuration.IDomainUiService,
+            Engine.GERDA.Configuration.DomainUiService>();
+
         // Rule Compiler (global)
         services.AddSingleton<RuleCompilerService>();
 
@@ -49,6 +53,7 @@ public static class GerdaServiceCollectionExtensions
             services.AddScoped<IDispatchingService, NoOpDispatchingService>();
             services.AddScoped<IGerdaService, NoOpGerdaService>();
             services.AddScoped<IEstimatingService, NoOpEstimatingService>();
+            services.AddScoped<IKnowledgeService, NoOpKnowledgeService>();
             return services;
         }
 
@@ -69,7 +74,19 @@ public static class GerdaServiceCollectionExtensions
         services.AddScoped<IGroupingService, GroupingService>();
         services.AddScoped<IEstimatingService, EstimatingService>();
         services.AddScoped<IRankingService, RankingService>();
-        services.AddScoped<IDispatchingService, DispatchingService>();
+
+        // Algorithms
+        services.AddSingleton(new Engine.GERDA.Dispatching.Configuration.WsjfConfig());
+        services.AddTransient<Engine.GERDA.Dispatching.Algorithms.WsjfEngine>();
+
+        // Dispatching policies & selectors
+        services.AddScoped<IDispatchingStrategySelector, DomainDispatchingStrategySelector>();
+        services.AddScoped<IAutoDispatchPolicy, ScoreThresholdAutoDispatchPolicy>();
+        services.AddScoped<IProjectManagerRecommendationService, WorkloadAndSuccessProjectManagerRecommendationService>();
+
+        // Using NoOp service: AgentMatchingEngine not available
+        services.AddScoped<IDispatchingService, NoOpDispatchingService>();
+        // services.AddScoped<IDispatchingService, DispatchingService>();
         services.AddScoped<IDispatchBacklogService, DispatchBacklogService>();
         services.AddScoped<IAnticipationService, AnticipationService>();
         services.AddScoped<IKnowledgeService, KnowledgeService>();

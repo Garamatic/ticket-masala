@@ -113,10 +113,10 @@ else
         async function generateRoadmap(projectId) {
             const btn = document.getElementById('btnGenerateRoadmap');
             const content = document.getElementById('roadmapContent');
-            
+
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Generating...';
-            
+
             try {
                 const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
                 const response = await fetch(`/Projects/GenerateAiRoadmap?projectId=${projectId}`, {
@@ -125,9 +125,9 @@ else
                         'RequestVerificationToken': token
                     }
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (data.success) {
                     content.innerHTML = typeof marked !== 'undefined' ? marked.parse(data.roadmap) : data.roadmap;
                 } else {

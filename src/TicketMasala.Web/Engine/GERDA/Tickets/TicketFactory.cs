@@ -1,5 +1,7 @@
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Enums;
+using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Repositories;
 
 namespace TicketMasala.Web.Engine.GERDA.Tickets;
@@ -11,13 +13,16 @@ namespace TicketMasala.Web.Engine.GERDA.Tickets;
 public class TicketFactory : ITicketFactory
 {
     private readonly IUserRepository _userRepository;
+    private readonly ISystemClock _clock;
     private readonly ILogger<TicketFactory> _logger;
 
     public TicketFactory(
         IUserRepository userRepository,
+        ISystemClock clock,
         ILogger<TicketFactory> logger)
     {
         _userRepository = userRepository;
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
         _logger = logger;
     }
 
@@ -37,8 +42,8 @@ public class TicketFactory : ITicketFactory
             Status = "New", // Required
             TicketStatus = TicketMasala.Domain.Common.Status.Pending,
             CustomFieldsJson = "{}",
-            CreationDate = DateTime.UtcNow,
-            CompletionTarget = DateTime.UtcNow.AddDays(14),
+            CreationDate = _clock.UtcNow,
+            CompletionTarget = _clock.UtcNow.AddDays(14),
             PriorityScore = 50,
             EstimatedEffortPoints = 0,
             Comments = new List<TicketComment>(),
@@ -49,7 +54,7 @@ public class TicketFactory : ITicketFactory
     /// <summary>
     /// Create a ticket from form submission data
     /// </summary>
-    public async Task<Ticket> CreateTicketAsync(
+    public Task<Ticket> CreateTicketAsync(
         string title,
         string description,
         ApplicationUser customer,
@@ -64,12 +69,12 @@ public class TicketFactory : ITicketFactory
             Title = title,
             Description = description,
             DomainId = "IT",
-            Status = responsible != null ? "Assigned" : "New",
+            Status = responsible != null ? ActivityType.Assigned.GetDisplayText() : ActivityType.Created.GetDisplayText(),
             TicketStatus = responsible != null ? TicketMasala.Domain.Common.Status.Assigned : TicketMasala.Domain.Common.Status.Pending,
             CustomFieldsJson = "{}",
             CreatorGuid = Guid.Parse(customer.Id),
-            CreationDate = DateTime.UtcNow,
-            CompletionTarget = completionTarget ?? DateTime.UtcNow.AddDays(14),
+            CreationDate = _clock.UtcNow,
+            CompletionTarget = completionTarget ?? _clock.UtcNow.AddDays(14),
             PriorityScore = 50,
             EstimatedEffortPoints = 0,
             Comments = new List<TicketComment>(),
@@ -93,7 +98,7 @@ public class TicketFactory : ITicketFactory
             description?.Substring(0, Math.Min(50, description?.Length ?? 0)),
             ticket.ContentHash);
 
-        return ticket;
+        return Task.FromResult(ticket);
     }
 
     /// <summary>
@@ -118,8 +123,8 @@ public class TicketFactory : ITicketFactory
             DomainId = "IT",
             Status = "New",
             GerdaTags = "Email-Ingested",
-            CreationDate = DateTime.UtcNow,
-            CompletionTarget = DateTime.UtcNow.AddDays(14),
+            CreationDate = _clock.UtcNow,
+            CompletionTarget = _clock.UtcNow.AddDays(14),
             PriorityScore = 50,
             EstimatedEffortPoints = 0,
             Comments = new List<TicketComment>(),

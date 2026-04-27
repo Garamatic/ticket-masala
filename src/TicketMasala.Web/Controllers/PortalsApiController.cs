@@ -8,6 +8,7 @@ using TicketMasala.Web.Configuration;
 using TicketMasala.Web.Engine.GERDA.Configuration;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Domain.Common; // Added
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Controllers;
 
@@ -27,6 +28,7 @@ public class PortalsApiController : ControllerBase
     private readonly IDomainConfigurationService _domainConfig;
     private readonly ILogger<PortalsApiController> _logger;
     private readonly IWebHostEnvironment _environment;
+    private readonly ISystemClock _clock;
 
     public PortalsApiController(
 
@@ -35,7 +37,8 @@ public class PortalsApiController : ControllerBase
         IProjectRepository projectRepository,
         IDomainConfigurationService domainConfig,
         ILogger<PortalsApiController> logger,
-        IWebHostEnvironment environment)
+        IWebHostEnvironment environment,
+        ISystemClock clock)
     {
 
         _ticketRepository = ticketRepository;
@@ -44,6 +47,7 @@ public class PortalsApiController : ControllerBase
         _domainConfig = domainConfig;
         _logger = logger;
         _environment = environment;
+        _clock = clock;
     }
 
     /// <summary>
@@ -99,7 +103,7 @@ public class PortalsApiController : ControllerBase
                 CustomerId = customer?.Id,
                 PriorityScore = model.PriorityScore ?? 5,
                 GerdaTags = model.Tags,
-                CompletionTarget = DateTime.UtcNow.AddDays(7) // Using the correct property name
+                CompletionTarget = _clock.UtcNow.AddDays(7) // Using the correct property name
             };
 
             // Handle geolocation
@@ -161,6 +165,6 @@ public class PortalsApiController : ControllerBase
     [HttpGet("health")]
     public IActionResult Health()
     {
-        return Ok(new { status = "healthy", timestamp = DateTime.UtcNow });
+        return Ok(new { status = "healthy", timestamp = _clock.UtcNow });
     }
 }

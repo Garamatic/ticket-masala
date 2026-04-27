@@ -559,8 +559,15 @@ public class LoginCreateVerifyFlowTests : IClassFixture<CustomWebApplicationFact
 
         if (ticket == null)
         {
-            var allTickets = await context.Tickets.Select(t => new { t.Guid, t.Description, t.Customer.Email }).ToListAsync();
-            var ticketDump = string.Join("; ", allTickets.Select(t => $"{t.Guid}: {t.Description} ({t.Email})"));
+            var allTickets = await context.Tickets
+                .Select(t => new
+                {
+                    t.Guid,
+                    t.Description,
+                    CustomerEmail = t.Customer != null ? t.Customer.Email : null
+                })
+                .ToListAsync();
+            var ticketDump = string.Join("; ", allTickets.Select(t => $"{t.Guid}: {t.Description} ({t.CustomerEmail})"));
             throw new InvalidOperationException($"Ticket not found after creation. Expected description: '{description}'. Available tickets: {ticketDump}");
         }
 
@@ -573,8 +580,6 @@ public class LoginCreateVerifyFlowTests : IClassFixture<CustomWebApplicationFact
         {
             return null;
         }
-
-        const string tokenFieldName = "__RequestVerificationToken";
 
         var nameIndex = html.IndexOf("name=\"__RequestVerificationToken\"", StringComparison.OrdinalIgnoreCase);
         if (nameIndex < 0)

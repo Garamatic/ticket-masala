@@ -79,9 +79,9 @@ public class DbSeeder
 
         // Execute all seed strategies in order
         Console.WriteLine($"DEBUG: DbSeeder found {_seedStrategies.Count()} strategies registered.");
-        foreach (var s in _seedStrategies) 
+        foreach (var s in _seedStrategies)
         {
-             Console.WriteLine($"DEBUG: Registered Strategy: {s.GetType().Name}");
+            Console.WriteLine($"DEBUG: Registered Strategy: {s.GetType().Name}");
         }
 
         foreach (var strategy in _seedStrategies)

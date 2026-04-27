@@ -4,6 +4,7 @@ using TicketMasala.Domain.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using TicketMasala.Web.Configuration;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Data.Seeding;
 
@@ -15,21 +16,24 @@ public class WorkItemSeedStrategy : ISeedStrategy
     private readonly MasalaDbContext _context;
     private readonly IWebHostEnvironment _environment;
     private readonly ILogger<WorkItemSeedStrategy> _logger;
+    private readonly ISystemClock _clock;
 
     public WorkItemSeedStrategy(
         MasalaDbContext context,
         IWebHostEnvironment environment,
-        ILogger<WorkItemSeedStrategy> logger)
+        ILogger<WorkItemSeedStrategy> logger,
+        ISystemClock clock)
     {
         _context = context;
         _environment = environment;
         _logger = logger;
+        _clock = clock;
     }
 
-    public async Task<bool> ShouldSeedAsync()
+    public Task<bool> ShouldSeedAsync()
     {
         // Always run to ensure new items from config are added
-        return true;
+        return Task.FromResult(true);
     }
 
     public async Task SeedAsync()
@@ -60,7 +64,7 @@ public class WorkItemSeedStrategy : ISeedStrategy
             }
         }
 
-        await _context.SaveChangesAsync();
+        await SaveChangesWithRetryAsync();
     }
 
     private async Task<SeedConfig?> LoadSeedConfigurationAsync()
@@ -68,7 +72,7 @@ public class WorkItemSeedStrategy : ISeedStrategy
         var seedFilePath = ConfigurationPaths.GetConfigFilePath(
             _environment.ContentRootPath,
             "seed_data.json");
-        
+
         if (!File.Exists(seedFilePath))
         {
             return null;
@@ -104,9 +108,9 @@ public class WorkItemSeedStrategy : ISeedStrategy
                 Name = containerDto.Name,
                 Description = containerDto.Description,
                 Status = containerDto.Status,
-                CreationDate = DateTime.UtcNow,
+                CreationDate = _clock.UtcNow,
             };
-            
+
             // Resolve ProjectManager
             if (!string.IsNullOrEmpty(containerDto.ProjectManagerEmail))
             {
@@ -128,7 +132,7 @@ public class WorkItemSeedStrategy : ISeedStrategy
             }
 
             _context.Projects.Add(project);
-            await _context.SaveChangesAsync(); // Save to get Guid
+            await SaveChangesWithRetryAsync(); // Save to get Guid
             _logger.LogInformation("Created project: {Name}", project.Name);
         }
 
@@ -146,7 +150,7 @@ public class WorkItemSeedStrategy : ISeedStrategy
     {
         // Use Description as Title since Title is missing in JSON
         var title = itemDto.Description.Length > 50 ? itemDto.Description.Substring(0, 47) + "..." : itemDto.Description;
-        
+
         // Check for existence 
         // Note: We use Title match. If duplicate descriptions exist, this might skip.
         var exists = await _context.Tickets
@@ -166,7 +170,7 @@ public class WorkItemSeedStrategy : ISeedStrategy
             TicketStatus = itemDto.Status,
             Status = itemDto.Status.ToString(), // Sync field
             ProjectGuid = projectId,
-            CreationDate = DateTime.UtcNow.AddDays(-itemDto.CompletionDaysAgo ?? 0),
+            CreationDate = _clock.UtcNow.AddDays(-itemDto.CompletionDaysAgo ?? 0),
             PriorityScore = itemDto.PriorityScore ?? 0,
             EstimatedEffortPoints = (int)(itemDto.EstimatedEffortPoints ?? 0),
             GerdaTags = itemDto.GerdaTags
@@ -181,21 +185,21 @@ public class WorkItemSeedStrategy : ISeedStrategy
                 ticket.ResponsibleId = user.Id;
             }
         }
-        
+
         // Resolve Customer (Reporter)
-        if (!string.IsNullOrEmpty(itemDto.CustomerEmail)) 
+        if (!string.IsNullOrEmpty(itemDto.CustomerEmail))
         {
-             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == itemDto.CustomerEmail);
-             if (user != null)
-             {
-                 ticket.CustomerId = user.Id;
-             }
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == itemDto.CustomerEmail);
+            if (user != null)
+            {
+                ticket.CustomerId = user.Id;
+            }
         }
 
         _context.Tickets.Add(ticket);
         _logger.LogInformation("Creating ticket: {Title}", ticket.Title);
-        
-        await _context.SaveChangesAsync();
+
+        await SaveChangesWithRetryAsync();
 
         if (itemDto.Comments?.Count > 0)
         {
@@ -205,21 +209,53 @@ public class WorkItemSeedStrategy : ISeedStrategy
                 {
                     TicketId = ticket.Guid,
                     Body = commentDto.Body,
-                    CreatedAt = DateTime.UtcNow.AddDays(-commentDto.CreatedDaysAgo),
+                    CreatedAt = _clock.UtcNow.AddDays(-commentDto.CreatedDaysAgo),
                 };
-                
-                 if (!string.IsNullOrEmpty(commentDto.AuthorEmail)) 
+
+                if (!string.IsNullOrEmpty(commentDto.AuthorEmail))
                 {
-                     var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == commentDto.AuthorEmail);
-                     if (user != null)
-                     {
-                         comment.AuthorId = user.Id;
-                     }
+                    var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == commentDto.AuthorEmail);
+                    if (user != null)
+                    {
+                        comment.AuthorId = user.Id;
+                    }
                 }
-                
+
                 _context.TicketComments.Add(comment);
             }
-            await _context.SaveChangesAsync();
+            await SaveChangesWithRetryAsync();
+        }
+    }
+
+    private async Task SaveChangesWithRetryAsync(int maxAttempts = 3)
+    {
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
+            {
+                await _context.SaveChangesAsync();
+                return;
+            }
+            catch (DbUpdateConcurrencyException ex) when (attempt < maxAttempts)
+            {
+                _logger.LogWarning(ex, "Optimistic concurrency during seeding (attempt {Attempt}/{Max}). Retrying...", attempt, maxAttempts);
+
+                foreach (var entry in ex.Entries)
+                {
+                    try
+                    {
+                        await entry.ReloadAsync();
+                    }
+                    catch
+                    {
+                        // If we can't reload an entry, let the next SaveChanges attempt decide.
+                    }
+                }
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw;
+            }
         }
     }
 }

@@ -8,6 +8,7 @@ using Moq;
 using TicketMasala.Domain.Data;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Engine.Enrichment;
+using TicketMasala.Web.Engine.GERDA.Sentiment;
 using Xunit;
 
 namespace TicketMasala.Tests.Services.Enrichment;
@@ -19,6 +20,7 @@ public class EnrichmentBackgroundServiceTests
     private readonly Mock<IServiceScopeFactory> _mockScopeFactory;
     private readonly Mock<IServiceScope> _mockScope;
     private readonly Mock<IServiceProvider> _mockServiceProvider;
+    private readonly Mock<ISentimentAnalyzer> _mockSentimentAnalyzer;
     private readonly DbContextOptions<MasalaDbContext> _dbOptions;
 
     public EnrichmentBackgroundServiceTests()
@@ -28,6 +30,7 @@ public class EnrichmentBackgroundServiceTests
         _mockScopeFactory = new Mock<IServiceScopeFactory>();
         _mockScope = new Mock<IServiceScope>();
         _mockServiceProvider = new Mock<IServiceProvider>();
+        _mockSentimentAnalyzer = new Mock<ISentimentAnalyzer>();
 
         _mockScopeFactory.Setup(x => x.CreateScope()).Returns(_mockScope.Object);
         _mockScope.Setup(x => x.ServiceProvider).Returns(_mockServiceProvider.Object);
@@ -48,6 +51,11 @@ public class EnrichmentBackgroundServiceTests
         await context.SaveChangesAsync();
 
         _mockServiceProvider.Setup(x => x.GetService(typeof(MasalaDbContext))).Returns(context);
+        
+        // Setup Sentiment Analyzer Mock
+        _mockSentimentAnalyzer.Setup(x => x.Analyze(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns((5.0, "Critical"));
+        _mockServiceProvider.Setup(x => x.GetService(typeof(ISentimentAnalyzer))).Returns(_mockSentimentAnalyzer.Object);
 
         var workItem = new EnrichmentWorkItem { TicketId = ticketId, EnrichmentType = "Sentiment" };
         var cts = new CancellationTokenSource();

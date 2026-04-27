@@ -16,8 +16,11 @@ dist/
 *.bak
 
 # SQLite sidecar files (created when app.db is opened)
+app.db
 *.db-wal
 *.db-shm
-
-
 .env
+seed_output.log
+seed_final.log
+*.azure.backup.*
+config/tenants/**/data/

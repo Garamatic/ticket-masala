@@ -3,6 +3,7 @@ using TicketMasala.Domain.Common;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Repositories.Queries;
 using TicketMasala.Web.Repositories.Specifications;
+using TicketMasala.Web.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace TicketMasala.Web.Repositories;
@@ -15,11 +16,16 @@ public class EfCoreTicketRepository : ITicketRepository
 {
     private readonly MasalaDbContext _context;
     private readonly ILogger<EfCoreTicketRepository> _logger;
+    private readonly ISystemClock _clock;
 
-    public EfCoreTicketRepository(MasalaDbContext context, ILogger<EfCoreTicketRepository> logger)
+    public EfCoreTicketRepository(
+        MasalaDbContext context, 
+        ILogger<EfCoreTicketRepository> logger,
+        ISystemClock clock)
     {
         _context = context;
         _logger = logger;
+        _clock = clock;
     }
 
     public async Task<Ticket?> GetByIdAsync(Guid id, bool includeRelations = true)
@@ -42,7 +48,7 @@ public class EfCoreTicketRepository : ITicketRepository
     public async Task<IEnumerable<Ticket>> GetAllAsync(Guid? departmentId = null)
     {
         return await _context.Tickets
-            .FilterByDepartment(departmentId, _context.Projects)
+            .FilterByDepartment(departmentId)
             .ToListAsync();
     }
 
@@ -51,7 +57,7 @@ public class EfCoreTicketRepository : ITicketRepository
         return await _context.Tickets
             .FilterValid()
             .FilterUnassigned()
-            .FilterByDepartment(departmentId, _context.Projects)
+            .FilterByDepartment(departmentId)
             .ToListAsync();
     }
 
@@ -60,7 +66,7 @@ public class EfCoreTicketRepository : ITicketRepository
         return await _context.Tickets
             .FilterByStatus(status)
             .FilterValid()
-            .FilterByDepartment(departmentId, _context.Projects)
+            .FilterByDepartment(departmentId)
             .ToListAsync();
     }
 
@@ -91,9 +97,9 @@ public class EfCoreTicketRepository : ITicketRepository
     public async Task<IEnumerable<Ticket>> GetRecentAsync(int timeWindowMinutes, Guid? departmentId = null)
     {
         return await _context.Tickets
-            .FilterRecent(timeWindowMinutes)
+            .WithinTimeWindow(timeWindowMinutes, _clock)
             .FilterValid()
-            .FilterByDepartment(departmentId, _context.Projects)
+            .FilterByDepartment(departmentId)
             .ToListAsync();
     }
 
@@ -102,7 +108,7 @@ public class EfCoreTicketRepository : ITicketRepository
         return await _context.Tickets
             .FilterPendingOrAssigned()
             .FilterValid()
-            .FilterByDepartment(departmentId, _context.Projects)
+            .FilterByDepartment(departmentId)
             .ToListAsync();
     }
 
@@ -110,22 +116,8 @@ public class EfCoreTicketRepository : ITicketRepository
     {
         var dbQuery = _context.Tickets
             .FilterValid()
-            .FilterByDepartment(query.DepartmentId, _context.Projects);
-
-        // Apply filters
-        if (!string.IsNullOrWhiteSpace(query.SearchTerm))
-        {
-            var term = query.SearchTerm.ToLower();
-            // Join with Users and Projects for search
-            dbQuery = dbQuery
-                .Include(t => t.Customer)
-                .Include(t => t.Responsible)
-                .Include(t => t.Project)
-                .Where(t =>
-                    t.Description.ToLower().Contains(term) ||
-                    (t.Customer != null && (t.Customer.FirstName.ToLower().Contains(term) || t.Customer.LastName.ToLower().Contains(term))) ||
-                    (t.Project != null && t.Project.Name.ToLower().Contains(term)));
-        }
+            .FilterByDepartment(query.DepartmentId)
+            .FilterBySearchTerm(query.SearchTerm);
 
         if (query.Status.HasValue)
         {

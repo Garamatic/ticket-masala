@@ -121,7 +121,7 @@ public class SeedController : Controller
         var debugInfo = new System.Text.StringBuilder();
         debugInfo.AppendLine($"Total Users: {users.Count}");
         debugInfo.AppendLine("----------------------------------------");
-        
+
         foreach (var u in users)
         {
             debugInfo.AppendLine($"User: {u.UserName} | Email: {u.Email} | ID: {u.Id}");

@@ -30,14 +30,16 @@ public class UserSeedStrategy : ISeedStrategy
         _employeeTypeAliases = LoadEmployeeTypeAliases();
     }
 
-    public async Task<bool> ShouldSeedAsync()
+    public Task<bool> ShouldSeedAsync()
     {
         Console.WriteLine("DEBUG: UserSeedStrategy.ShouldSeedAsync called");
-        return true;
+        return Task.FromResult(true);
     }
 
     public async Task SeedAsync()
     {
+        await Task.CompletedTask;
+        // if (context.Users.Any()) return; // context is not available here, need to rethink if needed or use injected context
         Console.WriteLine("DEBUG: UserSeedStrategy.SeedAsync called!");
         _logger.LogInformation("Seeding users and employees...");
 
@@ -78,7 +80,7 @@ public class UserSeedStrategy : ISeedStrategy
         var seedFilePath = TicketMasala.Web.Configuration.ConfigurationPaths.GetConfigFilePath(
             _environment.ContentRootPath,
             "seed_data.json");
-        
+
         Console.WriteLine($"Attempting to load seed data from: {seedFilePath}");
         _logger.LogInformation("Attempting to load seed data from: {Path}", seedFilePath);
 
@@ -94,7 +96,7 @@ public class UserSeedStrategy : ISeedStrategy
                 var files = Directory.GetFiles(directory);
                 Console.WriteLine($"Files in {directory}: {string.Join(", ", files.Select(Path.GetFileName))}");
             }
-            else 
+            else
             {
                 Console.WriteLine($"Directory NOT FOUND: {directory}");
             }
@@ -161,19 +163,8 @@ public class UserSeedStrategy : ISeedStrategy
             {
                 // Update existing - Reset Password
                 _logger.LogInformation("User {UserName} exists. Resetting password...", user.UserName);
-                
-                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-                var result = await _userManager.ResetPasswordAsync(user, token, defaultPassword);
-                
-                if (result.Succeeded)
-                {
-                    _logger.LogInformation("Password reset for {UserName} to default.", user.UserName);
-                }
-                else
-                {
-                    _logger.LogError("Failed to reset password for {UserName}: {Errors}", 
-                        user.UserName, string.Join(", ", result.Errors.Select(e => e.Description)));
-                }
+
+                await ResetPasswordWithRetryAsync(user, defaultPassword, user.UserName ?? user.Email ?? user.Id);
 
                 // Ensure role
                 if (!await _userManager.IsInRoleAsync(user, role))
@@ -247,19 +238,8 @@ public class UserSeedStrategy : ISeedStrategy
             {
                 // Update existing user - Reset Password
                 _logger.LogInformation("Employee {UserName} exists. Resetting password...", existingUser.UserName);
-                
-                var token = await _userManager.GeneratePasswordResetTokenAsync(existingUser);
-                var result = await _userManager.ResetPasswordAsync(existingUser, token, defaultPassword);
-                
-                if (result.Succeeded)
-                {
-                    _logger.LogInformation("Password reset for employee {UserName} to default.", existingUser.UserName);
-                }
-                else
-                {
-                    _logger.LogError("Failed to reset password for employee {UserName}: {Errors}", 
-                        existingUser.UserName, string.Join(", ", result.Errors.Select(e => e.Description)));
-                }
+
+                await ResetPasswordWithRetryAsync(existingUser, defaultPassword, existingUser.UserName ?? existingUser.Email ?? existingUser.Id, isEmployee: true);
 
                 // Ensure role
                 if (!await _userManager.IsInRoleAsync(existingUser, Constants.RoleEmployee))
@@ -286,6 +266,70 @@ public class UserSeedStrategy : ISeedStrategy
                 }
             }
         }
+    }
+
+    private async Task ResetPasswordWithRetryAsync(
+        ApplicationUser user,
+        string newPassword,
+        string userNameForLogging,
+        bool isEmployee = false,
+        int maxAttempts = 2)
+    {
+        var current = user;
+
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            var token = await _userManager.GeneratePasswordResetTokenAsync(current);
+            var result = await _userManager.ResetPasswordAsync(current, token, newPassword);
+
+            if (result.Succeeded)
+            {
+                if (isEmployee)
+                {
+                    _logger.LogInformation("Password reset for employee {UserName} to default.", userNameForLogging);
+                }
+                else
+                {
+                    _logger.LogInformation("Password reset for {UserName} to default.", userNameForLogging);
+                }
+
+                return;
+            }
+
+            if (IsConcurrencyFailure(result) && attempt < maxAttempts)
+            {
+                _logger.LogWarning(
+                    "Optimistic concurrency while resetting password for {UserName} (attempt {Attempt}/{Max}). Retrying...",
+                    userNameForLogging,
+                    attempt,
+                    maxAttempts);
+
+                var reloaded = await _userManager.FindByIdAsync(current.Id);
+                if (reloaded != null)
+                {
+                    current = reloaded;
+                }
+
+                continue;
+            }
+
+            var errors = result.Errors?.Select(e => e.Description) ?? Array.Empty<string>();
+            if (isEmployee)
+            {
+                _logger.LogError("Failed to reset password for employee {UserName}: {Errors}", userNameForLogging, string.Join(", ", errors));
+            }
+            else
+            {
+                _logger.LogError("Failed to reset password for {UserName}: {Errors}", userNameForLogging, string.Join(", ", errors));
+            }
+
+            return;
+        }
+    }
+
+    private static bool IsConcurrencyFailure(IdentityResult result)
+    {
+        return result.Errors?.Any(e => string.Equals(e.Code, "ConcurrencyFailure", StringComparison.OrdinalIgnoreCase)) == true;
     }
 
     private EmployeeType ResolveEmployeeType(string? rawLevel)

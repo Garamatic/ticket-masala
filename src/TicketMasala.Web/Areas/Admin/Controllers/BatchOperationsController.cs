@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web.Data;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Areas.Admin.Controllers;
 
@@ -14,18 +15,21 @@ public class BatchOperationsController : Controller
 {
     private readonly MasalaDbContext _context;
     private readonly ILogger<BatchOperationsController> _logger;
+    private readonly ISystemClock _clock;
 
     public BatchOperationsController(
         MasalaDbContext context,
-        ILogger<BatchOperationsController> logger)
+        ILogger<BatchOperationsController> logger,
+        ISystemClock clock)
     {
         _context = context;
         _logger = logger;
+        _clock = clock;
     }
 
     public async Task<IActionResult> Index()
     {
-        var today = DateTime.UtcNow.Date;
+        var today = _clock.UtcNow.Date;
         var weekAgo = today.AddDays(-7);
 
         var viewModel = new BatchOperationsViewModel
@@ -49,7 +53,7 @@ public class BatchOperationsController : Controller
     private async Task<List<BatchActivityItem>> GetRecentBatchActivityAsync()
     {
         var recentAssignments = await _context.Tickets
-            .Where(t => t.ResponsibleId != null && t.CreationDate > DateTime.UtcNow.AddDays(-7))
+            .Where(t => t.ResponsibleId != null && t.CreationDate > _clock.UtcNow.AddDays(-7))
             .GroupBy(t => t.CreationDate.Date)
             .Select(g => new BatchActivityItem
             {

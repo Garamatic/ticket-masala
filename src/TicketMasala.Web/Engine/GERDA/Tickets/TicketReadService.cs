@@ -16,6 +16,8 @@ using TicketMasala.Web.ViewModels.GERDA;
 using TicketMasala.Web.Engine.Security;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.GERDA.Configuration;
+using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.Utilities;
 
 namespace TicketMasala.Web.Engine.GERDA.Tickets;
 
@@ -49,6 +51,7 @@ public class TicketReadService : ITicketReadService
     private readonly ILogger<TicketReadService> _logger;
     private readonly IDomainConfigurationService _domainConfig;
     private readonly Domain.TicketReportingService _ticketReportingService;
+    private readonly ISystemClock _clock;
 
     public TicketReadService(
         MasalaDbContext context,
@@ -59,7 +62,8 @@ public class TicketReadService : ITicketReadService
         IHttpContextAccessor httpContextAccessor,
         ILogger<TicketReadService> logger,
         IDomainConfigurationService domainConfig,
-        Domain.TicketReportingService ticketReportingService)
+        Domain.TicketReportingService ticketReportingService,
+        ISystemClock clock)
     {
         _context = context;
         _ticketRepository = ticketRepository;
@@ -70,6 +74,7 @@ public class TicketReadService : ITicketReadService
         _logger = logger;
         _domainConfig = domainConfig;
         _ticketReportingService = ticketReportingService;
+        _clock = clock;
     }
 
     private string? GetCurrentUserId()
@@ -97,7 +102,7 @@ public class TicketReadService : ITicketReadService
         return customers.Select(c => new SelectListItem
         {
             Value = c.Id,
-            Text = $"{c.FirstName} {c.LastName}"
+            Text = c.ToFullName()
         }).ToList();
     }
 
@@ -107,7 +112,7 @@ public class TicketReadService : ITicketReadService
         return employees.Select(e => new SelectListItem
         {
             Value = e.Id,
-            Text = $"{e.FirstName} {e.LastName}"
+            Text = e.ToFullName()
         }).ToList();
     }
 
@@ -145,12 +150,8 @@ public class TicketReadService : ITicketReadService
             TicketStatus = t.TicketStatus,
             CreationDate = t.CreationDate,
             CompletionTarget = t.CompletionTarget,
-            ResponsibleName = t.Responsible != null
-                ? $"{t.Responsible.FirstName} {t.Responsible.LastName}"
-                : "Not Assigned",
-            CustomerName = t.Customer != null
-                ? $"{t.Customer.FirstName} {t.Customer.LastName}"
-                : "Unknown",
+            ResponsibleName = t.Responsible?.ToFullName() ?? "Not Assigned",
+            CustomerName = t.Customer?.ToFullName() ?? "Unknown",
             GerdaTags = t.GerdaTags
         }).ToList();
     }
@@ -186,13 +187,9 @@ public class TicketReadService : ITicketReadService
             QualityReviews = reviews.ToList(),
             AuditLogs = logs,
 
-            ResponsibleName = ticket.Responsible != null
-                ? $"{ticket.Responsible.FirstName} {ticket.Responsible.LastName}"
-                : null,
+            ResponsibleName = ticket.Responsible?.ToFullName(),
             ResponsibleId = ticket.Responsible?.Id,
-            CustomerName = ticket.Customer != null
-                ? $"{ticket.Customer.FirstName} {ticket.Customer.LastName}"
-                : null,
+            CustomerName = ticket.Customer?.ToFullName(),
             CustomerId = ticket.Customer?.Id,
             ParentTicketGuid = ticket.ParentTicket?.Guid,
             ProjectGuid = ticketProject?.Guid,
@@ -217,6 +214,22 @@ public class TicketReadService : ITicketReadService
             CustomFieldsJson = ticket.CustomFieldsJson
         };
 
+        if (viewModel.CompletionTarget.HasValue && viewModel.TicketStatus != Status.Completed)
+        {
+            var timeRemaining = viewModel.CompletionTarget.Value - _clock.UtcNow;
+            viewModel.IsCompletionOverdue = timeRemaining.TotalSeconds < 0;
+            viewModel.IsCompletionDueSoon = !viewModel.IsCompletionOverdue && timeRemaining.TotalHours < 24;
+            viewModel.HoursUntilCompletionTarget = timeRemaining.TotalHours;
+        }
+
+        // Calculate SLA status using ISystemClock
+        if (viewModel.CompletionTarget.HasValue)
+        {
+            viewModel.DaysUntilSla = viewModel.GetDaysUntilSla(_clock);
+            viewModel.IsSlaBreached = viewModel.IsSlaBreachedNow(_clock);
+            viewModel.SlaStatusLabel = viewModel.GetSlaStatusLabel(_clock);
+        }
+
         return viewModel;
     }
 
@@ -237,7 +250,7 @@ public class TicketReadService : ITicketReadService
         return users.Select(u => new SelectListItem
         {
             Value = u.Id,
-            Text = $"{u.FirstName} {u.LastName}"
+            Text = u.ToFullName()
         }).ToList();
     }
 
@@ -250,7 +263,7 @@ public class TicketReadService : ITicketReadService
         {
             var user = await _userRepository.GetUserByIdAsync(userId);
             var isAdmin = _httpContextAccessor.HttpContext?.User?.IsInRole("Admin") ?? false;
-            
+
             if (user != null && user is not Employee && !isAdmin)
             {
                 searchModel.CustomerId = userId;
@@ -283,7 +296,7 @@ public class TicketReadService : ITicketReadService
     public async Task<DashboardStats> GetDashboardStatsAsync(string? userId, bool isCustomer)
     {
         var stats = new DashboardStats();
-        var now = DateTime.UtcNow;
+        var now = _clock.UtcNow;
         var weekAgo = now.AddDays(-7);
         var todayStart = now.Date;
 
@@ -370,12 +383,8 @@ public class TicketReadService : ITicketReadService
             TicketStatus = t.TicketStatus,
             CreationDate = t.CreationDate,
             CompletionTarget = t.CompletionTarget,
-            ResponsibleName = t.Responsible != null
-                ? $"{t.Responsible.FirstName} {t.Responsible.LastName}"
-                : "Unassigned",
-            CustomerName = t.Customer != null
-                ? $"{t.Customer.FirstName} {t.Customer.LastName}"
-                : "Unknown",
+            ResponsibleName = t.Responsible?.ToFullName() ?? "Unassigned",
+            CustomerName = t.Customer?.ToFullName() ?? "Unknown",
             GerdaTags = t.GerdaTags
         }).ToList();
     }

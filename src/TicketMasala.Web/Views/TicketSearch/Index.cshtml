@@ -264,18 +264,14 @@
                             <td class="d-none d-md-table-cell">
                             @if (ticket.CompletionTarget.HasValue)
                             {
-                                var timeRemaining = ticket.CompletionTarget.Value - DateTime.UtcNow;
-                                var isOverdue = timeRemaining.TotalSeconds < 0;
-                                var isAtRisk = !isOverdue && timeRemaining.TotalHours < 24;
-                                
-                                <div class="@(isOverdue ? "text-danger fw-bold" : (isAtRisk ? "text-warning fw-bold" : ""))">
+                                <div class="@(ticket.IsOverdue ? "text-danger fw-bold" : (ticket.IsDueSoon ? "text-warning fw-bold" : ""))">
                                     @ticket.CompletionTarget.Value.ToLocalTime().ToString("MMM dd, yyyy")
                                     
-                                    @if (isOverdue)
+                                    @if (ticket.IsOverdue)
                                     {
                                         <i class="fas fa-exclamation-circle ms-1" title="@Localizer["Overdue"]"></i>
                                     }
-                                    else if (isAtRisk)
+                                    else if (ticket.IsDueSoon)
                                     {
                                         <i class="fas fa-exclamation-triangle ms-1" title="@Localizer["Due soon"]"></i>
                                     }

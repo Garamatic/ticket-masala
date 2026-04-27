@@ -113,6 +113,26 @@
             "Strategy": {
               "type": "string",
               "description": "Optional dispatching algorithm key such as 'ServiceBased', 'GeoLocation', 'SkillBased', or 'ZoneBased'."
+            },
+            "AutoDispatchMinScore": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Minimum dispatch score required to automatically dispatch a ticket to an agent."
+            },
+            "ProjectManagerMaxActiveProjects": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Maximum number of active projects to consider for a project manager when computing recommendations."
+            },
+            "ProjectManagerWorkloadWeight": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Weight applied to workload when computing project manager recommendations."
+            },
+            "ProjectManagerSuccessRateWeight": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Weight applied to success rate when computing project manager recommendations."
             }
           }
         },

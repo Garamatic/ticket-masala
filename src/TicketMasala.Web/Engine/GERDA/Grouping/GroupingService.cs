@@ -4,6 +4,7 @@ using TicketMasala.Domain.Common;
 using TicketMasala.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Engine.GERDA.Grouping;
 
@@ -15,15 +16,18 @@ public class GroupingService : IGroupingService
     private readonly MasalaDbContext _context;
     private readonly GerdaConfig _config;
     private readonly ILogger<GroupingService> _logger;
+    private readonly ISystemClock _clock;
 
     public GroupingService(
         MasalaDbContext context,
         GerdaConfig config,
-        ILogger<GroupingService> logger)
+        ILogger<GroupingService> logger,
+        ISystemClock clock)
     {
         _context = context;
         _config = config;
         _logger = logger;
+        _clock = clock;
     }
 
     public bool IsEnabled => _config.GerdaAI.IsEnabled && _config.GerdaAI.SpamDetection.IsEnabled;
@@ -57,7 +61,7 @@ public class GroupingService : IGroupingService
         // Find GROUPABLE tickets with SAME HASH within WINDOW
         // We look for existing tickets that are NOT the current one
         var timeWindowMinutes = _config.GerdaAI.SpamDetection.TimeWindowMinutes;
-        var cutoffTime = DateTime.UtcNow.AddMinutes(-timeWindowMinutes);
+        var cutoffTime = _clock.UtcNow.AddMinutes(-timeWindowMinutes);
 
         var duplicateCandidates = await _context.Tickets
             .Where(t => t.ContentHash == ticket.ContentHash)
@@ -108,7 +112,7 @@ public class GroupingService : IGroupingService
         if (string.IsNullOrEmpty(customerId))
             return new List<Guid>();
 
-        var cutoffTime = DateTime.UtcNow.AddMinutes(-timeWindowMinutes);
+        var cutoffTime = _clock.UtcNow.AddMinutes(-timeWindowMinutes);
 
         // This method was "Get by customer", but v2 prefers Hash match.
         // We will keep it as "Get by customer" for legacy calls, or update callers?

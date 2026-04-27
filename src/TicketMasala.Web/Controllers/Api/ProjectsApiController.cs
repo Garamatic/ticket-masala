@@ -12,6 +12,8 @@ using System.Security.Claims;
 using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.AI;
 
+using TicketMasala.Web.Abstractions;
+
 namespace TicketMasala.Web.Controllers.Api;
 
 /// <summary>
@@ -29,19 +31,22 @@ public class ProjectsApiController : ControllerBase
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ILogger<ProjectsApiController> _logger;
     private readonly IOpenAiService _openAiService;
+    private readonly ISystemClock _clock;
 
     public ProjectsApiController(
         IProjectReadService projectReadService,
         IProjectWorkflowService projectWorkflowService,
         UserManager<ApplicationUser> userManager,
         ILogger<ProjectsApiController> logger,
-        IOpenAiService openAiService)
+        IOpenAiService openAiService,
+        ISystemClock clock)
     {
         _projectReadService = projectReadService;
         _projectWorkflowService = projectWorkflowService;
         _userManager = userManager;
         _logger = logger;
         _openAiService = openAiService;
+        _clock = clock;
     }
 
     /// <summary>
@@ -65,13 +70,14 @@ public class ProjectsApiController : ControllerBase
 
             return Ok(ApiResponse<IEnumerable<ProjectTicketViewModel>>.SuccessResponse(
                 projects,
+                _clock.UtcNow,
                 $"Retrieved {projects.Count()} projects"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "API: Error getting all projects");
             return StatusCode(500, ApiResponse<IEnumerable<ProjectTicketViewModel>>.ErrorResponse(
-                "An error occurred while retrieving projects"));
+                "An error occurred while retrieving projects", _clock.UtcNow));
         }
     }
 
@@ -95,16 +101,16 @@ public class ProjectsApiController : ControllerBase
             {
                 _logger.LogWarning("API: Project {ProjectId} not found", id);
                 return NotFound(ApiResponse<ProjectTicketViewModel>.ErrorResponse(
-                    $"Project with ID {id} not found"));
+                    $"Project with ID {id} not found", _clock.UtcNow));
             }
 
-            return Ok(ApiResponse<ProjectTicketViewModel>.SuccessResponse(viewModel));
+            return Ok(ApiResponse<ProjectTicketViewModel>.SuccessResponse(viewModel, _clock.UtcNow));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "API: Error getting project {ProjectId}", id);
             return StatusCode(500, ApiResponse<ProjectTicketViewModel>.ErrorResponse(
-                "An error occurred while retrieving the project"));
+                "An error occurred while retrieving the project", _clock.UtcNow));
         }
     }
 
@@ -123,13 +129,14 @@ public class ProjectsApiController : ControllerBase
 
             return Ok(ApiResponse<IEnumerable<ProjectTicketViewModel>>.SuccessResponse(
                 projects,
+                _clock.UtcNow,
                 $"Retrieved {projects.Count()} projects for customer {customerId}"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "API: Error getting projects for customer {CustomerId}", customerId);
             return StatusCode(500, ApiResponse<IEnumerable<ProjectTicketViewModel>>.ErrorResponse(
-                "An error occurred while retrieving customer projects"));
+                "An error occurred while retrieving customer projects", _clock.UtcNow));
         }
     }
 
@@ -148,13 +155,14 @@ public class ProjectsApiController : ControllerBase
 
             return Ok(ApiResponse<IEnumerable<ProjectTicketViewModel>>.SuccessResponse(
                 projects,
+                _clock.UtcNow,
                 $"Found {projects.Count()} projects matching '{query}'"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "API: Error searching projects with query {Query}", query);
             return StatusCode(500, ApiResponse<IEnumerable<ProjectTicketViewModel>>.ErrorResponse(
-                "An error occurred while searching projects"));
+                "An error occurred while searching projects", _clock.UtcNow));
         }
     }
 
@@ -171,13 +179,13 @@ public class ProjectsApiController : ControllerBase
         {
             var stats = await _projectReadService.GetProjectStatisticsAsync(customerId);
 
-            return Ok(ApiResponse<ProjectStatisticsViewModel>.SuccessResponse(stats));
+            return Ok(ApiResponse<ProjectStatisticsViewModel>.SuccessResponse(stats, _clock.UtcNow));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "API: Error getting statistics for customer {CustomerId}", customerId);
             return StatusCode(500, ApiResponse<ProjectStatisticsViewModel>.ErrorResponse(
-                "An error occurred while retrieving statistics"));
+                "An error occurred while retrieving statistics", _clock.UtcNow));
         }
     }
 
@@ -200,7 +208,7 @@ public class ProjectsApiController : ControllerBase
                 .Select(e => e.ErrorMessage)
                 .ToList();
 
-            return BadRequest(ApiResponse<Guid>.ErrorResponse(errors));
+            return BadRequest(ApiResponse<Guid>.ErrorResponse(errors, _clock.UtcNow));
         }
 
         try
@@ -213,17 +221,17 @@ public class ProjectsApiController : ControllerBase
             return CreatedAtAction(
                 nameof(GetById),
                 new { id = project.Guid },
-                ApiResponse<Guid>.SuccessResponse(project.Guid, "Project created successfully"));
+                ApiResponse<Guid>.SuccessResponse(project.Guid, _clock.UtcNow, "Project created successfully"));
         }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(ApiResponse<Guid>.ErrorResponse(ex.Message));
+            return BadRequest(ApiResponse<Guid>.ErrorResponse(ex.Message, _clock.UtcNow));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "API: Error creating project");
             return StatusCode(500, ApiResponse<Guid>.ErrorResponse(
-                "An error occurred while creating the project"));
+                "An error occurred while creating the project", _clock.UtcNow));
         }
     }
 
@@ -239,13 +247,13 @@ public class ProjectsApiController : ControllerBase
         try
         {
             var roadmap = await _openAiService.GetResponseAsync(OpenAIPrompts.Steps, description);
-            return Ok(ApiResponse<string>.SuccessResponse(roadmap, "Roadmap generated successfully"));
+            return Ok(ApiResponse<string>.SuccessResponse(roadmap, _clock.UtcNow, "Roadmap generated successfully"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "API: Error generating AI roadmap");
             return StatusCode(500, ApiResponse<string>.ErrorResponse(
-                "An error occurred while generating the roadmap"));
+                "An error occurred while generating the roadmap", _clock.UtcNow));
         }
     }
 
@@ -266,18 +274,19 @@ public class ProjectsApiController : ControllerBase
 
             if (!success)
             {
-                return NotFound(ApiResponse<string>.ErrorResponse($"Project {id} not found"));
+                return NotFound(ApiResponse<string>.ErrorResponse($"Project {id} not found", _clock.UtcNow));
             }
 
             return Ok(ApiResponse<string>.SuccessResponse(
                 status.ToString(),
+                _clock.UtcNow,
                 $"Project status updated to {status}"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "API: Error updating project status {ProjectId}", id);
             return StatusCode(500, ApiResponse<string>.ErrorResponse(
-                "An error occurred while updating project status"));
+                "An error occurred while updating project status", _clock.UtcNow));
         }
     }
 
@@ -298,18 +307,19 @@ public class ProjectsApiController : ControllerBase
 
             if (!success)
             {
-                return NotFound(ApiResponse<string>.ErrorResponse($"Project {id} or Manager {managerId} not found"));
+                return NotFound(ApiResponse<string>.ErrorResponse($"Project {id} or Manager {managerId} not found", _clock.UtcNow));
             }
 
             return Ok(ApiResponse<string>.SuccessResponse(
                 managerId,
+                _clock.UtcNow,
                 "Project manager assigned successfully"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "API: Error assigning manager to project {ProjectId}", id);
             return StatusCode(500, ApiResponse<string>.ErrorResponse(
-                "An error occurred while assigning the project manager"));
+                "An error occurred while assigning the project manager", _clock.UtcNow));
         }
     }
 
@@ -331,6 +341,7 @@ public class ProjectsApiController : ControllerBase
             {
                 return Ok(ApiResponse<string>.SuccessResponse(
                     id.ToString(),
+                    _clock.UtcNow,
                     "Project deleted successfully"));
             }
             else
@@ -343,6 +354,7 @@ public class ProjectsApiController : ControllerBase
                 // The original impl always returned OK.
                 return Ok(ApiResponse<string>.SuccessResponse(
                    id.ToString(),
+                   _clock.UtcNow,
                    "Project deleted successfully"));
             }
         }
@@ -350,7 +362,7 @@ public class ProjectsApiController : ControllerBase
         {
             _logger.LogError(ex, "API: Error deleting project {ProjectId}", id);
             return StatusCode(500, ApiResponse<string>.ErrorResponse(
-                "An error occurred while deleting the project"));
+                "An error occurred while deleting the project", _clock.UtcNow));
         }
     }
 }
@@ -364,33 +376,38 @@ public class ApiResponse<T>
     public T? Data { get; set; }
     public string? Message { get; set; }
     public List<string> Errors { get; set; } = new();
-    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+    public DateTime Timestamp { get; set; }
 
-    public static ApiResponse<T> SuccessResponse(T data, string? message = null)
+    public static ApiResponse<T> SuccessResponse(T data, DateTime timestamp, string? message = null)
     {
         return new ApiResponse<T>
         {
             Success = true,
             Data = data,
-            Message = message
+            Message = message,
+            Timestamp = timestamp
         };
     }
 
-    public static ApiResponse<T> ErrorResponse(string error)
+
+    public static ApiResponse<T> ErrorResponse(string error, DateTime timestamp)
     {
         return new ApiResponse<T>
         {
             Success = false,
-            Errors = new List<string> { error }
+            Errors = new List<string> { error },
+            Timestamp = timestamp
         };
     }
 
-    public static ApiResponse<T> ErrorResponse(List<string> errors)
+
+    public static ApiResponse<T> ErrorResponse(List<string> errors, DateTime timestamp)
     {
         return new ApiResponse<T>
         {
             Success = false,
-            Errors = errors
+            Errors = errors,
+            Timestamp = timestamp
         };
     }
 }

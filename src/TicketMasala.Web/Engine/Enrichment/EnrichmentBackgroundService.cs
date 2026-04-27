@@ -1,6 +1,7 @@
 using TicketMasala.Domain.Data;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.GERDA.Dispatching;
+using TicketMasala.Web.Engine.GERDA.Sentiment;
 using Microsoft.EntityFrameworkCore;
 
 namespace TicketMasala.Web.Engine.Enrichment;
@@ -60,7 +61,8 @@ public class EnrichmentBackgroundService : BackgroundService
         if (workItem.EnrichmentType == "All" || workItem.EnrichmentType == "Sentiment")
         {
             // Use existing SimpleSentimentAnalyzer
-            var (score, label) = TicketMasala.Web.Engine.GERDA.Sentiment.SimpleSentimentAnalyzer.Analyze(ticket.Title, ticket.Description);
+            var sentimentAnalyzer = scope.ServiceProvider.GetRequiredService<ISentimentAnalyzer>();
+            var (score, label) = sentimentAnalyzer.Analyze(ticket.Title, ticket.Description);
             
             // Append tag
             var sentimentTag = $"Sentiment:{label}";

@@ -4,6 +4,8 @@ using TicketMasala.Web.Engine.GERDA.Strategies;
 using TicketMasala.Web.Engine.GERDA.Configuration;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Common;
+using TicketMasala.Web.Engine.GERDA.Dispatching.Algorithms;
+using TicketMasala.Web.Engine.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace TicketMasala.Web.Engine.GERDA.Ranking;
@@ -12,6 +14,9 @@ namespace TicketMasala.Web.Engine.GERDA.Ranking;
 /// <summary>
 /// R - Ranking: WSJF (Weighted Shortest Job First) priority calculation
 /// Calculates priority score: Cost of Delay / Job Size
+/// 
+/// Now delegates to Engine.GERDA.Dispatching.WsjfEngine for generic algorithm.
+/// Maintains backward compatibility with domain-specific strategies.
 /// </summary>
 public class RankingService : IRankingService
 {
@@ -19,6 +24,7 @@ public class RankingService : IRankingService
     private readonly GerdaConfig _config;
     private readonly IStrategyFactory _strategyFactory;
     private readonly IDomainConfigurationService _domainConfigService;
+    private readonly WsjfEngine _wsjfEngine;
     private readonly ILogger<RankingService> _logger;
 
     public RankingService(
@@ -26,12 +32,14 @@ public class RankingService : IRankingService
         GerdaConfig config,
         IStrategyFactory strategyFactory,
         IDomainConfigurationService domainConfigService,
+        WsjfEngine wsjfEngine,
         ILogger<RankingService> logger)
     {
         _context = context;
         _config = config;
         _strategyFactory = strategyFactory;
         _domainConfigService = domainConfigService;
+        _wsjfEngine = wsjfEngine ?? throw new ArgumentNullException(nameof(wsjfEngine));
         _logger = logger;
     }
 
@@ -61,13 +69,26 @@ public class RankingService : IRankingService
 
         try
         {
-            var strategy = _strategyFactory.GetStrategy<IJobRankingStrategy, double>(strategyName);
-            priorityScore = strategy.CalculateScore(ticket, _config);
+            // Option 1: Use upstream WsjfEngine for standard WSJF calculations
+            if (strategyName == "WSJF")
+            {
+                var workItem = new TicketWorkItemAdapter(ticket);
+                var result = _wsjfEngine.CalculatePriority(workItem);
+                priorityScore = (double)result.WsjfScore;
+                _logger.LogDebug(
+                    "GERDA-R: Using WsjfEngine for ticket {TicketGuid}, score {Score:F2}",
+                    ticketGuid, priorityScore);
+            }
+            else
+            {
+                // Option 2: Use domain-specific strategy for other algorithms
+                var strategy = _strategyFactory.GetStrategy<IJobRankingStrategy, double>(strategyName);
+                priorityScore = strategy.CalculateScore(ticket, _config);
+            }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to execute ranking strategy {StrategyName} for ticket {TicketGuid}", strategyName, ticketGuid);
-            // Fallback to 0 or rethrow? For now, 0 safe fallback but log error.
             return 0.0;
         }
 

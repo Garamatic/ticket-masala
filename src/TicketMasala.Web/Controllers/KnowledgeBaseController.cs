@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web.Repositories;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Controllers;
 
@@ -12,11 +13,16 @@ public class KnowledgeBaseController : Controller
 {
     private readonly IKnowledgeBaseRepository _repository;
     private readonly ILogger<KnowledgeBaseController> _logger;
+    private readonly ISystemClock _clock;
 
-    public KnowledgeBaseController(IKnowledgeBaseRepository repository, ILogger<KnowledgeBaseController> logger)
+    public KnowledgeBaseController(
+        IKnowledgeBaseRepository repository,
+        ILogger<KnowledgeBaseController> logger,
+        ISystemClock clock)
     {
         _repository = repository;
         _logger = logger;
+        _clock = clock;
     }
 
     // GET: KnowledgeBase
@@ -67,7 +73,7 @@ public class KnowledgeBaseController : Controller
         if (ModelState.IsValid)
         {
             article.Id = Guid.NewGuid();
-            article.CreatedAt = DateTime.UtcNow;
+            article.CreatedAt = _clock.UtcNow;
             article.AuthorId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             
             // Set default MasalaRank values
@@ -104,7 +110,7 @@ public class KnowledgeBaseController : Controller
         {
             try
             {
-                article.UpdatedAt = DateTime.UtcNow;
+                article.UpdatedAt = _clock.UtcNow;
                 await _repository.UpdateAsync(article);
             }
             catch (DbUpdateConcurrencyException)

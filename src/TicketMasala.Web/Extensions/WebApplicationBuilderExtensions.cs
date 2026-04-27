@@ -20,6 +20,8 @@ using TicketMasala.Web.Engine.GERDA.Ranking;
 using TicketMasala.Web.Engine.GERDA.Dispatching;
 using TicketMasala.Web.Engine.GERDA.Anticipation;
 using TicketMasala.Web.Engine.GERDA.BackgroundJobs;
+using TicketMasala.Web.Engine.GERDA.Knowledge;
+using TicketMasala.Web.Orchestrators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
@@ -89,6 +91,10 @@ public static class WebApplicationBuilderExtensions
         // ============================================
         // Register Services (CQRS + Factory Pattern)
         // ============================================
+        // System abstractions for testability
+        builder.Services.AddSingleton<TicketMasala.Web.Abstractions.ISystemClock, TicketMasala.Web.Services.SystemClock>();
+        builder.Services.AddScoped<TicketMasala.Web.Services.IJsonParsingService, TicketMasala.Web.Services.JsonParsingService>();
+
         builder.Services.AddSingleton<RuleCompilerService>();
         builder.Services.AddScoped<TicketMasala.Web.Engine.Ingestion.Validation.ICustomFieldValidationService,
             TicketMasala.Web.Engine.Ingestion.Validation.CustomFieldValidationService>();
@@ -101,22 +107,34 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddScoped<ITicketReadService, TicketReadService>();
         builder.Services.AddScoped<ITicketWorkflowService, TicketWorkflowService>();
         builder.Services.AddScoped<ITicketBatchService, TicketBatchService>();
-        builder.Services.AddScoped<TicketService>(); // Legacy implementation
+
+        // Ticket View Services (Facade decomposition for SRP)
+        builder.Services.AddScoped<ITicketDetailService, TicketDetailService>();
+        builder.Services.AddScoped<ITicketCreateService, TicketCreateService>();
+        builder.Services.AddScoped<ITicketEditService, TicketEditService>();
+
+        // Orchestrators
+        builder.Services.AddScoped<ITicketOrchestrator, TicketOrchestrator>();
 
         builder.Services.AddScoped<TicketDispatchService>();
         builder.Services.AddScoped<TicketReportingService>();
         builder.Services.AddScoped<TicketNotificationService>();
         builder.Services.AddScoped<ITicketFactory, TicketFactory>();
-        builder.Services.AddScoped<IFileService, FileService>();
+        builder.Services.AddScoped<IFileStorageService, DiskFileStorageService>();
         builder.Services.AddScoped<IEmailService, EmailService>();
         builder.Services.AddScoped<INotificationService, NotificationService>();
         builder.Services.AddScoped<ISavedFilterService, SavedFilterService>();
         builder.Services.AddScoped<IProjectReadService, ProjectReadService>();
         builder.Services.AddScoped<IProjectWorkflowService, ProjectWorkflowService>();
         builder.Services.AddScoped<IProjectTemplateService, ProjectTemplateService>();
-        builder.Services.AddScoped<ProjectService>(); // Legacy
         builder.Services.AddScoped<IAuditService, AuditService>();
         builder.Services.AddScoped<ITicketImportService, TicketImportService>();
+
+        // Ingestion & Sentiment
+        builder.Services.AddScoped<IEmailTicketProcessor, EmailTicketProcessor>();
+        builder.Services.AddScoped<TicketMasala.Web.Engine.GERDA.Sentiment.ISentimentAnalyzer,
+            TicketMasala.Web.Engine.GERDA.Sentiment.SimpleSentimentAnalyzer>();
+
         builder.Services.AddHostedService<EmailIngestionService>();
 
         // Background Queue
@@ -125,6 +143,10 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddHostedService<QueuedHostedService>();
         builder.Services.AddHostedService<TicketGeneratorService>();
         builder.Services.AddScoped<ITicketGenerator, TicketGenerator>();
+
+        // Enrichment
+        builder.Services.AddSingleton<TicketMasala.Web.Engine.Enrichment.IEnrichmentQueue, TicketMasala.Web.Engine.Enrichment.EnrichmentQueue>();
+        builder.Services.AddHostedService<TicketMasala.Web.Engine.Enrichment.EnrichmentBackgroundService>();
 
         // Seed Strategies (Strategy Pattern - executed in registration order)
         builder.Services.AddScoped<ISeedStrategy, RoleSeedStrategy>();
@@ -176,9 +198,14 @@ public static class WebApplicationBuilderExtensions
                     .FromFile(modelName: "GerdaDispatchModel", filePath: modelPath, watchForChanges: true);
 
                 builder.Services.AddScoped<IRankingService, RankingService>();
-                builder.Services.AddScoped<IDispatchingService, DispatchingService>();
+                builder.Services.AddScoped<IDispatchingStrategySelector, DomainDispatchingStrategySelector>();
+                builder.Services.AddScoped<IAutoDispatchPolicy, ScoreThresholdAutoDispatchPolicy>();
+                builder.Services.AddScoped<IProjectManagerRecommendationService, WorkloadAndSuccessProjectManagerRecommendationService>();
+                builder.Services.AddScoped<IDispatchingService, NoOpDispatchingService>();
+                // Using NoOp service: AgentMatchingEngine not available
                 builder.Services.AddScoped<IDispatchBacklogService, DispatchBacklogService>();
                 builder.Services.AddScoped<IAnticipationService, AnticipationService>();
+                builder.Services.AddScoped<IKnowledgeService, KnowledgeService>();
                 builder.Services.AddScoped<IGerdaService, GerdaService>();
                 builder.Services.AddHostedService<GerdaBackgroundService>();
 
@@ -192,32 +219,33 @@ public static class WebApplicationBuilderExtensions
             Console.WriteLine($"Note: GERDA config not found at {gerdaConfigPath}");
             Console.WriteLine("Application will run with basic ticketing functionality");
             builder.Services.AddScoped<IDispatchingService, NoOpDispatchingService>();
+            builder.Services.AddScoped<IKnowledgeService, NoOpKnowledgeService>();
             builder.Services.AddScoped<IGerdaService, NoOpGerdaService>();
         }
 
         // Rate Limiting
         builder.Services.AddRateLimiter(options =>
-        {
-            options.RejectionStatusCode = Microsoft.AspNetCore.Http.StatusCodes.Status429TooManyRequests;
-
-            options.AddFixedWindowLimiter("api", opt =>
             {
-                opt.PermitLimit = 100;
-                opt.Window = TimeSpan.FromMinutes(1);
-                opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-                opt.QueueLimit = 10;
-            });
+                options.RejectionStatusCode = Microsoft.AspNetCore.Http.StatusCodes.Status429TooManyRequests;
 
-            options.AddSlidingWindowLimiter("login", opt =>
-            {
-                opt.PermitLimit = 5;
-                opt.Window = TimeSpan.FromMinutes(15);
-                opt.SegmentsPerWindow = 3;
-                opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-                opt.QueueLimit = 0;
-            });
+                options.AddFixedWindowLimiter("api", opt =>
+                {
+                    opt.PermitLimit = 100;
+                    opt.Window = TimeSpan.FromMinutes(1);
+                    opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                    opt.QueueLimit = 10;
+                });
 
-            options.AddTokenBucketLimiter("general", opt =>
+                options.AddSlidingWindowLimiter("login", opt =>
+                {
+                    opt.PermitLimit = 5;
+                    opt.Window = TimeSpan.FromMinutes(15);
+                    opt.SegmentsPerWindow = 3;
+                    opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                    opt.QueueLimit = 0;
+                });
+
+                options.AddTokenBucketLimiter("general", opt =>
             {
                 opt.TokenLimit = 50;
                 opt.TokensPerPeriod = 10;
@@ -225,7 +253,7 @@ public static class WebApplicationBuilderExtensions
                 opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
                 opt.QueueLimit = 5;
             });
-        });
+            });
 
         // Memory Cache
         builder.Services.AddMemoryCache();

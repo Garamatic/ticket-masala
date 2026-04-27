@@ -68,9 +68,9 @@ public class KnowledgeSnippetRepositoryIntegrationTests : IDisposable
         using var context = new MasalaDbContext(_contextOptions);
         var repository = new EfCoreKnowledgeSnippetRepository(context);
 
-        var snippet1 = new KnowledgeBaseSnippet { Content = "This is a test snippet about apples", Tags = "#fruit" };
-        var snippet2 = new KnowledgeBaseSnippet { Content = "This is a test snippet about oranges", Tags = "#fruit" };
-        var snippet3 = new KnowledgeBaseSnippet { Content = "This is a test snippet about cars", Tags = "#vehicle" };
+        var snippet1 = new KnowledgeBaseSnippet { Content = "This is a test snippet about apples", Tags = "#fruit", CreatedAt = DateTime.UtcNow };
+        var snippet2 = new KnowledgeBaseSnippet { Content = "This is a test snippet about oranges", Tags = "#fruit", CreatedAt = DateTime.UtcNow };
+        var snippet3 = new KnowledgeBaseSnippet { Content = "This is a test snippet about cars", Tags = "#vehicle", CreatedAt = DateTime.UtcNow };
 
         context.KnowledgeBaseSnippets.AddRange(snippet1, snippet2, snippet3);
         await context.SaveChangesAsync();
@@ -92,7 +92,7 @@ public class KnowledgeSnippetRepositoryIntegrationTests : IDisposable
         using var context = new MasalaDbContext(_contextOptions);
         var repository = new EfCoreKnowledgeSnippetRepository(context);
 
-        var snippet = new KnowledgeBaseSnippet { Content = "Popular snippet", UsageCount = 10 };
+        var snippet = new KnowledgeBaseSnippet { Content = "Popular snippet", UsageCount = 10, CreatedAt = DateTime.UtcNow };
         context.KnowledgeBaseSnippets.Add(snippet);
         await context.SaveChangesAsync();
 

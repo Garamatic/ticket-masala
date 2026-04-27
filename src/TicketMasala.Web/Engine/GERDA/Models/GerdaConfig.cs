@@ -152,6 +152,18 @@ public class DispatchingSettings
     [JsonPropertyName("IsEnabled")]
     public bool IsEnabled { get; set; } = true;
 
+    [JsonPropertyName("AutoDispatchMinScore")]
+    public double AutoDispatchMinScore { get; set; } = 3.5;
+
+    [JsonPropertyName("ProjectManagerMaxActiveProjects")]
+    public int ProjectManagerMaxActiveProjects { get; set; } = 5;
+
+    [JsonPropertyName("ProjectManagerWorkloadWeight")]
+    public double ProjectManagerWorkloadWeight { get; set; } = 0.6;
+
+    [JsonPropertyName("ProjectManagerSuccessRateWeight")]
+    public double ProjectManagerSuccessRateWeight { get; set; } = 0.4;
+
     [JsonPropertyName("MinHistoryForAffinityMatch")]
     public int MinHistoryForAffinityMatch { get; set; } = 3;
 

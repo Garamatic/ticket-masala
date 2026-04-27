@@ -11,6 +11,8 @@ using TicketMasala.Web.Data;
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.ViewModels.Projects;
 using TicketMasala.Web.ViewModels.Tickets;
+using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.Utilities;
 
 namespace TicketMasala.Web.Engine.Projects;
 
@@ -19,15 +21,18 @@ public class ProjectReadService : IProjectReadService
     private readonly MasalaDbContext _context;
     private readonly IProjectRepository _projectRepository;
     private readonly ILogger<ProjectReadService> _logger;
+    private readonly ISystemClock _clock;
 
     public ProjectReadService(
         MasalaDbContext context,
         IProjectRepository projectRepository,
-        ILogger<ProjectReadService> logger)
+        ILogger<ProjectReadService> logger,
+        ISystemClock clock)
     {
         _context = context;
         _projectRepository = projectRepository;
         _logger = logger;
+        _clock = clock;
     }
 
     public async Task<IEnumerable<ProjectTicketViewModel>> GetAllProjectsAsync(string? userId, bool isCustomer)
@@ -54,9 +59,7 @@ public class ProjectReadService : IProjectReadService
                 Description = p.Description,
                 Status = p.Status,
                 ProjectManager = p.ProjectManager,
-                ProjectManagerName = p.ProjectManager != null
-                    ? $"{p.ProjectManager.FirstName} {p.ProjectManager.LastName}"
-                    : "Not Assigned",
+                ProjectManagerName = p.ProjectManager?.ToFullName() ?? "Not Assigned",
                 TicketCount = p.Tasks.Count
             },
             Tasks = p.Tasks.Select(t => new TicketViewModel
@@ -96,9 +99,7 @@ public class ProjectReadService : IProjectReadService
                 Status = project.Status,
                 CustomerId = project.CustomerId,
                 CompletionTarget = project.CompletionTarget,
-                ProjectManagerName = project.ProjectManager != null
-                    ? $"{project.ProjectManager.FirstName} {project.ProjectManager.LastName}"
-                    : "Not Assigned",
+                ProjectManagerName = project.ProjectManager?.ToFullName() ?? "Not Assigned",
                 TicketCount = project.Tasks.Count
             },
             Tasks = project.Tasks.Select(t => new TicketViewModel
@@ -106,14 +107,10 @@ public class ProjectReadService : IProjectReadService
                 Guid = t.Guid,
                 Description = t.Description,
                 TicketStatus = t.TicketStatus,
-                ResponsibleName = t.Responsible != null
-                    ? $"{t.Responsible.FirstName} {t.Responsible.LastName}"
-                    : "Not Assigned",
-                CustomerName = t.Customer != null
-                    ? $"{t.Customer.FirstName} {t.Customer.LastName}"
-                    : "Unknown",
+                ResponsibleName = t.Responsible?.ToFullName() ?? "Not Assigned",
+                CustomerName = t.Customer?.ToFullName() ?? "Unknown",
                 CompletionTarget = t.CompletionTarget,
-                CreationDate = DateTime.UtcNow
+                CreationDate = t.CreationDate
             }).ToList()
         };
     }
@@ -152,7 +149,7 @@ public class ProjectReadService : IProjectReadService
         return customers.Select(c => new SelectListItem
         {
             Value = c.Id.ToString(),
-            Text = $"{c.FirstName} {c.LastName}",
+            Text = c.ToFullName(),
             Selected = selectedCustomerId != null && c.Id == selectedCustomerId
         });
     }
@@ -163,7 +160,7 @@ public class ProjectReadService : IProjectReadService
         return employees.Select(c => new SelectListItem
         {
             Value = c.Id.ToString(),
-            Text = $"{c.FirstName} {c.LastName}"
+            Text = c.ToFullName(),
         });
     }
 
@@ -185,7 +182,7 @@ public class ProjectReadService : IProjectReadService
         var items = employees.Select(e => new SelectListItem
         {
             Value = e.Id,
-            Text = $"{e.FirstName} {e.LastName}",
+            Text = e.ToFullName(),
             Selected = selectedId != null && e.Id == selectedId
         }).ToList();
 
@@ -228,7 +225,7 @@ public class ProjectReadService : IProjectReadService
                         ? $"{t.Customer.FirstName} {t.Customer.LastName}"
                         : "Unknown",
                     CompletionTarget = t.CompletionTarget,
-                    CreationDate = DateTime.UtcNow
+                    CreationDate = t.CreationDate
                 }).ToList()
             })
             .ToListAsync();
@@ -273,7 +270,7 @@ public class ProjectReadService : IProjectReadService
                         ? $"{t.Customer.FirstName} {t.Customer.LastName}"
                         : "Unknown",
                     CompletionTarget = t.CompletionTarget,
-                    CreationDate = DateTime.UtcNow
+                    CreationDate = t.CreationDate
                 }).ToList()
             })
             .ToListAsync();
@@ -344,7 +341,7 @@ public class ProjectReadService : IProjectReadService
         if (bestPM != null)
         {
             recommendedPMId = bestPM.Employee.Id;
-            recommendedPMName = $"{bestPM.Employee.FirstName} {bestPM.Employee.LastName}";
+            recommendedPMName = bestPM.Employee.ToFullName();
         }
 
         var subject = ticket.Description.Split('\n')[0];
@@ -354,16 +351,14 @@ public class ProjectReadService : IProjectReadService
         {
             TicketId = ticketId,
             TicketDescription = ticket.Description,
-            CustomerName = ticket.Customer != null
-                ? $"{ticket.Customer.FirstName} {ticket.Customer.LastName}"
-                : null,
+            CustomerName = ticket.Customer?.ToFullName(),
             CustomerId = ticket.CustomerId,
             ProjectName = $"Project: {subject}",
             ProjectDescription = ticket.Description,
             RecommendedPMId = recommendedPMId,
             RecommendedPMName = recommendedPMName,
             SelectedPMId = recommendedPMId,
-            TargetCompletionDate = DateTime.UtcNow.AddDays(30),
+            TargetCompletionDate = _clock.UtcNow.AddDays(30),
             TemplateList = new SelectList(await GetTemplateSelectListAsync(), "Value", "Text"),
             ProjectManagerList = await GetEmployeeSelectListAsync(recommendedPMId)
         };

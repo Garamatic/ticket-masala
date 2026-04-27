@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Web.Data;
 using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Abstractions;
 
 namespace TicketMasala.Web.Areas.Admin.Controllers;
 
@@ -17,21 +18,24 @@ public class AdminController : Controller
     private readonly MasalaDbContext _context;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ILogger<AdminController> _logger;
+    private readonly ISystemClock _clock;
 
     public AdminController(
         MasalaDbContext context,
         UserManager<ApplicationUser> userManager,
-        ILogger<AdminController> logger)
+        ILogger<AdminController> logger,
+        ISystemClock clock)
     {
         _context = context;
         _userManager = userManager;
         _logger = logger;
+        _clock = clock;
     }
 
     public async Task<IActionResult> Index()
     {
-        var now = DateTimeOffset.UtcNow;
-        var today = DateTime.UtcNow.Date;
+        var now = new DateTimeOffset(_clock.UtcNow);
+        var today = _clock.UtcNow.Date;
 
         // Calculate active users: total users minus currently locked users
         var totalUsers = await _userManager.Users.CountAsync();

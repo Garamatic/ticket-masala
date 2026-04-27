@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Options;
 using TicketMasala.Web.Configuration;
 
 namespace TicketMasala.Web.Extensions;

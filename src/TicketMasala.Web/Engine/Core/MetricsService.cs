@@ -240,9 +240,9 @@ public class MetricsService : IMetricsService
             return new RecentActivityItem
             {
                 Timestamp = timestamp,
-                TicketGuid = t.Guid.ToString().Substring(0, 8),
+                TicketGuid = t.Guid.ToString()[..8],
                 TicketDescription = t.Description.Length > 60
-                    ? t.Description.Substring(0, 60) + "..."
+                    ? t.Description[..60] + "..."
                     : t.Description,
                 ActivityType = activityType,
                 AgentName = t.Responsible != null

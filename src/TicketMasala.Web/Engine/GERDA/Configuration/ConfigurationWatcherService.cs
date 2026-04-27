@@ -52,14 +52,17 @@ public class ConfigurationWatcherService : BackgroundService
 
     private void OnChanged(object sender, FileSystemEventArgs e)
     {
-        // Debounce logic could be added here if needed, but for now simple reload.
-        // FileSystemWatcher often fires multiple events for a single save.
-        // We catch exceptions to avoid crashing the service.
+        // Fire and forget with proper async handling
+        _ = HandleConfigChangeAsync(e);
+    }
+
+    private async Task HandleConfigChangeAsync(FileSystemEventArgs e)
+    {
+        // Debounce: wait for file write to complete
+        await Task.Delay(500);
+
         try
         {
-            // Small delay to ensure file write is complete
-            Thread.Sleep(500);
-
             _logger.LogInformation("Configuration change detected: {ChangeType} {FullPath}", e.ChangeType, e.FullPath);
             _domainConfigurationService.ReloadConfiguration();
         }

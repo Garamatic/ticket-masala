@@ -1,13 +1,13 @@
-using TicketMasala.Web.Data;
-using TicketMasala.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Enums;
-using TicketMasala.Web.ViewModels.Projects;
-using TicketMasala.Web.ViewModels.Tickets;
+using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.Data;
 using TicketMasala.Web.ViewModels.Customers;
 using TicketMasala.Web.ViewModels.Dashboard;
-using Microsoft.EntityFrameworkCore;
-using TicketMasala.Web.Abstractions;
+using TicketMasala.Web.ViewModels.Projects;
+using TicketMasala.Web.ViewModels.Tickets;
 
 namespace TicketMasala.Web.Engine.Core;
 
@@ -27,6 +27,7 @@ public class MetricsService : IMetricsService
     private readonly MasalaDbContext _context;
     private readonly ILogger<MetricsService> _logger;
     private readonly ISystemClock _clock;
+    private readonly Random _random = new();
 
     public MetricsService(MasalaDbContext context, ILogger<MetricsService> logger, ISystemClock clock)
     {
@@ -259,9 +260,12 @@ public class MetricsService : IMetricsService
     /// </summary>
     private string GetUrgencyLabel(double priorityScore)
     {
-        if (priorityScore >= 15.0) return "Critical";
-        if (priorityScore >= 10.0) return "High";
-        if (priorityScore >= 5.0) return "Medium";
+        if (priorityScore >= 15.0)
+            return "Critical";
+        if (priorityScore >= 10.0)
+            return "High";
+        if (priorityScore >= 5.0)
+            return "Medium";
         return "Low";
     }
 
@@ -270,10 +274,14 @@ public class MetricsService : IMetricsService
     /// </summary>
     private string GetComplexityLabel(int effortPoints)
     {
-        if (effortPoints <= 1) return "Trivial";
-        if (effortPoints <= 3) return "Simple";
-        if (effortPoints <= 8) return "Medium";
-        if (effortPoints <= 13) return "Complex";
+        if (effortPoints <= 1)
+            return "Trivial";
+        if (effortPoints <= 3)
+            return "Simple";
+        if (effortPoints <= 8)
+            return "Medium";
+        if (effortPoints <= 13)
+            return "Complex";
         return "Very Complex";
     }
     /// <summary>
@@ -298,17 +306,17 @@ public class MetricsService : IMetricsService
         // Simple linear projection with some random variation for "Peak and Valley" simulation
         // In a real app, this would use ML.NET or a more sophisticated algorithm
         var forecast = new List<ForecastData>();
-        var random = new Random();
 
         for (int i = 1; i <= 7; i++)
         {
             var date = today.AddDays(i);
             // Simulate weekday vs weekend variance
             var isWeekend = date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday;
-            var variance = (random.NextDouble() * 0.4) - 0.2; // +/- 20% variance
+            var variance = (_random.NextDouble() * 0.4) - 0.2; // +/- 20% variance
             var volume = averageDailyVolume * (1 + variance);
 
-            if (isWeekend) volume *= 0.3; // Lower volume on weekends
+            if (isWeekend)
+                volume *= 0.3; // Lower volume on weekends
 
             forecast.Add(new ForecastData
             {

@@ -1,12 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Enums;
+using TicketMasala.Domain.Services;
 using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.Compiler;
@@ -17,23 +14,6 @@ using TicketMasala.Web.Observers;
 using TicketMasala.Web.Repositories;
 
 namespace TicketMasala.Web.Engine.GERDA.Tickets;
-
-public interface ITicketWorkflowService
-{
-    Task<Ticket> CreateTicketAsync(string description, string customerId, string? responsibleId, Guid? projectGuid, DateTime? completionTarget);
-    Task<bool> UpdateTicketAsync(Ticket ticket);
-    Task<bool> AssignTicketAsync(Guid ticketGuid, string agentId);
-    Task<bool> AssignTicketWithProjectAsync(Guid ticketGuid, string? agentId, Guid? projectGuid);
-    Task<TicketComment> AddCommentAsync(Guid ticketId, string body, bool isInternal, string authorId);
-    Task<bool> RequestReviewAsync(Guid ticketId, string requesterId);
-    Task<bool> SubmitReviewAsync(Guid ticketId, int score, string feedback, bool approved, string reviewerId);
-    Task<TimeLog> LogTimeAsync(Guid ticketId, string userId, double hours, DateTime date, string description);
-
-    // Internal notification helpers exposed if needed, or kept private if only used internally
-    // Task NotifyObserversAssignedAsync(Ticket ticket, Employee assignee);
-    // Task NotifyObserversUpdatedAsync(Ticket ticket);
-    // Task NotifyObserversCommentedAsync(TicketComment comment);
-}
 
 public class TicketWorkflowService : ITicketWorkflowService
 {

@@ -9,7 +9,7 @@ using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.GERDA.Configuration;
 using TicketMasala.Web.Engine.GERDA.Tickets;
-using TicketMasala.Web.Repositories;
+using TicketMasala.Domain.Repositories;
 using Xunit;
 
 namespace TicketMasala.Tests.Services;

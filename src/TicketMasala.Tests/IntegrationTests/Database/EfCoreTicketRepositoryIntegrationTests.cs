@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Repositories;
 using TicketMasala.Tests.TestHelpers;
-using TicketMasala.Web.Repositories.Queries;
 using Xunit;
 
 namespace TicketMasala.Tests.IntegrationTests.Database;

@@ -7,11 +7,11 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Repositories;
 using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Engine.GERDA.Dispatching;
 using TicketMasala.Web.Engine.GERDA.Models;
 using TicketMasala.Web.Engine.GERDA.Tickets;
-using TicketMasala.Web.Repositories;
 using TicketMasala.Web.Services;
 using Xunit;
 

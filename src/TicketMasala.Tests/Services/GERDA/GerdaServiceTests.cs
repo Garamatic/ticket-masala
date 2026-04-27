@@ -2,13 +2,13 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Repositories;
 using TicketMasala.Web.Engine.GERDA;
 using TicketMasala.Web.Engine.GERDA.Dispatching;
 using TicketMasala.Web.Engine.GERDA.Estimating;
 using TicketMasala.Web.Engine.GERDA.Grouping;
 using TicketMasala.Web.Engine.GERDA.Models;
 using TicketMasala.Web.Engine.GERDA.Ranking;
-using TicketMasala.Web.Repositories;
 using Customer = TicketMasala.Domain.Entities.ApplicationUser;
 
 namespace TicketMasala.Tests.Services.GERDA;

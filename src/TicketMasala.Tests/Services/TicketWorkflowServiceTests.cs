@@ -12,7 +12,7 @@ using TicketMasala.Web.Engine.GERDA.Configuration;
 using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Engine.Security;
 using TicketMasala.Web.Observers;
-using TicketMasala.Web.Repositories;
+using TicketMasala.Domain.Repositories;
 using TicketMasala.Web.Services;
 using Xunit;
 

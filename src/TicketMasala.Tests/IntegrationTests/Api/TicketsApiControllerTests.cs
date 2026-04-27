@@ -146,7 +146,7 @@ public class TicketsApiControllerTests : IClassFixture<CustomWebApplicationFacto
         var responseJson = await response.Content.ReadAsStringAsync();
         var result = JsonSerializer.Deserialize<ExternalTicketResponse>(responseJson, _jsonOptions);
         Assert.NotNull(result);
-        Assert.True(result.Success, $"Expected success but got: {result?.Message}");
+        Assert.True(result.Success, $"Expected success but got: {result.Message}");
         Assert.NotNull(result.TicketReference);
     }
 

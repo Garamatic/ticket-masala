@@ -9,7 +9,7 @@ using TicketMasala.Web;
 using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.Projects;
-using TicketMasala.Web.Repositories;
+using TicketMasala.Domain.Repositories;
 using TicketMasala.Web.ViewModels.Customers;
 using TicketMasala.Web.ViewModels.Projects;
 using Xunit;

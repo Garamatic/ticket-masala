@@ -9,12 +9,27 @@ public interface IGerdaPipeline
     /// <summary>
     /// Executes all enabled stages in the pipeline for a single ticket.
     /// </summary>
-    Task<GerdaPipelineContext> ExecuteAsync(Guid ticketGuid);
+    /// <param name="ticketGuid">The ticket to process</param>
+    /// <returns>PipelineResult with detailed execution status for each stage</returns>
+    Task<PipelineResult> ExecuteAsync(Guid ticketGuid);
+
+    /// <summary>
+    /// Executes the pipeline with custom options.
+    /// </summary>
+    /// <param name="ticketGuid">The ticket to process</param>
+    /// <param name="options">Pipeline execution options</param>
+    /// <returns>PipelineResult with detailed execution status for each stage</returns>
+    Task<PipelineResult> ExecuteAsync(Guid ticketGuid, PipelineOptions options);
 }
 
 /// <summary>
 /// Default implementation of the GERDA pipeline.
-/// Executes stages sequentially, skipping disabled stages.
+/// Executes stages sequentially, supporting both "continue on error" and "fail fast" modes.
+///
+/// Issue #8: Pipeline Error Handling & Result Pattern
+/// - Replaces silent failure with explicit PipelineResult
+/// - Supports per-stage status reporting
+/// - Configurable execution modes (ContinueOnError vs FailFast)
 /// </summary>
 public class ConfigurableGerdaPipeline : IGerdaPipeline
 {
@@ -29,16 +44,40 @@ public class ConfigurableGerdaPipeline : IGerdaPipeline
         _logger = logger;
     }
 
-    public async Task<GerdaPipelineContext> ExecuteAsync(Guid ticketGuid)
+    /// <summary>
+    /// Executes the pipeline with default options (ContinueOnError for backward compatibility).
+    /// </summary>
+    public Task<PipelineResult> ExecuteAsync(Guid ticketGuid)
     {
+        return ExecuteAsync(ticketGuid, new PipelineOptions
+        {
+            ExecutionMode = PipelineExecutionMode.ContinueOnError,
+            CaptureTiming = true
+        });
+    }
+
+    /// <summary>
+    /// Executes the pipeline with custom options.
+    /// </summary>
+    public async Task<PipelineResult> ExecuteAsync(Guid ticketGuid, PipelineOptions options)
+    {
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
         var context = new GerdaPipelineContext();
+        var result = new PipelineResult
+        {
+            TicketGuid = ticketGuid,
+            Context = context,
+            ExecutionMode = options.ExecutionMode
+        };
 
         _logger.LogInformation(
-            "GERDA Pipeline: Processing ticket {TicketGuid} through {StageCount} enabled stages",
-            ticketGuid, _stages.Count);
+            "GERDA Pipeline: Processing ticket {TicketGuid} through {StageCount} enabled stages (Mode: {ExecutionMode})",
+            ticketGuid, _stages.Count, options.ExecutionMode);
 
         foreach (var stage in _stages)
         {
+            var stageStopwatch = options.CaptureTiming ? System.Diagnostics.Stopwatch.StartNew() : null;
+
             try
             {
                 _logger.LogDebug(
@@ -47,24 +86,70 @@ public class ConfigurableGerdaPipeline : IGerdaPipeline
 
                 await stage.ExecuteAsync(ticketGuid, context);
 
+                stageStopwatch?.Stop();
+
                 _logger.LogDebug(
-                    "GERDA Pipeline: Completed stage {StageName} for ticket {TicketGuid}",
-                    stage.StageName, ticketGuid);
+                    "GERDA Pipeline: Completed stage {StageName} for ticket {TicketGuid} in {DurationMs}ms",
+                    stage.StageName, ticketGuid, stageStopwatch?.ElapsedMilliseconds ?? 0);
+
+                result.AddStageResult(new StageResult
+                {
+                    StageName = stage.StageName,
+                    Status = StageStatus.Succeeded,
+                    Duration = stageStopwatch?.Elapsed ?? TimeSpan.Zero
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex,
-                    "GERDA Pipeline: Stage {StageName} failed for ticket {TicketGuid}. Continuing with next stage.",
-                    stage.StageName, ticketGuid);
+                stageStopwatch?.Stop();
 
-                // Continue with next stage instead of failing entire pipeline
+                _logger.LogError(ex,
+                    "GERDA Pipeline: Stage {StageName} failed for ticket {TicketGuid} after {DurationMs}ms",
+                    stage.StageName, ticketGuid, stageStopwatch?.ElapsedMilliseconds ?? 0);
+
+                result.AddStageResult(new StageResult
+                {
+                    StageName = stage.StageName,
+                    Status = StageStatus.Failed,
+                    Duration = stageStopwatch?.Elapsed ?? TimeSpan.Zero,
+                    Error = new StageError
+                    {
+                        StageName = stage.StageName,
+                        Message = ex.Message,
+                        ExceptionDetails = ex.ToString()
+                    }
+                });
+
+                // Fail fast mode: stop pipeline on first failure
+                if (options.ExecutionMode == PipelineExecutionMode.FailFast)
+                {
+                    _logger.LogWarning(
+                        "GERDA Pipeline: Aborting pipeline for ticket {TicketGuid} due to FailFast mode",
+                        ticketGuid);
+                    break;
+                }
+
+                // ContinueOnError mode: continue to next stage (legacy behavior)
             }
         }
 
-        _logger.LogInformation(
-            "GERDA Pipeline: Completed processing ticket {TicketGuid}",
-            ticketGuid);
+        stopwatch.Stop();
+        result = result with { Duration = stopwatch.Elapsed };
 
-        return context;
+        // Log summary
+        if (result.HasFailures)
+        {
+            _logger.LogWarning(
+                "GERDA Pipeline: Completed with failures for ticket {TicketGuid}. {Summary}",
+                ticketGuid, result.GetSummary());
+        }
+        else
+        {
+            _logger.LogInformation(
+                "GERDA Pipeline: Successfully completed for ticket {TicketGuid}. {Summary}",
+                ticketGuid, result.GetSummary());
+        }
+
+        return result;
     }
 }

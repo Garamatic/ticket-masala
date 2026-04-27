@@ -1,3 +1,4 @@
+using System.Linq;
 using TicketMasala.Domain.Common;
 using TicketMasala.Web.Engine.GERDA.Anticipation;
 using TicketMasala.Web.Engine.GERDA.Models;
@@ -48,15 +49,26 @@ public class GerdaServiceV2 : IGerdaService
         try
         {
             // Execute pipeline - all stages run in sequence
-            var context = await _pipeline.ExecuteAsync(ticketGuid);
+            var result = await _pipeline.ExecuteAsync(ticketGuid);
+            var context = result.Context;
 
-            _logger.LogInformation(
-                "GERDA: Completed processing ticket {TicketGuid}. Results: Parent={ParentGuid}, Effort={Effort}, Priority={Priority}, Agent={AgentId}",
-                ticketGuid,
-                context.ParentTicketGuid,
-                context.EffortPoints,
-                context.PriorityScore,
-                context.RecommendedAgentId);
+            if (result.HasFailures)
+            {
+                _logger.LogWarning(
+                    "GERDA: Pipeline completed with some failures for ticket {TicketGuid}. Failed stages: {FailedStages}",
+                    ticketGuid,
+                    string.Join(", ", result.GetAllErrors().Select(e => e.StageName)));
+            }
+            else
+            {
+                _logger.LogInformation(
+                    "GERDA: Successfully processed ticket {TicketGuid}. Results: Parent={ParentGuid}, Effort={Effort}, Priority={Priority}, Agent={AgentId}",
+                    ticketGuid,
+                    context.ParentTicketGuid,
+                    context.EffortPoints,
+                    context.PriorityScore,
+                    context.RecommendedAgentId);
+            }
         }
         catch (Exception ex)
         {

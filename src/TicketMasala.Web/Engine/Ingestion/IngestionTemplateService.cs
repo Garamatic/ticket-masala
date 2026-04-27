@@ -1,5 +1,4 @@
-using Scriban;
-using Scriban.Runtime;
+using System.Text.RegularExpressions;
 
 namespace TicketMasala.Web.Engine.Ingestion;
 
@@ -103,28 +102,22 @@ public class IngestionTemplateService : IIngestionTemplateService
 
         try
         {
-            var scriptObject = new ScriptObject();
-            scriptObject["source"] = sourceData;
-
-            var context = new TemplateContext();
-            context.PushGlobal(scriptObject);
-
             var result = new IngestionResult
             {
                 Success = true,
-                Title = RenderTemplate(template.TitleTemplate, context),
-                Description = RenderTemplate(template.DescriptionTemplate, context),
+                Title = RenderTemplate(template.TitleTemplate, sourceData),
+                Description = RenderTemplate(template.DescriptionTemplate, sourceData),
                 DomainId = template.DomainId
             };
 
             if (!string.IsNullOrEmpty(template.CustomerIdTemplate))
             {
-                result.CustomerId = RenderTemplate(template.CustomerIdTemplate, context);
+                result.CustomerId = RenderTemplate(template.CustomerIdTemplate, sourceData);
             }
 
             foreach (var (key, fieldTemplate) in template.CustomFieldTemplates)
             {
-                result.CustomFields[key] = RenderTemplate(fieldTemplate, context);
+                result.CustomFields[key] = RenderTemplate(fieldTemplate, sourceData);
             }
 
             return result;
@@ -140,10 +133,95 @@ public class IngestionTemplateService : IIngestionTemplateService
         }
     }
 
-    private static string RenderTemplate(string templateText, TemplateContext context)
+    private static string RenderTemplate(string templateText, Dictionary<string, object> sourceData)
     {
-        var template = Template.Parse(templateText);
-        return template.Render(context).Trim();
+        if (string.IsNullOrWhiteSpace(templateText))
+        {
+            return string.Empty;
+        }
+
+        var rendered = Regex.Replace(templateText, "\\{\\{\\s*(.*?)\\s*\\}\\}", match =>
+        {
+            var expression = match.Groups[1].Value;
+            var parts = expression.Split('|', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+
+            if (parts.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            var value = ResolveExpression(parts[0], sourceData);
+
+            for (var index = 1; index < parts.Length; index++)
+            {
+                value = ApplyFilter(parts[index], value);
+            }
+
+            return value;
+        });
+
+        return rendered.Trim();
+    }
+
+    private static string ResolveExpression(string expression, Dictionary<string, object> sourceData)
+    {
+        var path = expression.Trim();
+        if (path.StartsWith("source.", StringComparison.OrdinalIgnoreCase))
+        {
+            path = path[7..];
+        }
+
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return string.Empty;
+        }
+
+        var segments = path.Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        object? current = sourceData;
+
+        foreach (var segment in segments)
+        {
+            if (current is Dictionary<string, object> typedDict)
+            {
+                if (!typedDict.TryGetValue(segment, out current))
+                {
+                    return string.Empty;
+                }
+                continue;
+            }
+
+            if (current is IDictionary<string, object> dict)
+            {
+                if (!dict.TryGetValue(segment, out current))
+                {
+                    return string.Empty;
+                }
+                continue;
+            }
+
+            return string.Empty;
+        }
+
+        return current?.ToString() ?? string.Empty;
+    }
+
+    private static string ApplyFilter(string filterExpression, string value)
+    {
+        var filter = filterExpression.Trim();
+
+        if (filter.StartsWith("string.truncate", StringComparison.OrdinalIgnoreCase))
+        {
+            var arguments = filter.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (arguments.Length >= 2 && int.TryParse(arguments[1], out var maxLength) && maxLength >= 0)
+            {
+                if (value.Length > maxLength)
+                {
+                    return value[..maxLength];
+                }
+            }
+        }
+
+        return value;
     }
 
     public IEnumerable<string> GetTemplateNames() => _templates.Keys;

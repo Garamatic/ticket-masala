@@ -1,5 +1,4 @@
 using System.Threading.Channels;
-using TicketMasala.Domain.Services;
 
 namespace GatekeeperApi;
 

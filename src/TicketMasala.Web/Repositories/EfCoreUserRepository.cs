@@ -12,16 +12,16 @@ namespace TicketMasala.Web.Repositories;
 public class EfCoreUserRepository : IUserRepository
 {
     private readonly MasalaDbContext _context;
-    private readonly UserManager<ApplicationUser> _userManager; // Added
+    private readonly UserManager<ApplicationUser> _userManager;
     private readonly ILogger<EfCoreUserRepository> _logger;
 
     public EfCoreUserRepository(
         MasalaDbContext context,
-        UserManager<ApplicationUser> userManager, // Added
+        UserManager<ApplicationUser> userManager,
         ILogger<EfCoreUserRepository> logger)
     {
         _context = context;
-        _userManager = userManager; // Added
+        _userManager = userManager;
         _logger = logger;
     }
 

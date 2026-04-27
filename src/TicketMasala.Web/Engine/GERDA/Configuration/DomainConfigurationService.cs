@@ -22,7 +22,6 @@ public class DomainConfigurationService : IDomainConfigurationService, IDisposab
     private MasalaDomainsConfig _config;
     private readonly object _configLock = new();
     private readonly string _configFilePath;
-    private DateTime _lastLoadTime;
     private FileSystemWatcher? _fileWatcher;
     private string _currentConfigHash = string.Empty;
 
@@ -127,7 +126,6 @@ public class DomainConfigurationService : IDomainConfigurationService, IDisposab
                 // 1. Update local config object
                 _config = newConfig;
                 _currentConfigHash = hash;
-                _lastLoadTime = DateTime.UtcNow;
 
                 // 2. Push new config to Rule Compiler for atomic swap
                 _ruleCompiler.ReplaceRuleCache(_config);

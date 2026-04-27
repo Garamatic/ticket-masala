@@ -14,7 +14,6 @@ namespace TicketMasala.Web.Engine.Ingestion;
 public class TicketGenerator : ITicketGenerator
 {
     private readonly ITicketWorkflowService _ticketWorkflowService;
-    private readonly ITicketReadService _ticketReadService;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly MasalaDbContext _context;
     private readonly ILogger<TicketGenerator> _logger;
@@ -23,14 +22,12 @@ public class TicketGenerator : ITicketGenerator
 
     public TicketGenerator(
         ITicketWorkflowService ticketWorkflowService,
-        ITicketReadService ticketReadService,
         UserManager<ApplicationUser> userManager,
         MasalaDbContext context,
         ILogger<TicketGenerator> logger,
         ISystemClock clock)
     {
         _ticketWorkflowService = ticketWorkflowService;
-        _ticketReadService = ticketReadService;
         _userManager = userManager;
         _context = context;
         _logger = logger;

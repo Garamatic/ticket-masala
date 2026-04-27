@@ -121,7 +121,7 @@ public class TicketsApiControllerTests : IClassFixture<CustomWebApplicationFacto
         return client;
     }
 
-    [Fact(DisplayName = "POST /api/v1/tickets/external - Anonymous user can create external ticket", Skip = "Skipped - may fail due to app Result bug or customer creation logic")]
+    [Fact(DisplayName = "POST /api/v1/tickets/external - Anonymous user can create external ticket")]
     public async Task CreateExternalTicket_AnonymousUser_ReturnsSuccess()
     {
         // Arrange
@@ -150,7 +150,7 @@ public class TicketsApiControllerTests : IClassFixture<CustomWebApplicationFacto
         Assert.NotNull(result.TicketReference);
     }
 
-    [Fact(DisplayName = "POST /api/v1/tickets/external - Invalid request returns BadRequest", Skip = "Skipped - validation behavior may vary")]
+    [Fact(DisplayName = "POST /api/v1/tickets/external - Invalid request returns BadRequest")]
     public async Task CreateExternalTicket_InvalidRequest_ReturnsBadRequest()
     {
         // Arrange
@@ -226,7 +226,7 @@ public class TicketsApiControllerTests : IClassFixture<CustomWebApplicationFacto
             $"Expected Unauthorized or Redirect but got {response.StatusCode}");
     }
 
-    [Fact(DisplayName = "POST /api/v1/tickets - Authenticated user can create work item", Skip = "Skipped due to app Result handling bug")]
+    [Fact(DisplayName = "POST /api/v1/tickets - Authenticated user can create work item")]
     public async Task CreateWorkItem_AuthenticatedUser_ReturnsCreatedTicket()
     {
         // Arrange
@@ -253,7 +253,7 @@ public class TicketsApiControllerTests : IClassFixture<CustomWebApplicationFacto
             $"Expected OK, Created, or BadRequest but got {response.StatusCode}");
     }
 
-    [Fact(DisplayName = "POST /api/v1/tickets - Missing required fields returns BadRequest", Skip = "Skipped - endpoint may not exist or return different status")]
+    [Fact(DisplayName = "POST /api/v1/tickets - Missing required fields returns BadRequest")]
     public async Task CreateWorkItem_MissingFields_ReturnsBadRequest()
     {
         // Arrange
@@ -291,7 +291,7 @@ public class TicketsApiControllerTests : IClassFixture<CustomWebApplicationFacto
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
-    [Fact(DisplayName = "External ticket creates customer if not exists", Skip = "Skipped - may fail due to app Result bug")]
+    [Fact(DisplayName = "External ticket creates customer if not exists")]
     public async Task CreateExternalTicket_NewCustomer_CreatesCustomerAndTicket()
     {
         // Arrange

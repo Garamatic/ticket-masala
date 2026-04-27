@@ -143,7 +143,7 @@ public class TicketControllerTests : IClassFixture<CustomWebApplicationFactory>
         Assert.Contains("Description", content);
     }
 
-    [Fact(DisplayName = "POST /Ticket/Create - With valid data creates ticket and redirects", Skip = "Skipped due to app bug in Result handling - InvalidOperationException: Success result cannot have an error")]
+    [Fact(DisplayName = "POST /Ticket/Create - With valid data creates ticket and redirects")]
     public async Task Create_Post_ValidData_CreatesTicket()
     {
         // Arrange
@@ -179,7 +179,7 @@ public class TicketControllerTests : IClassFixture<CustomWebApplicationFactory>
             $"Expected Redirect or OK but got {response.StatusCode}");
     }
 
-    [Fact(DisplayName = "POST /Ticket/Create - With missing description shows validation error", Skip = "Skipped due to app bug in Result handling")]
+    [Fact(DisplayName = "POST /Ticket/Create - With missing description shows validation error")]
     public async Task Create_Post_MissingDescription_ShowsValidationError()
     {
         // Arrange
@@ -217,7 +217,7 @@ public class TicketControllerTests : IClassFixture<CustomWebApplicationFactory>
             "Expected validation error message in response");
     }
 
-    [Fact(DisplayName = "GET /Ticket/Detail/{id} - Returns ticket details for existing ticket", Skip = "Skipped due to app bug in Result handling")]
+    [Fact(DisplayName = "GET /Ticket/Detail/{id} - Returns ticket details for existing ticket")]
     public async Task Detail_ExistingTicket_ReturnsTicketDetails()
     {
         // Arrange
@@ -249,7 +249,7 @@ public class TicketControllerTests : IClassFixture<CustomWebApplicationFactory>
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
-    [Fact(DisplayName = "GET /Ticket/Edit/{id} - Returns edit form for existing ticket", Skip = "Skipped due to app bug in Result handling")]
+    [Fact(DisplayName = "GET /Ticket/Edit/{id} - Returns edit form for existing ticket")]
     public async Task Edit_Get_ExistingTicket_ReturnsEditForm()
     {
         // Arrange
@@ -268,7 +268,7 @@ public class TicketControllerTests : IClassFixture<CustomWebApplicationFactory>
         Assert.Contains("Test ticket for edit", content);
     }
 
-    [Fact(DisplayName = "POST /Ticket/Edit - Updates ticket with valid data", Skip = "Skipped due to app bug in Result handling")]
+    [Fact(DisplayName = "POST /Ticket/Edit - Updates ticket with valid data")]
     public async Task Edit_Post_ValidData_UpdatesTicket()
     {
         // Arrange
@@ -301,7 +301,7 @@ public class TicketControllerTests : IClassFixture<CustomWebApplicationFactory>
             $"Expected Redirect or OK but got {response.StatusCode}");
     }
 
-    [Fact(DisplayName = "GET /Ticket/Detail/{id} - Different customer cannot access ticket", Skip = "Skipped due to app bug in Result handling")]
+    [Fact(DisplayName = "GET /Ticket/Detail/{id} - Different customer cannot access ticket")]
     public async Task Detail_DifferentCustomer_ReturnsForbiddenOrRedirect()
     {
         // Arrange - Create ticket as customer1

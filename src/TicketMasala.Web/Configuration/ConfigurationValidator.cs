@@ -19,26 +19,7 @@ public class ConfigurationValidator : IConfigurationValidator
     /// <inheritdoc />
     public ValidationResult Validate(MasalaOptions options)
     {
-        var errors = new List<ValidationError>();
-
-        // Validate using data annotations
-        var validationContext = new System.ComponentModel.DataAnnotations.ValidationContext(options);
-        var validationResults = new List<System.ComponentModel.DataAnnotations.ValidationResult>();
-
-        if (!Validator.TryValidateObject(options, validationContext, validationResults, validateAllProperties: true))
-        {
-            foreach (var result in validationResults)
-            {
-                var field = result.MemberNames.FirstOrDefault() ?? "Unknown";
-                errors.Add(new ValidationError(field, result.ErrorMessage ?? "Validation failed"));
-            }
-        }
-
-        // Validate nested objects
-        errors.AddRange(ValidateDatabaseOptions(options.Database));
-        errors.AddRange(ValidateGerdaOptions(options.Gerda));
-        errors.AddRange(ValidateFeatureFlags(options.Features));
-
+        var errors = ValidateCore(options, _logger).ToList();
         return errors.Count > 0 ? ValidationResult.Failure(errors.ToArray()) : ValidationResult.Success();
     }
 
@@ -58,6 +39,114 @@ public class ConfigurationValidator : IConfigurationValidator
         }
 
         _logger.LogInformation("Configuration validation successful");
+    }
+
+    /// <summary>
+    /// Validates configuration at startup and throws if invalid.
+    /// Static version for use during early startup when DI is not available.
+    /// </summary>
+    public static void ValidateOrThrow(MasalaOptions options, ILogger logger)
+    {
+        var errors = ValidateCore(options, logger).ToList();
+
+        if (errors.Count > 0)
+        {
+            logger.LogError("Configuration validation failed with {ErrorCount} errors", errors.Count);
+            foreach (var error in errors)
+            {
+                logger.LogError("  - {Error}", error);
+            }
+            throw new ConfigurationValidationException(errors.ToArray());
+        }
+
+        logger.LogInformation("Configuration validation successful");
+    }
+
+    /// <summary>
+    /// Core validation logic shared between instance and static validation methods.
+    /// </summary>
+    private static IEnumerable<ValidationError> ValidateCore(MasalaOptions options, ILogger? logger)
+    {
+        var errors = new List<ValidationError>();
+
+        // Validate using data annotations
+        var context = new System.ComponentModel.DataAnnotations.ValidationContext(options);
+        var results = new List<System.ComponentModel.DataAnnotations.ValidationResult>();
+
+        if (!Validator.TryValidateObject(options, context, results, validateAllProperties: true))
+        {
+            foreach (var result in results)
+            {
+                var field = result.MemberNames.FirstOrDefault() ?? "Unknown";
+                errors.Add(new ValidationError(field, result.ErrorMessage ?? "Validation failed"));
+            }
+        }
+
+        // Validate nested objects
+        errors.AddRange(ValidateDatabaseOptionsCore(options.Database));
+        errors.AddRange(ValidateGerdaOptionsCore(options.Gerda, logger));
+        errors.AddRange(ValidateFeatureFlagsCore(options.Features));
+
+        return errors;
+    }
+
+    private static IEnumerable<ValidationError> ValidateDatabaseOptionsCore(DatabaseOptions options)
+    {
+        var errors = new List<ValidationError>();
+        var context = new System.ComponentModel.DataAnnotations.ValidationContext(options);
+        var results = new List<System.ComponentModel.DataAnnotations.ValidationResult>();
+
+        if (!Validator.TryValidateObject(options, context, results, validateAllProperties: true))
+        {
+            foreach (var result in results)
+            {
+                var field = $"Database.{result.MemberNames.FirstOrDefault() ?? "Unknown"}";
+                errors.Add(new ValidationError(field, result.ErrorMessage ?? "Validation failed"));
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(options.Provider))
+        {
+            errors.Add(new ValidationError("Database.Provider", "Database provider is required"));
+        }
+
+        if (string.IsNullOrWhiteSpace(options.ConnectionString))
+        {
+            errors.Add(new ValidationError("Database.ConnectionString", "Connection string is required"));
+        }
+
+        return errors;
+    }
+
+    private static IEnumerable<ValidationError> ValidateFeatureFlagsCore(FeatureOptions options)
+    {
+        var errors = new List<ValidationError>();
+        var context = new System.ComponentModel.DataAnnotations.ValidationContext(options);
+        var results = new List<System.ComponentModel.DataAnnotations.ValidationResult>();
+
+        if (!Validator.TryValidateObject(options, context, results, validateAllProperties: true))
+        {
+            foreach (var result in results)
+            {
+                var field = $"Features.{result.MemberNames.FirstOrDefault() ?? "Unknown"}";
+                errors.Add(new ValidationError(field, result.ErrorMessage ?? "Validation failed"));
+            }
+        }
+
+        return errors;
+    }
+
+    private static IEnumerable<ValidationError> ValidateGerdaOptionsCore(GerdaOptions options, ILogger? logger)
+    {
+        var errors = new List<ValidationError>();
+
+        if (options.Enabled && string.IsNullOrWhiteSpace(options.ModelPath))
+        {
+            // ModelPath is optional, just log a warning
+            logger?.LogWarning("GERDA is enabled but ModelPath is not configured");
+        }
+
+        return errors;
     }
 
     /// <inheritdoc />
@@ -95,66 +184,7 @@ public class ConfigurationValidator : IConfigurationValidator
         return errors.Count > 0 ? ValidationResult.Failure(errors.ToArray()) : ValidationResult.Success();
     }
 
-    private IEnumerable<ValidationError> ValidateDatabaseOptions(DatabaseOptions options)
-    {
-        var errors = new List<ValidationError>();
-        var context = new System.ComponentModel.DataAnnotations.ValidationContext(options);
-        var results = new List<System.ComponentModel.DataAnnotations.ValidationResult>();
-
-        if (!Validator.TryValidateObject(options, context, results, validateAllProperties: true))
-        {
-            foreach (var result in results)
-            {
-                var field = $"Database.{result.MemberNames.FirstOrDefault() ?? "Unknown"}";
-                errors.Add(new ValidationError(field, result.ErrorMessage ?? "Validation failed"));
-            }
-        }
-
-        // Additional validation
-        if (string.IsNullOrWhiteSpace(options.Provider))
-        {
-            errors.Add(new ValidationError("Database.Provider", "Database provider is required"));
-        }
-
-        if (string.IsNullOrWhiteSpace(options.ConnectionString))
-        {
-            errors.Add(new ValidationError("Database.ConnectionString", "Connection string is required"));
-        }
-
-        return errors;
-    }
-
-
-    private IEnumerable<ValidationError> ValidateGerdaOptions(GerdaOptions options)
-    {
-        var errors = new List<ValidationError>();
-
-        if (options.Enabled && string.IsNullOrWhiteSpace(options.ModelPath))
-        {
-            // ModelPath is optional, just log a warning
-            _logger.LogWarning("GERDA is enabled but ModelPath is not configured");
-        }
-
-        return errors;
-    }
-
-    private IEnumerable<ValidationError> ValidateFeatureFlags(FeatureOptions options)
-    {
-        var errors = new List<ValidationError>();
-        var context = new System.ComponentModel.DataAnnotations.ValidationContext(options);
-        var results = new List<System.ComponentModel.DataAnnotations.ValidationResult>();
-
-        if (!Validator.TryValidateObject(options, context, results, validateAllProperties: true))
-        {
-            foreach (var result in results)
-            {
-                var field = $"Features.{result.MemberNames.FirstOrDefault() ?? "Unknown"}";
-                errors.Add(new ValidationError(field, result.ErrorMessage ?? "Validation failed"));
-            }
-        }
-
-        return errors;
-    }
+    // Validation methods now use the shared core validation logic in ValidateCore
 
     private IEnumerable<ValidationError> ValidateYamlSyntax(string content, string filePath)
     {

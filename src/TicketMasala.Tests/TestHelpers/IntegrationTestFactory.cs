@@ -3,12 +3,15 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Moq;
 using TicketMasala.Domain.Data;
-using TicketMasala.Web.Engine.GERDA.Estimating;
+using TicketMasala.Web.Extensions;
 
 namespace TicketMasala.Tests.TestHelpers;
 
+/// <summary>
+/// Test factory with GERDA configured for testing.
+/// Uses in-memory database and mock ML predictions.
+/// </summary>
 public class IntegrationTestFactory<TProgram> : WebApplicationFactory<TProgram> where TProgram : class
 {
     private readonly string _tempConfigPath;
@@ -22,9 +25,18 @@ public class IntegrationTestFactory<TProgram> : WebApplicationFactory<TProgram> 
         // Capture original environment variable
         _originalEnvVar = Environment.GetEnvironmentVariable("MASALA_CONFIG_PATH");
 
-        // Create dummy configuration files required for startup
-        File.WriteAllText(Path.Combine(_tempConfigPath, "masala_domains.yaml"), "domains: {}\nglobal:\n  default_domain: IT");
-        File.WriteAllText(Path.Combine(_tempConfigPath, "gerda_config.yaml"), "gerda:\n  is_enabled: false");
+        // Create test configuration with GERDA disabled
+        var testConfig = new Dictionary<string, object>
+        {
+            ["AppInstanceName"] = "Test Ticket Masala",
+            ["GerdaAI"] = new Dictionary<string, object>
+            {
+                ["IsEnabled"] = false
+            }
+        };
+
+        var configJson = System.Text.Json.JsonSerializer.Serialize(testConfig);
+        File.WriteAllText(Path.Combine(_tempConfigPath, "masala_config.json"), configJson);
 
         Environment.SetEnvironmentVariable("MASALA_CONFIG_PATH", _tempConfigPath);
         TicketMasala.Web.Configuration.ConfigurationPaths.ResetCache();
@@ -42,9 +54,34 @@ public class IntegrationTestFactory<TProgram> : WebApplicationFactory<TProgram> 
             configBuilder.AddInMemoryCollection(testSettings);
         });
 
-        builder.ConfigureServices(services =>
+        builder.ConfigureServices((context, services) =>
         {
-            services.AddScoped<IEstimatingService>(sp => Mock.Of<IEstimatingService>());
+            // Re-register GERDA with test options
+            var gerdaOptions = new GerdaOptions
+            {
+                ConfigBasePath = _tempConfigPath,
+                UseMockMlPredictions = true,
+                EnableConfigReload = false
+            };
+
+            // Remove existing GERDA registrations if any
+            // Use precise namespace matching to avoid removing unrelated services
+            var descriptorsToRemove = services
+                .Where(d => d.ServiceType.FullName?.StartsWith("TicketMasala.Web.Engine.GERDA") == true)
+                .ToList();
+
+            foreach (var descriptor in descriptorsToRemove)
+            {
+                services.Remove(descriptor);
+            }
+
+            // Re-add with test configuration
+            services.AddGerda(options =>
+            {
+                options.ConfigBasePath = gerdaOptions.ConfigBasePath;
+                options.UseMockMlPredictions = gerdaOptions.UseMockMlPredictions;
+                options.EnableConfigReload = gerdaOptions.EnableConfigReload;
+            });
         });
 
         builder.UseEnvironment("Testing");

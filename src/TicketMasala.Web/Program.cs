@@ -66,10 +66,15 @@ builder.Services.AddMasalaDatabase(builder.Configuration, builder.Environment);
 builder.AddMasalaCore();
 
 // ============================================
-// GERDA AI SERVICES
+// GERDA AI SERVICES (Deep Module)
 // ============================================
 var configBasePath = TicketMasala.Web.Configuration.ConfigurationPaths.GetConfigBasePath(builder.Environment.ContentRootPath);
-builder.Services.AddGerdaServices(builder.Environment, configBasePath);
+builder.Services.AddGerda(options =>
+{
+    options.ConfigBasePath = configBasePath;
+    options.ModelPath = builder.Environment.ContentRootPath;
+});
+builder.Services.LogGerdaConfiguration(logger);
 
 // Configure OpenRouter HTTP client with retry policy
 builder.Services.AddHttpClient("OpenRouter", client =>
@@ -98,8 +103,8 @@ builder.Services.AddHttpClient("OpenRouter", client =>
     .WaitAndRetryAsync(3, retryAttempt =>
         TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
 
-// Register OpenAI service as singleton (reuses client, uses caching)
-builder.Services.AddSingleton<TicketMasala.Web.AI.IOpenAiService, TicketMasala.Web.AI.OpenAiService>();
+// Register OpenAI service for explainability
+builder.Services.AddTransient<TicketMasala.Web.AI.IOpenAiService, TicketMasala.Web.AI.OpenAiService>();
 builder.Services.AddScoped<TicketMasala.Domain.Services.IExplainabilityService, TicketMasala.Web.Engine.GERDA.Explainability.ExplainabilityService>();
 
 // ============================================

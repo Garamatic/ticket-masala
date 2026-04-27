@@ -163,98 +163,15 @@ public static class WebApplicationBuilderExtensions
         // ============================================
         // GERDA AI Services Configuration
         // ============================================
-        var configBasePath = TicketMasala.Web.Configuration.ConfigurationPaths.GetConfigBasePath(builder.Environment.ContentRootPath);
-        var gerdaConfigPath = Path.Combine(configBasePath, "masala_config.json");
+        // NOTE: GERDA is now registered as a deep module in Program.cs using AddGerda().
+        // This section is intentionally empty to avoid double registration.
+        // The deep module hides all stage services and strategies behind IGerda interface.
 
         builder.Services.AddSingleton<TicketMasala.Web.Engine.GERDA.Configuration.IDomainConfigurationService,
             TicketMasala.Web.Engine.GERDA.Configuration.DomainConfigurationService>();
         builder.Services.AddScoped<TicketMasala.Web.Engine.GERDA.Configuration.IDomainUiService,
             TicketMasala.Web.Engine.GERDA.Configuration.DomainUiService>();
 
-        if (File.Exists(gerdaConfigPath))
-        {
-            var gerdaConfigJson = File.ReadAllText(gerdaConfigPath);
-            var gerdaConfig = System.Text.Json.JsonSerializer.Deserialize<GerdaConfig>(gerdaConfigJson,
-                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-            if (gerdaConfig != null)
-            {
-                builder.Services.AddSingleton(gerdaConfig);
-                builder.Services.AddScoped<IGroupingService, GroupingService>();
-                builder.Services.AddScoped<IEstimatingService, EstimatingService>();
-
-                // Strategy Factory & Strategies (only if not already registered)
-                builder.Services.TryAddScoped<TicketMasala.Web.Engine.GERDA.Strategies.IStrategyFactory, TicketMasala.Web.Engine.GERDA.Strategies.StrategyFactory>();
-                builder.Services.AddScoped<IJobRankingStrategy, WeightedShortestJobFirstStrategy>();
-                builder.Services.AddScoped<IJobRankingStrategy, SeasonalPriorityStrategy>();
-                builder.Services.AddScoped<IEstimatingStrategy, CategoryBasedEstimatingStrategy>();
-
-                // DISPATCHING ARCHITECTURE (Issue #7: Consolidated Implementation)
-                // Old: Multiple competing paths (Strategy-based + Generic Engine)
-                // New: Single consolidated path using AgentMatchingEngine + IAffinityScorer plugins
-
-                // Core dispatching configuration
-                builder.Services.AddScoped<DispatchingConfig>(sp =>
-                {
-                    var gerdaConfig = sp.GetRequiredService<GerdaConfig>();
-                    return new DispatchingConfig
-                    {
-                        MaxCasesPerAgent = gerdaConfig.GerdaAI.Dispatching.MaxAssignedTicketsPerAgent,
-                        ConfidenceThreshold = 70m,
-                        OptimalUtilizationThreshold = 0.6m,
-                        SkillMatchWeight = 0.35m,
-                        WorkloadBalanceWeight = 0.30m,
-                        AffinityWeight = 0.25m,
-                        AvailabilityWeight = 0.10m
-                    };
-                });
-
-                // ML.NET Prediction Engine Pool (for affinity scoring)
-                var modelPath = Path.Combine(builder.Environment.ContentRootPath, "gerda_dispatch_model.zip");
-                builder.Services.AddPredictionEnginePool<TicketMasala.Web.Engine.GERDA.Models.AgentCustomerRating, TicketMasala.Web.Engine.GERDA.Models.RatingPrediction>()
-                    .FromFile(modelName: "GerdaDispatchModel", filePath: modelPath, watchForChanges: true);
-
-                // IAffinityScorer plugin (Matrix Factorization ML-based affinity scoring)
-                builder.Services.AddScoped<IAffinityScorer, MatrixFactorizationAffinityScorer>();
-
-                // Core Agent Matching Engine (with IAffinityScorer injected)
-                builder.Services.AddScoped<AgentMatchingEngine>(sp =>
-                {
-                    var config = sp.GetRequiredService<DispatchingConfig>();
-                    var logger = sp.GetRequiredService<ILogger<AgentMatchingEngine>>();
-                    var affinityScorer = sp.GetService<IAffinityScorer>(); // Optional for backward compatibility
-                    return new AgentMatchingEngine(config, logger, affinityScorer);
-                });
-
-                // Legacy strategy kept for fallback compatibility (optional)
-                builder.Services.AddScoped<IDispatchingStrategy, MatrixFactorizationDispatchingStrategy>();
-                builder.Services.AddScoped<IDispatchingStrategy, ZoneBasedDispatchingStrategy>();
-
-                builder.Services.AddScoped<TicketMasala.Web.Engine.GERDA.Features.IFeatureExtractor, TicketMasala.Web.Engine.GERDA.Features.DynamicFeatureExtractor>();
-
-                builder.Services.AddScoped<IRankingService, RankingService>();
-                builder.Services.AddScoped<IDispatchingStrategySelector, DomainDispatchingStrategySelector>();
-                builder.Services.AddScoped<IAutoDispatchPolicy, ScoreThresholdAutoDispatchPolicy>();
-                builder.Services.AddScoped<IProjectManagerRecommendationService, WorkloadAndSuccessProjectManagerRecommendationService>();
-
-                // CONSOLIDATED DISPATCHING SERVICE (Issue #7)
-                // Uses AgentMatchingEngine as primary path with IAffinityScorer plugin
-                builder.Services.AddScoped<IDispatchingService, DispatchingService>();
-                builder.Services.AddScoped<IDispatchBacklogService, DispatchBacklogService>();
-                builder.Services.AddScoped<IAnticipationService, AnticipationService>();
-                builder.Services.AddScoped<IKnowledgeService, KnowledgeService>();
-                builder.Services.AddScoped<IGerdaService, GerdaService>();
-                builder.Services.AddHostedService<GerdaBackgroundService>();
-
-                StrategyAutoRegistration.RegisterPluginStrategies(builder.Services);
-            }
-        }
-        else
-        {
-            builder.Services.AddScoped<IDispatchingService, NoOpDispatchingService>();
-            builder.Services.AddScoped<IKnowledgeService, NoOpKnowledgeService>();
-            builder.Services.AddScoped<IGerdaService, NoOpGerdaService>();
-        }
 
         // Rate Limiting
         builder.Services.AddRateLimiter(options =>

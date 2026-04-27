@@ -22,7 +22,7 @@ public class TicketBuilder
             Description = "Default test description for automated testing.",
             DomainId = "IT",
             TicketStatus = Status.Pending,
-            Status = "Pending",
+            Status = "New",
             CreationDate = DateTime.UtcNow,
             CustomFieldsJson = "{}"
         };

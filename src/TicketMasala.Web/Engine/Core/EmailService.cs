@@ -28,7 +28,7 @@ public class EmailService : IEmailService
             var smtpPort = int.Parse(_configuration["Email:SmtpPort"] ?? "587");
             var smtpUser = _configuration["Email:SmtpUser"];
             var smtpPass = _configuration["Email:SmtpPassword"];
-            var fromEmail = _configuration["Email:FromEmail"] ?? smtpUser;
+            var configuredFromEmail = _configuration["Email:FromEmail"];
             var fromName = _configuration["Email:FromName"] ?? "Ticket Masala";
 
             // If SMTP is not configured, log and return
@@ -39,6 +39,10 @@ public class EmailService : IEmailService
                 _logger.LogInformation("Email Body: {Body}", body);
                 return;
             }
+
+            var fromEmail = string.IsNullOrWhiteSpace(configuredFromEmail)
+                ? smtpUser
+                : configuredFromEmail;
 
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(fromName, fromEmail));

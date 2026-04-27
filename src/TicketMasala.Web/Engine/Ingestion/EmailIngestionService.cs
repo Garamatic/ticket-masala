@@ -60,6 +60,12 @@ public class EmailIngestionService : BackgroundService
             return;
         }
 
+        if (string.IsNullOrWhiteSpace(settings.Username) || string.IsNullOrWhiteSpace(settings.Password))
+        {
+            _logger.LogWarning("Email settings missing credentials, skipping ingestion.");
+            return;
+        }
+
         _logger.LogInformation("Connecting to IMAP server {Host}:{Port}...", settings.Host, settings.Port);
 
         try
@@ -76,6 +82,11 @@ public class EmailIngestionService : BackgroundService
 
             // Open Inbox
             var inbox = client.Inbox;
+            if (inbox == null)
+            {
+                _logger.LogWarning("IMAP inbox folder unavailable, skipping ingestion cycle.");
+                return;
+            }
             await inbox.OpenAsync(FolderAccess.ReadWrite, stoppingToken);
 
             // Search for unread messages
@@ -95,7 +106,7 @@ public class EmailIngestionService : BackgroundService
                 _logger.LogInformation("Processing email: {Subject} from {From}", message.Subject, message.From);
 
                 var emailContent = new EmailContent(
-                    message.Subject,
+                    message.Subject ?? "(no subject)",
                     message.TextBody ?? message.HtmlBody ?? "",
                     message.From.ToString());
 

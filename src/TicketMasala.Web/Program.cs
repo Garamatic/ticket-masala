@@ -1,21 +1,20 @@
-using TicketMasala.Web;
-using TicketMasala.Web.Data;
-using TicketMasala.Domain.Entities;
-using TicketMasala.Web.Tenancy;
-using TicketMasala.Web.Extensions;
-using TicketMasala.Web.Configuration;
-
-using TicketMasala.Web.Health;
-using TicketMasala.Web.Middleware;
+using System.IO;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.RateLimiting;
-using System.Threading.RateLimiting;
-using Microsoft.AspNetCore.Localization;
-using System.IO;
-using WebOptimizer;
 using Prometheus;
+using TicketMasala.Domain.Entities;
+using TicketMasala.Web;
+using TicketMasala.Web.Configuration;
+using TicketMasala.Web.Data;
+using TicketMasala.Web.Extensions;
+using TicketMasala.Web.Health;
+using TicketMasala.Web.Middleware;
+using TicketMasala.Web.Tenancy;
+using WebOptimizer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,7 +52,7 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 // TENANT PLUGIN SYSTEM
 // ============================================
 var pluginPath = Environment.GetEnvironmentVariable("MASALA_PLUGINS_PATH");
-TenantPluginLoader.LoadPlugins(builder, pluginPath ?? "");
+TenantPluginLoader.LoadPlugins(builder, pluginPath ?? "", logger);
 
 // ============================================
 // DATABASE CONFIGURATION

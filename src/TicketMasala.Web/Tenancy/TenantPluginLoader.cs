@@ -31,7 +31,8 @@ public static class TenantPluginLoader
     /// </summary>
     /// <param name="builder">The web application builder.</param>
     /// <param name="pluginPath">Path to directory containing plugin DLLs.</param>
-    public static void LoadPlugins(WebApplicationBuilder builder, string pluginPath)
+    /// <param name="logger">Optional logger for diagnostic messages.</param>
+    public static void LoadPlugins(WebApplicationBuilder builder, string pluginPath, ILogger? logger = null)
     {
         if (string.IsNullOrEmpty(pluginPath) || !Directory.Exists(pluginPath))
         {
@@ -44,12 +45,9 @@ public static class TenantPluginLoader
             {
                 LoadPluginAssembly(builder, dllPath);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Plugin loading errors are silently ignored during startup.
-                // A diagnostic logger would be needed here, but BuildServiceProvider()
-                // during service registration is an anti-pattern that causes
-                // duplicate singleton initialization issues.
+                logger?.LogError(ex, "Failed to load plugin from {DllPath}", dllPath);
             }
         }
     }

@@ -309,6 +309,7 @@ public class TicketController : Controller
         ViewBag.DomainId = context?.DomainId ?? "IT";
         ViewBag.EntityLabels = context?.EntityLabels;
         ViewBag.CustomFields = context?.CustomFields;
+        ViewBag.WorkItemTypeCode = context?.WorkItemTypeCode;
         ViewBag.CustomFieldValues = context?.CustomFieldValues ?? new Dictionary<string, object>();
 
         return View(viewModel);

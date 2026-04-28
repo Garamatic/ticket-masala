@@ -1,47 +1,39 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 using TicketMasala.Domain.Common;
-using TicketMasala.Domain.Entities;
-using TicketMasala.Web;
-using TicketMasala.Web.Abstractions;
-using TicketMasala.Web.AI;
-using TicketMasala.Web.Data;
-using TicketMasala.Web.Engine.Compiler;
-using TicketMasala.Web.Engine.Core;
-using TicketMasala.Web.Engine.GERDA;
-using TicketMasala.Web.Engine.GERDA.Configuration;
-using TicketMasala.Web.Engine.GERDA.Tickets;
-using TicketMasala.Web.Engine.Ingestion;
-using TicketMasala.Web.Engine.Ingestion.Background;
-using TicketMasala.Web.Engine.Projects;
+using TicketMasala.Web.Modules.Tickets;
 using TicketMasala.Web.Orchestrators;
-using TicketMasala.Web.ViewModels.Customers;
-using TicketMasala.Web.ViewModels.Projects;
 using TicketMasala.Web.ViewModels.Tickets;
 
 namespace TicketMasala.Web.Controllers;
 
 /// <summary>
 /// Main controller for ticket CRUD operations (Create, Read, Update, Detail).
+/// Refactored to use ITicketModule deep module for business operations.
 /// </summary>
 [Authorize]
 public class TicketController : Controller
 {
-    private readonly ITicketOrchestrator _orchestrator;
+    private readonly ITicketModule _ticketModule;
+    private readonly ITicketOrchestrator _orchestrator; // Kept for UI context operations
     private readonly ILogger<TicketController> _logger;
 
     public TicketController(
+        ITicketModule ticketModule,
         ITicketOrchestrator orchestrator,
         ILogger<TicketController> logger)
     {
+        _ticketModule = ticketModule;
         _orchestrator = orchestrator;
         _logger = logger;
     }
 
     public async Task<IActionResult> Index(TicketSearchViewModel searchModel)
     {
+        // Use orchestrator for search (complex query with full DTOs)
+        // TODO: Migrate search to TicketModule once module supports full TicketSearchResultDto
         var result = await _orchestrator.SearchTicketsAsync(searchModel, User);
 
         ViewBag.SavedFilters = result.SavedFilters;
@@ -56,16 +48,14 @@ public class TicketController : Controller
         if (id == null)
             return NotFound();
 
-        TicketDetailsViewModel? viewModel;
-        try
-        {
-            viewModel = await _orchestrator.GetTicketDetailsAsync(id.Value, User);
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return Forbid();
-        }
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+        var result = await _ticketModule.GetDetailsAsync(id.Value, userId);
 
+        if (!result.IsSuccess)
+            return NotFound();
+
+        // Keep orchestrator for UI context (domain config, custom fields, etc.)
+        var viewModel = await _orchestrator.GetTicketDetailsAsync(id.Value, User);
         if (viewModel == null)
             return NotFound();
 
@@ -85,6 +75,7 @@ public class TicketController : Controller
     {
         try
         {
+            // Keep using orchestrator for AI features until those are also modularized
             var summary = await _orchestrator.GenerateAiSummaryAsync(ticketId);
             return Json(new { success = true, summary });
         }
@@ -105,6 +96,7 @@ public class TicketController : Controller
     [HttpGet]
     public async Task<IActionResult> Create(Guid? projectGuid = null)
     {
+        // Keep orchestrator for UI context
         var context = await _orchestrator.GetCreateContextAsync(projectGuid, User);
 
         ViewBag.Employees = context.Employees;
@@ -132,26 +124,50 @@ public class TicketController : Controller
         string? domainId,
         string? workItemTypeCode)
     {
-        // Input validation for form UX (Orchestrator has defensive validation as well)
+        // Input validation for form UX
         if (string.IsNullOrWhiteSpace(description))
             ModelState.AddModelError("description", "Description is required");
-        if (string.IsNullOrWhiteSpace(customerId))
+
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+        var roles = User.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList();
+
+        // Auto-assign customer for customer users
+        if (User.IsInRole(Constants.RoleCustomer) && !string.IsNullOrEmpty(userId))
         {
-            // Only require customerId for non-customer users (customers are auto-assigned)
-            if (!User.IsInRole(Constants.RoleCustomer))
-            {
-                ModelState.AddModelError("customerId", "Customer is required");
-            }
+            customerId = userId;
+        }
+
+        if (string.IsNullOrWhiteSpace(customerId) && !User.IsInRole(Constants.RoleCustomer))
+        {
+            ModelState.AddModelError("customerId", "Customer is required");
         }
 
         if (ModelState.IsValid)
         {
-            var result = await _orchestrator.CreateTicketAsync(
-                description, customerId, responsibleId, projectGuid, completionTarget, domainId, workItemTypeCode, Request.Form, User);
+            // Build custom fields from form
+            var customFields = Request.Form
+                .Where(x => x.Key.StartsWith("customFields["))
+                .ToDictionary(
+                    x => x.Key.Replace("customFields[", "").Replace("]", ""),
+                    x => x.Value.ToString());
+
+            var command = new CreateTicketCommand(
+                description,
+                customerId,
+                responsibleId,
+                projectGuid,
+                completionTarget,
+                domainId,
+                workItemTypeCode,
+                customFields,
+                userId,
+                roles);
+
+            var result = await _ticketModule.CreateAsync(command);
 
             if (result.IsSuccess)
             {
-                TempData["Success"] = result.SuccessMessage;
+                TempData["Success"] = "Ticket created successfully! GERDA AI has processed the ticket.";
                 return RedirectToAction("Index", "TicketSearch");
             }
 
@@ -164,9 +180,6 @@ public class TicketController : Controller
         ViewBag.Projects = context.Projects;
         ViewBag.Customers = context.Customers;
         ViewBag.IsCustomer = context.IsCustomer;
-
-        // We might need to preserve the user's selected domain if possible, but for simplicity we reload default or let view handle it.
-        // Context has DomainId from config/defaults.
         ViewBag.DomainId = context.DomainId;
         ViewBag.EntityLabels = context.EntityLabels;
         ViewBag.WorkItemTypes = context.WorkItemTypes;
@@ -185,6 +198,7 @@ public class TicketController : Controller
         if (id == null)
             return NotFound();
 
+        // Keep orchestrator for UI context and view model construction
         Facades.TicketEditContext? context;
         try
         {
@@ -203,7 +217,6 @@ public class TicketController : Controller
         if (context == null)
             return NotFound();
 
-        // Pass ValidStatuses if available (Orchestrator should populate it)
         if (context.ValidStatuses != null)
         {
             ViewBag.ValidStatuses = context.ValidStatuses;
@@ -227,7 +240,28 @@ public class TicketController : Controller
 
         if (ModelState.IsValid)
         {
-            var result = await _orchestrator.UpdateTicketAsync(id, viewModel, Request.Form, User);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+            var roles = User.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList();
+
+            // Build custom fields from form
+            var customFields = Request.Form
+                .Where(x => x.Key.StartsWith("customFields["))
+                .ToDictionary(
+                    x => x.Key.Replace("customFields[", "").Replace("]", ""),
+                    x => x.Value.ToString());
+
+            var command = new UpdateTicketCommand(
+                id,
+                viewModel.Description,
+                viewModel.TicketStatus.ToString(),
+                viewModel.CompletionTarget,
+                viewModel.CustomerId ?? string.Empty,
+                viewModel.ProjectGuid,
+                customFields,
+                userId,
+                roles);
+
+            var result = await _ticketModule.UpdateAsync(command);
 
             if (result.IsSuccess)
             {
@@ -238,10 +272,10 @@ public class TicketController : Controller
         }
 
         // Reload context
-        viewModel.ResponsibleUsers = (await _orchestrator.GetCreateContextAsync(null, User)).Employees?.ToList() ?? new List<SelectListItem>();
-        // Note: We might want a specialized Reload method in Orchestrator that returns ViewModel ready lists.
-        // reusing GetCreateContextAsync for lists is a bit hacky but works for employees/projects/customers.
-        // But GetEditReloadContextAsync is better.
+        var listsContext = await _orchestrator.GetCreateContextAsync(viewModel.ProjectGuid, User);
+        viewModel.ResponsibleUsers = listsContext.Employees?.ToList() ?? new List<SelectListItem>();
+        viewModel.CustomerList = listsContext.Customers?.ToList() ?? new List<SelectListItem>();
+        viewModel.ProjectList = listsContext.Projects?.ToList() ?? new List<SelectListItem>();
 
         var context = await _orchestrator.GetEditReloadContextAsync(id, User);
 
@@ -250,24 +284,10 @@ public class TicketController : Controller
             ViewBag.ValidStatuses = context.ValidStatuses;
         }
 
-        // We also need to repopulate lists in ViewModel if they are null.
-        // Orchestrator.UpdateTicketAsync doesn't return a ViewModel.
-        // We have to manually repopulate.
-        // Since GetEditReloadContextAsync returns context, does it have lists?
-        // TicketEditContext definition shows it DOES NOT have lists for ViewModel properties (ResponsibleUsers, etc).
-        // It has ValidStatuses.
-        // So we need to fetch lists.
-        // I'll add a helper in Orchestrator or just use GetCreateContextAsync logic here.
-        // Actually, let's just fetch them via GetCreateContextAsync for simplicity, as I did above.
-        var listsContext = await _orchestrator.GetCreateContextAsync(viewModel.ProjectGuid, User);
-        viewModel.ResponsibleUsers = listsContext.Employees?.ToList() ?? new List<SelectListItem>();
-        viewModel.CustomerList = listsContext.Customers?.ToList() ?? new List<SelectListItem>();
-        viewModel.ProjectList = listsContext.Projects?.ToList() ?? new List<SelectListItem>();
-
         ViewBag.DomainId = context.DomainId;
         ViewBag.EntityLabels = context.EntityLabels;
         ViewBag.CustomFields = context.CustomFields;
-        ViewBag.CustomFieldValues = new Dictionary<string, object>(); // Reset or preserve?
+        ViewBag.CustomFieldValues = new Dictionary<string, object>();
 
         return View(viewModel);
     }

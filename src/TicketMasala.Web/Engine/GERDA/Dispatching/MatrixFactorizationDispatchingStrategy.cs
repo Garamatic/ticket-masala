@@ -13,7 +13,15 @@ namespace TicketMasala.Web.Engine.GERDA.Dispatching;
 
 using Microsoft.Extensions.ML;
 
-// ...
+/// <summary>
+/// LEGACY: Strategy-based dispatching implementation.
+/// </summary>
+/// <remarks>
+/// DEPRECATED: This strategy is replaced by the consolidated AgentMatchingEngine + IAffinityScorer architecture.
+/// The ML logic has been extracted into MatrixFactorizationAffinityScorer which is used by AgentMatchingEngine.
+/// This class is kept for backward compatibility only and will be removed in a future release.
+/// </remarks>
+[Obsolete("Use AgentMatchingEngine with MatrixFactorizationAffinityScorer instead. This strategy will be removed in a future release.")]
 public class MatrixFactorizationDispatchingStrategy : IDispatchingStrategy
 {
     public string Name => "MatrixFactorization";

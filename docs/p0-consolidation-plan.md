@@ -26,6 +26,12 @@ from concurrent migrations. This has been achieved:
    - Proper error handling and observability via queue depth
    - Removed `IServiceScopeFactory` dependency from `TicketModule`
 
+4. **Dispatching Consolidation**: ✅ COMPLETE
+   - `AgentMatchingEngine` is now the primary dispatching path
+   - `MatrixFactorizationAffinityScorer` provides ML-based affinity scoring
+   - Legacy `MatrixFactorizationDispatchingStrategy` marked `[Obsolete]`
+   - Single consolidated architecture: AgentMatchingEngine + IAffinityScorer plugins
+
 ### Risk Reduction
 
 | Before P0 | After P0 |
@@ -35,13 +41,14 @@ from concurrent migrations. This has been achieved:
 | Confusing dual orchestration pattern | Clear deprecation with migration path |
 | Silent pipeline failures | Proper result types (GerdaOutcome) |
 | Fire-and-forget Task.Run (unobservable failures) | Domain event + background queue (observable, retryable) |
+| Dual dispatching paths (Strategy vs Engine) | Single AgentMatchingEngine + plugin architecture |
 
 ### Next Steps
 
-**P1 (Hardening)** - Updated after fire-and-forget fix:
+**P1 (Hardening)** - Current Status:
 - ✅ Replace Task.Run fire-and-forget with domain events + background service **COMPLETE**
+- ✅ Consolidate dispatching to `AgentMatchingEngine` single path **COMPLETE**
 - ⏳ Migrate `TicketController` from `ITicketOrchestrator` to `ITicketModule`
-- ⏳ Consolidate dispatching to `AgentMatchingEngine` single path
 - ⏳ Add OpenTelemetry tracing and outbox metrics
 
 **P2 (Domain Quality)**:

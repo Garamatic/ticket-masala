@@ -1,18 +1,53 @@
+using System.Security.Claims;
+using TicketMasala.Domain.Configuration;
+using TicketMasala.Web.Facades;
+using TicketMasala.Web.ViewModels.Tickets;
+
 namespace TicketMasala.Web.Modules.Tickets;
 
+/// <summary>
+/// Deep module for all ticket operations.
+/// Consolidates lifecycle, query, and UI context behind a single interface.
+/// </summary>
+/// <remarks>
+/// P0 Consolidation: Replaces ITicketOrchestrator. All new code should use this interface.
+/// </remarks>
 public interface ITicketModule
 {
-    // Core lifecycle
+    // ─── Core lifecycle (write operations) ───────────────────────────────────
+
     Task<TicketResult<Guid>> CreateAsync(CreateTicketCommand command, CancellationToken ct = default);
     Task<TicketResult<Unit>> UpdateAsync(UpdateTicketCommand command, CancellationToken ct = default);
     Task<TicketResult<Unit>> AssignAsync(AssignTicketCommand command, CancellationToken ct = default);
     Task<TicketResult<Unit>> TransitionStatusAsync(TransitionStatusCommand command, CancellationToken ct = default);
 
-    // Query (read-only, returns DTOs not entities)
+    // ─── Query operations ────────────────────────────────────────────────────
+
     Task<TicketResult<TicketDetailsDto>> GetDetailsAsync(Guid ticketId, string requestingUserId, IEnumerable<string> requestingUserRoles, CancellationToken ct = default);
     Task<TicketSearchResult> SearchAsync(TicketSearchQuery query, CancellationToken ct = default);
 
-    // This is the only public surface - everything else is internal
+    // ─── UI context (read operations for views) ──────────────────────────────
+
+    /// <summary>Full search including saved filters and role-based customer scoping.</summary>
+    Task<TicketSearchViewModel> SearchForUiAsync(TicketSearchViewModel searchModel, ClaimsPrincipal user, CancellationToken ct = default);
+
+    /// <summary>Detail page view model + domain context for polymorphic UI.</summary>
+    Task<(TicketDetailsViewModel? ViewModel, TicketDetailContext Context)> GetDetailPageAsync(Guid ticketId, ClaimsPrincipal user, CancellationToken ct = default);
+
+    /// <summary>AI-generated summary for a ticket.</summary>
+    Task<string> GenerateAiSummaryAsync(Guid ticketId, CancellationToken ct = default);
+
+    /// <summary>Lists and domain config for the ticket creation form.</summary>
+    Task<TicketCreateContext> GetCreateContextAsync(Guid? projectGuid, ClaimsPrincipal user, CancellationToken ct = default);
+
+    /// <summary>Full edit context including valid status transitions and custom field values.</summary>
+    Task<TicketEditContext?> GetEditContextAsync(Guid ticketId, ClaimsPrincipal user, CancellationToken ct = default);
+
+    /// <summary>Reloads edit context when form validation fails (minimal set of lists + domain config).</summary>
+    Task<TicketCreateContext> GetCreateReloadContextAsync(Guid? projectGuid, ClaimsPrincipal user, CancellationToken ct = default);
+
+    /// <summary>Reloads edit context on failure with valid statuses and field values.</summary>
+    Task<TicketEditContext> GetEditReloadContextAsync(Guid ticketId, ClaimsPrincipal user, CancellationToken ct = default);
 }
 
 // Result type for explicit success/failure

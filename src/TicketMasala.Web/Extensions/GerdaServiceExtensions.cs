@@ -176,13 +176,18 @@ public static class GerdaServiceExtensions
     {
         var modelPath = Path.Combine(options.ModelPath ?? "", "gerda_dispatch_model.zip");
 
-        // Only register MatrixFactorization if model file exists or not using mock predictions
+        // LEGACY STRATEGIES (Issue #7):
+        // These strategies are deprecated in favor of the consolidated AgentMatchingEngine architecture.
+        // They are registered only for backward compatibility as fallback options in DispatchingService.
+        // The primary dispatching path uses AgentMatchingEngine + IAffinityScorer plugins.
+
+        // Register MatrixFactorization as legacy fallback (deprecated)
         if (File.Exists(modelPath) && !options.UseMockMlPredictions)
         {
             services.AddScoped<IDispatchingStrategy, MatrixFactorizationDispatchingStrategy>();
         }
 
-        // Always register ZoneBased as fallback
+        // Register ZoneBased as legacy fallback
         services.AddScoped<IDispatchingStrategy, ZoneBasedDispatchingStrategy>();
     }
 

@@ -1,7 +1,10 @@
+using System.Security.Claims;
 using Microsoft.Extensions.DependencyInjection;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Engine.GERDA;
+using TicketMasala.Web.Facades;
 using TicketMasala.Web.Modules.Tickets.Internal;
+using TicketMasala.Web.ViewModels.Tickets;
 
 namespace TicketMasala.Web.Modules.Tickets;
 
@@ -140,5 +143,51 @@ internal class TicketModule : ITicketModule
     public async Task<TicketSearchResult> SearchAsync(TicketSearchQuery query, CancellationToken ct)
     {
         return await _queries.SearchAsync(query, ct);
+    }
+
+    // ─── UI context methods (P1: Migrate from ITicketOrchestrator) ───────────
+    // These methods provide the UI-specific context needed by controllers.
+    // They will replace the orchestrator calls once fully implemented.
+
+    public Task<TicketSearchViewModel> SearchForUiAsync(TicketSearchViewModel searchModel, ClaimsPrincipal user, CancellationToken ct)
+    {
+        // P1: Migrate from ITicketOrchestrator.SearchTicketsAsync
+        throw new NotImplementedException("SearchForUiAsync is planned for P1. Use ITicketOrchestrator for now.");
+    }
+
+    public Task<(TicketDetailsViewModel? ViewModel, TicketDetailContext Context)> GetDetailPageAsync(Guid ticketId, ClaimsPrincipal user, CancellationToken ct)
+    {
+        // P1: Migrate from ITicketOrchestrator.GetTicketDetailsAsync + GetTicketDetailContextAsync
+        throw new NotImplementedException("GetDetailPageAsync is planned for P1. Use ITicketOrchestrator for now.");
+    }
+
+    public Task<string> GenerateAiSummaryAsync(Guid ticketId, CancellationToken ct)
+    {
+        // P1: Migrate from ITicketOrchestrator.GenerateAiSummaryAsync
+        throw new NotImplementedException("GenerateAiSummaryAsync is planned for P1. Use ITicketOrchestrator for now.");
+    }
+
+    public Task<TicketCreateContext> GetCreateContextAsync(Guid? projectGuid, ClaimsPrincipal user, CancellationToken ct)
+    {
+        // P1: Migrate from ITicketOrchestrator.GetCreateContextAsync
+        throw new NotImplementedException("GetCreateContextAsync is planned for P1. Use ITicketOrchestrator for now.");
+    }
+
+    public Task<TicketEditContext?> GetEditContextAsync(Guid ticketId, ClaimsPrincipal user, CancellationToken ct)
+    {
+        // P1: Migrate from ITicketOrchestrator.GetEditContextAsync
+        throw new NotImplementedException("GetEditContextAsync is planned for P1. Use ITicketOrchestrator for now.");
+    }
+
+    public Task<TicketCreateContext> GetCreateReloadContextAsync(Guid? projectGuid, ClaimsPrincipal user, CancellationToken ct)
+    {
+        // P1: Migrate from ITicketOrchestrator.GetCreateReloadContextAsync
+        throw new NotImplementedException("GetCreateReloadContextAsync is planned for P1. Use ITicketOrchestrator for now.");
+    }
+
+    public Task<TicketEditContext> GetEditReloadContextAsync(Guid ticketId, ClaimsPrincipal user, CancellationToken ct)
+    {
+        // P1: Migrate from ITicketOrchestrator.GetEditReloadContextAsync
+        throw new NotImplementedException("GetEditReloadContextAsync is planned for P1. Use ITicketOrchestrator for now.");
     }
 }

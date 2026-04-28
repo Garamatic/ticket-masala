@@ -19,7 +19,6 @@ namespace TicketMasala.Web.Handlers.DomainEvents;
 /// Benefits over Task.Run:
 /// - Observable queue depth (IBackgroundTaskQueue.QueuedCount)
 /// - Proper error handling and logging
-/// - Retry with exponential backoff
 /// - Graceful shutdown support (work items complete before app exit)
 /// </remarks>
 public class TicketCreatedGerdaHandler : IDomainEventHandler<TicketCreatedEvent>

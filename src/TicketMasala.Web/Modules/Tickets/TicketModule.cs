@@ -172,8 +172,10 @@ internal class TicketModule : ITicketModule
         if (searchModel == null)
             searchModel = new TicketSearchViewModel();
 
-        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var isCustomer = user.IsInRole(Constants.RoleCustomer);
+        // Guard against null user (can happen in test scenarios)
+        var safeUser = user ?? new ClaimsPrincipal(new ClaimsIdentity());
+        var userId = safeUser.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var isCustomer = safeUser.IsInRole(Constants.RoleCustomer);
 
         // Apply customer filter for customer users
         if (isCustomer && !string.IsNullOrEmpty(userId))

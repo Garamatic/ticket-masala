@@ -268,10 +268,19 @@ public class OutboxPublisher : BackgroundService
         {
             stopwatch.Stop();
 
-            // Transient failure: may succeed on retry
+            // Transient failure: may succeed on retry (if under max retries)
             message.RetryCount++;
             message.Error = ex.Message[..Math.Min(ex.Message.Length, 500)];
-            message.ScheduledRetryAt = DateTime.UtcNow.Add(_options.RetryDelay);
+
+            // Only schedule retry if we haven't exceeded max retries
+            if (message.RetryCount < _options.MaxRetries)
+            {
+                message.ScheduledRetryAt = DateTime.UtcNow.Add(_options.RetryDelay);
+            }
+            else
+            {
+                message.ScheduledRetryAt = null; // No more retries scheduled
+            }
 
             MessagesRetriedCounter.Add(1,
                 new KeyValuePair<string, object?>("event_type", message.EventType),

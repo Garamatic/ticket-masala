@@ -153,6 +153,13 @@ public class AnticipationService : IAnticipationService
         var totalLoad = currentBacklog + weeklyPredictedInflow;
         var weeklyCapacity = dailyCapacity * 7;
 
+        // Guard against division by zero (no capacity = no risk calculation possible)
+        if (weeklyCapacity == 0)
+        {
+            _logger.LogWarning("GERDA-A: Cannot calculate utilization - zero team capacity (no employees configured)");
+            return null;
+        }
+
         // Check if we're exceeding capacity threshold
         var utilizationRate = totalLoad / weeklyCapacity;
         var riskThreshold = _config.GerdaAI.Anticipation.RiskThresholdPercentage / 100.0;

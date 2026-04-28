@@ -1,3 +1,4 @@
+using TicketMasala.Domain;
 using TicketMasala.Domain.Entities;
 
 namespace TicketMasala.Web.Modules.Tickets.Internal;
@@ -18,7 +19,7 @@ internal class TicketAuthorizationService : ITicketAuthorizationService
     public bool CanAssign(Ticket ticket, string userId, IReadOnlyList<string> roles)
     {
         // Must have role AND ticket must be in assignable state
-        var hasRole = roles.Contains("Admin") || roles.Contains("Employee");
+        var hasRole = roles.Contains(Constants.RoleAdmin) || roles.Contains(Constants.RoleEmployee);
         return hasRole && ticket.CanBeAssigned();
     }
 

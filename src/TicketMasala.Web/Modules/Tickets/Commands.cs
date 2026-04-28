@@ -9,8 +9,7 @@ public record CreateTicketCommand(
     string? DomainId,
     string? WorkItemTypeCode,
     Dictionary<string, string> CustomFields,
-    string CreatedByUserId,
-    IReadOnlyList<string> CreatedByRoles);
+    string CreatedByUserId);
 
 public record UpdateTicketCommand(
     Guid TicketId,

@@ -132,7 +132,6 @@ public class TicketController : Controller
             ModelState.AddModelError("description", "Description is required");
 
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
-        var roles = User.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList();
 
         // Auto-assign customer for customer users
         if (User.IsInRole(Constants.RoleCustomer) && !string.IsNullOrEmpty(userId))
@@ -163,8 +162,7 @@ public class TicketController : Controller
                 domainId,
                 workItemTypeCode,
                 customFields,
-                userId,
-                roles);
+                userId);
 
             var result = await _ticketModule.CreateAsync(command);
 

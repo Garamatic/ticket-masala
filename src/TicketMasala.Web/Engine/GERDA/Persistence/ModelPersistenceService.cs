@@ -140,8 +140,9 @@ public class ModelPersistenceService : IModelPersistenceService
             var json = File.ReadAllText(metadataPath);
             return System.Text.Json.JsonSerializer.Deserialize<ModelInfo>(json);
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogWarning(ex, "Failed to load model metadata from {Path}", metadataPath);
             return null;
         }
     }

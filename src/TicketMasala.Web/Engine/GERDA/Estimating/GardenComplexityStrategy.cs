@@ -41,9 +41,10 @@ public class GardenComplexityStrategy : IEstimatingStrategy
                 }
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // Fallback on error
+            // Graceful degradation: return default complexity on parsing error
+            System.Diagnostics.Debug.WriteLine($"Garden complexity estimation failed: {ex.Message}");
             return 5;
         }
 

@@ -70,6 +70,8 @@ public class NullDispatchingService : IDispatchingService
 /// </summary>
 public class NullKnowledgeService : IKnowledgeService
 {
+    public bool IsEnabled => false;
+
     public Task<List<KnowledgeSuggestion>> GetSuggestedArticlesAsync(TicketMasala.Domain.Entities.Ticket ticket, int maxSuggestions = 3)
     {
         return Task.FromResult(new List<KnowledgeSuggestion>());

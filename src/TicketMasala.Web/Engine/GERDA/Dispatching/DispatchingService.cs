@@ -152,7 +152,7 @@ public class DispatchingService : IDispatchingService
         var employees = employeesTask.Result;
         var agentWorkloads = workloadTask.Result;
 
-        // Customer is loaded separately (FindAsync returns ValueTask, not Task)
+        // Load customer separately (cannot be parallelized with other queries as it depends on ticket.CreatorGuid)
         var customer = await _context.Users.FindAsync(ticket.CreatorGuid.ToString());
 
         if (employees.Count == 0)
@@ -369,8 +369,9 @@ public class DispatchingService : IDispatchingService
         {
             return System.Text.Json.JsonSerializer.Deserialize<List<string>>(specializationsJson) ?? new List<string>();
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogDebug(ex, "Failed to parse specializations JSON: {Json}", specializationsJson);
             return new List<string>();
         }
     }
@@ -386,7 +387,7 @@ public class DispatchingService : IDispatchingService
         ApplicationUser? customer)
     {
         // Calculate multi-factor score (adapted from original MatrixFactorizationDispatchingStrategy)
-        var multiFactorScore = CalculateMultiFactorScore(mlAffinityScore, employee, customer, ftsScore);
+        var multiFactorScore = CalculateMultiFactorScore(mlAffinityScore, ftsScore);
 
         // Apply workload penalty
         var adjustedScore = multiFactorScore * (1.0 - (workloadPenalty * 0.5));
@@ -444,7 +445,7 @@ public class DispatchingService : IDispatchingService
         return result;
     }
 
-    private double CalculateMultiFactorScore(double mlScore, Employee employee, ApplicationUser? customer, double ftsScore)
+    private double CalculateMultiFactorScore(double mlScore, double ftsScore)
     {
         // Start with ML affinity score (0-5)
         var baseScore = mlScore;

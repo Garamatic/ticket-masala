@@ -84,8 +84,11 @@ public static class AffinityScoring
 
             return 2.0; // No match, but not disqualifying
         }
-        catch
+        catch (Exception ex)
         {
+            // Graceful degradation: return neutral score on parsing error
+            // This ensures dispatching continues even if specializations data is malformed
+            System.Diagnostics.Debug.WriteLine($"Expertise score calculation failed: {ex.Message}");
             return 2.5; // Neutral on error
         }
     }
@@ -96,12 +99,9 @@ public static class AffinityScoring
     /// </summary>
     public static double CalculateLanguageScore(Employee agent, ApplicationUser? customer)
     {
-        if (customer == null || string.IsNullOrWhiteSpace(agent.Language))
-            return 3.0; // Neutral if no data
-
-        // For now, we don't have customer language in the model
-        // So we return neutral score
-        if (customer == null || string.IsNullOrWhiteSpace(agent.Language) || string.IsNullOrWhiteSpace(customer.Language))
+        if (customer == null ||
+            string.IsNullOrWhiteSpace(agent.Language) ||
+            string.IsNullOrWhiteSpace(customer.Language))
             return 3.0; // Neutral if no data
 
         // Check for exact match
@@ -121,12 +121,9 @@ public static class AffinityScoring
     /// </summary>
     public static double CalculateGeographyScore(Employee agent, ApplicationUser? customer)
     {
-        if (customer == null || string.IsNullOrWhiteSpace(agent.Region))
-            return 3.0; // Neutral if no data
-
-        // For now, we don't have customer region in the model
-        // So we return neutral score
-        if (customer == null || string.IsNullOrWhiteSpace(agent.Region) || string.IsNullOrWhiteSpace(customer.Region))
+        if (customer == null ||
+            string.IsNullOrWhiteSpace(agent.Region) ||
+            string.IsNullOrWhiteSpace(customer.Region))
             return 3.0; // Neutral if no data
 
         // Check for exact match
@@ -163,9 +160,10 @@ public static class AffinityScoring
                 }
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // Fall through to use WorkType
+            // Graceful degradation: fall through to use WorkType when metadata parsing fails
+            System.Diagnostics.Debug.WriteLine($"Metadata extraction failed: {ex.Message}");
         }
 
         // Default to WorkType as category
@@ -200,8 +198,10 @@ public static class AffinityScoring
 
             return 2.0;
         }
-        catch
+        catch (Exception ex)
         {
+            // Graceful degradation: return neutral score on parsing error
+            System.Diagnostics.Debug.WriteLine($"Expertise score calculation failed: {ex.Message}");
             return 2.5;
         }
     }

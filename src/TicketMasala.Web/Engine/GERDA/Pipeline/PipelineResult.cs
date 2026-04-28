@@ -2,9 +2,7 @@ namespace TicketMasala.Web.Engine.GERDA.Pipeline;
 
 /// <summary>
 /// Represents the result of a pipeline execution, including per-stage status.
-/// 
-/// Issue #8: Pipeline Error Handling & Result Pattern
-/// This replaces the silent failure behavior with explicit error reporting.
+/// This replaces the silent failure behavior with explicit error reporting (Issue #8).
 /// </summary>
 public record PipelineResult
 {

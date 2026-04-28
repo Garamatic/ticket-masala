@@ -25,11 +25,7 @@ public interface IGerdaPipeline
 /// <summary>
 /// Default implementation of the GERDA pipeline.
 /// Executes stages sequentially, supporting both "continue on error" and "fail fast" modes.
-///
-/// Issue #8: Pipeline Error Handling & Result Pattern
-/// - Replaces silent failure with explicit PipelineResult
-/// - Supports per-stage status reporting
-/// - Configurable execution modes (ContinueOnError vs FailFast)
+/// Replaces silent failure with explicit PipelineResult (Issue #8).
 /// </summary>
 public class ConfigurableGerdaPipeline : IGerdaPipeline
 {

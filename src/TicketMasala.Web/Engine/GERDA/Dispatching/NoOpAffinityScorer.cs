@@ -8,6 +8,7 @@ namespace TicketMasala.Web.Engine.GERDA.Dispatching;
 /// </summary>
 public sealed class NoOpAffinityScorer : IAffinityScorer
 {
+    public string Name => "NoOp";
     public bool IsReady => false;
     public DateTime? LastTrained => null;
 

@@ -18,7 +18,7 @@ public class EstimatingStage : IGerdaStage
     }
 
     public string StageName => "Estimating";
-    public bool IsEnabled => true; // Always enabled
+    public bool IsEnabled => _estimatingService?.IsEnabled ?? false;
 
     public async Task ExecuteAsync(Guid ticketGuid, GerdaPipelineContext context)
     {

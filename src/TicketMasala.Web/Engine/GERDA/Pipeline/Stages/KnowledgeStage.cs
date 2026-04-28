@@ -24,7 +24,7 @@ public class KnowledgeStage : IGerdaStage
     }
 
     public string StageName => "Knowledge";
-    public bool IsEnabled => _knowledgeService != null;
+    public bool IsEnabled => _knowledgeService?.IsEnabled ?? false;
 
     public async Task ExecuteAsync(Guid ticketGuid, GerdaPipelineContext context)
     {

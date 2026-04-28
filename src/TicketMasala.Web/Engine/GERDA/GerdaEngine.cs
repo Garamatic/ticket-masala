@@ -89,7 +89,7 @@ internal sealed class GerdaEngine : IGerda
             if (effortPoints.HasValue)
             {
                 _logger.LogInformation("GERDA-E: Ticket {TicketGuid} estimated at {Points} effort points",
-                    ticketGuid, effortPoints.Value);
+                    ticketGuid, effortPoints);
             }
 
             // R - Ranking
@@ -97,8 +97,11 @@ internal sealed class GerdaEngine : IGerda
             if (_ranking.IsEnabled)
             {
                 priorityScore = await _ranking.CalculatePriorityAsync(ticketGuid);
-                _logger.LogInformation("GERDA-R: Ticket {TicketGuid} priority score: {Score}",
-                    ticketGuid, priorityScore.Value);
+                if (priorityScore.HasValue)
+                {
+                    _logger.LogInformation("GERDA-R: Ticket {TicketGuid} priority score: {Score}",
+                        ticketGuid, priorityScore.Value);
+                }
             }
 
             // D - Dispatching
@@ -179,9 +182,11 @@ internal sealed class GerdaEngine : IGerda
             ? new CancellationTokenSource(timeout.Value)
             : null;
 
-        var linkedToken = cts != null
-            ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token).Token
-            : cancellationToken;
+        using var linkedCts = cts != null
+            ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token)
+            : null;
+
+        var linkedToken = linkedCts?.Token ?? cancellationToken;
 
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
         var stageDetails = new Dictionary<GerdaStage, GerdaStageDetail>();

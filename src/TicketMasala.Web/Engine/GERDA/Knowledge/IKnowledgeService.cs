@@ -14,6 +14,11 @@ public interface IKnowledgeService
     /// <param name="maxSuggestions">Max number of suggestions to return</param>
     /// <returns>List of suggested KB articles with relevance scores</returns>
     Task<List<KnowledgeSuggestion>> GetSuggestedArticlesAsync(Ticket ticket, int maxSuggestions = 3);
+
+    /// <summary>
+    /// Check if knowledge base suggestions are enabled
+    /// </summary>
+    bool IsEnabled { get; }
 }
 
 public class KnowledgeSuggestion

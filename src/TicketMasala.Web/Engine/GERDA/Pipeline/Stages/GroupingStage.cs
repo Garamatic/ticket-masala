@@ -18,7 +18,7 @@ public class GroupingStage : IGerdaStage
     }
 
     public string StageName => "Grouping";
-    public bool IsEnabled => true; // Always enabled
+    public bool IsEnabled => _groupingService?.IsEnabled ?? false;
 
     public async Task ExecuteAsync(Guid ticketGuid, GerdaPipelineContext context)
     {

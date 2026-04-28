@@ -9,6 +9,11 @@ namespace TicketMasala.Web.Engine.GERDA.Dispatching;
 public interface IAffinityScorer
 {
     /// <summary>
+    /// Gets the name of this affinity scorer for diagnostics.
+    /// </summary>
+    string Name { get; }
+
+    /// <summary>
     /// Calculate affinity score between an agent and a ticket.
     /// </summary>
     /// <param name="employee">The agent/employee</param>

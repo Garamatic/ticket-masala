@@ -8,6 +8,11 @@ namespace TicketMasala.Web.Engine.GERDA.Knowledge;
 /// </summary>
 public class NoOpKnowledgeService : IKnowledgeService
 {
+    /// <summary>
+    /// Always returns false - this is a no-op implementation
+    /// </summary>
+    public bool IsEnabled => false;
+
     public Task<List<KnowledgeSuggestion>> GetSuggestedArticlesAsync(Ticket ticket, int maxSuggestions = 3)
     {
         return Task.FromResult(new List<KnowledgeSuggestion>());

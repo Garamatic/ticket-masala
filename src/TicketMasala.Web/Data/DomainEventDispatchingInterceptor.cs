@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using TicketMasala.Domain.Events;
@@ -13,8 +14,8 @@ public class DomainEventDispatchingInterceptor : SaveChangesInterceptor
 {
     private readonly IServiceProvider _serviceProvider;
 
-    // Store events per-context before save, dispatch after save
-    private readonly Dictionary<DbContext, List<IDomainEvent>> _pendingEvents = new();
+    // Instance-level storage - safe because DbContext and interceptor have same (scoped) lifetime
+    private readonly ConcurrentDictionary<DbContext, List<IDomainEvent>> _pendingEvents = new();
 
     public DomainEventDispatchingInterceptor(IServiceProvider serviceProvider)
     {
@@ -29,17 +30,11 @@ public class DomainEventDispatchingInterceptor : SaveChangesInterceptor
         var context = eventData.Context;
         if (context != null)
         {
-            // Collect domain events from all aggregates before saving
-            var events = context.ChangeTracker.Entries<IHasDomainEvents>()
-                .SelectMany(e => e.Entity.DomainEvents)
-                .ToList();
-
-            if (events.Any())
+            // Capture events before saving - they will be dispatched after successful save
+            var events = CaptureDomainEvents(context);
+            if (events.Count > 0)
             {
-                lock (_pendingEvents)
-                {
-                    _pendingEvents[context] = events;
-                }
+                _pendingEvents[context] = events;
             }
         }
 
@@ -52,37 +47,48 @@ public class DomainEventDispatchingInterceptor : SaveChangesInterceptor
         CancellationToken cancellationToken = default)
     {
         var context = eventData.Context;
-        if (context != null)
+        if (context != null && _pendingEvents.TryRemove(context, out var events))
         {
-            List<IDomainEvent>? events = null;
-            lock (_pendingEvents)
-            {
-                if (_pendingEvents.TryGetValue(context, out events))
-                {
-                    _pendingEvents.Remove(context);
-                }
-            }
-
-            if (events != null && events.Any())
-            {
-                // Get dispatcher from the service provider
-                var dispatcher = _serviceProvider.GetService<IDomainEventDispatcher>();
-                if (dispatcher != null)
-                {
-                    await dispatcher.DispatchAsync(events, cancellationToken);
-                }
-
-                // Clear events from aggregates
-                var aggregates = context.ChangeTracker.Entries<IHasDomainEvents>()
-                    .Select(e => e.Entity);
-
-                foreach (var aggregate in aggregates)
-                {
-                    aggregate.ClearDomainEvents();
-                }
-            }
+            await DispatchEventsAsync(events, context, cancellationToken);
         }
 
         return await base.SavedChangesAsync(eventData, result, cancellationToken);
+    }
+
+    private static List<IDomainEvent> CaptureDomainEvents(DbContext context)
+    {
+        var events = new List<IDomainEvent>();
+        var aggregates = context.ChangeTracker.Entries<IHasDomainEvents>();
+
+        foreach (var entry in aggregates)
+        {
+            var entityEvents = entry.Entity.DomainEvents;
+            if (entityEvents.Any())
+            {
+                events.AddRange(entityEvents);
+            }
+        }
+
+        return events;
+    }
+
+    private async Task DispatchEventsAsync(List<IDomainEvent> events, DbContext context, CancellationToken cancellationToken)
+    {
+        // Get dispatcher from the service provider
+        var dispatcher = _serviceProvider.GetService<IDomainEventDispatcher>();
+        if (dispatcher == null)
+            return;
+
+        await dispatcher.DispatchAsync(events, cancellationToken);
+
+        // Clear events only from aggregates that had events
+        var aggregates = context.ChangeTracker.Entries<IHasDomainEvents>();
+        foreach (var entry in aggregates)
+        {
+            if (entry.Entity.DomainEvents.Any())
+            {
+                entry.Entity.ClearDomainEvents();
+            }
+        }
     }
 }

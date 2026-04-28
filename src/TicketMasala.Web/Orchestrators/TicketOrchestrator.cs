@@ -204,18 +204,19 @@ public class TicketOrchestrator : ITicketOrchestrator
             // Track original status for transition validation
             var originalStatus = ticketToUpdate.TicketStatus;
 
-            // Update properties
+            // Validate status transition BEFORE modifying entity
+            // This must be done first because ValidateCanChangeStatus checks current TicketStatus
+            if (originalStatus != viewModel.TicketStatus)
+            {
+                ticketToUpdate.ValidateCanChangeStatus(userId, userRoles, viewModel.TicketStatus);
+            }
+
+            // Now safe to update properties
             ticketToUpdate.Description = viewModel.Description;
             ticketToUpdate.TicketStatus = viewModel.TicketStatus;
             ticketToUpdate.CompletionTarget = viewModel.CompletionTarget;
             ticketToUpdate.CustomerId = viewModel.CustomerId;
             ticketToUpdate.ProjectGuid = viewModel.ProjectGuid;
-
-            // Validate status transition if changed
-            if (originalStatus != viewModel.TicketStatus)
-            {
-                ticketToUpdate.ValidateCanChangeStatus(userId, userRoles, viewModel.TicketStatus);
-            }
 
             var domainId = ticketToUpdate.DomainId ?? _domainConfig.GetDefaultDomainId();
             var formDictionary = form.ToDictionary(x => x.Key, x => x.Value.ToString());

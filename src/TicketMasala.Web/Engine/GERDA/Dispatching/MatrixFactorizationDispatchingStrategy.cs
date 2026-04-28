@@ -506,7 +506,10 @@ public class MatrixFactorizationDispatchingStrategy : IDispatchingStrategy
             return false;
 
         // FTS5 query operators that could be used for injection
-        var ftsOperators = new[] { " AND ", " OR ", " NOT ", "NEAR", "^", "*", "(", ")", "-" };
+        // Note: Hyphen "-" is intentionally excluded as it's common in specialization names
+        // (e.g., "DevOps-Engineer"). A leading hyphen means NOT in FTS5, but our quoted
+        // query format "term" prevents this from being interpreted as an operator.
+        var ftsOperators = new[] { " AND ", " OR ", " NOT ", "NEAR", "^", "*", "(", ")" };
 
         foreach (var op in ftsOperators)
         {

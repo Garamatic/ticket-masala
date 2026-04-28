@@ -134,7 +134,8 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddScoped<ITicketCreateService, TicketCreateService>();
         builder.Services.AddScoped<ITicketEditService, TicketEditService>();
 
-        // Orchestrators
+        // Orchestrators (P0 CONSOLIDATION: ITicketOrchestrator is now internal,
+        // kept for backward compatibility while migrating to ITicketModule deep module)
         builder.Services.AddScoped<ITicketOrchestrator, TicketOrchestrator>();
 
         builder.Services.AddScoped<TicketDispatchService>();
@@ -240,38 +241,10 @@ public static class WebApplicationBuilderExtensions
             });
 
         // ============================================
-        // RabbitMQ Publisher (outbound events)
+        // RabbitMQ Publisher (outbound events) - lazy connection
         // ============================================
-        builder.Services.AddSingleton<RabbitMQ.Client.IConnectionFactory>(sp =>
-        {
-            var config = sp.GetRequiredService<IConfiguration>();
-            var section = config.GetSection("RabbitMq");
-            return new RabbitMQ.Client.ConnectionFactory
-            {
-                HostName = section["HostName"] ?? "localhost",
-                Port = section.GetValue<int?>("Port") ?? 5672,
-                UserName = section["UserName"] ?? "guest",
-                Password = section["Password"] ?? "guest",
-                VirtualHost = section["VirtualHost"] ?? "/",
-                AutomaticRecoveryEnabled = true
-            };
-        });
-
-        builder.Services.AddSingleton<RabbitMQ.Client.IConnection>(sp =>
-        {
-            var factory = sp.GetRequiredService<RabbitMQ.Client.IConnectionFactory>();
-            var logger = sp.GetRequiredService<ILogger<TicketMasala.Web.Messaging.RabbitMqPublisher>>();
-            try
-            {
-                return factory.CreateConnectionAsync().GetAwaiter().GetResult();
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Failed to connect to RabbitMQ at startup. Publisher will not be available.");
-                throw;
-            }
-        });
-
+        // Publisher manages its own connection and creates it on first use.
+        // This avoids blocking startup if RabbitMQ is temporarily unavailable.
         builder.Services.AddSingleton<TicketMasala.Web.Messaging.IRabbitMqPublisher, TicketMasala.Web.Messaging.RabbitMqPublisher>();
 
         // Outbox Publisher (Background Service)

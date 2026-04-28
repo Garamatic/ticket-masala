@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Domain.Data;
 using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Messaging;
 
 namespace TicketMasala.Web.Services;
 
@@ -142,20 +143,21 @@ public class OutboxPublisher : BackgroundService
         {
             foreach (var message in pendingMessages)
             {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    break;
-                }
-
+                cancellationToken.ThrowIfCancellationRequested();
                 await ProcessSingleMessageAsync(message, publisher, cancellationToken);
             }
 
             await context.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
         }
+        catch (OperationCanceledException)
+        {
+            await transaction.RollbackAsync(CancellationToken.None);
+            throw;
+        }
         catch (Exception)
         {
-            await transaction.RollbackAsync(cancellationToken);
+            await transaction.RollbackAsync(CancellationToken.None);
             throw;
         }
     }
@@ -195,7 +197,7 @@ public class OutboxPublisher : BackgroundService
         {
             // Transient failure: may succeed on retry
             message.RetryCount++;
-            message.Error = ex.Message.Length > 500 ? ex.Message[..500] : ex.Message;
+            message.Error = ex.Message[..Math.Min(ex.Message.Length, 500)];
             message.ScheduledRetryAt = DateTime.UtcNow.Add(_options.RetryDelay);
 
             _logger.LogError(ex,

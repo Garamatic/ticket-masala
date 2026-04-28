@@ -6,6 +6,7 @@ using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Enums;
 using TicketMasala.Domain.Exceptions;
 using TicketMasala.Domain.Services;
+using TicketMasala.Domain.Tenancy;
 using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.Compiler;
@@ -42,6 +43,7 @@ public class TicketWorkflowService : ITicketWorkflowService
     private readonly Domain.TicketDispatchService _ticketDispatchService;
     private readonly ISystemClock _clock;
     private readonly IRabbitMqPublisher? _rabbitMqPublisher;
+    private readonly ITenantContext _tenantContext;
 
     public TicketWorkflowService(
         MasalaDbContext context,
@@ -60,9 +62,11 @@ public class TicketWorkflowService : ITicketWorkflowService
         ILogger<TicketWorkflowService> logger,
         Domain.TicketDispatchService ticketDispatchService,
         ISystemClock clock,
-        IRabbitMqPublisher? rabbitMqPublisher = null)
+        IRabbitMqPublisher? rabbitMqPublisher = null,
+        ITenantContext? tenantContext = null)
     {
         _rabbitMqPublisher = rabbitMqPublisher;
+        _tenantContext = tenantContext ?? new DefaultTenantContext();
         _context = context;
         _ticketRepository = ticketRepository;
         _userRepository = userRepository;
@@ -416,7 +420,7 @@ public class TicketWorkflowService : ITicketWorkflowService
                     CustomerName = $"{ticket.Customer?.FirstName} {ticket.Customer?.LastName}".Trim(),
                     ServiceDescription = ticket.Title,
                     Amount = billableAmount ?? 0m,
-                    TenantId = string.Empty,
+                    TenantId = _tenantContext.TenantId ?? string.Empty,
                     ResolvedAt = ticket.CompletionDate ?? DateTime.UtcNow,
                     ResolutionNotes = resolutionNotes
                 };

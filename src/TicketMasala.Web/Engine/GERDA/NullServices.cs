@@ -1,3 +1,4 @@
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Engine.GERDA.Dispatching;
 using TicketMasala.Web.Engine.GERDA.Knowledge;
 using TicketMasala.Web.Engine.GERDA.Ranking;
@@ -72,7 +73,7 @@ public class NullKnowledgeService : IKnowledgeService
 {
     public bool IsEnabled => false;
 
-    public Task<List<KnowledgeSuggestion>> GetSuggestedArticlesAsync(TicketMasala.Domain.Entities.Ticket ticket, int maxSuggestions = 3)
+    public Task<List<KnowledgeSuggestion>> GetSuggestedArticlesAsync(Ticket ticket, int maxSuggestions = 3)
     {
         return Task.FromResult(new List<KnowledgeSuggestion>());
     }

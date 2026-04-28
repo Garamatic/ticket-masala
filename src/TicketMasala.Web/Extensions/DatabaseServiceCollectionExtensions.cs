@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using TicketMasala.Web.Data;
+using TicketMasala.Web.Infrastructure.DomainEvents;
 using TicketMasala.Web.Tenancy;
 
 namespace TicketMasala.Web.Extensions;
@@ -34,7 +35,7 @@ public static class DatabaseServiceCollectionExtensions
         var dbProvider = configuration["DatabaseProvider"];
         var connectionString = tenantConnectionResolver.GetCurrentConnectionString();
 
-        services.AddDbContext<MasalaDbContext>(options =>
+        services.AddDbContext<MasalaDbContext>((serviceProvider, options) =>
         {
             if (string.Equals(dbProvider, "InMemory", StringComparison.OrdinalIgnoreCase))
             {
@@ -49,10 +50,17 @@ public static class DatabaseServiceCollectionExtensions
             {
                 ConfigureSqlServer(options, connectionString);
             }
+
+            // Add domain event interceptor
+            var interceptor = serviceProvider.GetRequiredService<DomainEventDispatchingInterceptor>();
+            options.AddInterceptors(interceptor);
         });
 
         // Register TenantConnectionResolver for DI
         services.AddSingleton<TenantConnectionResolver>();
+
+        // Register domain event interceptor (must be scoped to match DbContext lifetime)
+        services.AddScoped<DomainEventDispatchingInterceptor>();
 
         return services;
     }

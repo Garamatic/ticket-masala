@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Events;
+using TicketMasala.Domain.Exceptions;
 
 namespace TicketMasala.Domain.Entities;
 
@@ -7,8 +9,10 @@ namespace TicketMasala.Domain.Entities;
 /// Represents a work item (ticket) in the system.
 /// This is the core domain entity for tracking and managing work.
 /// </summary>
-public class Ticket : BaseModel
+public class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
 {
+    // Note: Domain events are now managed by BaseModel.
+    // Use RaiseDomainEvent() and DomainEventsNew from base class.
     public TicketType? TicketType { get; set; }
 
     public string Description { get; set; } = string.Empty;
@@ -133,6 +137,43 @@ public class Ticket : BaseModel
         CustomFieldsJson = "{}";
         TicketStatus = Common.Status.Pending;
         SyncStatus(); // Ensure Status is synchronized on creation
+    }
+
+    // ═══════════════════════════════════════════
+    // DOMAIN EVENT RAISES (Phase 1: Non-breaking)
+    // ═══════════════════════════════════════════
+
+    /// <summary>
+    /// Raises a domain event when this ticket is created.
+    /// Call this immediately after creating a new ticket.
+    /// </summary>
+    public void RaiseCreatedEvent(string customerId)
+    {
+        RaiseDomainEvent(new TicketCreatedEvent(Guid, customerId, DomainId));
+    }
+
+    /// <summary>
+    /// Raises a domain event when this ticket is assigned.
+    /// </summary>
+    public void RaiseAssignedEvent(string newResponsibleId, string? oldResponsibleId, string assignedByUserId)
+    {
+        RaiseDomainEvent(new TicketAssignedEvent(Guid, newResponsibleId, oldResponsibleId, assignedByUserId));
+    }
+
+    /// <summary>
+    /// Raises a domain event when this ticket's status changes.
+    /// </summary>
+    public void RaiseStatusChangedEvent(Status oldStatus, Status newStatus, string changedByUserId)
+    {
+        RaiseDomainEvent(new TicketStatusChangedEvent(Guid, oldStatus, newStatus, changedByUserId));
+    }
+
+    /// <summary>
+    /// Raises a domain event when this ticket is updated.
+    /// </summary>
+    public void RaiseUpdatedEvent(string propertyName, string updatedByUserId)
+    {
+        RaiseDomainEvent(new TicketUpdatedEvent(Guid, propertyName, updatedByUserId));
     }
 }
 

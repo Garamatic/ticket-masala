@@ -30,6 +30,7 @@ using TicketMasala.Web.Engine.Ingestion;
 using TicketMasala.Web.Engine.Ingestion.Background;
 using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.Health;
+using TicketMasala.Web.Infrastructure.DomainEvents;
 using TicketMasala.Web.Observers;
 using TicketMasala.Web.Orchestrators;
 using TicketMasala.Web.Repositories;
@@ -169,6 +170,12 @@ public static class WebApplicationBuilderExtensions
 
         builder.Services.AddSingleton<TicketMasala.Web.Engine.GERDA.Configuration.IDomainConfigurationService,
             TicketMasala.Web.Engine.GERDA.Configuration.DomainConfigurationService>();
+
+        // ============================================
+        // Domain Events Infrastructure
+        // ============================================
+        // Registers the domain event dispatcher and scans for handlers.
+        builder.Services.AddDomainEvents();
         builder.Services.AddScoped<TicketMasala.Web.Engine.GERDA.Configuration.IDomainUiService,
             TicketMasala.Web.Engine.GERDA.Configuration.DomainUiService>();
 

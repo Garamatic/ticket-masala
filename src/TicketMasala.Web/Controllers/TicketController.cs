@@ -292,24 +292,24 @@ public class TicketController : Controller
             ModelState.AddModelError("", result.ErrorMessage ?? "Failed to update ticket.");
         }
 
-        // Reload context on failure - GetEditReloadContextAsync now includes lists in ViewModel
+        // Reload context on failure
         var reloadUser = User ?? new ClaimsPrincipal(new ClaimsIdentity());
+        var listsContext = await _ticketModule.GetCreateReloadContextAsync(viewModel.ProjectGuid, reloadUser);
+        viewModel.ResponsibleUsers = listsContext.Employees?.ToList() ?? new List<SelectListItem>();
+        viewModel.CustomerList = listsContext.Customers?.ToList() ?? new List<SelectListItem>();
+        viewModel.ProjectList = listsContext.Projects?.ToList() ?? new List<SelectListItem>();
+
         var context = await _ticketModule.GetEditReloadContextAsync(id, reloadUser);
 
-        // Update viewModel with lists from reload context
-        viewModel.ResponsibleUsers = context.ViewModel.ResponsibleUsers ?? new List<SelectListItem>();
-        viewModel.CustomerList = context.ViewModel.CustomerList ?? new List<SelectListItem>();
-        viewModel.ProjectList = context.ViewModel.ProjectList ?? new List<SelectListItem>();
-
-        if (context.ValidStatuses != null)
+        if (context?.ValidStatuses != null)
         {
             ViewBag.ValidStatuses = context.ValidStatuses;
         }
 
-        ViewBag.DomainId = context.DomainId;
-        ViewBag.EntityLabels = context.EntityLabels;
-        ViewBag.CustomFields = context.CustomFields;
-        ViewBag.CustomFieldValues = context.CustomFieldValues;
+        ViewBag.DomainId = context?.DomainId ?? "IT";
+        ViewBag.EntityLabels = context?.EntityLabels;
+        ViewBag.CustomFields = context?.CustomFields;
+        ViewBag.CustomFieldValues = context?.CustomFieldValues ?? new Dictionary<string, object>();
 
         return View(viewModel);
     }

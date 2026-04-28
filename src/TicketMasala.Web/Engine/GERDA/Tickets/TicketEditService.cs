@@ -82,11 +82,16 @@ public class TicketEditService : ITicketEditService
             }
         }
 
+        // Get valid status transitions for the current ticket state
+        var validStates = _ruleEngine.GetValidNextStates(ticket, user);
+        var allowedStatuses = validStates.Union(new[] { ticket.TicketStatus }).Distinct().ToList();
+
         return new TicketEditContext
         {
             ViewModel = viewModel,
             WorkItemTypeCode = ticket.WorkItemTypeCode,
-            CustomFieldValues = customFieldValues
+            CustomFieldValues = customFieldValues,
+            ValidStatuses = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(allowedStatuses)
         };
     }
 
@@ -106,6 +111,20 @@ public class TicketEditService : ITicketEditService
             var allowedStatuses = validStates.Union(new[] { reloadTicket.TicketStatus }).Distinct().ToList();
             context.ValidStatuses = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(allowedStatuses);
             context.WorkItemTypeCode = reloadTicket.WorkItemTypeCode;
+
+            // Preserve custom field values from ticket's JSON storage
+            if (!string.IsNullOrEmpty(reloadTicket.CustomFieldsJson))
+            {
+                try
+                {
+                    context.CustomFieldValues = JsonSerializer.Deserialize<Dictionary<string, object>>(reloadTicket.CustomFieldsJson)
+                        ?? new Dictionary<string, object>();
+                }
+                catch (JsonException)
+                {
+                    context.CustomFieldValues = new Dictionary<string, object>();
+                }
+            }
         }
 
         return context;

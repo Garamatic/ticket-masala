@@ -51,11 +51,12 @@ public abstract class BaseModel : IHasDomainEvents
     }
 
     /// <summary>
-    /// Clears all legacy domain events.
+    /// Clears all domain events. This should be called after events are dispatched.
     /// </summary>
     public void ClearDomainEvents()
     {
-        _domainEvents.Clear();
+        _domainEventsNew.Clear();
+        _domainEvents.Clear(); // Also clear legacy collection for completeness
     }
 
     /// <summary>

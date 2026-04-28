@@ -5,6 +5,10 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.RateLimiting;
+using OpenTelemetry;
+using OpenTelemetry.Instrumentation.AspNetCore;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Polly;
 using Prometheus;
 using TicketMasala.Domain.Entities;
@@ -76,6 +80,41 @@ builder.Services.AddGerda(options =>
     options.ModelPath = builder.Environment.ContentRootPath;
 });
 builder.Services.LogGerdaConfiguration(logger);
+
+// ============================================
+// OPENTELEMETRY TRACING
+// ============================================
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(r => r.AddService(
+        serviceName: "TicketMasala.Web",
+        serviceVersion: typeof(Program).Assembly.GetName().Version?.ToString() ?? "1.0.0"))
+    .WithTracing(t =>
+    {
+        // Explicitly include our application ActivitySources
+        t.AddSource("TicketMasala.Outbox");
+        t.AddSource("TicketMasala.Messaging");
+        // GERDA deep module registers its own sources internally via AddGerda()
+        // AspNetCore instrumentation for HTTP request spans
+        t.AddAspNetCoreInstrumentation(options =>
+        {
+            options.RecordException = true;
+            options.Filter = httpContext =>
+            {
+                // Skip health checks and metrics endpoints
+                var path = httpContext.Request.Path.Value ?? "";
+                return !path.StartsWith("/health", StringComparison.OrdinalIgnoreCase)
+                    && !path.StartsWith("/metrics", StringComparison.OrdinalIgnoreCase);
+            };
+        });
+        // Instrument outgoing HTTP calls (OpenRouter, etc.)
+        t.AddHttpClientInstrumentation(options =>
+        {
+            options.RecordException = true;
+        });
+        // Console exporter for local development
+        // Replace with .AddOtlpExporter() when an OTLP collector is available
+        t.AddConsoleExporter();
+    });
 
 // Configure OpenRouter HTTP client with retry policy
 builder.Services.AddHttpClient("OpenRouter", client =>

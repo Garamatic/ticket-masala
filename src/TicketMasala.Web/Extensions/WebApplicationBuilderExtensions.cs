@@ -76,75 +76,38 @@ public static class WebApplicationBuilderExtensions
             .AddDefaultUI();
 
         // ============================================
+        // Register Ticket Module (Extracted to deep module)
+        // ============================================
+        builder.Services.AddTicketModule();
+
+        // ============================================
         // Register Repositories (Repository Pattern)
         // ============================================
-        builder.Services.AddScoped<ITicketRepository, EfCoreTicketRepository>();
         builder.Services.AddScoped<IProjectRepository, EfCoreProjectRepository>();
         builder.Services.AddScoped<IUserRepository, EfCoreUserRepository>();
         builder.Services.AddScoped<IKnowledgeBaseRepository, EfCoreKnowledgeBaseRepository>();
         builder.Services.AddScoped<IKnowledgeSnippetRepository, EfCoreKnowledgeSnippetRepository>();
-        builder.Services.AddScoped<IUnitOfWork, EfCoreUnitOfWork>();
-
-        // ============================================
-        // Register Domain Services (Phase 4: Rich Domain Model)
-        // ============================================
-        builder.Services.AddScoped<ITicketAssignmentService, TicketAssignmentService>();
-        builder.Services.AddScoped<ITicketGroupingService, TicketGroupingService>();
-
-        // ============================================
-        // Register Deep Modules (Ticket Module)
-        // ============================================
-        builder.Services.AddScoped<ITicketModule, TicketModule>();
-        builder.Services.AddScoped<TicketMasala.Web.Modules.Tickets.Internal.ITicketLifecycleService, TicketMasala.Web.Modules.Tickets.Internal.TicketLifecycleService>();
-        builder.Services.AddScoped<TicketMasala.Web.Modules.Tickets.Internal.ITicketQueryService, TicketMasala.Web.Modules.Tickets.Internal.TicketQueryService>();
-        // Note: TicketQueryService intentionally minimal - only needs DbContext
-        builder.Services.AddScoped<TicketMasala.Web.Modules.Tickets.Internal.ITicketAuthorizationService, TicketMasala.Web.Modules.Tickets.Internal.TicketAuthorizationService>();
 
         // ============================================
         // Register Observers (Observer Pattern)
         // ============================================
-        builder.Services.AddScoped<ITicketObserver, GerdaTicketObserver>();
-        builder.Services.AddScoped<ITicketObserver, LoggingTicketObserver>();
-        builder.Services.AddScoped<ITicketObserver, NotificationTicketObserver>();
         builder.Services.AddScoped<IProjectObserver, LoggingProjectObserver>();
         builder.Services.AddScoped<IProjectObserver, NotificationProjectObserver>();
         builder.Services.AddScoped<ICommentObserver, LoggingCommentObserver>();
         builder.Services.AddScoped<ICommentObserver, NotificationCommentObserver>();
 
         // ============================================
-        // Register Domain Event Handlers
+        // Register System Abstractions & Cross-Cutting Services
         // ============================================
-        builder.Services.AddScoped<IDomainEventHandler<TicketCreatedEvent>, TicketCreatedGerdaHandler>();
-
-        // ============================================
-        // Register Services (CQRS + Factory Pattern)
-        // ============================================
-        // System abstractions for testability
         builder.Services.AddSingleton<TicketMasala.Web.Abstractions.ISystemClock, TicketMasala.Web.Services.SystemClock>();
         builder.Services.AddScoped<TicketMasala.Web.Services.IJsonParsingService, TicketMasala.Web.Services.JsonParsingService>();
-
-        builder.Services.AddSingleton<RuleCompilerService>();
-        builder.Services.AddScoped<TicketMasala.Web.Engine.Ingestion.Validation.ICustomFieldValidationService,
-            TicketMasala.Web.Engine.Ingestion.Validation.CustomFieldValidationService>();
-        builder.Services.AddScoped<IRuleEngineService, RuleEngineService>();
         builder.Services.AddScoped<TicketMasala.Web.Engine.Security.IPiiScrubberService,
             TicketMasala.Web.Engine.Security.PiiScrubberService>();
         builder.Services.AddScoped<IMetricsService, MetricsService>();
 
-        // Ticket Services (Split by Responsibility)
-        builder.Services.AddScoped<ITicketReadService, TicketReadService>();
-        builder.Services.AddScoped<ITicketWorkflowService, TicketWorkflowService>();
-        builder.Services.AddScoped<ITicketBatchService, TicketBatchService>();
-
-        // Ticket View Services (Facade decomposition for SRP)
-        builder.Services.AddScoped<ITicketDetailService, TicketDetailService>();
-        builder.Services.AddScoped<ITicketCreateService, TicketCreateService>();
-        builder.Services.AddScoped<ITicketEditService, TicketEditService>();
-
-        builder.Services.AddScoped<TicketDispatchService>();
-        builder.Services.AddScoped<TicketReportingService>();
-        builder.Services.AddScoped<TicketNotificationService>();
-        builder.Services.AddScoped<ITicketFactory, TicketFactory>();
+        // ============================================
+        // Register Core Services (CQRS + Factory Pattern)
+        // ============================================
         builder.Services.AddScoped<IFileStorageService, DiskFileStorageService>();
         builder.Services.AddScoped<IEmailService, EmailService>();
         builder.Services.AddScoped<INotificationService, NotificationService>();
@@ -153,54 +116,44 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddScoped<IProjectWorkflowService, ProjectWorkflowService>();
         builder.Services.AddScoped<IProjectTemplateService, ProjectTemplateService>();
         builder.Services.AddScoped<IAuditService, AuditService>();
-        builder.Services.AddScoped<ITicketImportService, TicketImportService>();
 
-        // Ingestion & Sentiment
-        builder.Services.AddScoped<IEmailTicketProcessor, EmailTicketProcessor>();
+        // ============================================
+        // Register Ingestion Module (Extracted to deep module)
+        // ============================================
+        builder.Services.AddIngestionModule();
+
+        // Sentiment Analysis (GERDA subsystem)
         builder.Services.AddScoped<TicketMasala.Web.Engine.GERDA.Sentiment.ISentimentAnalyzer,
             TicketMasala.Web.Engine.GERDA.Sentiment.SimpleSentimentAnalyzer>();
 
-        builder.Services.AddHostedService<EmailIngestionService>();
-
-        // Background Queue
-        builder.Services.AddSingleton<IBackgroundTaskQueue>(ctx => new BackgroundQueue(100));
-        builder.Services.AddSingleton(System.Threading.Channels.Channel.CreateUnbounded<TicketMasala.Web.ViewModels.Ingestion.IngestionWorkItem>());
-        builder.Services.AddHostedService<QueuedHostedService>();
-        builder.Services.AddHostedService<TicketGeneratorService>();
-        builder.Services.AddScoped<ITicketGenerator, TicketGenerator>();
-
-        // Enrichment
+        // ============================================
+        // Register Enrichment Module
+        // ============================================
         builder.Services.AddSingleton<TicketMasala.Web.Engine.Enrichment.IEnrichmentQueue, TicketMasala.Web.Engine.Enrichment.EnrichmentQueue>();
         builder.Services.AddHostedService<TicketMasala.Web.Engine.Enrichment.EnrichmentBackgroundService>();
 
-        // Seed Strategies (Strategy Pattern - executed in registration order)
+        // ============================================
+        // Register Data Seeding (Strategy Pattern)
+        // ============================================
         builder.Services.AddScoped<ISeedStrategy, RoleSeedStrategy>();
         builder.Services.AddScoped<ISeedStrategy, UserSeedStrategy>();
         builder.Services.AddScoped<ISeedStrategy, ProjectSeedStrategy>();
         builder.Services.AddScoped<ISeedStrategy, WorkItemSeedStrategy>();
         builder.Services.AddScoped<ISeedStrategy, KnowledgeBaseSeedStrategy>();
-
-        // DbSeeder
         builder.Services.AddScoped<DbSeeder>();
 
         // ============================================
-        // GERDA AI Services Configuration
+        // Register GERDA Configuration Services
         // ============================================
-        // NOTE: GERDA is now registered as a deep module in Program.cs using AddGerda().
-        // This section is intentionally empty to avoid double registration.
-        // The deep module hides all stage services and strategies behind IGerda interface.
-
         builder.Services.AddSingleton<TicketMasala.Web.Engine.GERDA.Configuration.IDomainConfigurationService,
             TicketMasala.Web.Engine.GERDA.Configuration.DomainConfigurationService>();
 
         // ============================================
-        // Domain Events Infrastructure
+        // Register Domain Events Infrastructure
         // ============================================
-        // Registers the domain event dispatcher and scans for handlers.
         builder.Services.AddDomainEvents();
         builder.Services.AddScoped<TicketMasala.Web.Engine.GERDA.Configuration.IDomainUiService,
             TicketMasala.Web.Engine.GERDA.Configuration.DomainUiService>();
-
 
         // Rate Limiting
         builder.Services.AddRateLimiter(options =>

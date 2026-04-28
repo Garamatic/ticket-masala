@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.ML;
 using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Services;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Data.Seeding;
 using TicketMasala.Web.Engine.Compiler;
@@ -79,6 +80,12 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddScoped<IKnowledgeBaseRepository, EfCoreKnowledgeBaseRepository>();
         builder.Services.AddScoped<IKnowledgeSnippetRepository, EfCoreKnowledgeSnippetRepository>();
         builder.Services.AddScoped<IUnitOfWork, EfCoreUnitOfWork>();
+
+        // ============================================
+        // Register Domain Services (Phase 4: Rich Domain Model)
+        // ============================================
+        builder.Services.AddScoped<ITicketAssignmentService, TicketAssignmentService>();
+        builder.Services.AddScoped<ITicketGroupingService, TicketGroupingService>();
 
         // ============================================
         // Register Observers (Observer Pattern)

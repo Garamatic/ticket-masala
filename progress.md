@@ -45,9 +45,14 @@ In Progress
 - [x] Simplify `TicketWorkflowService.UpdateTicketAsync()` - validation moved to orchestrator
 - [x] Update `GlobalExceptionHandler` to use Domain namespace
 
-#### Phase 4: Domain Services (Pending)
-- [ ] Create domain services for cross-aggregate operations
-- [ ] Migrate complex logic from orchestrators
+#### Phase 4: Domain Services ✅ COMPLETE
+- [x] Create `ITicketAssignmentService` interface with domain operations
+- [x] Implement `TicketAssignmentService` with validation
+- [x] Create `ITicketGroupingService` for parent/child ticket operations
+- [x] Implement `TicketGroupingService` with grouping rules
+- [x] Add `TicketGroupingException` for grouping-specific errors
+- [x] Register domain services in DI container
+- [x] Define `AssignmentRecommendation` for AI-assisted assignments
 
 ## Files Changed
 - 18 new/modified files for Phase 1

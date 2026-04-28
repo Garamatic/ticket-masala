@@ -40,6 +40,9 @@ public class TicketEditService : ITicketEditService
 
         if (isCustomer)
         {
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("User ID is required for customer authorization.");
+
             if (ticket.CustomerId != userId)
                 throw new UnauthorizedAccessException("Customer is not authorized to edit this ticket.");
 
@@ -78,7 +81,8 @@ public class TicketEditService : ITicketEditService
             }
             catch (JsonException)
             {
-                // Silently ignore deserialization errors - custom fields will be empty
+                // Silently continue with empty custom fields on deserialization errors
+                // This prevents UI crashes due to corrupted JSON data
             }
         }
 
@@ -122,6 +126,7 @@ public class TicketEditService : ITicketEditService
                 }
                 catch (JsonException)
                 {
+                    // Silently continue with empty custom fields on deserialization errors
                     context.CustomFieldValues = new Dictionary<string, object>();
                 }
             }

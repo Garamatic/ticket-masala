@@ -18,6 +18,7 @@ using TicketMasala.Web.Engine.GERDA;
 using TicketMasala.Web.Engine.GERDA.Anticipation;
 using TicketMasala.Web.Engine.GERDA.BackgroundJobs;
 using TicketMasala.Web.Engine.GERDA.Dispatching;
+using TicketMasala.Web.Modules.Tickets;
 using TicketMasala.Web.Engine.GERDA.Dispatching.Algorithms;
 using TicketMasala.Web.Engine.GERDA.Dispatching.Configuration;
 using TicketMasala.Web.Engine.GERDA.Estimating;
@@ -86,6 +87,14 @@ public static class WebApplicationBuilderExtensions
         // ============================================
         builder.Services.AddScoped<ITicketAssignmentService, TicketAssignmentService>();
         builder.Services.AddScoped<ITicketGroupingService, TicketGroupingService>();
+
+        // ============================================
+        // Register Deep Modules (Ticket Module)
+        // ============================================
+        builder.Services.AddScoped<ITicketModule, TicketModule>();
+        builder.Services.AddScoped<TicketMasala.Web.Modules.Tickets.Internal.ITicketLifecycleService, TicketMasala.Web.Modules.Tickets.Internal.TicketLifecycleService>();
+        builder.Services.AddScoped<TicketMasala.Web.Modules.Tickets.Internal.ITicketQueryService, TicketMasala.Web.Modules.Tickets.Internal.TicketQueryService>();
+        builder.Services.AddScoped<TicketMasala.Web.Modules.Tickets.Internal.ITicketAuthorizationService, TicketMasala.Web.Modules.Tickets.Internal.TicketAuthorizationService>();
 
         // ============================================
         // Register Observers (Observer Pattern)

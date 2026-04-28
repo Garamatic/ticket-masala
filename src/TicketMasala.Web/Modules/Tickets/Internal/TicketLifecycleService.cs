@@ -43,8 +43,6 @@ internal class TicketLifecycleService : ITicketLifecycleService
         var ticket = Ticket.CreateFromPortal(
             command.Description,
             command.CustomerId,
-            priorityScore: null,
-            tags: null,
             completionTarget: command.CompletionTarget);
 
         ticket.DomainId = domainId;

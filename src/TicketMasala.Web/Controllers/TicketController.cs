@@ -28,7 +28,7 @@ public class TicketController : Controller
         var result = await _ticketModule.SearchForUiAsync(searchModel, User);
 
         ViewBag.SavedFilters = result.SavedFilters;
-        ViewBag.IsCustomer = User?.IsInRole(Constants.RoleCustomer) ?? false;
+        ViewBag.IsCustomer = User.IsInRole(Constants.RoleCustomer);
         return View("~/Views/TicketSearch/Index.cshtml", result);
     }
 
@@ -140,22 +140,19 @@ public class TicketController : Controller
             return BadRequest("Invalid request context");
         }
 
-        // Ensure User is not null
-        var user = User ?? new ClaimsPrincipal(new ClaimsIdentity());
-
         // Input validation for form UX
         if (string.IsNullOrWhiteSpace(description))
             ModelState.AddModelError("description", "Description is required");
 
-        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
 
         // Auto-assign customer for customer users
-        if (user.IsInRole(Constants.RoleCustomer) && !string.IsNullOrEmpty(userId))
+        if (User.IsInRole(Constants.RoleCustomer) && !string.IsNullOrEmpty(userId))
         {
             customerId = userId;
         }
 
-        if (string.IsNullOrWhiteSpace(customerId) && !user.IsInRole(Constants.RoleCustomer))
+        if (string.IsNullOrWhiteSpace(customerId) && !User.IsInRole(Constants.RoleCustomer))
         {
             ModelState.AddModelError("customerId", "Customer is required");
         }
@@ -194,7 +191,7 @@ public class TicketController : Controller
         }
 
         // Reload context on failure
-        var context = await _ticketModule.GetCreateReloadContextAsync(projectGuid, user);
+        var context = await _ticketModule.GetCreateReloadContextAsync(projectGuid, User);
         ViewBag.Employees = context?.Employees ?? new List<SelectListItem>();
         ViewBag.Projects = context?.Projects ?? new List<SelectListItem>();
         ViewBag.Customers = context?.Customers ?? new List<SelectListItem>();
@@ -254,9 +251,8 @@ public class TicketController : Controller
 
         if (ModelState.IsValid)
         {
-            var currentUser = User ?? new ClaimsPrincipal(new ClaimsIdentity());
-            var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
-            var roles = currentUser.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList();
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+            var roles = User.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList();
 
             // Build custom fields from form
             var customFields = Request.Form?.Count > 0
@@ -289,13 +285,12 @@ public class TicketController : Controller
         }
 
         // Reload context on failure
-        var reloadUser = User ?? new ClaimsPrincipal(new ClaimsIdentity());
-        var listsContext = await _ticketModule.GetCreateReloadContextAsync(viewModel.ProjectGuid, reloadUser);
+        var listsContext = await _ticketModule.GetCreateReloadContextAsync(viewModel.ProjectGuid, User);
         viewModel.ResponsibleUsers = listsContext.Employees?.ToList() ?? new List<SelectListItem>();
         viewModel.CustomerList = listsContext.Customers?.ToList() ?? new List<SelectListItem>();
         viewModel.ProjectList = listsContext.Projects?.ToList() ?? new List<SelectListItem>();
 
-        var context = await _ticketModule.GetEditReloadContextAsync(id, reloadUser);
+        var context = await _ticketModule.GetEditReloadContextAsync(id, User);
 
         // Note: context is never null per ITicketModule contract
         ViewBag.ValidStatuses = context.ValidStatuses;

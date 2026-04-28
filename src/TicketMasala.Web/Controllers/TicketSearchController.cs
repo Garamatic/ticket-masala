@@ -16,38 +16,24 @@ public class TicketSearchController : Controller
 {
     private readonly ITicketModule _ticketModule;
     private readonly ISavedFilterService _savedFilterService;
-    private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly ILogger<TicketSearchController> _logger;
 
     public TicketSearchController(
         ITicketModule ticketModule,
-        ISavedFilterService savedFilterService,
-        IHttpContextAccessor httpContextAccessor,
-        ILogger<TicketSearchController> logger)
+        ISavedFilterService savedFilterService)
     {
         _ticketModule = ticketModule;
         _savedFilterService = savedFilterService;
-        _httpContextAccessor = httpContextAccessor;
-        _logger = logger;
     }
 
     [HttpGet]
     public async Task<IActionResult> Index(TicketSearchViewModel searchModel)
     {
-        try
-        {
-            var result = await _ticketModule.SearchForUiAsync(searchModel, User);
+        var result = await _ticketModule.SearchForUiAsync(searchModel, User);
 
-            ViewBag.SavedFilters = result.SavedFilters;
-            ViewBag.IsCustomer = User?.IsInRole(Constants.RoleCustomer) ?? false;
+        ViewBag.SavedFilters = result.SavedFilters;
+        ViewBag.IsCustomer = User.IsInRole(Constants.RoleCustomer);
 
-            return View(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error loading tickets");
-            return StatusCode(500);
-        }
+        return View(result);
     }
 
     [HttpPost]
@@ -60,7 +46,7 @@ public class TicketSearchController : Controller
             return RedirectToAction(nameof(Index), searchModel);
         }
 
-        var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId))
             return Unauthorized();
 
@@ -96,7 +82,7 @@ public class TicketSearchController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteFilter(Guid id)
     {
-        var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId))
             return Forbid();
 

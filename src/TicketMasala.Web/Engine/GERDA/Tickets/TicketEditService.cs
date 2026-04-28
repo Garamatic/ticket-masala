@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using TicketMasala.Domain.Common;
 using TicketMasala.Web.Engine.Compiler;
 using TicketMasala.Web.Facades;
@@ -20,13 +21,16 @@ public class TicketEditService : ITicketEditService
 {
     private readonly ITicketReadService _ticketReadService;
     private readonly IRuleEngineService _ruleEngine;
+    private readonly ILogger<TicketEditService> _logger;
 
     public TicketEditService(
         ITicketReadService ticketReadService,
-        IRuleEngineService ruleEngine)
+        IRuleEngineService ruleEngine,
+        ILogger<TicketEditService> logger)
     {
         _ticketReadService = ticketReadService;
         _ruleEngine = ruleEngine;
+        _logger = logger;
     }
 
     public async Task<TicketEditContext?> GetEditContextAsync(Guid ticketId, System.Security.Claims.ClaimsPrincipal user)
@@ -38,6 +42,7 @@ public class TicketEditService : ITicketEditService
         var userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         var isCustomer = user.IsInRole(Constants.RoleCustomer);
 
+        // Authorize before loading dropdown lists to avoid wasted database calls
         if (isCustomer)
         {
             if (string.IsNullOrEmpty(userId))
@@ -83,7 +88,7 @@ public class TicketEditService : ITicketEditService
             {
                 // Log deserialization errors but continue with empty custom fields
                 // This prevents UI crashes due to corrupted JSON data
-                System.Diagnostics.Debug.WriteLine($"Failed to deserialize CustomFieldsJson for ticket {ticket.Guid}: {ex.Message}");
+                _logger.LogWarning(ex, "Failed to deserialize CustomFieldsJson for ticket {TicketGuid}", ticket.Guid);
             }
         }
 
@@ -128,7 +133,7 @@ public class TicketEditService : ITicketEditService
                 catch (JsonException ex)
                 {
                     // Log deserialization errors but continue with empty custom fields
-                    System.Diagnostics.Debug.WriteLine($"Failed to deserialize CustomFieldsJson for ticket {reloadTicket.Guid}: {ex.Message}");
+                    _logger.LogWarning(ex, "Failed to deserialize CustomFieldsJson for ticket {TicketGuid}", reloadTicket.Guid);
                     context.CustomFieldValues = new Dictionary<string, object>();
                 }
             }

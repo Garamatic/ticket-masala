@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Diagnostics;
 using RabbitMQ.Client;
 
 namespace TicketMasala.Web.Messaging;
@@ -25,6 +26,8 @@ public class RabbitMqPublisher : IRabbitMqPublisher, IAsyncDisposable
     private const string ConfigSection = "RabbitMq";
     private const string ExchangeNameKey = "ExchangeName";
     public const string DefaultExchangeName = "event_exchange";
+
+    private static readonly ActivitySource ActivitySource = new ActivitySource("TicketMasala.Messaging");
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -91,6 +94,11 @@ public class RabbitMqPublisher : IRabbitMqPublisher, IAsyncDisposable
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentException.ThrowIfNullOrWhiteSpace(routingKey);
+
+        using var activity = ActivitySource.StartActivity("RabbitMq.Publish");
+        activity?.SetTag("messaging.system", "rabbitmq");
+        activity?.SetTag("messaging.destination", routingKey);
+        activity?.SetTag("messaging.message_type", typeof(T).Name);
 
         var channel = await EnsureInitializedAsync(cancellationToken);
 

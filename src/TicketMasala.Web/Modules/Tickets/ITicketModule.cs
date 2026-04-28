@@ -27,27 +27,30 @@ public interface ITicketModule
     Task<TicketSearchResult> SearchAsync(TicketSearchQuery query, CancellationToken ct = default);
 
     // ─── UI context (read operations for views) ──────────────────────────────
+    // Note: These methods don't accept CancellationToken because the underlying
+    // view services (ITicketReadService, ITicketContextFacade) don't support it.
+    // Adding ct parameters would give callers false impression of cancellation support.
 
     /// <summary>Full search including saved filters and role-based customer scoping.</summary>
-    Task<TicketSearchViewModel> SearchForUiAsync(TicketSearchViewModel searchModel, ClaimsPrincipal user, CancellationToken ct = default);
+    Task<TicketSearchViewModel> SearchForUiAsync(TicketSearchViewModel searchModel, ClaimsPrincipal user);
 
     /// <summary>Detail page view model + domain context for polymorphic UI.</summary>
-    Task<(TicketDetailsViewModel? ViewModel, TicketDetailContext Context)> GetDetailPageAsync(Guid ticketId, ClaimsPrincipal user, CancellationToken ct = default);
+    Task<(TicketDetailsViewModel? ViewModel, TicketDetailContext Context)> GetDetailPageAsync(Guid ticketId, ClaimsPrincipal user);
 
     /// <summary>AI-generated summary for a ticket.</summary>
-    Task<string> GenerateAiSummaryAsync(Guid ticketId, CancellationToken ct = default);
+    Task<string> GenerateAiSummaryAsync(Guid ticketId);
 
     /// <summary>Lists and domain config for the ticket creation form.</summary>
-    Task<TicketCreateContext> GetCreateContextAsync(Guid? projectGuid, ClaimsPrincipal user, CancellationToken ct = default);
+    Task<TicketCreateContext> GetCreateContextAsync(Guid? projectGuid, ClaimsPrincipal user);
 
     /// <summary>Full edit context including valid status transitions and custom field values.</summary>
-    Task<TicketEditContext?> GetEditContextAsync(Guid ticketId, ClaimsPrincipal user, CancellationToken ct = default);
+    Task<TicketEditContext?> GetEditContextAsync(Guid ticketId, ClaimsPrincipal user);
 
     /// <summary>Reloads edit context when form validation fails (minimal set of lists + domain config).</summary>
-    Task<TicketCreateContext> GetCreateReloadContextAsync(Guid? projectGuid, ClaimsPrincipal user, CancellationToken ct = default);
+    Task<TicketCreateContext> GetCreateReloadContextAsync(Guid? projectGuid, ClaimsPrincipal user);
 
     /// <summary>Reloads edit context on failure with valid statuses and field values.</summary>
-    Task<TicketEditContext> GetEditReloadContextAsync(Guid ticketId, ClaimsPrincipal user, CancellationToken ct = default);
+    Task<TicketEditContext> GetEditReloadContextAsync(Guid ticketId, ClaimsPrincipal user);
 }
 
 // Result type for explicit success/failure

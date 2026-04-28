@@ -55,7 +55,7 @@ internal class TicketModule : ITicketModule
 
             // Create ticket - GERDA processing is now handled by TicketCreatedGerdaHandler
             // which is dispatched via DomainEventDispatchingInterceptor after successful save.
-            var ticket = await _lifecycle.CreateAsync(command, ct);
+            var ticket = await _lifecycle.CreateAsync(command);
 
             _logger.LogInformation(
                 "Ticket {TicketGuid} created. GERDA processing queued via domain event handler.",
@@ -81,7 +81,7 @@ internal class TicketModule : ITicketModule
 
         try
         {
-            await _lifecycle.UpdateAsync(ticket, command, ct);
+            await _lifecycle.UpdateAsync(ticket, command);
             return TicketResult<Unit>.Success(Unit.Value);
         }
         catch (Exception ex)
@@ -102,7 +102,7 @@ internal class TicketModule : ITicketModule
 
         try
         {
-            await _lifecycle.AssignAsync(ticket, command, ct);
+            await _lifecycle.AssignAsync(ticket, command);
             return TicketResult<Unit>.Success(Unit.Value);
         }
         catch (Exception ex)
@@ -123,7 +123,7 @@ internal class TicketModule : ITicketModule
 
         try
         {
-            await _lifecycle.TransitionStatusAsync(ticket, command, ct);
+            await _lifecycle.TransitionStatusAsync(ticket, command);
             return TicketResult<Unit>.Success(Unit.Value);
         }
         catch (Exception ex)
@@ -166,15 +166,12 @@ internal class TicketModule : ITicketModule
 
     // --- UI context methods ----------------------------------------------------
 
-    public async Task<TicketSearchViewModel> SearchForUiAsync(TicketSearchViewModel searchModel, ClaimsPrincipal user, CancellationToken ct)
+    public async Task<TicketSearchViewModel> SearchForUiAsync(TicketSearchViewModel searchModel, ClaimsPrincipal user)
     {
-        if (searchModel == null)
-            searchModel = new TicketSearchViewModel();
+        searchModel ??= new TicketSearchViewModel();
 
-        // Guard against null user (can happen in test scenarios)
-        var safeUser = user ?? new ClaimsPrincipal(new ClaimsIdentity());
-        var userId = safeUser.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var isCustomer = safeUser.IsInRole(Constants.RoleCustomer);
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var isCustomer = user.IsInRole(Constants.RoleCustomer);
 
         // Apply customer filter for customer users
         if (isCustomer && !string.IsNullOrEmpty(userId))
@@ -194,40 +191,29 @@ internal class TicketModule : ITicketModule
         return result;
     }
 
-    public async Task<(TicketDetailsViewModel? ViewModel, TicketDetailContext Context)> GetDetailPageAsync(Guid ticketId, ClaimsPrincipal user, CancellationToken ct)
+    public async Task<(TicketDetailsViewModel? ViewModel, TicketDetailContext Context)> GetDetailPageAsync(Guid ticketId, ClaimsPrincipal user)
     {
-        // Guard against null user (can happen in test scenarios)
-        var safeUser = user ?? new ClaimsPrincipal(new ClaimsIdentity());
-        var userId = safeUser.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var isCustomer = safeUser.IsInRole(Constants.RoleCustomer);
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var isCustomer = user.IsInRole(Constants.RoleCustomer);
 
-        try
+        // Get view model from facade
+        var viewModel = await _contextFacade.GetTicketDetailsAsync(ticketId, userId, isCustomer);
+        if (viewModel == null)
         {
-            // Get view model from facade
-            var viewModel = await _contextFacade.GetTicketDetailsAsync(ticketId, userId, isCustomer);
-            if (viewModel == null)
-            {
-                return (null, new TicketDetailContext());
-            }
-
-            // Get domain context
-            var context = await _contextFacade.GetTicketDetailContextAsync(viewModel);
-
-            return (viewModel, context);
+            return (null, new TicketDetailContext());
         }
-        catch (UnauthorizedAccessException)
-        {
-            // Re-throw to let controller handle with Forbid()
-            throw;
-        }
+
+        // Get domain context
+        var context = await _contextFacade.GetTicketDetailContextAsync(viewModel);
+
+        return (viewModel, context);
     }
 
-    public async Task<string> GenerateAiSummaryAsync(Guid ticketId, CancellationToken ct)
+    public async Task<string> GenerateAiSummaryAsync(Guid ticketId)
     {
-        // Get ticket details
-        var userId = string.Empty;
-        var isCustomer = false;
-        var viewModel = await _contextFacade.GetTicketDetailsAsync(ticketId, userId, isCustomer);
+        // AI summary generation doesn't require authorization (called via AJAX for ticket owners)
+        // Pass empty userId/false isCustomer to get unfiltered ticket details
+        var viewModel = await _contextFacade.GetTicketDetailsAsync(ticketId, userId: string.Empty, isCustomer: false);
 
         if (viewModel == null)
         {
@@ -244,28 +230,23 @@ internal class TicketModule : ITicketModule
         return await _openAiService.GetResponseAsync(OpenAIPrompts.Summary, query);
     }
 
-    public async Task<TicketCreateContext> GetCreateContextAsync(Guid? projectGuid, ClaimsPrincipal user, CancellationToken ct)
+    public async Task<TicketCreateContext> GetCreateContextAsync(Guid? projectGuid, ClaimsPrincipal user)
     {
-        // Guard against null user (can happen in test scenarios)
-        var safeUser = user ?? new ClaimsPrincipal(new ClaimsIdentity());
-        var userId = safeUser.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var isCustomer = safeUser.IsInRole(Constants.RoleCustomer);
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var isCustomer = user.IsInRole(Constants.RoleCustomer);
 
         return await _contextFacade.GetCreateContextAsync(isCustomer, userId, projectGuid);
     }
 
-    public async Task<TicketEditContext?> GetEditContextAsync(Guid ticketId, ClaimsPrincipal user, CancellationToken ct)
+    public async Task<TicketEditContext?> GetEditContextAsync(Guid ticketId, ClaimsPrincipal user)
     {
         return await _contextFacade.GetEditContextAsync(ticketId, user);
     }
 
-    public Task<TicketCreateContext> GetCreateReloadContextAsync(Guid? projectGuid, ClaimsPrincipal user, CancellationToken ct)
-    {
-        // Reload uses same context as initial load
-        return GetCreateContextAsync(projectGuid, user, ct);
-    }
+    public Task<TicketCreateContext> GetCreateReloadContextAsync(Guid? projectGuid, ClaimsPrincipal user)
+        => GetCreateContextAsync(projectGuid, user);
 
-    public async Task<TicketEditContext> GetEditReloadContextAsync(Guid ticketId, ClaimsPrincipal user, CancellationToken ct)
+    public async Task<TicketEditContext> GetEditReloadContextAsync(Guid ticketId, ClaimsPrincipal user)
     {
         return await _contextFacade.GetEditReloadContextAsync(ticketId, user);
     }

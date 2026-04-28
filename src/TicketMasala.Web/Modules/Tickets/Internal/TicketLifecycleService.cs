@@ -7,10 +7,12 @@ namespace TicketMasala.Web.Modules.Tickets.Internal;
 
 internal interface ITicketLifecycleService
 {
-    Task<Ticket> CreateAsync(CreateTicketCommand command, CancellationToken ct);
-    Task UpdateAsync(Ticket ticket, UpdateTicketCommand command, CancellationToken ct);
-    Task AssignAsync(Ticket ticket, AssignTicketCommand command, CancellationToken ct);
-    Task TransitionStatusAsync(Ticket ticket, TransitionStatusCommand command, CancellationToken ct);
+    // Note: These methods don't accept CancellationToken because the underlying
+    // repositories (ITicketRepository, IUserRepository) don't support it.
+    Task<Ticket> CreateAsync(CreateTicketCommand command);
+    Task UpdateAsync(Ticket ticket, UpdateTicketCommand command);
+    Task AssignAsync(Ticket ticket, AssignTicketCommand command);
+    Task TransitionStatusAsync(Ticket ticket, TransitionStatusCommand command);
 }
 
 internal class TicketLifecycleService : ITicketLifecycleService
@@ -32,7 +34,7 @@ internal class TicketLifecycleService : ITicketLifecycleService
         _domainConfig = domainConfig;
     }
 
-    public async Task<Ticket> CreateAsync(CreateTicketCommand command, CancellationToken ct)
+    public async Task<Ticket> CreateAsync(CreateTicketCommand command)
     {
         var customer = await _userRepository.GetCustomerByIdAsync(command.CustomerId);
         if (customer == null)
@@ -50,7 +52,7 @@ internal class TicketLifecycleService : ITicketLifecycleService
         ticket.ProjectGuid = command.ProjectGuid;
 
         // Parse custom fields into JSON
-        if (command.CustomFields.Any())
+        if (command.CustomFields.Count > 0)
         {
             ticket.UpdateCustomFields(
                 System.Text.Json.JsonSerializer.Serialize(command.CustomFields),
@@ -72,7 +74,7 @@ internal class TicketLifecycleService : ITicketLifecycleService
         return ticket;
     }
 
-    public async Task UpdateAsync(Ticket ticket, UpdateTicketCommand command, CancellationToken ct)
+    public async Task UpdateAsync(Ticket ticket, UpdateTicketCommand command)
     {
         // Check status transition first (optimistic concurrency check)
         // This must happen before any modifications to prevent partial updates on conflict
@@ -100,7 +102,7 @@ internal class TicketLifecycleService : ITicketLifecycleService
         ticket.CustomerId = command.CustomerId;
         ticket.ProjectGuid = command.ProjectGuid;
 
-        if (command.CustomFields.Any())
+        if (command.CustomFields.Count > 0)
         {
             ticket.UpdateCustomFields(
                 System.Text.Json.JsonSerializer.Serialize(command.CustomFields),
@@ -110,7 +112,7 @@ internal class TicketLifecycleService : ITicketLifecycleService
         await _ticketRepository.UpdateAsync(ticket);
     }
 
-    public async Task AssignAsync(Ticket ticket, AssignTicketCommand command, CancellationToken ct)
+    public async Task AssignAsync(Ticket ticket, AssignTicketCommand command)
     {
         var employee = await _userRepository.GetEmployeeByIdAsync(command.ResponsibleId);
         if (employee == null)
@@ -125,7 +127,7 @@ internal class TicketLifecycleService : ITicketLifecycleService
         await _ticketRepository.UpdateAsync(ticket);
     }
 
-    public async Task TransitionStatusAsync(Ticket ticket, TransitionStatusCommand command, CancellationToken ct)
+    public async Task TransitionStatusAsync(Ticket ticket, TransitionStatusCommand command)
     {
         // Optimistic concurrency check: verify ticket hasn't changed since UI loaded
         if (ticket.TicketStatus.ToString() != command.FromStatus)

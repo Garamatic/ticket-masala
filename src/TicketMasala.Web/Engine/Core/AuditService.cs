@@ -18,7 +18,7 @@ public class AuditService : IAuditService
         _logger = logger;
     }
 
-    public async Task LogActionAsync(Guid ticketId, string action, string? userId, string? propertyName = null, string? oldValue = null, string? newValue = null)
+    public Task LogActionAsync(Guid ticketId, string action, string? userId, string? propertyName = null, string? oldValue = null, string? newValue = null)
     {
         try
         {
@@ -35,11 +35,16 @@ public class AuditService : IAuditService
             };
 
             _context.AuditLogs.Add(entry);
-            await _context.SaveChangesAsync();
+            // Note: Changes are NOT committed here. They will be committed when IUnitOfWork.CommitAsync() is called.
+            // This ensures audit logs are part of the same transaction as the main operation.
+            _logger.LogDebug("Audit log queued for ticket {TicketId}: {Action}", ticketId, action);
+            return Task.CompletedTask;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to log audit entry for ticket {TicketId}", ticketId);
+            // Log error but don't throw - audit logging should not fail the main operation
+            _logger.LogError(ex, "Failed to queue audit entry for ticket {TicketId}", ticketId);
+            return Task.CompletedTask;
         }
     }
 

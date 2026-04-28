@@ -24,7 +24,6 @@ using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.Facades;
 using TicketMasala.Web.Modules.Tickets;
-using TicketMasala.Web.Orchestrators;
 using TicketMasala.Web.ViewModels.ApplicationUsers;
 using Xunit;
 
@@ -142,7 +141,7 @@ namespace TicketMasala.Tests.Robustness
         }
 
         [Fact]
-        public async Task DispatchBacklogService_NegativePage_ShouldHandled()
+        public async Task DispatchBacklogService_NegativePage_ShouldHandle()
         {
             // Arrange
             var mockRepo = new Mock<ITicketRepository>();

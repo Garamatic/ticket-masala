@@ -25,6 +25,7 @@ public class DatabaseTestFixture : IDisposable
     public EfCoreTicketRepository TicketRepository { get; private set; }
     public EfCoreProjectRepository ProjectRepository { get; private set; }
     public EfCoreUserRepository UserRepository { get; private set; }
+    public EfCoreUnitOfWork UnitOfWork { get; private set; }
 
     public DatabaseTestFixture()
     {
@@ -60,6 +61,14 @@ public class DatabaseTestFixture : IDisposable
             Context,
             userManagerMock.Object,
             Mock.Of<ILogger<EfCoreUserRepository>>());
+
+        // Unit of Work (for repository commit operations)
+        UnitOfWork = new EfCoreUnitOfWork(
+            Context,
+            TicketRepository,
+            ProjectRepository,
+            UserRepository,
+            Mock.Of<ILogger<EfCoreUnitOfWork>>());
     }
 
     /// <summary>
@@ -208,6 +217,7 @@ public class DatabaseTestFixture : IDisposable
 
     public void Dispose()
     {
+        UnitOfWork?.Dispose();
         Context?.Dispose();
         _connection?.Dispose();
     }

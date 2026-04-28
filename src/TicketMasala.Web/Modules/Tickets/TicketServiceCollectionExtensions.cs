@@ -9,7 +9,6 @@ using TicketMasala.Web.Infrastructure.DomainEvents;
 using TicketMasala.Web.Modules.Tickets.Internal;
 using TicketMasala.Web.Observers;
 using TicketMasala.Web.Repositories;
-using TicketMasala.Web.Services;
 
 namespace TicketMasala.Web.Modules.Tickets;
 
@@ -69,6 +68,17 @@ public static class TicketServiceCollectionExtensions
         services.AddScoped<ITicketEditService, TicketEditService>();
         services.AddScoped<ITicketWorkflowService, TicketWorkflowService>();
         services.AddScoped<ITicketBatchService, TicketBatchService>();
+
+        // Specialized Services (Phase 1: extracted from TicketWorkflowService)
+        services.AddScoped<ITicketResolutionService, TicketResolutionService>();
+        services.AddScoped<ITicketCommentService, TicketCommentService>();
+        services.AddScoped<ITicketReviewService, TicketReviewService>();
+        services.AddScoped<ITicketTimeLoggingService, TicketTimeLoggingService>();
+
+        // Specialized Services (Phase 2: core workflow extraction)
+        services.AddScoped<ITicketCreationService, TicketCreationService>();
+        services.AddScoped<ITicketUpdateService, TicketUpdateService>();
+        services.AddScoped<ITicketAssignmentFacade, TicketAssignmentFacade>();
 
         // Specialized Services
         services.AddScoped<TicketDispatchService>();

@@ -84,40 +84,25 @@ public class EfCoreUserRepository : IUserRepository
         return await _context.Users.CountAsync();
     }
 
-    public async Task<bool> UpdateCustomerAsync(ApplicationUser customer)
+    public Task UpdateCustomerAsync(ApplicationUser customer)
     {
-        try
-        {
-            _context.Users.Update(customer);
-            await _context.SaveChangesAsync();
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating customer {CustomerId}", customer.Id);
-            return false;
-        }
+        _context.Users.Update(customer);
+        // Note: Changes are not committed here. Call IUnitOfWork.CommitAsync() to persist.
+        _logger.LogDebug("Customer {CustomerId} queued for update (pending commit)", customer.Id);
+        return Task.CompletedTask;
     }
 
     public async Task<bool> DeleteCustomerAsync(string id)
     {
-        try
+        var customer = await GetCustomerByIdAsync(id);
+        if (customer != null)
         {
-            var customer = await GetCustomerByIdAsync(id);
-            if (customer == null)
-            {
-                return false;
-            }
-
             _context.Users.Remove(customer);
-            await _context.SaveChangesAsync();
+            // Note: Changes are not committed here. Call IUnitOfWork.CommitAsync() to persist.
+            _logger.LogDebug("Customer {CustomerId} queued for delete (pending commit)", id);
             return true;
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error deleting customer {CustomerId}", id);
-            return false;
-        }
+        return false;
     }
 
     public async Task<bool> CreateCustomerAsync(ApplicationUser customer, string password)

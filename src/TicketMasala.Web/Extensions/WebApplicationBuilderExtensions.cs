@@ -10,7 +10,6 @@ using TicketMasala.Web.Data;
 using TicketMasala.Web.Data.Seeding;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.Enrichment;
-using TicketMasala.Web.Engine.GERDA.Configuration;
 using TicketMasala.Web.Engine.GERDA.Sentiment;
 using TicketMasala.Web.Engine.Ingestion;
 using TicketMasala.Web.Engine.Projects;
@@ -32,9 +31,25 @@ public static class WebApplicationBuilderExtensions
 {
     /// <summary>
     /// Adds all Ticket Masala core services to the application.
-    /// Call this after registering any custom overrides (e.g., custom IJobRankingStrategy).
+    /// Composes smaller, focused extension methods for better maintainability.
     /// </summary>
     public static WebApplicationBuilder AddMasalaCore(this WebApplicationBuilder builder)
+    {
+        builder
+            .AddMasalaIdentity()
+            .AddMasalaModules()
+            .AddMasalaCrossCutting()
+            .AddMasalaInfrastructure()
+            .AddMasalaMessaging()
+            .AddMasalaSecurity();
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Adds Identity, Authentication, and Authorization services.
+    /// </summary>
+    private static WebApplicationBuilder AddMasalaIdentity(this WebApplicationBuilder builder)
     {
         // Identity configuration
         builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -55,126 +70,136 @@ public static class WebApplicationBuilderExtensions
             .AddDefaultTokenProviders()
             .AddDefaultUI();
 
-        // ============================================
-        // Register Ticket Module (Extracted to deep module)
-        // ============================================
+        // Authorization
+        builder.Services.AddAuthorization(options =>
+        {
+            options.AddPolicy("AllowAnonymous", policy => policy.RequireAssertion(_ => true));
+            if (!builder.Environment.IsDevelopment())
+            {
+                options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .Build();
+            }
+        });
+
+        builder.Services.ConfigureApplicationCookie(options =>
+        {
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SameSite = SameSiteMode.Lax;
+            options.Cookie.SecurePolicy = builder.Environment.IsProduction()
+                ? CookieSecurePolicy.Always
+                : CookieSecurePolicy.SameAsRequest;
+            options.ExpireTimeSpan = TimeSpan.FromHours(8);
+            options.LoginPath = "/Identity/Account/Login";
+            options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+            options.SlidingExpiration = true;
+        });
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Adds all feature modules (Tickets, Projects, Knowledge, Ingestion, Enrichment).
+    /// </summary>
+    private static WebApplicationBuilder AddMasalaModules(this WebApplicationBuilder builder)
+    {
+        // Core domain modules
         builder.Services.AddTicketModule();
-
-        // ============================================
-        // Register Project Module (Extracted to deep module)
-        // ============================================
         builder.Services.AddProjectModule();
-
-        // ============================================
-        // Register Knowledge Module (Extracted to deep module)
-        // ============================================
         builder.Services.AddKnowledgeModule();
+        builder.Services.AddIngestionModule();
+        builder.Services.AddEnrichmentModule();
 
-        // ============================================
-        // Register Remaining Repositories
-        // ============================================
+        // Remaining repositories
         builder.Services.AddScoped<IUserRepository, EfCoreUserRepository>();
 
-        // ============================================
-        // Register Comment Observers (Observer Pattern)
-        // ============================================
+        // Observers
         builder.Services.AddScoped<ICommentObserver, LoggingCommentObserver>();
         builder.Services.AddScoped<ICommentObserver, NotificationCommentObserver>();
 
-        // ============================================
-        // Register System Abstractions & Cross-Cutting Services
-        // ============================================
+        return builder;
+    }
+
+    /// <summary>
+    /// Adds cross-cutting services (Clock, JSON, File, Email, Notifications, etc).
+    /// </summary>
+    private static WebApplicationBuilder AddMasalaCrossCutting(this WebApplicationBuilder builder)
+    {
+        // System abstractions
         builder.Services.AddSingleton<TicketMasala.Web.Abstractions.ISystemClock, TicketMasala.Web.Services.SystemClock>();
         builder.Services.AddScoped<TicketMasala.Web.Services.IJsonParsingService, TicketMasala.Web.Services.JsonParsingService>();
-        builder.Services.AddSecurityModule();
-        builder.Services.AddScoped<IMetricsService, MetricsService>();
 
-        // ============================================
-        // Register Core Services (CQRS + Factory Pattern)
-        // ============================================
+        // Core services
         builder.Services.AddScoped<IFileStorageService, DiskFileStorageService>();
         builder.Services.AddScoped<IEmailService, EmailService>();
         builder.Services.AddScoped<INotificationService, NotificationService>();
         builder.Services.AddScoped<ISavedFilterService, SavedFilterService>();
         builder.Services.AddScoped<IAuditService, AuditService>();
+        builder.Services.AddScoped<IMetricsService, MetricsService>();
 
-        // ============================================
-        // Register Ingestion Module (Extracted to deep module)
-        // ============================================
-        builder.Services.AddIngestionModule();
+        // Security module
+        builder.Services.AddSecurityModule();
 
-        // Sentiment Analysis (GERDA subsystem)
-        builder.Services.AddScoped<ISentimentAnalyzer, SimpleSentimentAnalyzer>();
-
-        // ============================================
-        // Register Enrichment Module (Extracted to deep module)
-        // ============================================
-        builder.Services.AddEnrichmentModule();
-
-        // ============================================
-        // Register Data Seeding (Strategy Pattern - Extracted)
-        // ============================================
-        builder.Services.AddDataSeeding();
-
-        // ============================================
-        // Register GERDA Configuration Services
-        // ============================================
+        // GERDA Configuration
         builder.Services.AddSingleton<TicketMasala.Web.Engine.GERDA.Configuration.IDomainConfigurationService,
             TicketMasala.Web.Engine.GERDA.Configuration.DomainConfigurationService>();
-
-        // ============================================
-        // Register Domain Events Infrastructure
-        // ============================================
-        builder.Services.AddDomainEvents();
         builder.Services.AddScoped<TicketMasala.Web.Engine.GERDA.Configuration.IDomainUiService,
             TicketMasala.Web.Engine.GERDA.Configuration.DomainUiService>();
 
-        // Rate Limiting
-        builder.Services.AddRateLimiter(options =>
-            {
-                options.RejectionStatusCode = Microsoft.AspNetCore.Http.StatusCodes.Status429TooManyRequests;
+        // Sentiment Analysis
+        builder.Services.AddScoped<ISentimentAnalyzer, SimpleSentimentAnalyzer>();
 
-                options.AddFixedWindowLimiter("api", opt =>
-                {
-                    opt.PermitLimit = 100;
-                    opt.Window = TimeSpan.FromMinutes(1);
-                    opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-                    opt.QueueLimit = 10;
-                });
+        // Data Seeding
+        builder.Services.AddDataSeeding();
 
-                options.AddSlidingWindowLimiter("login", opt =>
-                {
-                    opt.PermitLimit = 5;
-                    opt.Window = TimeSpan.FromMinutes(15);
-                    opt.SegmentsPerWindow = 3;
-                    opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-                    opt.QueueLimit = 0;
-                });
+        return builder;
+    }
 
-                options.AddTokenBucketLimiter("general", opt =>
-                {
-                    opt.TokenLimit = 50;
-                    opt.TokensPerPeriod = 10;
-                    opt.ReplenishmentPeriod = TimeSpan.FromSeconds(10);
-                    opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-                    opt.QueueLimit = 5;
-                });
+    /// <summary>
+    /// Adds infrastructure services (Domain Events, CORS, Health Checks, Swagger, Forwarded Headers).
+    /// </summary>
+    private static WebApplicationBuilder AddMasalaInfrastructure(this WebApplicationBuilder builder)
+    {
+        // Domain Events Infrastructure
+        builder.Services.AddDomainEvents();
 
-                // Strict limiter for external ticket submissions (anti-spam)
-                options.AddFixedWindowLimiter("ExternalSubmission", opt =>
-                {
-                    opt.PermitLimit = 3; // Max 3 submissions per window
-                    opt.Window = TimeSpan.FromMinutes(5); // Per 5 minutes
-                    opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-                    opt.QueueLimit = 0; // No queue, immediate 429
-                });
-            });
+        // CORS
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("AllowAll",
+                b => b.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+        });
 
-        // ============================================
+        // Health Checks
+        builder.Services.AddHealthChecks();
+
+        // Swagger
+        builder.Services.AddEndpointsApiExplorer();
+
+        // Forwarded Headers
+        builder.Services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor |
+                                       Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+            options.KnownIPNetworks.Clear();
+            options.KnownProxies.Clear();
+        });
+
+        // View Location Expander for multi-tenancy
+        builder.Services.Configure<RazorViewEngineOptions>(options =>
+        {
+            options.ViewLocationExpanders.Add(new TenantViewLocationExpander());
+        });
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Adds messaging infrastructure (RabbitMQ, Outbox, Background Services).
+    /// </summary>
+    private static WebApplicationBuilder AddMasalaMessaging(this WebApplicationBuilder builder)
+    {
         // RabbitMQ Publisher (outbound events) - lazy connection
-        // ============================================
-        // Publisher manages its own connection and creates it on first use.
-        // This avoids blocking startup if RabbitMQ is temporarily unavailable.
         builder.Services.AddSingleton<TicketMasala.Web.Messaging.IRabbitMqPublisher, TicketMasala.Web.Messaging.RabbitMqPublisher>();
 
         // Outbox Publisher (Background Service)
@@ -182,7 +207,56 @@ public static class WebApplicationBuilderExtensions
             builder.Configuration.GetSection("OutboxPublisher").Get<OutboxPublisherOptions>() ?? new OutboxPublisherOptions());
         builder.Services.AddHostedService<OutboxPublisher>();
 
-        // Memory Cache - registered once here, used throughout the application
+        return builder;
+    }
+
+    /// <summary>
+    /// Adds security services (Rate Limiting, Data Protection, Caching).
+    /// </summary>
+    private static WebApplicationBuilder AddMasalaSecurity(this WebApplicationBuilder builder)
+    {
+        // Rate Limiting
+        builder.Services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = Microsoft.AspNetCore.Http.StatusCodes.Status429TooManyRequests;
+
+            options.AddFixedWindowLimiter("api", opt =>
+            {
+                opt.PermitLimit = 100;
+                opt.Window = TimeSpan.FromMinutes(1);
+                opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                opt.QueueLimit = 10;
+            });
+
+            options.AddSlidingWindowLimiter("login", opt =>
+            {
+                opt.PermitLimit = 5;
+                opt.Window = TimeSpan.FromMinutes(15);
+                opt.SegmentsPerWindow = 3;
+                opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                opt.QueueLimit = 0;
+            });
+
+            options.AddTokenBucketLimiter("general", opt =>
+            {
+                opt.TokenLimit = 50;
+                opt.TokensPerPeriod = 10;
+                opt.ReplenishmentPeriod = TimeSpan.FromSeconds(10);
+                opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                opt.QueueLimit = 5;
+            });
+
+            // Strict limiter for external ticket submissions (anti-spam)
+            options.AddFixedWindowLimiter("ExternalSubmission", opt =>
+            {
+                opt.PermitLimit = 3;
+                opt.Window = TimeSpan.FromMinutes(5);
+                opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                opt.QueueLimit = 0;
+            });
+        });
+
+        // Memory Cache
         builder.Services.AddMemoryCache();
         builder.Services.AddDistributedMemoryCache();
 
@@ -200,63 +274,6 @@ public static class WebApplicationBuilderExtensions
             builder.Services.AddDataProtection()
                 .SetApplicationName("ticket-masala");
         }
-
-        // WebOptimizer is configured in AddMasalaFrontend()
-
-        // Authorization
-        builder.Services.AddAuthorization(options =>
-        {
-            options.AddPolicy("AllowAnonymous", policy => policy.RequireAssertion(_ => true));
-            if (!builder.Environment.IsDevelopment())
-            {
-                options.FallbackPolicy = new AuthorizationPolicyBuilder()
-                    .RequireAuthenticatedUser()
-                    .Build();
-            }
-        });
-
-        builder.Services.ConfigureApplicationCookie(options =>
-        {
-            options.Cookie.HttpOnly = true;
-            options.Cookie.SameSite = SameSiteMode.Lax;
-            // Secure cookie in Production to prevent transmission over HTTP
-            options.Cookie.SecurePolicy = builder.Environment.IsProduction()
-                ? CookieSecurePolicy.Always
-                : CookieSecurePolicy.SameAsRequest;
-            options.ExpireTimeSpan = TimeSpan.FromHours(8);
-            options.LoginPath = "/Identity/Account/Login";
-            options.AccessDeniedPath = "/Identity/Account/AccessDenied";
-            options.SlidingExpiration = true;
-        });
-
-        // Localization is configured in AddMasalaFrontend()
-        // CORS
-        builder.Services.AddCors(options =>
-        {
-            options.AddPolicy("AllowAll",
-                b => b.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
-        });
-
-        // MVC and Razor Pages are configured in AddMasalaApi() and AddMasalaFrontend()
-        // ViewLocationExpander for multi-tenancy
-        builder.Services.Configure<RazorViewEngineOptions>(options =>
-        {
-            options.ViewLocationExpanders.Add(new TenantViewLocationExpander());
-        });
-        builder.Services.AddHealthChecks();
-        // Note: TenantConnectionResolver is already registered by AddMasalaDatabase()
-
-        // Swagger
-        builder.Services.AddEndpointsApiExplorer();
-
-        // Forwarded Headers
-        builder.Services.Configure<ForwardedHeadersOptions>(options =>
-        {
-            options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor |
-                                       Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
-            options.KnownIPNetworks.Clear();
-            options.KnownProxies.Clear();
-        });
 
         return builder;
     }

@@ -181,19 +181,20 @@ public class EfCoreTicketRepository : ITicketRepository
         return (results, totalItems);
     }
 
-    public async Task<Ticket> AddAsync(Ticket ticket)
+    public Task<Ticket> AddAsync(Ticket ticket)
     {
         _context.Tickets.Add(ticket);
-        await _context.SaveChangesAsync();
-        _logger.LogInformation("Ticket {TicketGuid} added to repository", ticket.Guid);
-        return ticket;
+        // Note: Changes are not committed here. Call IUnitOfWork.CommitAsync() to persist.
+        _logger.LogDebug("Ticket {TicketGuid} queued for add (pending commit)", ticket.Guid);
+        return Task.FromResult(ticket);
     }
 
-    public async Task UpdateAsync(Ticket ticket)
+    public Task UpdateAsync(Ticket ticket)
     {
         _context.Tickets.Update(ticket);
-        await _context.SaveChangesAsync();
-        _logger.LogInformation("Ticket {TicketGuid} updated in repository", ticket.Guid);
+        // Note: Changes are not committed here. Call IUnitOfWork.CommitAsync() to persist.
+        _logger.LogDebug("Ticket {TicketGuid} queued for update (pending commit)", ticket.Guid);
+        return Task.CompletedTask;
     }
 
     public async Task DeleteAsync(Guid id)
@@ -202,8 +203,8 @@ public class EfCoreTicketRepository : ITicketRepository
         if (ticket != null)
         {
             _context.Tickets.Remove(ticket);
-            await _context.SaveChangesAsync();
-            _logger.LogInformation("Ticket {TicketGuid} deleted from repository", id);
+            // Note: Changes are not committed here. Call IUnitOfWork.CommitAsync() to persist.
+            _logger.LogDebug("Ticket {TicketGuid} queued for delete (pending commit)", id);
         }
     }
 
@@ -255,6 +256,14 @@ public class EfCoreTicketRepository : ITicketRepository
             .Where(r => r.TicketId == ticketId)
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();
+    }
+
+    public Task<TicketComment> AddCommentAsync(TicketComment comment)
+    {
+        _context.TicketComments.Add(comment);
+        // Note: Changes are not committed here. Call IUnitOfWork.CommitAsync() to persist.
+        _logger.LogDebug("Comment {CommentId} queued for add to ticket {TicketId} (pending commit)", comment.Id, comment.TicketId);
+        return Task.FromResult(comment);
     }
 
 }

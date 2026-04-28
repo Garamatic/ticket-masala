@@ -16,14 +16,14 @@ public interface ITicketModule
 {
     // ─── Core lifecycle (write operations) ───────────────────────────────────
 
-    Task<TicketResult<Guid>> CreateAsync(CreateTicketCommand command, CancellationToken ct = default);
-    Task<TicketResult<Unit>> UpdateAsync(UpdateTicketCommand command, CancellationToken ct = default);
-    Task<TicketResult<Unit>> AssignAsync(AssignTicketCommand command, CancellationToken ct = default);
-    Task<TicketResult<Unit>> TransitionStatusAsync(TransitionStatusCommand command, CancellationToken ct = default);
+    Task<Common.Result<Guid>> CreateAsync(CreateTicketCommand command, CancellationToken ct = default);
+    Task<Common.Result<Unit>> UpdateAsync(UpdateTicketCommand command, CancellationToken ct = default);
+    Task<Common.Result<Unit>> AssignAsync(AssignTicketCommand command, CancellationToken ct = default);
+    Task<Common.Result<Unit>> TransitionStatusAsync(TransitionStatusCommand command, CancellationToken ct = default);
 
     // ─── Query operations ────────────────────────────────────────────────────
 
-    Task<TicketResult<TicketDetailsDto>> GetDetailsAsync(Guid ticketId, string requestingUserId, IEnumerable<string> requestingUserRoles, CancellationToken ct = default);
+    Task<Common.Result<TicketDetailsDto>> GetDetailsAsync(Guid ticketId, string requestingUserId, IEnumerable<string> requestingUserRoles, CancellationToken ct = default);
     Task<TicketSearchResult> SearchAsync(TicketSearchQuery query, CancellationToken ct = default);
 
     // ─── UI context (read operations for views) ──────────────────────────────
@@ -38,6 +38,9 @@ public interface ITicketModule
     Task<(TicketDetailsViewModel? ViewModel, TicketDetailContext Context)> GetDetailPageAsync(Guid ticketId, ClaimsPrincipal user);
 
     /// <summary>AI-generated summary for a ticket.</summary>
+    Task<string> GenerateAiSummaryAsync(Guid ticketId, ClaimsPrincipal user);
+
+    /// <summary>AI-generated summary for a ticket (backward compatibility).</summary>
     Task<string> GenerateAiSummaryAsync(Guid ticketId);
 
     /// <summary>Lists and domain config for the ticket creation form.</summary>
@@ -53,14 +56,5 @@ public interface ITicketModule
     Task<TicketEditContext> GetEditReloadContextAsync(Guid ticketId, ClaimsPrincipal user);
 }
 
-// Result type for explicit success/failure
-public record TicketResult<T>
-{
-    public bool IsSuccess { get; init; }
-    public T Value { get; init; } = default!;
-    public string ErrorMessage { get; init; } = string.Empty;
-    public static TicketResult<T> Success(T value) => new() { IsSuccess = true, Value = value };
-    public static TicketResult<T> Failure(string message) => new() { IsSuccess = false, ErrorMessage = message };
-}
-
+// Unit type for operations that return no value
 public record Unit { public static Unit Value = new(); }

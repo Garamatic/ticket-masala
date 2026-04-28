@@ -106,6 +106,7 @@ public class EfCoreTicketRepositoryIntegrationTests : IDisposable
 
         // Act
         var result = await _fixture.TicketRepository.AddAsync(ticket);
+        await _fixture.UnitOfWork.CommitAsync();
 
         // Assert
         Assert.NotNull(result);
@@ -139,6 +140,7 @@ public class EfCoreTicketRepositoryIntegrationTests : IDisposable
 
         // Act
         await _fixture.TicketRepository.AddAsync(ticket);
+        await _fixture.UnitOfWork.CommitAsync();
 
         // Assert
         var fromDb = await _fixture.Context.Tickets.FindAsync(ticket.Guid);
@@ -211,6 +213,7 @@ public class EfCoreTicketRepositoryIntegrationTests : IDisposable
 
         // Act
         await _fixture.TicketRepository.UpdateAsync(ticket);
+        await _fixture.UnitOfWork.CommitAsync();
 
         // Assert
         var fromDb = await _fixture.Context.Tickets.FindAsync(ticket.Guid);
@@ -232,6 +235,7 @@ public class EfCoreTicketRepositoryIntegrationTests : IDisposable
 
         // Act
         await _fixture.TicketRepository.UpdateAsync(ticket);
+        await _fixture.UnitOfWork.CommitAsync();
 
         // Assert
         _fixture.Context.ChangeTracker.Clear();
@@ -256,6 +260,7 @@ public class EfCoreTicketRepositoryIntegrationTests : IDisposable
 
         // Act
         await _fixture.TicketRepository.DeleteAsync(ticketGuid);
+        await _fixture.UnitOfWork.CommitAsync();
 
         // Assert
         var fromDb = await _fixture.Context.Tickets.FindAsync(ticketGuid);

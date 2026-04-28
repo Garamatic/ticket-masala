@@ -10,7 +10,18 @@ namespace TicketMasala.Web.Engine.GERDA.Tickets;
 /// </summary>
 public interface ITicketCreateService
 {
-    Task<TicketCreateContext> GetCreateContextAsync(bool isCustomer, string? preselectedCustomerId = null, Guid? projectGuid = null);
+    /// <summary>
+    /// Gets the context needed for the ticket creation view.
+    /// </summary>
+    /// <remarks>
+    /// Note: CancellationToken is accepted for API consistency but not yet propagated
+    /// to underlying services (planned for future enhancement).
+    /// </remarks>
+    Task<TicketCreateContext> GetCreateContextAsync(
+        bool isCustomer,
+        string? preselectedCustomerId = null,
+        Guid? projectGuid = null,
+        CancellationToken cancellationToken = default);
 }
 
 public class TicketCreateService : ITicketCreateService
@@ -26,18 +37,24 @@ public class TicketCreateService : ITicketCreateService
         _projectReadService = projectReadService;
     }
 
-    public async Task<TicketCreateContext> GetCreateContextAsync(bool isCustomer, string? preselectedCustomerId = null, Guid? projectGuid = null)
+    public async Task<TicketCreateContext> GetCreateContextAsync(
+        bool isCustomer,
+        string? preselectedCustomerId = null,
+        Guid? projectGuid = null,
+        CancellationToken cancellationToken = default)
     {
+        // Note: cancellationToken is not yet propagated to underlying services
+        // (ITicketReadService and IProjectReadService need CancellationToken support)
         var context = new TicketCreateContext
         {
             IsCustomer = isCustomer,
-            Employees = await _ticketReadService.GetEmployeeSelectListAsync(),
-            Projects = await _ticketReadService.GetProjectSelectListAsync()
+            Employees = await _ticketReadService.GetEmployeeSelectListAsync().ConfigureAwait(false),
+            Projects = await _ticketReadService.GetProjectSelectListAsync().ConfigureAwait(false)
         };
 
         if (projectGuid.HasValue)
         {
-            var project = await _projectReadService.GetProjectDetailsAsync(projectGuid.Value);
+            var project = await _projectReadService.GetProjectDetailsAsync(projectGuid.Value).ConfigureAwait(false);
             if (project != null && project.ProjectDetails != null)
             {
                 context.PreselectedProjectId = project.ProjectDetails.Guid;
@@ -50,7 +67,7 @@ public class TicketCreateService : ITicketCreateService
 
         if (!isCustomer)
         {
-            context.Customers = await _ticketReadService.GetCustomerSelectListAsync();
+            context.Customers = await _ticketReadService.GetCustomerSelectListAsync().ConfigureAwait(false);
             context.PreselectedCustomerId = preselectedCustomerId;
         }
         else

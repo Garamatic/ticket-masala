@@ -5,7 +5,7 @@ namespace TicketMasala.Domain.Common;
 
 /// <summary>
 /// Base class for all domain entities providing common properties.
-/// Now implements IHasDomainEvents for rich domain model support.
+/// Implements IHasDomainEvents for rich domain model support.
 /// </summary>
 public abstract class BaseModel : IHasDomainEvents
 {
@@ -16,64 +16,27 @@ public abstract class BaseModel : IHasDomainEvents
     public DateTime? ValidUntil { get; set; }
     public Guid? CreatorGuid { get; set; }
 
-    // Domain events collection (legacy - preserved for backward compatibility)
-    private readonly List<DomainEvent> _domainEvents = new();
-
-    [System.Text.Json.Serialization.JsonIgnore]
-    public IReadOnlyCollection<DomainEvent> DomainEvents => _domainEvents.AsReadOnly();
-
-    // New: IDomainEvent support for rich domain model
-    private readonly List<IDomainEvent> _domainEventsNew = new();
+    private readonly List<IDomainEvent> _domainEvents = new();
 
     /// <summary>
-    /// Read-only collection of domain events implementing the new IDomainEvent interface.
+    /// Read-only collection of domain events that have been raised but not yet dispatched.
     /// </summary>
     [System.Text.Json.Serialization.JsonIgnore]
-    public IReadOnlyCollection<IDomainEvent> DomainEventsNew => _domainEventsNew.AsReadOnly();
-
-    // Explicit interface implementation for IHasDomainEvents
-    IReadOnlyCollection<IDomainEvent> IHasDomainEvents.DomainEvents => _domainEventsNew.AsReadOnly();
+    IReadOnlyCollection<IDomainEvent> IHasDomainEvents.DomainEvents => _domainEvents.AsReadOnly();
 
     /// <summary>
-    /// Adds a legacy domain event to the collection.
+    /// Raises a domain event.
     /// </summary>
-    protected void AddDomainEvent(DomainEvent eventItem)
+    protected void RaiseDomainEvent(IDomainEvent eventItem)
     {
         _domainEvents.Add(eventItem);
     }
 
     /// <summary>
-    /// Adds a domain event using the new IDomainEvent interface.
-    /// </summary>
-    protected void RaiseDomainEvent(IDomainEvent eventItem)
-    {
-        _domainEventsNew.Add(eventItem);
-    }
-
-    /// <summary>
-    /// Clears all domain events. This should be called after events are dispatched.
-    /// </summary>
-    public void ClearDomainEvents()
-    {
-        _domainEventsNew.Clear();
-        _domainEvents.Clear(); // Also clear legacy collection for completeness
-    }
-
-    /// <summary>
-    /// Clears all domain events implementing IDomainEvent.
+    /// Clears all pending domain events after they have been dispatched.
     /// </summary>
     void IHasDomainEvents.ClearDomainEvents()
     {
-        _domainEventsNew.Clear();
+        _domainEvents.Clear();
     }
-}
-
-/// <summary>
-/// Marker class for domain events. Inherit from this to create specific event types.
-/// Now implements IDomainEvent for compatibility with the new rich domain model.
-/// </summary>
-public abstract class DomainEvent : IDomainEvent
-{
-    public Guid EventId { get; } = Guid.NewGuid();
-    public DateTime OccurredOn { get; } = DateTime.UtcNow;
 }

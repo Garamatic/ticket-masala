@@ -13,7 +13,6 @@ using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.GERDA.Configuration;
-using TicketMasala.Web.Engine.Security;
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.Utilities;
 using TicketMasala.Web.ViewModels.GERDA;
@@ -37,7 +36,6 @@ public interface ITicketReadService
     Task<List<TicketViewModel>> GetRecentActivityAsync(string? userId, int count);
     Task<Guid?> GetCurrentUserDepartmentIdAsync();
     Task<Ticket?> GetTicketForEditAsync(Guid ticketGuid);
-    string ParseCustomFields(string domainId, Dictionary<string, string> formValues);
 }
 
 public class TicketReadService : ITicketReadService
@@ -88,7 +86,7 @@ public class TicketReadService : ITicketReadService
         if (string.IsNullOrEmpty(userId))
             return null;
 
-        var user = await _context.Users.FindAsync(userId);
+        var user = await _context.Users.FindAsync(userId).ConfigureAwait(false);
         var employee = user as Employee;
         if (employee?.DepartmentId != null && Guid.TryParse(employee.DepartmentId, out var deptGuid))
         {
@@ -99,27 +97,27 @@ public class TicketReadService : ITicketReadService
 
     public async Task<List<SelectListItem>> GetCustomerSelectListAsync()
     {
-        var customers = await _userRepository.GetAllCustomersAsync();
+        var customers = await _userRepository.GetAllCustomersAsync().ConfigureAwait(false);
         return customers.Select(c => new SelectListItem
         {
             Value = c.Id,
-            Text = c.ToFullName()
+            Text = c.FullName
         }).ToList();
     }
 
     public async Task<List<SelectListItem>> GetEmployeeSelectListAsync()
     {
-        var employees = await _userRepository.GetAllEmployeesAsync();
+        var employees = await _userRepository.GetAllEmployeesAsync().ConfigureAwait(false);
         return employees.Select(e => new SelectListItem
         {
             Value = e.Id,
-            Text = e.ToFullName()
+            Text = e.FullName
         }).ToList();
     }
 
     public async Task<List<SelectListItem>> GetProjectSelectListAsync()
     {
-        var projects = await _projectRepository.GetAllAsync();
+        var projects = await _projectRepository.GetAllAsync().ConfigureAwait(false);
         return projects.Select(p => new SelectListItem
         {
             Value = p.Guid.ToString(),
@@ -129,7 +127,7 @@ public class TicketReadService : ITicketReadService
 
     public async Task<List<SelectListItem>> GetCustomerProjectSelectListAsync(string customerId)
     {
-        var projects = await _projectRepository.GetActiveProjectsAsync();
+        var projects = await _projectRepository.GetActiveProjectsAsync().ConfigureAwait(false);
         return projects
             .Where(p => p.CustomerId == customerId || p.Customers.Any(c => c.Id == customerId))
             .Select(p => new SelectListItem
@@ -141,8 +139,8 @@ public class TicketReadService : ITicketReadService
 
     public async Task<IEnumerable<TicketViewModel>> GetAllTicketsAsync()
     {
-        var departmentId = await GetCurrentUserDepartmentIdAsync();
-        var tickets = await _ticketRepository.GetAllAsync(departmentId);
+        var departmentId = await GetCurrentUserDepartmentIdAsync().ConfigureAwait(false);
+        var tickets = await _ticketRepository.GetAllAsync(departmentId).ConfigureAwait(false);
 
         return tickets.Select(t => new TicketViewModel
         {
@@ -151,28 +149,32 @@ public class TicketReadService : ITicketReadService
             TicketStatus = t.TicketStatus,
             CreationDate = t.CreationDate,
             CompletionTarget = t.CompletionTarget,
-            ResponsibleName = t.Responsible?.ToFullName() ?? "Not Assigned",
-            CustomerName = t.Customer?.ToFullName() ?? "Unknown",
+            ResponsibleName = t.Responsible?.FullName ?? "Not Assigned",
+            CustomerName = t.Customer?.FullName ?? "Unknown",
             GerdaTags = t.GerdaTags
         }).ToList();
     }
 
     public async Task<TicketDetailsViewModel?> GetTicketDetailsAsync(Guid ticketGuid)
     {
-        var ticket = await _ticketRepository.GetByIdAsync(ticketGuid, includeRelations: true);
+        var ticket = await _ticketRepository.GetByIdAsync(ticketGuid, includeRelations: true).ConfigureAwait(false);
 
         if (ticket == null)
         {
             return null;
         }
 
-        var documents = await _ticketRepository.GetDocumentsForTicketAsync(ticketGuid);
-        var comments = await _ticketRepository.GetCommentsForTicketAsync(ticketGuid);
-        var reviews = await _ticketRepository.GetQualityReviewsForTicketAsync(ticketGuid);
-        var logs = await _auditService.GetAuditLogForTicketAsync(ticketGuid);
+        var documents = await _ticketRepository.GetDocumentsForTicketAsync(ticketGuid).ConfigureAwait(false);
+        var comments = await _ticketRepository.GetCommentsForTicketAsync(ticketGuid).ConfigureAwait(false);
+        var reviews = await _ticketRepository.GetQualityReviewsForTicketAsync(ticketGuid).ConfigureAwait(false);
+        var logs = await _auditService.GetAuditLogForTicketAsync(ticketGuid).ConfigureAwait(false);
 
-        var project = await _projectRepository.GetAllAsync();
-        var ticketProject = project.FirstOrDefault(p => p.Tasks.Any(t => t.Guid == ticketGuid));
+        // Get project efficiently using the ticket's ProjectGuid if available
+        Project? ticketProject = null;
+        if (ticket.ProjectGuid.HasValue)
+        {
+            ticketProject = await _projectRepository.GetByIdAsync(ticket.ProjectGuid.Value, includeRelations: false).ConfigureAwait(false);
+        }
 
         var viewModel = new TicketDetailsViewModel
         {
@@ -188,9 +190,9 @@ public class TicketReadService : ITicketReadService
             QualityReviews = reviews.ToList(),
             AuditLogs = logs,
 
-            ResponsibleName = ticket.Responsible?.ToFullName(),
+            ResponsibleName = ticket.Responsible?.FullName,
             ResponsibleId = ticket.Responsible?.Id,
-            CustomerName = ticket.Customer?.ToFullName(),
+            CustomerName = ticket.Customer?.FullName,
             CustomerId = ticket.Customer?.Id,
             ParentTicketGuid = ticket.ParentTicket?.Guid,
             ProjectGuid = ticketProject?.Guid,
@@ -236,34 +238,34 @@ public class TicketReadService : ITicketReadService
 
     public async Task<Employee?> GetEmployeeByIdAsync(string agentId)
     {
-        return await _userRepository.GetEmployeeByIdAsync(agentId);
+        return await _userRepository.GetEmployeeByIdAsync(agentId).ConfigureAwait(false);
     }
 
     public async Task<int> GetEmployeeCurrentWorkloadAsync(string agentId)
     {
-        return await _ticketReportingService.GetEmployeeCurrentWorkloadAsync(agentId);
+        return await _ticketReportingService.GetEmployeeCurrentWorkloadAsync(agentId).ConfigureAwait(false);
     }
 
     public async Task<List<SelectListItem>> GetAllUsersSelectListAsync()
     {
-        var users = await _userRepository.GetAllUsersAsync();
+        var users = await _userRepository.GetAllUsersAsync().ConfigureAwait(false);
 
         return users.Select(u => new SelectListItem
         {
             Value = u.Id,
-            Text = u.ToFullName()
+            Text = u.FullName
         }).ToList();
     }
 
     public async Task<TicketSearchViewModel> SearchTicketsAsync(TicketSearchViewModel searchModel)
     {
-        var departmentId = await GetCurrentUserDepartmentIdAsync();
+        var departmentId = await GetCurrentUserDepartmentIdAsync().ConfigureAwait(false);
 
         var userId = GetCurrentUserId();
         if (!string.IsNullOrEmpty(userId))
         {
-            var user = await _userRepository.GetUserByIdAsync(userId);
-            var isAdmin = _httpContextAccessor.HttpContext?.User?.IsInRole("Admin") ?? false;
+            var user = await _userRepository.GetUserByIdAsync(userId).ConfigureAwait(false);
+            var isAdmin = _httpContextAccessor.HttpContext?.User?.IsInRole(Constants.RoleAdmin) ?? false;
 
             if (user != null && user is not Employee && !isAdmin)
             {
@@ -271,7 +273,7 @@ public class TicketReadService : ITicketReadService
             }
         }
 
-        var query = new TicketSearchQuery
+        var query = new TicketMasala.Domain.Repositories.TicketSearchQuery
         {
             SearchTerm = searchModel.SearchTerm,
             Status = searchModel.Status,
@@ -286,7 +288,7 @@ public class TicketReadService : ITicketReadService
             PageSize = searchModel.PageSize
         };
 
-        var (results, totalItems) = await _ticketRepository.SearchAsync(query);
+        var (results, totalItems) = await _ticketRepository.SearchAsync(query).ConfigureAwait(false);
 
         searchModel.Results = results.ToList();
         searchModel.TotalItems = totalItems;
@@ -312,45 +314,47 @@ public class TicketReadService : ITicketReadService
                 projectQuery = projectQuery.Where(p => p.CustomerId == userId);
             }
 
-            stats.ProjectCount = await projectQuery.CountAsync();
+            stats.ProjectCount = await projectQuery.CountAsync().ConfigureAwait(false);
             stats.NewProjectsThisWeek = await projectQuery
                 .Where(p => p.CreationDate >= weekAgo)
-                .CountAsync();
+                .CountAsync().ConfigureAwait(false);
 
             stats.ActiveTicketCount = await ticketQuery
                 .Where(t => t.TicketStatus != Status.Completed)
-                .CountAsync();
+                .CountAsync().ConfigureAwait(false);
 
             stats.PendingTaskCount = await ticketQuery
                 .Where(t => t.TicketStatus == Status.Pending)
-                .CountAsync();
+                .CountAsync().ConfigureAwait(false);
 
             stats.CompletedToday = await ticketQuery
                 .Where(t => t.TicketStatus == Status.Completed && t.CompletionDate >= todayStart)
-                .CountAsync();
+                .CountAsync().ConfigureAwait(false);
 
             var threeDaysFromNow = now.AddDays(3);
             stats.DueSoon = await ticketQuery
                 .Where(t => t.CompletionTarget.HasValue &&
                            t.CompletionTarget.Value <= threeDaysFromNow &&
                            t.TicketStatus != Status.Completed)
-                .CountAsync();
+                .CountAsync().ConfigureAwait(false);
 
-            var totalTickets = await ticketQuery.CountAsync();
-            var completedTickets = await ticketQuery.Where(t => t.TicketStatus == Status.Completed).CountAsync();
+            var totalTickets = await ticketQuery.CountAsync().ConfigureAwait(false);
+            var completedTickets = await ticketQuery.Where(t => t.TicketStatus == Status.Completed).CountAsync().ConfigureAwait(false);
             stats.CompletionRate = totalTickets > 0 ? (int)((double)completedTickets / totalTickets * 100) : 0;
 
             stats.HighRiskCount = await ticketQuery
                 .Where(t => t.GerdaTags != null && (t.GerdaTags.Contains("Risk:Critical") || t.GerdaTags.Contains("Risk:High") || t.GerdaTags.Contains("Compliance:Violation")))
-                .CountAsync();
+                .CountAsync().ConfigureAwait(false);
 
             stats.SentimentWarningCount = await ticketQuery
                 .Where(t => t.GerdaTags != null && t.GerdaTags.Contains("Sentiment:Negative"))
-                .CountAsync();
+                .CountAsync().ConfigureAwait(false);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error fetching dashboard stats for user {UserId}", userId);
+            // Return empty stats on error rather than partial data
+            return new DashboardStats();
         }
 
         return stats;
@@ -365,8 +369,8 @@ public class TicketReadService : ITicketReadService
 
         if (!string.IsNullOrEmpty(userId))
         {
-            var user = await _userRepository.GetUserByIdAsync(userId);
-            if (user is not TicketMasala.Domain.Entities.Employee)
+            var user = await _userRepository.GetUserByIdAsync(userId).ConfigureAwait(false);
+            if (user is not Employee)
             {
                 query = query.Where(t => t.CustomerId == userId);
             }
@@ -375,7 +379,7 @@ public class TicketReadService : ITicketReadService
         var tickets = await query
             .OrderByDescending(t => t.CreationDate)
             .Take(count)
-            .ToListAsync();
+            .ToListAsync().ConfigureAwait(false);
 
         return tickets.Select(t => new TicketViewModel
         {
@@ -384,44 +388,14 @@ public class TicketReadService : ITicketReadService
             TicketStatus = t.TicketStatus,
             CreationDate = t.CreationDate,
             CompletionTarget = t.CompletionTarget,
-            ResponsibleName = t.Responsible?.ToFullName() ?? "Unassigned",
-            CustomerName = t.Customer?.ToFullName() ?? "Unknown",
+            ResponsibleName = t.Responsible?.FullName ?? "Unassigned",
+            CustomerName = t.Customer?.FullName ?? "Unknown",
             GerdaTags = t.GerdaTags
         }).ToList();
     }
 
     public async Task<Ticket?> GetTicketForEditAsync(Guid ticketGuid)
     {
-        return await _ticketRepository.GetByIdAsync(ticketGuid, includeRelations: true);
-    }
-
-    public string ParseCustomFields(string domainId, Dictionary<string, string> formValues)
-    {
-        var customFieldValues = new Dictionary<string, object?>();
-        var customFieldDefs = _domainConfig.GetCustomFields(domainId);
-
-        foreach (var field in customFieldDefs)
-        {
-            var formKey = $"customFields[{field.Name}]";
-            if (formValues.TryGetValue(formKey, out var value) && !string.IsNullOrEmpty(value))
-            {
-                object? parsedValue = value;
-                var type = field.Type.ToLowerInvariant();
-
-                if (type == "number" || type == "currency")
-                {
-                    if (decimal.TryParse(value, System.Globalization.CultureInfo.InvariantCulture, out var num))
-                        parsedValue = num;
-                }
-                else if (type == "boolean")
-                {
-                    parsedValue = value.Equals("true", StringComparison.OrdinalIgnoreCase);
-                }
-
-                customFieldValues[field.Name] = parsedValue;
-            }
-        }
-
-        return System.Text.Json.JsonSerializer.Serialize(customFieldValues);
+        return await _ticketRepository.GetByIdAsync(ticketGuid, includeRelations: true).ConfigureAwait(false);
     }
 }

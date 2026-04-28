@@ -38,13 +38,16 @@ public class TicketDetailService : ITicketDetailService
 
     public async Task<TicketDetailsViewModel?> GetTicketDetailsAsync(Guid ticketId, string? userId, bool isCustomer)
     {
-        var viewModel = await _ticketReadService.GetTicketDetailsAsync(ticketId);
+        var viewModel = await _ticketReadService.GetTicketDetailsAsync(ticketId).ConfigureAwait(false);
         if (viewModel == null)
             return null;
 
+        // Note: Authorization is primarily handled at the module/controller level using
+        // ClaimsPrincipal with full role information. This service-level check only handles
+        // the simple customer ownership case for defense in depth.
         if (isCustomer && viewModel.CustomerId != userId)
         {
-            throw new UnauthorizedAccessException("Customer is not authorized to view this ticket.");
+            return null; // Return null to indicate "not found or not accessible" (don't leak existence)
         }
 
         // Get recommended agent for unassigned tickets
@@ -52,14 +55,14 @@ public class TicketDetailService : ITicketDetailService
         {
             try
             {
-                var recommendations = await _dispatchingService.GetTopRecommendedAgentsAsync(ticketId, 1);
+                var recommendations = await _dispatchingService.GetTopRecommendedAgentsAsync(ticketId, 1).ConfigureAwait(false);
                 if (recommendations != null && recommendations.Any())
                 {
                     var topRecommendation = recommendations.First();
-                    var agent = await _ticketReadService.GetEmployeeByIdAsync(topRecommendation.AgentId);
+                    var agent = await _ticketReadService.GetEmployeeByIdAsync(topRecommendation.AgentId).ConfigureAwait(false);
                     if (agent != null)
                     {
-                        var currentWorkload = await _ticketReadService.GetEmployeeCurrentWorkloadAsync(agent.Id);
+                        var currentWorkload = await _ticketReadService.GetEmployeeCurrentWorkloadAsync(agent.Id).ConfigureAwait(false);
                         viewModel.RecommendedAgent = new RecommendedAgentInfo
                         {
                             AgentId = agent.Id,
@@ -80,10 +83,10 @@ public class TicketDetailService : ITicketDetailService
         // Get suggested KB articles (GERDA-K)
         try
         {
-            var ticket = await _ticketReadService.GetTicketForEditAsync(ticketId);
+            var ticket = await _ticketReadService.GetTicketForEditAsync(ticketId).ConfigureAwait(false);
             if (ticket != null)
             {
-                var suggestions = await _knowledgeService.GetSuggestedArticlesAsync(ticket);
+                var suggestions = await _knowledgeService.GetSuggestedArticlesAsync(ticket).ConfigureAwait(false);
                 viewModel.SuggestedArticles = suggestions.Select(s => new KnowledgeSuggestionInfo
                 {
                     ArticleId = s.Article.Id,

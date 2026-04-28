@@ -19,13 +19,16 @@ public class WorkContainersController : ControllerBase
 {
     private readonly IProjectWorkflowService _projectWorkflowService;
     private readonly IProjectRepository _projectRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
     public WorkContainersController(
         IProjectWorkflowService projectWorkflowService,
-        IProjectRepository projectRepository)
+        IProjectRepository projectRepository,
+        IUnitOfWork unitOfWork)
     {
         _projectWorkflowService = projectWorkflowService;
         _projectRepository = projectRepository;
+        _unitOfWork = unitOfWork;
     }
 
     /// <summary>
@@ -104,6 +107,7 @@ public class WorkContainersController : ControllerBase
         if (needsUpdate)
         {
             await _projectRepository.UpdateAsync(project);
+            await _unitOfWork.CommitAsync();
         }
 
         return CreatedAtAction(nameof(GetById), new { id = project.Guid, version = "1.0" }, project.ToWorkContainerDto());
@@ -129,6 +133,7 @@ public class WorkContainersController : ControllerBase
 
         // Use Repository to update (service update might be limited to ViewModel)
         await _projectRepository.UpdateAsync(updatedProject);
+        await _unitOfWork.CommitAsync();
 
         return NoContent();
     }
@@ -145,6 +150,7 @@ public class WorkContainersController : ControllerBase
             return NotFound();
 
         await _projectRepository.DeleteAsync(id);
+        await _unitOfWork.CommitAsync();
         return NoContent();
     }
 }

@@ -14,15 +14,18 @@ public class CustomerController : Controller
 {
     private readonly IUserRepository _userRepository;
     private readonly IProjectRepository _projectRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<CustomerController> _logger;
 
     public CustomerController(
         IUserRepository userRepository,
         IProjectRepository projectRepository,
+        IUnitOfWork unitOfWork,
         ILogger<CustomerController> logger)
     {
         _userRepository = userRepository;
         _projectRepository = projectRepository;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
@@ -158,15 +161,19 @@ public class CustomerController : Controller
         customer.Email = viewModel.Email;
         customer.PhoneNumber = viewModel.PhoneNumber;
 
-        var success = await _userRepository.UpdateCustomerAsync(customer);
-        if (success)
+        try
         {
+            await _userRepository.UpdateCustomerAsync(customer);
+            await _unitOfWork.CommitAsync();
             TempData["Success"] = "Customer updated successfully.";
             return RedirectToAction(nameof(Detail), new { id });
         }
-
-        ModelState.AddModelError("", "Failed to update customer. Please try again.");
-        return View(viewModel);
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating customer {CustomerId}", id);
+            ModelState.AddModelError("", "Failed to update customer. Please try again.");
+            return View(viewModel);
+        }
     }
 
     [HttpPost]
@@ -179,14 +186,29 @@ public class CustomerController : Controller
             return NotFound();
         }
 
-        var success = await _userRepository.DeleteCustomerAsync(id);
-        if (success)
+        try
         {
+            var deleted = await _userRepository.DeleteCustomerAsync(id);
+            if (!deleted)
+            {
+                return NotFound();
+            }
+            await _unitOfWork.CommitAsync();
             TempData["Success"] = "Customer deleted successfully.";
             return RedirectToAction(nameof(Index));
         }
-
-        TempData["Error"] = "Failed to delete customer. The customer may have associated projects or tickets.";
-        return RedirectToAction(nameof(Detail), new { id });
+        catch (DbUpdateException ex)
+        {
+            // This catches FK constraint violations at CommitAsync time
+            _logger.LogError(ex, "Error deleting customer {CustomerId} - may have associated projects or tickets", id);
+            TempData["Error"] = "Failed to delete customer. The customer may have associated projects or tickets.";
+            return RedirectToAction(nameof(Detail), new { id });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting customer {CustomerId}", id);
+            TempData["Error"] = "Failed to delete customer. Please try again.";
+            return RedirectToAction(nameof(Detail), new { id });
+        }
     }
 }

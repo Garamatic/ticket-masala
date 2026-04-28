@@ -67,19 +67,20 @@ public class EfCoreProjectRepository : IProjectRepository
             .FirstOrDefaultAsync();
     }
 
-    public async Task<Project> AddAsync(Project project)
+    public Task<Project> AddAsync(Project project)
     {
         _context.Projects.Add(project);
-        await _context.SaveChangesAsync();
-        _logger.LogInformation("Project {ProjectGuid} added to repository", project.Guid);
-        return project;
+        // Note: Changes are not committed here. Call IUnitOfWork.CommitAsync() to persist.
+        _logger.LogDebug("Project {ProjectGuid} queued for add (pending commit)", project.Guid);
+        return Task.FromResult(project);
     }
 
-    public async Task UpdateAsync(Project project)
+    public Task UpdateAsync(Project project)
     {
         _context.Projects.Update(project);
-        await _context.SaveChangesAsync();
-        _logger.LogInformation("Project {ProjectGuid} updated in repository", project.Guid);
+        // Note: Changes are not committed here. Call IUnitOfWork.CommitAsync() to persist.
+        _logger.LogDebug("Project {ProjectGuid} queued for update (pending commit)", project.Guid);
+        return Task.CompletedTask;
     }
 
     public async Task DeleteAsync(Guid id)
@@ -88,8 +89,8 @@ public class EfCoreProjectRepository : IProjectRepository
         if (project != null)
         {
             _context.Projects.Remove(project);
-            await _context.SaveChangesAsync();
-            _logger.LogInformation("Project {ProjectGuid} deleted from repository", id);
+            // Note: Changes are not committed here. Call IUnitOfWork.CommitAsync() to persist.
+            _logger.LogDebug("Project {ProjectGuid} queued for delete (pending commit)", id);
         }
     }
 

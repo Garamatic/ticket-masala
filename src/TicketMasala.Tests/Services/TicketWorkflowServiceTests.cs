@@ -1,19 +1,10 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Moq;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Data;
 using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Repositories;
-using TicketMasala.Web.Data;
-using TicketMasala.Web.Engine.Compiler;
-using TicketMasala.Web.Engine.Core;
-using TicketMasala.Web.Engine.GERDA.Configuration;
 using TicketMasala.Web.Engine.GERDA.Tickets;
-using TicketMasala.Web.Engine.Security;
-using TicketMasala.Web.Observers;
-using TicketMasala.Web.Services;
 using Xunit;
 
 namespace TicketMasala.Tests.Services;
@@ -31,62 +22,43 @@ public class TicketWorkflowServiceTests
 
     private TicketWorkflowService CreateService(MasalaDbContext context)
     {
-        var ticketRepository = new Mock<ITicketRepository>();
-        var userRepository = new Mock<IUserRepository>();
-        var projectRepository = new Mock<IProjectRepository>();
-        var observers = new List<ITicketObserver>();
-        var commentObservers = new List<ICommentObserver>();
-        var notificationService = new Mock<INotificationService>();
-        var auditService = new Mock<IAuditService>();
         var httpContextAccessor = new Mock<IHttpContextAccessor>();
-        var ruleEngine = new Mock<IRuleEngineService>();
-        var domainConfig = new Mock<IDomainConfigurationService>();
-        var logger = new Mock<ILogger<TicketWorkflowService>>();
-        var piiScrubber = new Mock<IPiiScrubberService>();
-        var ticketDispatchService = new Mock<TicketMasala.Web.Engine.GERDA.Tickets.Domain.TicketDispatchService>(ticketRepository.Object, new Mock<ILogger<TicketMasala.Web.Engine.GERDA.Tickets.Domain.TicketDispatchService>>().Object);
-        var ticketNotificationService = new Mock<TicketMasala.Web.Engine.GERDA.Tickets.Domain.TicketNotificationService>(notificationService.Object, new Mock<ILogger<TicketMasala.Web.Engine.GERDA.Tickets.Domain.TicketNotificationService>>().Object);
-
-        piiScrubber.Setup(s => s.Scrub(It.IsAny<string>())).Returns((string s) => s);
-
-        userRepository.Setup(r => r.GetCustomerByIdAsync(It.IsAny<string>()))
-            .ReturnsAsync((string id) => context.Users.OfType<ApplicationUser>().FirstOrDefault(u => u.Id == id));
-
-        userRepository.Setup(r => r.GetEmployeeByIdAsync(It.IsAny<string>()))
-            .ReturnsAsync((string id) => context.Users.OfType<Employee>().FirstOrDefault(u => u.Id == id));
-
-        ticketRepository.Setup(r => r.AddAsync(It.IsAny<Ticket>()))
-           .Callback((Ticket t) => context.Tickets.Add(t))
-           .ReturnsAsync((Ticket t) => t);
-
-        ticketRepository.Setup(r => r.UpdateAsync(It.IsAny<Ticket>()))
-            .Callback((Ticket t) =>
+        var resolutionService = new Mock<ITicketResolutionService>();
+        var commentService = new Mock<ITicketCommentService>();
+        var reviewService = new Mock<ITicketReviewService>();
+        var timeLoggingService = new Mock<ITicketTimeLoggingService>();
+        var creationService = new Mock<ITicketCreationService>();
+        // Setup mock to create actual tickets
+        creationService.Setup(s => s.CreateAsync(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<DateTime?>(), It.IsAny<string>()))
+            .ReturnsAsync((string desc, string custId, string? respId, Guid? proj, DateTime? comp, string? creator) =>
             {
-                var existing = context.Tickets.Find(t.Guid);
-                if (existing != null)
-                    context.Entry(existing).CurrentValues.SetValues(t);
-            })
-            .Returns(Task.CompletedTask);
+                var ticket = new Ticket
+                {
+                    Guid = Guid.NewGuid(),
+                    Description = desc,
+                    CustomerId = custId,
+                    ResponsibleId = respId,
+                    ProjectGuid = proj,
+                    Title = desc.Length > 50 ? desc[..47] + "..." : desc,
+                    TicketStatus = !string.IsNullOrEmpty(respId) ? Status.Assigned : Status.Pending
+                };
+                return ticket;
+            });
+        var updateService = new Mock<ITicketUpdateService>();
+        var assignmentFacade = new Mock<ITicketAssignmentFacade>();
 
-        projectRepository.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<bool>()))
-            .ReturnsAsync((Guid id, bool include) => context.Projects.Include(p => p.Tasks).FirstOrDefault(p => p.Guid == id));
+        // No additional setup needed - all behavior is in the specialized services
 
         return new TicketWorkflowService(
-            context,
-            ticketRepository.Object,
-            userRepository.Object,
-            projectRepository.Object,
-            observers,
-            commentObservers,
-            notificationService.Object,
-            auditService.Object,
             httpContextAccessor.Object,
-            ruleEngine.Object,
-            domainConfig.Object,
-            piiScrubber.Object,
-            ticketNotificationService.Object,
-            logger.Object,
-            ticketDispatchService.Object,
-            new SystemClock()
+            resolutionService.Object,
+            commentService.Object,
+            reviewService.Object,
+            timeLoggingService.Object,
+            creationService.Object,
+            updateService.Object,
+            assignmentFacade.Object
         );
     }
 

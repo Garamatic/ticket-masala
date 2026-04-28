@@ -60,7 +60,6 @@ public class IntegrationTestFactory<TProgram> : WebApplicationFactory<TProgram> 
             var gerdaOptions = new GerdaOptions
             {
                 ConfigBasePath = _tempConfigPath,
-                UseMockMlPredictions = true,
                 EnableConfigReload = false
             };
 
@@ -79,7 +78,6 @@ public class IntegrationTestFactory<TProgram> : WebApplicationFactory<TProgram> 
             services.AddGerda(options =>
             {
                 options.ConfigBasePath = gerdaOptions.ConfigBasePath;
-                options.UseMockMlPredictions = gerdaOptions.UseMockMlPredictions;
                 options.EnableConfigReload = gerdaOptions.EnableConfigReload;
             });
         });

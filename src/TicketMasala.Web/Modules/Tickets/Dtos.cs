@@ -14,14 +14,40 @@ public record TicketDetailsDto(
     string? GerdaTags,
     IReadOnlyList<string> ValidNextStatuses);
 
-public record TicketSearchQuery(
-    string? SearchTerm,
-    string? Status,
-    string? ResponsibleId,
-    string? CustomerId,
-    Guid? ProjectId,
-    int Page = 1,
-    int PageSize = 20);
+/// <summary>
+/// Factory method to create TicketDetailsDto with proper ValidNextStatuses parsing.
+/// Handles edge cases in status string formatting.
+/// </summary>
+public static class TicketDetailsDtoFactory
+{
+    public static TicketDetailsDto Create(
+        Guid guid,
+        string title,
+        string description,
+        string status,
+        DateTime creationDate,
+        DateTime? completionTarget,
+        string? responsibleName,
+        string? customerName,
+        string? projectName,
+        double priorityScore,
+        string? gerdaTags,
+        string validNextStatusesString)
+    {
+        // Safely parse the comma-separated statuses, handling null/empty and whitespace
+        var statuses = string.IsNullOrWhiteSpace(validNextStatusesString)
+            ? Array.Empty<string>()
+            : validNextStatusesString.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        return new TicketDetailsDto(
+            guid, title, description, status, creationDate, completionTarget,
+            responsibleName, customerName, projectName, priorityScore, gerdaTags,
+            statuses);
+    }
+}
+
+// Note: TicketSearchQuery is defined in Domain/Repositories/ITicketRepository.cs
+// to ensure consistency across layers. It uses enum types for Status and TicketType.
 
 public record TicketSearchResult(
     IReadOnlyList<TicketSummaryDto> Items,

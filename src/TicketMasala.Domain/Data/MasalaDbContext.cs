@@ -39,9 +39,6 @@ public class MasalaDbContext : IdentityDbContext<ApplicationUser, IdentityRole, 
     {
         base.OnModelCreating(modelBuilder);
 
-        // Exclude DomainEvent from EF Core mapping (it's not a persisted entity)
-        modelBuilder.Ignore<DomainEvent>();
-
         // Detect database provider for provider-specific SQL generation
         var providerName = Database.ProviderName ?? "Microsoft.EntityFrameworkCore.Sqlite";
 

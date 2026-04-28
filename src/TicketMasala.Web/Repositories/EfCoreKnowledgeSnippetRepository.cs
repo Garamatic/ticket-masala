@@ -61,11 +61,11 @@ public class EfCoreKnowledgeSnippetRepository : IKnowledgeSnippetRepository
         }
     }
 
-    public async Task<KnowledgeBaseSnippet> AddAsync(KnowledgeBaseSnippet snippet)
+    public Task<KnowledgeBaseSnippet> AddAsync(KnowledgeBaseSnippet snippet)
     {
         _context.KnowledgeBaseSnippets.Add(snippet);
-        await _context.SaveChangesAsync();
-        return snippet;
+        // Note: Changes are not committed here. Call IUnitOfWork.CommitAsync() to persist.
+        return Task.FromResult(snippet);
     }
 
     public async Task IncrementUsageCountAsync(Guid id)
@@ -74,7 +74,7 @@ public class EfCoreKnowledgeSnippetRepository : IKnowledgeSnippetRepository
         if (snippet != null)
         {
             snippet.UsageCount++;
-            await _context.SaveChangesAsync();
+            // Note: Changes are not committed here. Call IUnitOfWork.CommitAsync() to persist.
         }
     }
 }

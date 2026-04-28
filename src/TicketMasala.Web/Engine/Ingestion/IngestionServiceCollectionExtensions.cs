@@ -27,7 +27,7 @@ public static class IngestionServiceCollectionExtensions
         // ============================================
         // Register Background Task Queue Infrastructure
         // ============================================
-        services.AddSingleton<IBackgroundTaskQueue>(ctx => new BackgroundQueue(100));
+        services.AddSingleton<IBackgroundTaskQueue>(_ => new BackgroundQueue(100));
         services.AddSingleton(Channel.CreateUnbounded<IngestionWorkItem>());
         services.AddHostedService<QueuedHostedService>();
 

@@ -33,9 +33,29 @@ public class TicketEditService : ITicketEditService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Deserializes custom fields JSON safely, returning empty dictionary on error.
+    /// </summary>
+    private Dictionary<string, object> DeserializeCustomFields(string? json, Guid ticketGuid)
+    {
+        if (string.IsNullOrEmpty(json))
+            return new Dictionary<string, object>();
+
+        try
+        {
+            return JsonSerializer.Deserialize<Dictionary<string, object>>(json)
+                ?? new Dictionary<string, object>();
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogWarning(ex, "Failed to deserialize CustomFieldsJson for ticket {TicketGuid}", ticketGuid);
+            return new Dictionary<string, object>();
+        }
+    }
+
     public async Task<TicketEditContext?> GetEditContextAsync(Guid ticketId, System.Security.Claims.ClaimsPrincipal user)
     {
-        var ticket = await _ticketReadService.GetTicketForEditAsync(ticketId);
+        var ticket = await _ticketReadService.GetTicketForEditAsync(ticketId).ConfigureAwait(false);
         if (ticket == null)
             return null;
 
@@ -43,23 +63,29 @@ public class TicketEditService : ITicketEditService
         var isCustomer = user.IsInRole(Constants.RoleCustomer);
 
         // Authorize before loading dropdown lists to avoid wasted database calls
-        if (isCustomer)
+        if (string.IsNullOrEmpty(userId))
+            throw new UnauthorizedAccessException("User ID is required for authorization.");
+
+        // All users must be authorized to edit this ticket
+        var userRoles = user.Claims
+            .Where(c => c.Type == System.Security.Claims.ClaimTypes.Role)
+            .Select(c => c.Value)
+            .ToList();
+
+        if (!ticket.CanBeEditedBy(userId, userRoles))
+            throw new UnauthorizedAccessException("You are not authorized to edit this ticket.");
+
+        // Customers have additional restrictions: can only edit in specific states
+        if (isCustomer && !ticket.CanEditInCurrentState())
         {
-            if (string.IsNullOrEmpty(userId))
-                throw new UnauthorizedAccessException("User ID is required for customer authorization.");
-
-            if (ticket.CustomerId != userId)
-                throw new UnauthorizedAccessException("Customer is not authorized to edit this ticket.");
-
-            if (ticket.TicketStatus != Status.Pending && ticket.TicketStatus != Status.Assigned)
-            {
-                throw new InvalidOperationException("You can only edit tickets that are in Pending or Assigned status.");
-            }
+            throw new InvalidOperationException(
+                $"You can only edit tickets that are in Pending, Assigned, or In Progress status. " +
+                $"This ticket is currently {ticket.TicketStatus}.");
         }
 
-        var responsibleUsers = await _ticketReadService.GetAllUsersSelectListAsync();
-        var customers = await _ticketReadService.GetCustomerSelectListAsync();
-        var projects = await _ticketReadService.GetProjectSelectListAsync();
+        var responsibleUsers = await _ticketReadService.GetAllUsersSelectListAsync().ConfigureAwait(false);
+        var customers = await _ticketReadService.GetCustomerSelectListAsync().ConfigureAwait(false);
+        var projects = await _ticketReadService.GetProjectSelectListAsync().ConfigureAwait(false);
 
         var viewModel = new EditTicketViewModel
         {
@@ -76,21 +102,7 @@ public class TicketEditService : ITicketEditService
         };
 
         // Deserialize custom field values from ticket's JSON storage
-        var customFieldValues = new Dictionary<string, object>();
-        if (!string.IsNullOrEmpty(ticket.CustomFieldsJson))
-        {
-            try
-            {
-                customFieldValues = JsonSerializer.Deserialize<Dictionary<string, object>>(ticket.CustomFieldsJson)
-                    ?? new Dictionary<string, object>();
-            }
-            catch (JsonException ex)
-            {
-                // Log deserialization errors but continue with empty custom fields
-                // This prevents UI crashes due to corrupted JSON data
-                _logger.LogWarning(ex, "Failed to deserialize CustomFieldsJson for ticket {TicketGuid}", ticket.Guid);
-            }
-        }
+        var customFieldValues = DeserializeCustomFields(ticket.CustomFieldsJson, ticket.Guid);
 
         // Get valid status transitions for the current ticket state
         var validStates = _ruleEngine.GetValidNextStates(ticket, user);
@@ -99,6 +111,7 @@ public class TicketEditService : ITicketEditService
         return new TicketEditContext
         {
             ViewModel = viewModel,
+            DomainId = ticket.DomainId,
             WorkItemTypeCode = ticket.WorkItemTypeCode,
             CustomFieldValues = customFieldValues,
             ValidStatuses = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(allowedStatuses)
@@ -113,7 +126,7 @@ public class TicketEditService : ITicketEditService
         // by GetCreateReloadContextAsync in the controller. This method only fetches
         // edit-specific data that varies based on the ticket state.
 
-        var reloadTicket = await _ticketReadService.GetTicketForEditAsync(ticketId);
+        var reloadTicket = await _ticketReadService.GetTicketForEditAsync(ticketId).ConfigureAwait(false);
         if (reloadTicket != null)
         {
             // Valid status transitions depend on current ticket state and user permissions
@@ -123,20 +136,7 @@ public class TicketEditService : ITicketEditService
             context.WorkItemTypeCode = reloadTicket.WorkItemTypeCode;
 
             // Preserve custom field values from ticket's JSON storage
-            if (!string.IsNullOrEmpty(reloadTicket.CustomFieldsJson))
-            {
-                try
-                {
-                    context.CustomFieldValues = JsonSerializer.Deserialize<Dictionary<string, object>>(reloadTicket.CustomFieldsJson)
-                        ?? new Dictionary<string, object>();
-                }
-                catch (JsonException ex)
-                {
-                    // Log deserialization errors but continue with empty custom fields
-                    _logger.LogWarning(ex, "Failed to deserialize CustomFieldsJson for ticket {TicketGuid}", reloadTicket.Guid);
-                    context.CustomFieldValues = new Dictionary<string, object>();
-                }
-            }
+            context.CustomFieldValues = DeserializeCustomFields(reloadTicket.CustomFieldsJson, reloadTicket.Guid);
         }
 
         return context;

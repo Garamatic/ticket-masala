@@ -8,9 +8,16 @@ public class Result
 {
     public bool IsSuccess { get; }
     public bool IsFailure => !IsSuccess;
+
+    /// <summary>
+    /// The error message if the operation failed. Null if successful.
+    /// </summary>
     public string? Error { get; }
+
+    /// <summary>
+    /// The success message if the operation succeeded. Null if failed.
+    /// </summary>
     public string? SuccessMessage { get; }
-    public string? ErrorMessage => Error;
 
     protected Result(bool isSuccess, string? error, string? successMessage = null)
     {

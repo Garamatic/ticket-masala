@@ -37,6 +37,9 @@ public interface ITicketRepository
     Task<IReadOnlyList<Document>> GetDocumentsForTicketAsync(Guid ticketId);
     Task<IReadOnlyList<TicketComment>> GetCommentsForTicketAsync(Guid ticketId);
     Task<IReadOnlyList<QualityReview>> GetQualityReviewsForTicketAsync(Guid ticketId);
+
+    // Comment operations
+    Task<TicketComment> AddCommentAsync(TicketComment comment);
 }
 
 /// <summary>

@@ -1,3 +1,5 @@
+using TicketMasala.Domain.Repositories;
+using TicketMasala.Web.Common;
 using TicketMasala.Web.Modules.Tickets;
 using Xunit;
 
@@ -28,16 +30,16 @@ public class TicketModuleRegistrationTests
     }
 
     [Fact]
-    public void TicketResult_IsRecordType()
+    public void CommonResult_IsRecordType()
     {
-        var type = typeof(TicketResult<object>);
+        var type = typeof(Result<object>);
         Assert.True(type.IsPublic);
 
         // Verify it has the expected properties
         var properties = type.GetProperties();
         Assert.Contains(properties, p => p.Name == "IsSuccess");
         Assert.Contains(properties, p => p.Name == "Value");
-        Assert.Contains(properties, p => p.Name == "ErrorMessage");
+        Assert.Contains(properties, p => p.Name == "Error");
     }
 
     [Fact]

@@ -2,41 +2,40 @@ using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Repositories;
 using TicketMasala.Domain.Services;
 using TicketMasala.Web.Engine.GERDA.Configuration;
+using TicketMasala.Web.Repositories;
 
 namespace TicketMasala.Web.Modules.Tickets.Internal;
 
 internal interface ITicketLifecycleService
 {
-    // Note: These methods don't accept CancellationToken because the underlying
-    // repositories (ITicketRepository, IUserRepository) don't support it.
-    Task<Ticket> CreateAsync(CreateTicketCommand command);
-    Task UpdateAsync(Ticket ticket, UpdateTicketCommand command);
-    Task AssignAsync(Ticket ticket, AssignTicketCommand command);
-    Task TransitionStatusAsync(Ticket ticket, TransitionStatusCommand command);
+    Task<Ticket> CreateAsync(CreateTicketCommand command, CancellationToken ct = default);
+    Task UpdateAsync(Ticket ticket, UpdateTicketCommand command, CancellationToken ct = default);
+    Task AssignAsync(Ticket ticket, AssignTicketCommand command, CancellationToken ct = default);
+    Task TransitionStatusAsync(Ticket ticket, TransitionStatusCommand command, CancellationToken ct = default);
 }
 
 internal class TicketLifecycleService : ITicketLifecycleService
 {
-    private readonly ITicketRepository _ticketRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IUserRepository _userRepository;
     private readonly ITicketAssignmentService _assignmentService;
     private readonly IDomainConfigurationService _domainConfig;
 
     public TicketLifecycleService(
-        ITicketRepository ticketRepository,
+        IUnitOfWork unitOfWork,
         IUserRepository userRepository,
         ITicketAssignmentService assignmentService,
         IDomainConfigurationService domainConfig)
     {
-        _ticketRepository = ticketRepository;
+        _unitOfWork = unitOfWork;
         _userRepository = userRepository;
         _assignmentService = assignmentService;
         _domainConfig = domainConfig;
     }
 
-    public async Task<Ticket> CreateAsync(CreateTicketCommand command)
+    public async Task<Ticket> CreateAsync(CreateTicketCommand command, CancellationToken ct = default)
     {
-        var customer = await _userRepository.GetCustomerByIdAsync(command.CustomerId);
+        var customer = await _userRepository.GetCustomerByIdAsync(command.CustomerId).ConfigureAwait(false);
         if (customer == null)
             throw new InvalidOperationException($"Customer {command.CustomerId} not found");
 
@@ -61,7 +60,7 @@ internal class TicketLifecycleService : ITicketLifecycleService
 
         if (!string.IsNullOrEmpty(command.ResponsibleId))
         {
-            var employee = await _userRepository.GetEmployeeByIdAsync(command.ResponsibleId);
+            var employee = await _userRepository.GetEmployeeByIdAsync(command.ResponsibleId).ConfigureAwait(false);
             if (employee != null)
             {
                 ticket.SetResponsible(employee);
@@ -70,25 +69,25 @@ internal class TicketLifecycleService : ITicketLifecycleService
             }
         }
 
-        await _ticketRepository.AddAsync(ticket);
+        await _unitOfWork.Tickets.AddAsync(ticket).ConfigureAwait(false);
+        await _unitOfWork.CommitAsync(ct).ConfigureAwait(false);
         return ticket;
     }
 
-    public async Task UpdateAsync(Ticket ticket, UpdateTicketCommand command)
+    public async Task UpdateAsync(Ticket ticket, UpdateTicketCommand command, CancellationToken ct = default)
     {
         // Check status transition first (optimistic concurrency check)
         // This must happen before any modifications to prevent partial updates on conflict
-        var actualStatus = ticket.TicketStatus.ToString();
-        if (actualStatus != command.TicketStatus)
+        var actualStatusString = ticket.TicketStatus.ToString();
+        if (actualStatusString != command.TicketStatus)
         {
-            // Status differs from what UI expected - verify it's a valid intentional transition
-            if (!Enum.TryParse<Domain.Common.Status>(command.TicketStatus, out var newStatus))
-                throw new InvalidOperationException($"Invalid status: {command.TicketStatus}");
+            // Status differs from what UI expected - parse and verify valid transition
+            var newStatus = command.ParseStatusOrThrow();
 
             if (!Ticket.IsValidTransition(ticket.TicketStatus, newStatus))
             {
                 throw new InvalidOperationException(
-                    $"Cannot transition from {actualStatus} to {newStatus}. " +
+                    $"Cannot transition from {actualStatusString} to {newStatus}. " +
                     $"The ticket may have been modified by another user. Please refresh and try again.");
             }
 
@@ -109,12 +108,13 @@ internal class TicketLifecycleService : ITicketLifecycleService
                 command.ModifiedByUserId);
         }
 
-        await _ticketRepository.UpdateAsync(ticket);
+        await _unitOfWork.Tickets.UpdateAsync(ticket).ConfigureAwait(false);
+        await _unitOfWork.CommitAsync(ct).ConfigureAwait(false);
     }
 
-    public async Task AssignAsync(Ticket ticket, AssignTicketCommand command)
+    public async Task AssignAsync(Ticket ticket, AssignTicketCommand command, CancellationToken ct = default)
     {
-        var employee = await _userRepository.GetEmployeeByIdAsync(command.ResponsibleId);
+        var employee = await _userRepository.GetEmployeeByIdAsync(command.ResponsibleId).ConfigureAwait(false);
         if (employee == null)
             throw new InvalidOperationException($"Employee {command.ResponsibleId} not found");
 
@@ -122,12 +122,13 @@ internal class TicketLifecycleService : ITicketLifecycleService
             ticket,
             employee,
             command.AssignedByUserId,
-            command.AssignedByRoles);
+            command.AssignedByRoles).ConfigureAwait(false);
 
-        await _ticketRepository.UpdateAsync(ticket);
+        await _unitOfWork.Tickets.UpdateAsync(ticket).ConfigureAwait(false);
+        await _unitOfWork.CommitAsync(ct).ConfigureAwait(false);
     }
 
-    public async Task TransitionStatusAsync(Ticket ticket, TransitionStatusCommand command)
+    public async Task TransitionStatusAsync(Ticket ticket, TransitionStatusCommand command, CancellationToken ct = default)
     {
         // Optimistic concurrency check: verify ticket hasn't changed since UI loaded
         if (ticket.TicketStatus.ToString() != command.FromStatus)
@@ -141,6 +142,7 @@ internal class TicketLifecycleService : ITicketLifecycleService
             throw new InvalidOperationException($"Invalid status: {command.ToStatus}");
 
         ticket.TransitionTo(targetStatus, command.ChangedByUserId);
-        await _ticketRepository.UpdateAsync(ticket);
+        await _unitOfWork.Tickets.UpdateAsync(ticket).ConfigureAwait(false);
+        await _unitOfWork.CommitAsync(ct).ConfigureAwait(false);
     }
 }

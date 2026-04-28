@@ -21,15 +21,18 @@ public class WorkItemsController : ControllerBase
 {
     private readonly ITicketWorkflowService _ticketWorkflowService;
     private readonly ITicketRepository _ticketRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IJsonParsingService _jsonParsingService;
 
     public WorkItemsController(
         ITicketWorkflowService ticketWorkflowService,
         ITicketRepository ticketRepository,
+        IUnitOfWork unitOfWork,
         IJsonParsingService jsonParsingService)
     {
         _ticketWorkflowService = ticketWorkflowService;
         _ticketRepository = ticketRepository;
+        _unitOfWork = unitOfWork;
         _jsonParsingService = jsonParsingService;
     }
 
@@ -92,27 +95,25 @@ public class WorkItemsController : ControllerBase
         );
 
         // Post-creation update for fields not in Service.Create signature
-        bool needsUpdate = false;
+        // Use domain methods to ensure proper validation and event raising
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "system";
+
         if (!string.IsNullOrEmpty(workItem.Title) && workItem.Title != "New Ticket")
         {
-            ticket.Title = workItem.Title;
-            needsUpdate = true;
+            ticket.UpdateTitle(workItem.Title, currentUserId);
         }
         if (!string.IsNullOrEmpty(workItem.DomainId) && workItem.DomainId != "IT")
         {
-            ticket.DomainId = workItem.DomainId;
-            needsUpdate = true;
+            ticket.SetDomain(workItem.DomainId);
         }
         if (!string.IsNullOrEmpty(workItem.TypeCode))
         {
-            ticket.WorkItemTypeCode = workItem.TypeCode;
-            needsUpdate = true;
+            ticket.SetWorkItemTypeCode(workItem.TypeCode);
         }
 
-        if (needsUpdate)
-        {
-            await _ticketWorkflowService.UpdateTicketAsync(ticket);
-        }
+        // Always update to capture any domain method changes
+        await _ticketRepository.UpdateAsync(ticket);
+        await _unitOfWork.CommitAsync();
 
         return CreatedAtAction(
             nameof(GetById),
@@ -159,6 +160,7 @@ public class WorkItemsController : ControllerBase
             return NotFound();
 
         await _ticketRepository.DeleteAsync(id);
+        await _unitOfWork.CommitAsync();
         return NoContent();
     }
 

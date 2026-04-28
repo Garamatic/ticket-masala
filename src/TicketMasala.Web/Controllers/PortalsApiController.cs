@@ -25,25 +25,26 @@ public class PortalsApiController : ControllerBase
     private readonly ITicketRepository _ticketRepository;
     private readonly IUserRepository _userRepository;
     private readonly IProjectRepository _projectRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IDomainConfigurationService _domainConfig;
     private readonly ILogger<PortalsApiController> _logger;
     private readonly IWebHostEnvironment _environment;
     private readonly ISystemClock _clock;
 
     public PortalsApiController(
-
         ITicketRepository ticketRepository,
         IUserRepository userRepository,
         IProjectRepository projectRepository,
+        IUnitOfWork unitOfWork,
         IDomainConfigurationService domainConfig,
         ILogger<PortalsApiController> logger,
         IWebHostEnvironment environment,
         ISystemClock clock)
     {
-
         _ticketRepository = ticketRepository;
         _userRepository = userRepository;
         _projectRepository = projectRepository;
+        _unitOfWork = unitOfWork;
         _domainConfig = domainConfig;
         _logger = logger;
         _environment = environment;
@@ -128,7 +129,7 @@ public class PortalsApiController : ControllerBase
 
             // Save to database
             await _ticketRepository.AddAsync(ticket);
-
+            await _unitOfWork.CommitAsync();
 
             _logger.LogInformation("Portal ticket created: {TicketGuid}", ticket.Guid);
 

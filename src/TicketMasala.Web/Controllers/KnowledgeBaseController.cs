@@ -12,15 +12,18 @@ namespace TicketMasala.Web.Controllers;
 public class KnowledgeBaseController : Controller
 {
     private readonly IKnowledgeBaseRepository _repository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<KnowledgeBaseController> _logger;
     private readonly ISystemClock _clock;
 
     public KnowledgeBaseController(
         IKnowledgeBaseRepository repository,
+        IUnitOfWork unitOfWork,
         ILogger<KnowledgeBaseController> logger,
         ISystemClock clock)
     {
         _repository = repository;
+        _unitOfWork = unitOfWork;
         _logger = logger;
         _clock = clock;
     }
@@ -83,6 +86,7 @@ public class KnowledgeBaseController : Controller
             article.IsVerified = false;
 
             await _repository.AddAsync(article);
+            await _unitOfWork.CommitAsync();
             return RedirectToAction(nameof(Index));
         }
         return View(article);
@@ -117,6 +121,7 @@ public class KnowledgeBaseController : Controller
             {
                 article.UpdatedAt = _clock.UtcNow;
                 await _repository.UpdateAsync(article);
+                await _unitOfWork.CommitAsync();
             }
             catch (DbUpdateConcurrencyException)
             {

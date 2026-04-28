@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using TicketMasala.Domain.Common;
+using TicketMasala.Domain.Configuration;
 using TicketMasala.Web.Facades;
 using TicketMasala.Web.Modules.Tickets;
 using TicketMasala.Web.ViewModels.Tickets;
@@ -68,12 +69,16 @@ public class TicketController : Controller
     {
         try
         {
-            var summary = await _ticketModule.GenerateAiSummaryAsync(ticketId);
+            var summary = await _ticketModule.GenerateAiSummaryAsync(ticketId, User);
             return Json(new { success = true, summary });
         }
         catch (ArgumentException)
         {
             return NotFound();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
         }
         catch (Exception ex)
         {
@@ -115,14 +120,7 @@ public class TicketController : Controller
         string? domainId,
         string? workItemTypeCode)
     {
-        try
-        {
-            return await CreateInternal(description, customerId, responsibleId, projectGuid, completionTarget, domainId, workItemTypeCode);
-        }
-        catch (NullReferenceException)
-        {
-            return BadRequest("Request could not be processed due to missing context");
-        }
+        return await CreateInternal(description, customerId, responsibleId, projectGuid, completionTarget, domainId, workItemTypeCode);
     }
 
     private async Task<IActionResult> CreateInternal(
@@ -159,9 +157,10 @@ public class TicketController : Controller
 
         if (ModelState.IsValid)
         {
-            // Build custom fields from form (safely handle null form)
-            var customFields = Request.Form?.Count > 0
-                ? Request.Form
+            // Build custom fields from form
+            var form = HttpContext.Request.Form;
+            var customFields = form.Count > 0
+                ? form
                     .Where(x => x.Key.StartsWith("customFields["))
                     .ToDictionary(
                         x => x.Key.Replace("customFields[", "").Replace("]", ""),
@@ -187,7 +186,7 @@ public class TicketController : Controller
                 return RedirectToAction("Index", "TicketSearch");
             }
 
-            TempData["Warning"] = result.ErrorMessage;
+            TempData["Warning"] = result.Error;
         }
 
         // Reload context on failure
@@ -255,8 +254,9 @@ public class TicketController : Controller
             var roles = User.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList();
 
             // Build custom fields from form
-            var customFields = Request.Form?.Count > 0
-                ? Request.Form
+            var form = HttpContext.Request.Form;
+            var customFields = form.Count > 0
+                ? form
                     .Where(x => x.Key.StartsWith("customFields["))
                     .ToDictionary(
                         x => x.Key.Replace("customFields[", "").Replace("]", ""),
@@ -281,7 +281,7 @@ public class TicketController : Controller
                 return RedirectToAction(nameof(Detail), new { id = id });
             }
 
-            ModelState.AddModelError("", result.ErrorMessage ?? "Failed to update ticket.");
+            ModelState.AddModelError("", result.Error ?? "Failed to update ticket.");
         }
 
         // Reload context on failure
@@ -292,13 +292,13 @@ public class TicketController : Controller
 
         var context = await _ticketModule.GetEditReloadContextAsync(id, User);
 
-        // Note: context is never null per ITicketModule contract
-        ViewBag.ValidStatuses = context.ValidStatuses;
-        ViewBag.DomainId = context.DomainId;
-        ViewBag.EntityLabels = context.EntityLabels;
-        ViewBag.CustomFields = context.CustomFields;
-        ViewBag.WorkItemTypeCode = context.WorkItemTypeCode;
-        ViewBag.CustomFieldValues = context.CustomFieldValues;
+        // Defensive: context should not be null, but handle gracefully if it is
+        ViewBag.ValidStatuses = context?.ValidStatuses ?? new SelectList(Enum.GetValues<Status>());
+        ViewBag.DomainId = context?.DomainId ?? "IT";
+        ViewBag.EntityLabels = context?.EntityLabels ?? new Domain.Configuration.EntityLabels();
+        ViewBag.CustomFields = context?.CustomFields ?? new List<Domain.Configuration.CustomFieldDefinition>();
+        ViewBag.WorkItemTypeCode = context?.WorkItemTypeCode;
+        ViewBag.CustomFieldValues = context?.CustomFieldValues ?? new Dictionary<string, object>();
 
         return View(viewModel);
     }

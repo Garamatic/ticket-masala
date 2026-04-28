@@ -105,6 +105,7 @@ public class KnowledgeBaseRepositoryTests
 
         // Act
         await repository.IncrementUsageCountAsync(article.Id);
+        await context.SaveChangesAsync(); // Repository no longer calls SaveChanges - manual commit for test
 
         // Assert
         var updated = await context.KnowledgeBaseArticles.FindAsync(article.Id);

@@ -13,10 +13,11 @@ namespace TicketMasala.Domain.Entities;
 public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
 {
     // ═════════════════════════════════════════════════════════════════
-    // ENCAPSULATED PROPERTIES (Phase 2: internal set for migration compatibility)
+    // DOMAIN PROPERTIES
     // ═════════════════════════════════════════════════════════════════
-    // Note: Using 'internal set' allows the Web layer to set properties during
-    // the migration period. Goal is to gradually move to rich methods.
+    // Note: Properties use public setters for EF Core compatibility.
+    // Domain methods (SetDomain, UpdateTitle, TransitionTo, etc.) should be
+    // used for business operations to ensure validation and event raising.
 
     public TicketType? TicketType { get; set; }
 
@@ -56,7 +57,10 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
     public string? ResolutionNotes { get; set; }
 
     // --- RIGID COLUMNS (Indexed, Relational) ---
-    public string DomainId { get; set; } = "IT"; // e.g., "IT", "LEGAL"
+    /// <summary>
+    /// Domain identifier (e.g., "IT", "LEGAL").
+    /// </summary>
+    public string DomainId { get; set; } = "IT"; // TODO: Migrate callers to SetDomain()
 
     /// <summary>
     /// Simplified lifecycle status for triage: "New", "Triaged", "Done".
@@ -69,7 +73,7 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
     /// Workflow state for ticket processing (Pending, InProgress, Completed, etc.).
     /// This is the primary status for business logic and GERDA workflow.
     /// </summary>
-    public Status TicketStatus { get; set; } = Common.Status.Pending;
+    public Status TicketStatus { get; set; } = Common.Status.Pending; // TODO: Migrate callers to TransitionTo()
 
     public string Title { get; set; } = string.Empty;
 
@@ -218,6 +222,8 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
 
     /// <summary>
     /// Creates a ticket from portal submission with minimal required fields.
+    /// Note: Domain events are suppressed during creation and raised after all
+    /// properties are set to ensure event data is complete.
     /// </summary>
     public static Ticket CreateFromPortal(
         string description,
@@ -231,8 +237,21 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
             ? description[..47] + "..."
             : description;
 
-        var ticket = Create(description, title, customerId);
+        // Create ticket without raising domain event yet
+        var ticket = new Ticket
+        {
+            Description = description.Trim(),
+            Title = title.Trim(),
+            CustomerId = customerId,
+            DomainId = "IT",
+            TicketStatus = Common.Status.Pending,
+            PriorityScore = 0.0,
+            CustomFieldsJson = "{}"
+        };
 
+        ticket.SyncStatus();
+
+        // Apply optional values BEFORE raising domain event
         if (priorityScore.HasValue)
             ticket.SetPriorityScore(priorityScore.Value);
 
@@ -241,6 +260,12 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
 
         if (completionTarget.HasValue)
             ticket.SetCompletionTarget(completionTarget.Value);
+
+        // Now raise domain event with complete data
+        if (!string.IsNullOrEmpty(customerId))
+        {
+            ticket.RaiseDomainEvent(new TicketCreatedEvent(ticket.Guid, customerId, ticket.DomainId));
+        }
 
         return ticket;
     }
@@ -511,6 +536,25 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
     public void SetProject(Guid? projectGuid)
     {
         ProjectGuid = projectGuid;
+    }
+
+    /// <summary>
+    /// Sets the domain ID (e.g., "IT", "LEGAL").
+    /// </summary>
+    public void SetDomain(string domainId)
+    {
+        if (string.IsNullOrWhiteSpace(domainId))
+            throw new DomainException("Domain ID cannot be empty");
+
+        DomainId = domainId.Trim();
+    }
+
+    /// <summary>
+    /// Sets the customer ID.
+    /// </summary>
+    public void SetCustomer(string? customerId)
+    {
+        CustomerId = customerId;
     }
 
     /// <summary>
@@ -892,13 +936,37 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
 
     /// <summary>
     /// [LEGACY] Direct property setters for seeding and migration scenarios.
-    /// These methods bypass domain validation and should only be used for:
-    /// - Data seeding
-    /// - Database migrations
-    /// - Importing legacy data
+    /// ⚠️ WARNING: This method bypasses ALL domain validation and business rules.
+    /// Use only for:
+    /// - Data seeding (test/development data)
+    /// - Database migrations (one-time data fixes)
+    /// - Importing legacy data (known-good historical data)
+    /// 
+    /// NEVER use for:
+    /// - Regular business operations
+    /// - User-initiated changes
+    /// - New feature development
+    /// 
+    /// This method will be removed in Phase 4 of the domain model migration.
     /// </summary>
+    /// <param name="setter">Action that performs direct property mutation.</param>
+    /// <exception cref="InvalidOperationException">Thrown in production environments when attempted.</exception>
     public void SetPropertyForSeeding(Action<Ticket> setter)
     {
+#if !DEBUG && !TESTING
+        // In production, require explicit opt-in via environment variable
+        var allowSeedBypass = Environment.GetEnvironmentVariable("TICKETMASALA_ALLOW_SEED_BYPASS") == "true";
+        if (!allowSeedBypass)
+        {
+            throw new InvalidOperationException(
+                "SetPropertyForSeeding is not allowed in production. " +
+                "Set TICKETMASALA_ALLOW_SEED_BYPASS=true only for data migrations.");
+        }
+#endif
+
         setter(this);
+
+        // After seeding, ensure status is synchronized (in case TicketStatus was modified)
+        SyncStatus();
     }
 }

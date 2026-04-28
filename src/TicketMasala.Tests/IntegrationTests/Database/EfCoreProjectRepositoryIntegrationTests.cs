@@ -42,6 +42,7 @@ public class EfCoreProjectRepositoryIntegrationTests : IDisposable
 
         // Act
         var result = await _fixture.ProjectRepository.AddAsync(project);
+        await _fixture.UnitOfWork.CommitAsync();
 
         // Assert
         Assert.NotNull(result);
@@ -72,6 +73,7 @@ public class EfCoreProjectRepositoryIntegrationTests : IDisposable
 
         // Act
         await _fixture.ProjectRepository.AddAsync(project);
+        await _fixture.UnitOfWork.CommitAsync();
 
         // Assert
         _fixture.Context.ChangeTracker.Clear();
@@ -285,6 +287,7 @@ public class EfCoreProjectRepositoryIntegrationTests : IDisposable
 
         // Act
         await _fixture.ProjectRepository.UpdateAsync(project);
+        await _fixture.UnitOfWork.CommitAsync();
 
         // Assert
         _fixture.Context.ChangeTracker.Clear();
@@ -307,6 +310,7 @@ public class EfCoreProjectRepositoryIntegrationTests : IDisposable
 
         // Act
         await _fixture.ProjectRepository.DeleteAsync(projectGuid);
+        await _fixture.UnitOfWork.CommitAsync();
 
         // Assert
         var fromDb = await _fixture.Context.Projects.FindAsync(projectGuid);

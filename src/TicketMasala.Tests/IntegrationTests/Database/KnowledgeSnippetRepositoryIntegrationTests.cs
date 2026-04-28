@@ -97,6 +97,7 @@ public class KnowledgeSnippetRepositoryIntegrationTests : IDisposable
         await context.SaveChangesAsync();
 
         await repository.IncrementUsageCountAsync(snippet.Id);
+        await context.SaveChangesAsync(); // Repository no longer calls SaveChanges - manual commit for test
 
         var updatedSnippet = await context.KnowledgeBaseSnippets.FindAsync(snippet.Id);
         Assert.NotNull(updatedSnippet);

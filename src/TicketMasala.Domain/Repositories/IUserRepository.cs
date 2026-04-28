@@ -16,7 +16,15 @@ public interface IUserRepository
     // Customer operations
     Task<ApplicationUser?> GetCustomerByIdAsync(string id);
     Task<IReadOnlyList<ApplicationUser>> GetAllCustomersAsync();
-    Task<bool> UpdateCustomerAsync(ApplicationUser customer);
+    /// <summary>
+    /// Queues customer update. Call IUnitOfWork.CommitAsync() to persist.
+    /// </summary>
+    Task UpdateCustomerAsync(ApplicationUser customer);
+
+    /// <summary>
+    /// Queues customer delete. Call IUnitOfWork.CommitAsync() to persist.
+    /// </summary>
+    /// <returns>True if customer was found and queued for deletion, false if not found.</returns>
     Task<bool> DeleteCustomerAsync(string id);
     Task<bool> CreateCustomerAsync(ApplicationUser customer, string password);
 

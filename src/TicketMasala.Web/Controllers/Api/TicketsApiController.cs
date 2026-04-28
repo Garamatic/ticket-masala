@@ -33,6 +33,7 @@ public class TicketsApiController : ControllerBase
     private readonly ITicketReadService _ticketReadService;
     private readonly IUserRepository _userRepository;
     private readonly ITicketRepository _ticketRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ILogger<TicketsApiController> _logger;
     private readonly ISystemClock _clock;
@@ -47,6 +48,7 @@ public class TicketsApiController : ControllerBase
         ITicketReadService ticketReadService,
         IUserRepository userRepository,
         ITicketRepository ticketRepository,
+        IUnitOfWork unitOfWork,
         UserManager<ApplicationUser> userManager,
         ILogger<TicketsApiController> logger,
         ISystemClock clock)
@@ -55,6 +57,7 @@ public class TicketsApiController : ControllerBase
         _ticketReadService = ticketReadService;
         _userRepository = userRepository;
         _ticketRepository = ticketRepository;
+        _unitOfWork = unitOfWork;
         _userManager = userManager;
         _logger = logger;
         _clock = clock;
@@ -127,6 +130,7 @@ public class TicketsApiController : ControllerBase
             : $"{ticket.GerdaTags},External-Request,{sanitizedSourceSite}";
 
         await _ticketRepository.UpdateAsync(ticket);
+        await _unitOfWork.CommitAsync();
 
         _logger.LogInformation(
             "External ticket {TicketId} created successfully for customer {CustomerId} from {Source}",
@@ -213,10 +217,11 @@ public class TicketsApiController : ControllerBase
         );
 
         // Update domain-specific fields
-        ticket.DomainId = request.DomainId;
-        ticket.Title = request.Title;
-        ticket.CustomFieldsJson = customFieldsJson;
+        ticket.SetDomain(request.DomainId);
+        ticket.UpdateTitle(request.Title, request.CustomerId ?? "system");
+        ticket.UpdateCustomFields(customFieldsJson, request.CustomerId ?? "system");
         await _ticketRepository.UpdateAsync(ticket);
+        await _unitOfWork.CommitAsync();
 
         _logger.LogInformation("Created WorkItem {Id} successfully", ticket.Guid);
 

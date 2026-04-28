@@ -51,17 +51,18 @@ public class EfCoreKnowledgeBaseRepository : IKnowledgeBaseRepository
             .ToListAsync();
     }
 
-    public async Task<KnowledgeBaseArticle> AddAsync(KnowledgeBaseArticle article)
+    public Task<KnowledgeBaseArticle> AddAsync(KnowledgeBaseArticle article)
     {
         _context.KnowledgeBaseArticles.Add(article);
-        await _context.SaveChangesAsync();
-        return article;
+        // Note: Changes are not committed here. Call IUnitOfWork.CommitAsync() to persist.
+        return Task.FromResult(article);
     }
 
-    public async Task UpdateAsync(KnowledgeBaseArticle article)
+    public Task UpdateAsync(KnowledgeBaseArticle article)
     {
         _context.KnowledgeBaseArticles.Update(article);
-        await _context.SaveChangesAsync();
+        // Note: Changes are not committed here. Call IUnitOfWork.CommitAsync() to persist.
+        return Task.CompletedTask;
     }
 
     public async Task DeleteAsync(Guid id)
@@ -70,7 +71,7 @@ public class EfCoreKnowledgeBaseRepository : IKnowledgeBaseRepository
         if (article != null)
         {
             _context.KnowledgeBaseArticles.Remove(article);
-            await _context.SaveChangesAsync();
+            // Note: Changes are not committed here. Call IUnitOfWork.CommitAsync() to persist.
         }
     }
 
@@ -85,7 +86,7 @@ public class EfCoreKnowledgeBaseRepository : IKnowledgeBaseRepository
         if (article != null)
         {
             article.UsageCount++;
-            await _context.SaveChangesAsync();
+            // Note: Changes are not committed here. Call IUnitOfWork.CommitAsync() to persist.
         }
     }
 }

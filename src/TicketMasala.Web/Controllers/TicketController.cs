@@ -55,7 +55,16 @@ public class TicketController : Controller
             return NotFound();
 
         // Keep orchestrator for UI context (domain config, custom fields, etc.)
-        var viewModel = await _orchestrator.GetTicketDetailsAsync(id.Value, User);
+        TicketDetailsViewModel? viewModel;
+        try
+        {
+            viewModel = await _orchestrator.GetTicketDetailsAsync(id.Value, User);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+
         if (viewModel == null)
             return NotFound();
 

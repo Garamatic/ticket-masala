@@ -18,6 +18,7 @@ using TicketMasala.Web.Controllers;
 using TicketMasala.Web.Engine.Compiler;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.GERDA;
+using TicketMasala.Web.Modules.Tickets;
 using TicketMasala.Web.Engine.GERDA.Configuration;
 using TicketMasala.Web.Engine.GERDA.Dispatching;
 using TicketMasala.Web.Engine.GERDA.Tickets;
@@ -111,9 +112,10 @@ namespace TicketMasala.Tests.Robustness
                 .ReturnsAsync(new TicketCreateContext { DomainId = "IT", Employees = new List<SelectListItem>(), Projects = new List<SelectListItem>() });
 
             var mockLogger = new Mock<ILogger<TicketController>>();
+            var mockModule = new Mock<ITicketModule>();
 
             var controller = new TicketController(
-                mockOrchestrator.Object, mockLogger.Object);
+                mockModule.Object, mockOrchestrator.Object, mockLogger.Object);
 
             // Set up minimal HttpContext to avoid null reference on User and Request
             var httpContext = new DefaultHttpContext();
@@ -138,9 +140,10 @@ namespace TicketMasala.Tests.Robustness
             // Arrange
             var mockOrchestrator = new Mock<ITicketOrchestrator>();
             var mockLogger = new Mock<ILogger<TicketController>>();
+            var mockModule = new Mock<ITicketModule>();
 
             var controller = new TicketController(
-                mockOrchestrator.Object, mockLogger.Object);
+                mockModule.Object, mockOrchestrator.Object, mockLogger.Object);
 
             // Act
             var result = await controller.Detail(null);

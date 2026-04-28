@@ -15,6 +15,10 @@ using TicketMasala.Web.Repositories;
 
 namespace TicketMasala.Web.Engine.GERDA.Tickets;
 
+/// <summary>
+/// NOTE: This service is being replaced by the TicketModule deep module.
+/// New code should use ITicketModule instead for ticket lifecycle operations.
+/// </summary>
 public class TicketWorkflowService : ITicketWorkflowService
 {
     private readonly MasalaDbContext _context;
@@ -106,16 +110,14 @@ public class TicketWorkflowService : ITicketWorkflowService
             Customer = customer,
             CustomerId = customerId,
             Responsible = responsible,
-            Status = responsible != null ? "Assigned" : "New",
             Title = description.Length > 50 ? description.Substring(0, 47) + "..." : description,
             DomainId = defaultDomainId,
             ConfigVersionId = currentConfigVersion,
             TicketStatus = responsible != null ? Status.Assigned : Status.Pending,
             CompletionTarget = completionTarget ?? _clock.UtcNow.AddDays(14),
             CreatorGuid = Guid.Parse(customer.Id),
-            CreationDate = _clock.UtcNow,
-            Comments = new List<TicketComment>()
         };
+        ticket.SyncStatus();
 
         // Add ticket via repository
         await _ticketRepository.AddAsync(ticket);

@@ -19,6 +19,7 @@ using TicketMasala.Web.ViewModels.Tickets;
 
 namespace TicketMasala.Web.Orchestrators;
 
+[Obsolete("Use ITicketModule from TicketMasala.Web.Modules.Tickets instead. This orchestrator will be removed in a future release.")]
 public class TicketOrchestrator : ITicketOrchestrator
 {
     private readonly IGerda _gerda;

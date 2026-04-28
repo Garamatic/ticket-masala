@@ -8,6 +8,7 @@ using TicketMasala.Web.ViewModels.Tickets;
 
 namespace TicketMasala.Web.Orchestrators;
 
+[Obsolete("Use ITicketModule from TicketMasala.Web.Modules.Tickets instead. This interface will be removed in a future release.")]
 public interface ITicketOrchestrator
 {
     Task<TicketSearchViewModel> SearchTicketsAsync(TicketSearchViewModel searchModel, ClaimsPrincipal user);

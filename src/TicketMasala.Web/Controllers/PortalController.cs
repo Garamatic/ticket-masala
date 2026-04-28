@@ -17,18 +17,18 @@ public class PortalController : Controller
 {
     private readonly ITicketWorkflowService _ticketWorkflowService;
     private readonly ITicketReadService _ticketReadService;
-    private readonly IGerdaService _gerdaService;
+    private readonly IGerda _gerda;
     private readonly ILogger<PortalController> _logger;
 
     public PortalController(
         ITicketWorkflowService ticketWorkflowService,
         ITicketReadService ticketReadService,
-        IGerdaService gerdaService,
+        IGerda gerda,
         ILogger<PortalController> logger)
     {
         _ticketWorkflowService = ticketWorkflowService;
         _ticketReadService = ticketReadService;
-        _gerdaService = gerdaService;
+        _gerda = gerda;
         _logger = logger;
     }
 
@@ -89,7 +89,7 @@ public class PortalController : Controller
 
             // Trigger GERDA processing
             _logger.LogInformation("Processing customer portal ticket {TicketGuid} with GERDA AI", ticket.Guid);
-            await _gerdaService.ProcessTicketAsync(ticket.Guid);
+            await _gerda.ProcessAsync(ticket.Guid);
 
             TempData["Success"] = "Ticket created successfully!";
             return RedirectToAction(nameof(Index));

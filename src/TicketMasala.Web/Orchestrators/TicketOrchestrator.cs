@@ -19,6 +19,12 @@ using TicketMasala.Web.ViewModels.Tickets;
 
 namespace TicketMasala.Web.Orchestrators;
 
+/// <summary>
+/// LEGACY: Orchestrator implementation being consolidated into TicketModule.
+/// </summary>
+/// <remarks>
+/// P0 CONSOLIDATION: Use ITicketModule instead. This class will be removed in a future release.
+/// </remarks>
 [Obsolete("Use ITicketModule from TicketMasala.Web.Modules.Tickets instead. This orchestrator will be removed in a future release.")]
 public class TicketOrchestrator : ITicketOrchestrator
 {

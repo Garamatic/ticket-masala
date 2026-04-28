@@ -39,13 +39,13 @@ public class GerdaTicketObserver : ITicketObserver
             {
                 using (var scope = _serviceScopeFactory.CreateScope())
                 {
-                    var gerdaService = scope.ServiceProvider.GetRequiredService<IGerdaService>();
+                    var gerda = scope.ServiceProvider.GetRequiredService<IGerda>();
                     var logger = scope.ServiceProvider.GetRequiredService<ILogger<GerdaTicketObserver>>();
 
                     try
                     {
                         logger.LogInformation("GERDA Background: Processing ticket {TicketGuid}", ticket.Guid);
-                        await gerdaService.ProcessTicketAsync(ticket.Guid);
+                        await gerda.ProcessAsync(ticket.Guid);
                     }
                     catch (Exception ex)
                     {

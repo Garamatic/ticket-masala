@@ -313,37 +313,6 @@ public static class GerdaServiceExtensions
                 TicketMasala.Web.Engine.GERDA.Anticipation.AnticipationService>();
         }
 
-        // Legacy IGerdaService registration (redirects to new IGerda)
-        services.AddScoped<TicketMasala.Web.Engine.GERDA.IGerdaService>(sp =>
-            new GerdaServiceAdapter(sp.GetRequiredService<IGerda>()));
-    }
-}
-
-/// <summary>
-/// Adapter to make new IGerda compatible with legacy IGerdaService interface.
-/// </summary>
-internal sealed class GerdaServiceAdapter : TicketMasala.Web.Engine.GERDA.IGerdaService
-{
-    private readonly IGerda _gerda;
-
-    public GerdaServiceAdapter(IGerda gerda)
-    {
-        _gerda = gerda;
-    }
-
-    public bool IsEnabled => _gerda.IsActive;
-
-    public async Task ProcessTicketAsync(Guid ticketGuid)
-    {
-        await _gerda.ProcessAsync(ticketGuid);
-    }
-
-    public async Task ProcessAllOpenTicketsAsync()
-    {
-        // This method is no longer supported via the deep interface
-        // It should be called through the maintenance service directly
-        throw new NotSupportedException(
-            "ProcessAllOpenTicketsAsync is deprecated. Use GerdaMaintenanceService or IGerda for single ticket processing.");
     }
 }
 

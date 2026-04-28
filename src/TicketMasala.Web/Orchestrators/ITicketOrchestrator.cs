@@ -1,6 +1,4 @@
-using System;
 using System.Security.Claims;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using TicketMasala.Web.Common;
 using TicketMasala.Web.Facades;
@@ -8,6 +6,13 @@ using TicketMasala.Web.ViewModels.Tickets;
 
 namespace TicketMasala.Web.Orchestrators;
 
+/// <summary>
+/// LEGACY: Orchestrator interface being consolidated into ITicketModule.
+/// </summary>
+/// <remarks>
+/// P0 CONSOLIDATION: This interface is being migrated to ITicketModule deep module pattern.
+/// New code should use ITicketModule exclusively. This interface will be removed in a future release.
+/// </remarks>
 [Obsolete("Use ITicketModule from TicketMasala.Web.Modules.Tickets instead. This interface will be removed in a future release.")]
 public interface ITicketOrchestrator
 {

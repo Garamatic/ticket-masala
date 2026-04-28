@@ -239,6 +239,7 @@ public class DispatchingService : IDispatchingService
             .Where(e => !string.IsNullOrWhiteSpace(e.Specializations))
             .SelectMany(e => ParseSpecializations(e.Specializations))
             .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Where(s => IsValidFts5Term(s)) // Security: filter out terms with FTS5 operators
             .ToList();
 
         if (allSpecs.Count == 0)
@@ -249,6 +250,7 @@ public class DispatchingService : IDispatchingService
         try
         {
             // Build a single OR query for all unique specializations
+            // Security: Terms are validated above; quotes are doubled to escape them
             var matchQuery = string.Join(" OR ", allSpecs.Select(s => $"\"{s.Replace("\"", "\"\"")}\""));
 
             // Execute single FTS5 query
@@ -373,6 +375,32 @@ public class DispatchingService : IDispatchingService
             _logger.LogDebug(ex, "Failed to parse specializations JSON: {Json}", specializationsJson);
             return new List<string>();
         }
+    }
+
+    /// <summary>
+    /// Validates that a term is safe to use in an FTS5 MATCH expression.
+    /// Rejects terms containing FTS5 operators (AND, OR, NOT, NEAR, ^, *, etc.)
+    /// to prevent query injection attacks.
+    /// </summary>
+    private static bool IsValidFts5Term(string term)
+    {
+        if (string.IsNullOrWhiteSpace(term))
+            return false;
+
+        // FTS5 query operators that could be used for injection
+        var ftsOperators = new[] { " AND ", " OR ", " NOT ", "NEAR", "^", "*", "(", ")", "-" };
+
+        foreach (var op in ftsOperators)
+        {
+            if (term.Contains(op, StringComparison.OrdinalIgnoreCase))
+                return false;
+        }
+
+        // Only allow alphanumeric, spaces, and basic punctuation
+        return term.All(c =>
+            char.IsLetterOrDigit(c) ||
+            char.IsWhiteSpace(c) ||
+            c is '-' or '_' or '.' or ',' or '/' or '&' or '+' or '#' or '@' or '%');
     }
 
     private DispatchResult BuildDispatchResult(

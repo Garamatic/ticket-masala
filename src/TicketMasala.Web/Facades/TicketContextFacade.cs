@@ -93,24 +93,8 @@ public class TicketContextFacade : ITicketContextFacade
             context.EntityLabels = _domainConfig.GetEntityLabels(domainId);
             context.CustomFields = _domainConfig.GetCustomFields(domainId).ToList();
 
-            if (context.ViewModel.Guid != Guid.Empty)
-            {
-                try
-                {
-                    var customFieldsJson = context.CustomFieldValues.Count > 0
-                        ? JsonSerializer.Serialize(context.CustomFieldValues)
-                        : "{}";
-
-                    if (customFieldsJson != "{}")
-                    {
-                        context.CustomFieldValues = JsonSerializer.Deserialize<Dictionary<string, object>>(customFieldsJson) ?? new Dictionary<string, object>();
-                    }
-                }
-                catch (JsonException ex)
-                {
-                    _logger.LogWarning(ex, "Failed to deserialize custom fields for edit context for ticket {TicketId}", context.ViewModel.Guid);
-                }
-            }
+            // CustomFieldValues is already populated by TicketEditService from ticket.CustomFieldsJson
+            // No additional processing needed here
         }
 
         return context;

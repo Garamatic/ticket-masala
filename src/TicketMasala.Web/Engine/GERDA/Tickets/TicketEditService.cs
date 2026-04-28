@@ -1,3 +1,4 @@
+using System.Text.Json;
 using TicketMasala.Domain.Common;
 using TicketMasala.Web.Engine.Compiler;
 using TicketMasala.Web.Facades;
@@ -66,10 +67,26 @@ public class TicketEditService : ITicketEditService
             ProjectList = projects.ToList()
         };
 
+        // Deserialize custom field values from ticket's JSON storage
+        var customFieldValues = new Dictionary<string, object>();
+        if (!string.IsNullOrEmpty(ticket.CustomFieldsJson))
+        {
+            try
+            {
+                customFieldValues = JsonSerializer.Deserialize<Dictionary<string, object>>(ticket.CustomFieldsJson)
+                    ?? new Dictionary<string, object>();
+            }
+            catch (JsonException)
+            {
+                // Silently ignore deserialization errors - custom fields will be empty
+            }
+        }
+
         return new TicketEditContext
         {
             ViewModel = viewModel,
-            WorkItemTypeCode = ticket.WorkItemTypeCode
+            WorkItemTypeCode = ticket.WorkItemTypeCode,
+            CustomFieldValues = customFieldValues
         };
     }
 
@@ -77,19 +94,14 @@ public class TicketEditService : ITicketEditService
     {
         var context = new TicketEditContext();
 
-        // Fetch lists for dropdowns (needed when form validation fails and view is re-rendered)
-        var responsibleUsers = await _ticketReadService.GetAllUsersSelectListAsync();
-        var customers = await _ticketReadService.GetCustomerSelectListAsync();
-        var projects = await _ticketReadService.GetProjectSelectListAsync();
+        // Note: Dropdown lists (ResponsibleUsers, CustomerList, ProjectList) are populated
+        // by GetCreateReloadContextAsync in the controller. This method only fetches
+        // edit-specific data that varies based on the ticket state.
 
-        context.ViewModel.ResponsibleUsers = responsibleUsers.ToList();
-        context.ViewModel.CustomerList = customers.ToList();
-        context.ViewModel.ProjectList = projects.ToList();
-
-        // Valid statuses and work item type depend on the ticket
         var reloadTicket = await _ticketReadService.GetTicketForEditAsync(ticketId);
         if (reloadTicket != null)
         {
+            // Valid status transitions depend on current ticket state and user permissions
             var validStates = _ruleEngine.GetValidNextStates(reloadTicket, user);
             var allowedStatuses = validStates.Union(new[] { reloadTicket.TicketStatus }).Distinct().ToList();
             context.ValidStatuses = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(allowedStatuses);

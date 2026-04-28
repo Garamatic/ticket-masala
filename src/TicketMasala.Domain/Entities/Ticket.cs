@@ -136,7 +136,7 @@ public class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         DomainId = "IT";
         CustomFieldsJson = "{}";
         TicketStatus = Common.Status.Pending;
-        WatcherIds = new List<string>();
+        // Note: WatcherIds is initialized by property initializer
         SyncStatus(); // Ensure Status is synchronized on creation
     }
 

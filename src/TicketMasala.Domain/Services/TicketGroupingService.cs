@@ -1,6 +1,5 @@
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Events;
 using TicketMasala.Domain.Exceptions;
 
 namespace TicketMasala.Domain.Services;
@@ -53,10 +52,6 @@ public class TicketGroupingService : ITicketGroupingService
         foreach (var child in childList)
         {
             parentTicket.AddSubTicket(child);
-
-            // Note: Domain events should be raised by the entity itself
-            // The grouping operation modifies SubTickets, which will be tracked by EF Core
-            // Events are raised via the entity's methods when appropriate
         }
 
         return Task.CompletedTask;
@@ -73,13 +68,10 @@ public class TicketGroupingService : ITicketGroupingService
         // Clear the parent relationship
         childTicket.SetParentTicket(null);
 
-        // Note: Domain events for relationship changes are handled by EF Core change tracking
-        // and the domain event dispatcher interceptors
-
         return Task.CompletedTask;
     }
 
-    public Task<IReadOnlyList<Ticket>> SplitTicketAsync(
+    public async Task<IReadOnlyList<Ticket>> SplitTicketAsync(
         Ticket parentTicket,
         IEnumerable<string> splitDescriptions,
         string splitByUserId)
@@ -125,12 +117,12 @@ public class TicketGroupingService : ITicketGroupingService
         }
 
         // Group all children under the parent
-        GroupTicketsAsync(parentTicket, childTickets, splitByUserId);
+        await GroupTicketsAsync(parentTicket, childTickets, splitByUserId);
 
-        return Task.FromResult<IReadOnlyList<Ticket>>(childTickets);
+        return childTickets;
     }
 
-    public Task<Ticket> MergeTicketsAsync(
+    public async Task<Ticket> MergeTicketsAsync(
         IEnumerable<Ticket> ticketsToMerge,
         string mergedByUserId)
     {
@@ -163,7 +155,7 @@ public class TicketGroupingService : ITicketGroupingService
         parentTicket.UpdateDescription(mergedDescription, mergedByUserId);
 
         // Group other tickets as children
-        GroupTicketsAsync(parentTicket, childrenToGroup, mergedByUserId);
+        await GroupTicketsAsync(parentTicket, childrenToGroup, mergedByUserId);
 
         // Mark children as cancelled/merged
         foreach (var child in childrenToGroup)
@@ -171,7 +163,7 @@ public class TicketGroupingService : ITicketGroupingService
             child.TransitionTo(Status.Cancelled, mergedByUserId);
         }
 
-        return Task.FromResult(parentTicket);
+        return parentTicket;
     }
 
     public Task<IReadOnlyList<Ticket>> FindPotentialDuplicatesAsync(Ticket ticket)

@@ -15,16 +15,8 @@ public class TicketAssignmentService : ITicketAssignmentService
         string assignedByUserId,
         IEnumerable<string> assignedByRoles)
     {
-        // Validate using domain rules
+        // Validate using domain rules (includes CanBeAssigned check)
         ticket.ValidateCanAssign(assignedByUserId, assignedByRoles);
-
-        // Check if ticket can be assigned in current state
-        if (!ticket.CanBeAssigned())
-        {
-            throw new DomainRuleException(
-                $"Cannot assign ticket in {ticket.TicketStatus} status. " +
-                "Ticket must be in Pending, Assigned, or InProgress status.");
-        }
 
         // Perform the assignment using rich domain method
         ticket.AssignTo(employee.Id, assignedByUserId);

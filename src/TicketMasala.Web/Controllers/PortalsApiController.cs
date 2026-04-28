@@ -94,24 +94,18 @@ public class PortalsApiController : ControllerBase
                 }
             }
 
-            // Create the ticket
-            var ticket = new Ticket
-            {
-                Description = model.Description,
-                Status = "New", // Using string for status
-                WorkItemTypeCode = model.WorkItemType, // Setting WorkItemTypeCode from model
-                CustomerId = customer?.Id,
-                PriorityScore = model.PriorityScore ?? 5,
-                GerdaTags = model.Tags,
-                CompletionTarget = _clock.UtcNow.AddDays(7) // Using the correct property name
-            };
+            // Create the ticket using factory method
+            var ticket = Ticket.CreateFromPortal(
+                model.Description,
+                customer?.Id,
+                priorityScore: model.PriorityScore ?? 5,
+                tags: model.Tags,
+                completionTarget: _clock.UtcNow.AddDays(7));
 
             // Handle geolocation
             if (model.Latitude.HasValue && model.Longitude.HasValue)
             {
-                ticket.GerdaTags = string.IsNullOrEmpty(ticket.GerdaTags)
-                    ? $"Geo:{model.Latitude},{model.Longitude}"
-                    : $"{ticket.GerdaTags},Geo:{model.Latitude},{model.Longitude}";
+                ticket.AddGerdaTag($"Geo:{model.Latitude},{model.Longitude}");
             }
 
             // Handle file upload
@@ -128,10 +122,8 @@ public class PortalsApiController : ControllerBase
                     await model.Attachment.CopyToAsync(fileStream);
                 }
 
-                // Store file reference in tags for now
-                ticket.GerdaTags = string.IsNullOrEmpty(ticket.GerdaTags)
-                    ? $"Attachment:{uniqueFileName}"
-                    : $"{ticket.GerdaTags},Attachment:{uniqueFileName}";
+                // Store file reference in tags
+                ticket.AddGerdaTag($"Attachment:{uniqueFileName}");
             }
 
             // Save to database

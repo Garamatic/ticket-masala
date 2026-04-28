@@ -12,6 +12,7 @@ public abstract class BaseModel : IHasDomainEvents
     [Key]
     public Guid Guid { get; set; } = Guid.NewGuid();
     public DateTime CreationDate { get; set; } = DateTime.UtcNow;
+    public DateTime? LastModified { get; set; }
     public DateTime? ValidUntil { get; set; }
     public Guid? CreatorGuid { get; set; }
 

@@ -161,20 +161,19 @@ public class WorkItemSeedStrategy : ISeedStrategy
             return;
         }
 
-        var ticket = new Ticket
+        // Use factory method for creation (seeding uses SetPropertyForSeeding for non-standard scenarios)
+        var ticket = Ticket.Create(itemDto.Description, title, null, "IT", projectId, itemDto.Type.ToString());
+
+        // Apply seeding-specific properties via the legacy compatibility method
+        ticket.SetPropertyForSeeding(t =>
         {
-            Title = title,
-            Description = itemDto.Description,
-            TicketType = itemDto.Type,
-            WorkItemTypeCode = itemDto.Type.ToString(), // Sync field
-            TicketStatus = itemDto.Status,
-            Status = itemDto.Status.ToString(), // Sync field
-            ProjectGuid = projectId,
-            CreationDate = _clock.UtcNow.AddDays(-itemDto.CompletionDaysAgo ?? 0),
-            PriorityScore = itemDto.PriorityScore ?? 0,
-            EstimatedEffortPoints = (int)(itemDto.EstimatedEffortPoints ?? 0),
-            GerdaTags = itemDto.GerdaTags
-        };
+            t.TicketType = itemDto.Type;
+            t.TicketStatus = itemDto.Status;
+            t.CreationDate = _clock.UtcNow.AddDays(-itemDto.CompletionDaysAgo ?? 0);
+            t.PriorityScore = itemDto.PriorityScore ?? 0;
+            t.EstimatedEffortPoints = (int)(itemDto.EstimatedEffortPoints ?? 0);
+            t.GerdaTags = itemDto.GerdaTags;
+        });
 
         // Resolve Responsible (AssignedTo)
         if (!string.IsNullOrEmpty(itemDto.ResponsibleEmail))
@@ -182,7 +181,7 @@ public class WorkItemSeedStrategy : ISeedStrategy
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == itemDto.ResponsibleEmail);
             if (user != null)
             {
-                ticket.ResponsibleId = user.Id;
+                ticket.SetPropertyForSeeding(t => t.ResponsibleId = user.Id);
             }
         }
 
@@ -192,7 +191,7 @@ public class WorkItemSeedStrategy : ISeedStrategy
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == itemDto.CustomerEmail);
             if (user != null)
             {
-                ticket.CustomerId = user.Id;
+                ticket.SetPropertyForSeeding(t => t.CustomerId = user.Id);
             }
         }
 

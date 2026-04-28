@@ -13,7 +13,6 @@ internal class TicketModule : ITicketModule
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<TicketModule> _logger;
 
-    // This is the ONLY constructor - 5 dependencies, all module-internal or cross-module interfaces
     public TicketModule(
         ITicketLifecycleService lifecycle,
         ITicketQueryService queries,
@@ -123,11 +122,14 @@ internal class TicketModule : ITicketModule
         }
     }
 
-    public async Task<TicketResult<TicketDetailsDto>> GetDetailsAsync(Guid ticketId, string requestingUserId, CancellationToken ct)
+    public async Task<TicketResult<TicketDetailsDto>> GetDetailsAsync(Guid ticketId, string requestingUserId, IEnumerable<string> requestingUserRoles, CancellationToken ct)
     {
         var ticket = await _queries.GetByIdAsync(ticketId, includeRelations: true, ct);
         if (ticket == null)
             return TicketResult<TicketDetailsDto>.Failure("Ticket not found");
+
+        if (!_auth.CanView(ticket, requestingUserId, requestingUserRoles.ToList()))
+            return TicketResult<TicketDetailsDto>.Failure("Not authorized to view this ticket");
 
         var dto = new TicketDetailsDto(
             ticket.Guid,

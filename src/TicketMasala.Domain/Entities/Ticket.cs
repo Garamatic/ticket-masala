@@ -127,6 +127,15 @@ public class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
 
     public ReviewStatus ReviewStatus { get; set; } = ReviewStatus.None;
 
+    // ═════════════════════════════════════════════════════════════════
+    // RESOLUTION PROPERTIES 
+    // ═════════════════════════════════════════════════════════════════
+    
+    [StringLength(2000)]
+    public string? ResolutionNotes { get; set; }
+    
+    public decimal? BillableAmount { get; set; }
+
     // Navigation properties
     public virtual Project? Project { get; set; }
     public virtual ApplicationUser? Customer { get; set; }

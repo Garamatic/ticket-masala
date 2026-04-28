@@ -9,7 +9,7 @@ public interface ITicketModule
     Task<TicketResult<Unit>> TransitionStatusAsync(TransitionStatusCommand command, CancellationToken ct = default);
 
     // Query (read-only, returns DTOs not entities)
-    Task<TicketResult<TicketDetailsDto>> GetDetailsAsync(Guid ticketId, string requestingUserId, CancellationToken ct = default);
+    Task<TicketResult<TicketDetailsDto>> GetDetailsAsync(Guid ticketId, string requestingUserId, IEnumerable<string> requestingUserRoles, CancellationToken ct = default);
     Task<TicketSearchResult> SearchAsync(TicketSearchQuery query, CancellationToken ct = default);
 
     // This is the only public surface - everything else is internal

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Engine.GERDA;
 using TicketMasala.Web.Modules.Tickets.Internal;

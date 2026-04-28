@@ -82,13 +82,22 @@ internal class TicketLifecycleService : ITicketLifecycleService
         ticket.CustomerId = command.CustomerId;
         ticket.ProjectGuid = command.ProjectGuid;
 
-        // Handle status transition if changed
-        if (ticket.TicketStatus.ToString() != command.TicketStatus)
+        // Handle status transition if changed (with concurrency check)
+        var actualStatus = ticket.TicketStatus.ToString();
+        if (actualStatus != command.TicketStatus)
         {
-            if (Enum.TryParse<Domain.Common.Status>(command.TicketStatus, out var newStatus))
+            // Status differs from what UI expected - verify it's a valid intentional transition
+            if (!Enum.TryParse<Domain.Common.Status>(command.TicketStatus, out var newStatus))
+                throw new InvalidOperationException($"Invalid status: {command.TicketStatus}");
+
+            if (!Ticket.IsValidTransition(ticket.TicketStatus, newStatus))
             {
-                ticket.TransitionTo(newStatus, command.ModifiedByUserId);
+                throw new InvalidOperationException(
+                    $"Cannot transition from {actualStatus} to {newStatus}. " +
+                    $"The ticket may have been modified by another user. Please refresh and try again.");
             }
+
+            ticket.TransitionTo(newStatus, command.ModifiedByUserId);
         }
 
         if (command.CustomFields.Any())
@@ -118,6 +127,14 @@ internal class TicketLifecycleService : ITicketLifecycleService
 
     public async Task TransitionStatusAsync(Ticket ticket, TransitionStatusCommand command, CancellationToken ct)
     {
+        // Optimistic concurrency check: verify ticket hasn't changed since UI loaded
+        if (ticket.TicketStatus.ToString() != command.FromStatus)
+        {
+            throw new InvalidOperationException(
+                $"Ticket status has changed from {command.FromStatus} to {ticket.TicketStatus}. " +
+                "Please refresh and try again.");
+        }
+
         if (!Enum.TryParse<Domain.Common.Status>(command.ToStatus, out var targetStatus))
             throw new InvalidOperationException($"Invalid status: {command.ToStatus}");
 

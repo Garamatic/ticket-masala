@@ -16,10 +16,23 @@ internal class TicketAuthorizationService : ITicketAuthorizationService
         => ticket.CanBeEditedBy(userId, roles) && ticket.CanEditInCurrentState();
 
     public bool CanAssign(Ticket ticket, string userId, IReadOnlyList<string> roles)
-        => roles.Contains("Admin") || roles.Contains("Employee");
+    {
+        // Must have role AND ticket must be in assignable state
+        var hasRole = roles.Contains("Admin") || roles.Contains("Employee");
+        return hasRole && ticket.CanBeAssigned();
+    }
 
     public bool CanChangeStatus(Ticket ticket, string userId, IReadOnlyList<string> roles, string targetStatus)
-        => ticket.CanChangeStatus(userId, roles);
+    {
+        // Check user can change status AND the specific transition is valid
+        if (!ticket.CanChangeStatus(userId, roles))
+            return false;
+
+        if (!Enum.TryParse<Domain.Common.Status>(targetStatus, out var target))
+            return false;
+
+        return Ticket.IsValidTransition(ticket.TicketStatus, target);
+    }
 
     public bool CanView(Ticket ticket, string userId, IReadOnlyList<string> roles)
         => ticket.CanBeViewedBy(userId, roles);

@@ -1,6 +1,8 @@
+using System.Threading.Channels;
 using TicketMasala.Web.Engine.Compiler;
 using TicketMasala.Web.Engine.Ingestion.Background;
 using TicketMasala.Web.Engine.Ingestion.Validation;
+using TicketMasala.Web.ViewModels.Ingestion;
 
 namespace TicketMasala.Web.Engine.Ingestion;
 
@@ -26,7 +28,7 @@ public static class IngestionServiceCollectionExtensions
         // Register Background Task Queue Infrastructure
         // ============================================
         services.AddSingleton<IBackgroundTaskQueue>(ctx => new BackgroundQueue(100));
-        services.AddSingleton(System.Threading.Channels.Channel.CreateUnbounded<TicketMasala.Web.ViewModels.Ingestion.IngestionWorkItem>());
+        services.AddSingleton(Channel.CreateUnbounded<IngestionWorkItem>());
         services.AddHostedService<QueuedHostedService>();
 
         // ============================================

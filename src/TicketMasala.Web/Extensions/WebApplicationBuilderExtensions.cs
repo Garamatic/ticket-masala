@@ -5,42 +5,22 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.ML;
 using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Events;
-using TicketMasala.Domain.Services;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Data.Seeding;
-using TicketMasala.Web.Engine.Compiler;
 using TicketMasala.Web.Engine.Core;
-using TicketMasala.Web.Engine.GERDA;
-using TicketMasala.Web.Engine.GERDA.Anticipation;
-using TicketMasala.Web.Engine.GERDA.BackgroundJobs;
-using TicketMasala.Web.Engine.GERDA.Dispatching;
-using TicketMasala.Web.Engine.GERDA.Dispatching.Algorithms;
-using TicketMasala.Web.Engine.GERDA.Dispatching.Configuration;
-using TicketMasala.Web.Engine.GERDA.Estimating;
-using TicketMasala.Web.Engine.GERDA.Grouping;
-using TicketMasala.Web.Engine.GERDA.Knowledge;
-using TicketMasala.Web.Engine.GERDA.Models;
-using TicketMasala.Web.Engine.GERDA.Ranking;
-using TicketMasala.Web.Engine.GERDA.Tickets;
-using TicketMasala.Web.Engine.GERDA.Tickets.Domain;
+using TicketMasala.Web.Engine.Enrichment;
+using TicketMasala.Web.Engine.GERDA.Configuration;
+using TicketMasala.Web.Engine.GERDA.Sentiment;
 using TicketMasala.Web.Engine.Ingestion;
-using TicketMasala.Web.Engine.Ingestion.Background;
 using TicketMasala.Web.Engine.Projects;
-using TicketMasala.Web.Handlers.DomainEvents;
-using TicketMasala.Web.Health;
+using TicketMasala.Web.Engine.Security;
 using TicketMasala.Web.Infrastructure.DomainEvents;
 using TicketMasala.Web.Modules.Tickets;
 using TicketMasala.Web.Observers;
-using TicketMasala.Web.Orchestrators;
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.Services;
 using TicketMasala.Web.Tenancy;
-using WebOptimizer;
 
 namespace TicketMasala.Web.Extensions;
 
@@ -81,18 +61,23 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddTicketModule();
 
         // ============================================
-        // Register Repositories (Repository Pattern)
+        // Register Project Module (Extracted to deep module)
         // ============================================
-        builder.Services.AddScoped<IProjectRepository, EfCoreProjectRepository>();
-        builder.Services.AddScoped<IUserRepository, EfCoreUserRepository>();
-        builder.Services.AddScoped<IKnowledgeBaseRepository, EfCoreKnowledgeBaseRepository>();
-        builder.Services.AddScoped<IKnowledgeSnippetRepository, EfCoreKnowledgeSnippetRepository>();
+        builder.Services.AddProjectModule();
 
         // ============================================
-        // Register Observers (Observer Pattern)
+        // Register Knowledge Module (Extracted to deep module)
         // ============================================
-        builder.Services.AddScoped<IProjectObserver, LoggingProjectObserver>();
-        builder.Services.AddScoped<IProjectObserver, NotificationProjectObserver>();
+        builder.Services.AddKnowledgeModule();
+
+        // ============================================
+        // Register Remaining Repositories
+        // ============================================
+        builder.Services.AddScoped<IUserRepository, EfCoreUserRepository>();
+
+        // ============================================
+        // Register Comment Observers (Observer Pattern)
+        // ============================================
         builder.Services.AddScoped<ICommentObserver, LoggingCommentObserver>();
         builder.Services.AddScoped<ICommentObserver, NotificationCommentObserver>();
 
@@ -101,8 +86,7 @@ public static class WebApplicationBuilderExtensions
         // ============================================
         builder.Services.AddSingleton<TicketMasala.Web.Abstractions.ISystemClock, TicketMasala.Web.Services.SystemClock>();
         builder.Services.AddScoped<TicketMasala.Web.Services.IJsonParsingService, TicketMasala.Web.Services.JsonParsingService>();
-        builder.Services.AddScoped<TicketMasala.Web.Engine.Security.IPiiScrubberService,
-            TicketMasala.Web.Engine.Security.PiiScrubberService>();
+        builder.Services.AddSecurityModule();
         builder.Services.AddScoped<IMetricsService, MetricsService>();
 
         // ============================================
@@ -112,9 +96,6 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddScoped<IEmailService, EmailService>();
         builder.Services.AddScoped<INotificationService, NotificationService>();
         builder.Services.AddScoped<ISavedFilterService, SavedFilterService>();
-        builder.Services.AddScoped<IProjectReadService, ProjectReadService>();
-        builder.Services.AddScoped<IProjectWorkflowService, ProjectWorkflowService>();
-        builder.Services.AddScoped<IProjectTemplateService, ProjectTemplateService>();
         builder.Services.AddScoped<IAuditService, AuditService>();
 
         // ============================================
@@ -123,24 +104,17 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddIngestionModule();
 
         // Sentiment Analysis (GERDA subsystem)
-        builder.Services.AddScoped<TicketMasala.Web.Engine.GERDA.Sentiment.ISentimentAnalyzer,
-            TicketMasala.Web.Engine.GERDA.Sentiment.SimpleSentimentAnalyzer>();
+        builder.Services.AddScoped<ISentimentAnalyzer, SimpleSentimentAnalyzer>();
 
         // ============================================
-        // Register Enrichment Module
+        // Register Enrichment Module (Extracted to deep module)
         // ============================================
-        builder.Services.AddSingleton<TicketMasala.Web.Engine.Enrichment.IEnrichmentQueue, TicketMasala.Web.Engine.Enrichment.EnrichmentQueue>();
-        builder.Services.AddHostedService<TicketMasala.Web.Engine.Enrichment.EnrichmentBackgroundService>();
+        builder.Services.AddEnrichmentModule();
 
         // ============================================
-        // Register Data Seeding (Strategy Pattern)
+        // Register Data Seeding (Strategy Pattern - Extracted)
         // ============================================
-        builder.Services.AddScoped<ISeedStrategy, RoleSeedStrategy>();
-        builder.Services.AddScoped<ISeedStrategy, UserSeedStrategy>();
-        builder.Services.AddScoped<ISeedStrategy, ProjectSeedStrategy>();
-        builder.Services.AddScoped<ISeedStrategy, WorkItemSeedStrategy>();
-        builder.Services.AddScoped<ISeedStrategy, KnowledgeBaseSeedStrategy>();
-        builder.Services.AddScoped<DbSeeder>();
+        builder.Services.AddDataSeeding();
 
         // ============================================
         // Register GERDA Configuration Services
@@ -227,21 +201,7 @@ public static class WebApplicationBuilderExtensions
                 .SetApplicationName("ticket-masala");
         }
 
-        // WebOptimizer
-        builder.Services.AddWebOptimizer(pipeline =>
-        {
-            pipeline.AddCssBundle("/css/bundle.css",
-                "lib/bootstrap/dist/css/bootstrap.min.css",
-                "css/design-system.css",
-                "css/site.css")
-                .MinifyCss();
-            pipeline.AddJavaScriptBundle("/js/bundle.js",
-                "lib/jquery/dist/jquery.min.js",
-                "lib/bootstrap/dist/js/bootstrap.bundle.min.js",
-                "js/site.js",
-                "js/toast.js")
-                .MinifyJavaScript();
-        });
+        // WebOptimizer is configured in AddMasalaFrontend()
 
         // Authorization
         builder.Services.AddAuthorization(options =>
@@ -269,24 +229,20 @@ public static class WebApplicationBuilderExtensions
             options.SlidingExpiration = true;
         });
 
-        // Localization & CORS
-        builder.Services.AddLocalization();
+        // Localization is configured in AddMasalaFrontend()
+        // CORS
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("AllowAll",
                 b => b.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
         });
 
-        builder.Services.AddControllersWithViews()
-            .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix)
-            .AddDataAnnotationsLocalization();
-
+        // MVC and Razor Pages are configured in AddMasalaApi() and AddMasalaFrontend()
+        // ViewLocationExpander for multi-tenancy
         builder.Services.Configure<RazorViewEngineOptions>(options =>
         {
             options.ViewLocationExpanders.Add(new TenantViewLocationExpander());
         });
-
-        builder.Services.AddRazorPages();
         builder.Services.AddHealthChecks();
         // Note: TenantConnectionResolver is already registered by AddMasalaDatabase()
 

@@ -10,7 +10,7 @@ namespace TicketMasala.Domain.Entities;
 /// This is the core domain entity for tracking and managing work.
 /// Now implements Rich Domain Model pattern with encapsulated behavior.
 /// </summary>
-public class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
+public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
 {
     // ═════════════════════════════════════════════════════════════════
     // ENCAPSULATED PROPERTIES (Phase 2: internal set for migration compatibility)

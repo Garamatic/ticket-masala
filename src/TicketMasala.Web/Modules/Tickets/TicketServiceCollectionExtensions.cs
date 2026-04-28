@@ -1,9 +1,5 @@
-using Microsoft.AspNetCore.Identity;
-using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Events;
 using TicketMasala.Domain.Services;
-using TicketMasala.Web.Data;
-using TicketMasala.Web.Data.Seeding;
 using TicketMasala.Web.Engine.GERDA.BackgroundJobs;
 using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Engine.GERDA.Tickets.Domain;

@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.ML;
 using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Events;
 using TicketMasala.Domain.Services;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Data.Seeding;
@@ -30,6 +31,7 @@ using TicketMasala.Web.Engine.GERDA.Tickets.Domain;
 using TicketMasala.Web.Engine.Ingestion;
 using TicketMasala.Web.Engine.Ingestion.Background;
 using TicketMasala.Web.Engine.Projects;
+using TicketMasala.Web.Handlers.DomainEvents;
 using TicketMasala.Web.Health;
 using TicketMasala.Web.Infrastructure.DomainEvents;
 using TicketMasala.Web.Modules.Tickets;
@@ -110,6 +112,11 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddScoped<ICommentObserver, NotificationCommentObserver>();
 
         // ============================================
+        // Register Domain Event Handlers
+        // ============================================
+        builder.Services.AddScoped<IDomainEventHandler<TicketCreatedEvent>, TicketCreatedGerdaHandler>();
+
+        // ============================================
         // Register Services (CQRS + Factory Pattern)
         // ============================================
         // System abstractions for testability
@@ -133,10 +140,6 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddScoped<ITicketDetailService, TicketDetailService>();
         builder.Services.AddScoped<ITicketCreateService, TicketCreateService>();
         builder.Services.AddScoped<ITicketEditService, TicketEditService>();
-
-        // Orchestrators (P0 CONSOLIDATION: ITicketOrchestrator is now internal,
-        // kept for backward compatibility while migrating to ITicketModule deep module)
-        builder.Services.AddScoped<ITicketOrchestrator, TicketOrchestrator>();
 
         builder.Services.AddScoped<TicketDispatchService>();
         builder.Services.AddScoped<TicketReportingService>();

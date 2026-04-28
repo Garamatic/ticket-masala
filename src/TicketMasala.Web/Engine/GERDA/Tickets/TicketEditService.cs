@@ -75,6 +75,12 @@ public class TicketEditService : ITicketEditService
     {
         var context = new TicketEditContext();
 
+        // Always populate the lists for dropdowns
+        var responsibleUsers = await _ticketReadService.GetAllUsersSelectListAsync();
+        context.ViewModel.ResponsibleUsers = responsibleUsers.ToList();
+        context.ViewModel.CustomerList = (await _ticketReadService.GetCustomerSelectListAsync()).ToList();
+        context.ViewModel.ProjectList = (await _ticketReadService.GetProjectSelectListAsync()).ToList();
+
         var reloadTicket = await _ticketReadService.GetTicketForEditAsync(ticketId);
         if (reloadTicket != null)
         {

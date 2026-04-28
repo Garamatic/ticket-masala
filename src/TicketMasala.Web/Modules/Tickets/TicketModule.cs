@@ -3,7 +3,6 @@ using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Web.AI;
 using TicketMasala.Web.Engine.Core;
-using TicketMasala.Web.Engine.GERDA;
 using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Facades;
 using TicketMasala.Web.Modules.Tickets.Internal;

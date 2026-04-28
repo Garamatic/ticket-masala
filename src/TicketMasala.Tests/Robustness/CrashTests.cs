@@ -102,13 +102,11 @@ namespace TicketMasala.Tests.Robustness
         public async Task TicketController_Create_WithNullModel_ShouldHandleGracefully()
         {
             // Arrange
-            var mockLogger = new Mock<ILogger<TicketController>>();
             var mockModule = new Mock<ITicketModule>();
             mockModule.Setup(m => m.GetCreateContextAsync(It.IsAny<Guid?>(), It.IsAny<ClaimsPrincipal>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new TicketCreateContext { DomainId = "IT", Employees = new List<SelectListItem>(), Projects = new List<SelectListItem>() });
 
-            var controller = new TicketController(
-                mockModule.Object, mockLogger.Object);
+            var controller = new TicketController(mockModule.Object);
 
             // Set up minimal HttpContext to avoid null reference on User and Request
             var httpContext = new DefaultHttpContext();
@@ -131,11 +129,9 @@ namespace TicketMasala.Tests.Robustness
         public async Task TicketController_Detail_WithInvalidId_ShouldReturnBadRequest_OrNotFound()
         {
             // Arrange
-            var mockLogger = new Mock<ILogger<TicketController>>();
             var mockModule = new Mock<ITicketModule>();
 
-            var controller = new TicketController(
-                mockModule.Object, mockLogger.Object);
+            var controller = new TicketController(mockModule.Object);
 
             // Act
             var result = await controller.Detail(null);

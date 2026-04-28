@@ -161,4 +161,34 @@ public class WorkItemsController : ControllerBase
         await _ticketRepository.DeleteAsync(id);
         return NoContent();
     }
+
+    /// <summary>
+    /// Resolve a work item (mark as completed with resolution notes and billable amount).
+    /// </summary>
+    [HttpPost("{id}/resolve")]
+    [ProducesResponseType(typeof(WorkItemDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Resolve(Guid id, [FromBody] ResolveWorkItemRequest request)
+    {
+        if (!ModelState.IsValid)
+            return ValidationProblem(ModelState);
+
+        // Get current user ID
+        var resolvedByUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(resolvedByUserId))
+        {
+            return Unauthorized();
+        }
+
+        // Resolve the ticket via workflow service
+        var ticket = await _ticketWorkflowService.ResolveTicketAsync(
+            id,
+            request.ResolutionNotes,
+            request.BillableAmount,
+            resolvedByUserId
+        );
+
+        return Ok(ticket.ToWorkItemDto(_jsonParsingService));
+    }
 }

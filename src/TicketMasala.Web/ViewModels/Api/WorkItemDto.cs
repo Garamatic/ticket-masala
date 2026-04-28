@@ -91,4 +91,16 @@ public class WorkItemDto
     /// Customer ID associated with this work item
     /// </summary>
     public string? CustomerId { get; set; }
+
+    /// <summary>
+    /// Billable amount for resolved work items (used for invoicing)
+    /// </summary>
+    [Range(0, 100000)]
+    public decimal? BillableAmount { get; set; }
+
+    /// <summary>
+    /// Notes about how the work item was resolved
+    /// </summary>
+    [StringLength(2000)]
+    public string? ResolutionNotes { get; set; }
 }

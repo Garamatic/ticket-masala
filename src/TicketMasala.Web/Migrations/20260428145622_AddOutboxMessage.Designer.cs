@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TicketMasala.Domain.Data;
 
@@ -10,9 +11,11 @@ using TicketMasala.Domain.Data;
 namespace TicketMasala.Web.Migrations
 {
     [DbContext(typeof(MasalaDbContext))]
-    partial class MasalaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260428145622_AddOutboxMessage")]
+    partial class AddOutboxMessage
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.7");
@@ -740,9 +743,6 @@ namespace TicketMasala.Web.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("TEXT");
 
-                    b.Property<decimal?>("BillableAmount")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<DateTime?>("CompletionDate")
                         .HasColumnType("TEXT");
 
@@ -814,10 +814,6 @@ namespace TicketMasala.Web.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("RecommendedProjectName")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ResolutionNotes")
-                        .HasMaxLength(2000)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ResponsibleId")

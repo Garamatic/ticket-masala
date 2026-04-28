@@ -57,7 +57,33 @@ _Not just a chatbot._ GERDA is an embedded heuristic agent that:
 - **Estimates Effort:** Uses historical data to predict resolution time.
 - **Enforces Compliance:** Automatically flags requests that violate domain-specific rules (e.g., GDPR violations in the Tax domain).
 
-### 3. Data Sovereignty & Security
+### 3. Event-Driven Architecture (RabbitMQ)
+
+Ticket Masala publishes domain events for downstream integrations:
+
+- **Outbox Pattern:** Ensures atomic transaction between ticket updates and event publishing.
+- **Reliable Delivery:** Background service (`OutboxPublisher`) drains messages to RabbitMQ with retry logic.
+- **Event Schema:** Follows `integration-contracts` snake_case convention.
+
+**Published Events:**
+| Event | Routing Key | Description |
+|-------|-------------|-------------|
+| `ticket.resolved` | `event.ticket.resolved` | Ticket completed, triggers billing workflow |
+| `ticket.created` | `event.ticket.created` | New ticket created |
+| `ticket.assigned` | `event.ticket.assigned` | Ticket assigned to agent |
+
+**Configuration:**
+```json
+"RabbitMQ": {
+  "HostName": "localhost",
+  "Port": 5672,
+  "UserName": "guest",
+  "Password": "guest",
+  "ExchangeName": "garamatic.events"
+}
+```
+
+### 4. Data Sovereignty & Security
 
 - **Federated Deployment:** Supports air-gapped deployment for high-security environments.
 - **SQLite WAL Mode:** Optimized for single-file deployment with high concurrent read performance.

@@ -47,7 +47,9 @@ public static class DtoMappingExtensions
             CustomFields = customFields.ToDictionary(k => k.Key, v => v.Value ?? new object()),
             EstimatedEffortPoints = ticket.EstimatedEffortPoints > 0 ? ticket.EstimatedEffortPoints : null,
             PriorityScore = ticket.PriorityScore > 0 ? ticket.PriorityScore : null,
-            CustomerId = ticket.CustomerId
+            CustomerId = ticket.CustomerId,
+            BillableAmount = ticket.BillableAmount,
+            ResolutionNotes = ticket.ResolutionNotes
         };
     }
 
@@ -147,7 +149,6 @@ public static class DtoMappingExtensions
         // Map basic fields
         ticket.Title = dto.Title;
         ticket.Description = dto.Description;
-        ticket.Status = dto.Status;
         ticket.ResponsibleId = dto.AssignedHandlerId;
         ticket.ProjectGuid = dto.ContainerId;
         ticket.DomainId = dto.DomainId;
@@ -160,6 +161,20 @@ public static class DtoMappingExtensions
             ticket.EstimatedEffortPoints = dto.EstimatedEffortPoints.Value;
         if (dto.PriorityScore.HasValue)
             ticket.PriorityScore = dto.PriorityScore.Value;
+
+        // Map Status - convert string Status to TicketStatus enum and sync
+        if (!string.IsNullOrEmpty(dto.Status))
+        {
+            ticket.TicketStatus = dto.Status.ToLowerInvariant() switch
+            {
+                "new" => TicketMasala.Domain.Common.Status.Pending,
+                "triaged" => TicketMasala.Domain.Common.Status.Assigned,
+                "done" => TicketMasala.Domain.Common.Status.Completed,
+                "cancelled" => TicketMasala.Domain.Common.Status.Cancelled,
+                _ => TicketMasala.Domain.Common.Status.Pending
+            };
+            ticket.SyncStatus();
+        }
 
         // Serialize custom fields to JSON
         if (dto.CustomFields != null && dto.CustomFields.Any())

@@ -153,14 +153,13 @@ public class TicketImportService : ITicketImportService
                 }
                 var ticket = new Ticket
                 {
-                    Guid = Guid.NewGuid(),
                     Title = title,
                     Description = description,
                     DomainId = "IT",
-                    Status = "New",
                     CreatorGuid = Guid.Parse(customer.Id),
                     ResponsibleId = null
                 };
+                ticket.SyncStatus();
 
                 // 4. Set optional properties
                 if (mapping.ContainsKey("TicketType") && rowDict.ContainsKey(mapping["TicketType"]))
@@ -174,8 +173,6 @@ public class TicketImportService : ITicketImportService
                     var statusStr = rowDict[mapping["Status"]]?.ToString();
                     if (!string.IsNullOrWhiteSpace(statusStr))
                     {
-                        ticket.Status = statusStr;
-
                         // Try to map to Enum
                         if (Enum.TryParse<Status>(statusStr, true, out var statusEnum))
                         {
@@ -189,6 +186,7 @@ public class TicketImportService : ITicketImportService
                         {
                             ticket.TicketStatus = Status.Completed;
                         }
+                        ticket.SyncStatus();
                     }
                 }
 

@@ -14,7 +14,6 @@ public class TicketGroupingService : ITicketGroupingService
         IEnumerable<Ticket> childTickets,
         string groupedByUserId)
     {
-        // Note: groupedByUserId reserved for future audit logging
         // Validate parent ticket can have children
         if (parentTicket.ParentTicketGuid.HasValue)
         {
@@ -55,14 +54,16 @@ public class TicketGroupingService : ITicketGroupingService
             parentTicket.AddSubTicket(child);
         }
 
+        // Raise domain event for audit trail
+        parentTicket.RecordChildrenGrouped(childList, groupedByUserId);
+
         return Task.CompletedTask;
     }
 
     public Task UngroupTicketAsync(Ticket childTicket, string ungroupedByUserId)
     {
-        // Note: ungroupedByUserId reserved for future audit logging
-
-        if (!childTicket.ParentTicketGuid.HasValue)
+        var formerParentGuid = childTicket.ParentTicketGuid;
+        if (!formerParentGuid.HasValue)
         {
             // Not grouped - idempotent
             return Task.CompletedTask;
@@ -70,6 +71,9 @@ public class TicketGroupingService : ITicketGroupingService
 
         // Clear the parent relationship
         childTicket.SetParentTicket(null);
+
+        // Raise domain event for audit trail
+        childTicket.RecordUngrouped(formerParentGuid, ungroupedByUserId);
 
         return Task.CompletedTask;
     }

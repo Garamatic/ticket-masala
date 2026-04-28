@@ -62,16 +62,22 @@ public class TicketTests
     }
 
     [Fact]
-    public void Status_SetToValidValue_PersistsValue()
+    public void Status_IsDerivedFromTicketStatusViaSyncStatus()
     {
         // Arrange
         var ticket = new Ticket();
 
-        // Act
-        ticket.Status = "InProgress";
+        // Act - Status is auto-derived from TicketStatus via constructor calling SyncStatus()
 
         // Assert
-        ticket.Status.Should().Be("InProgress");
+        ticket.Status.Should().Be("New"); // Pending -> "New"
+
+        // Act - change TicketStatus and sync
+        ticket.TicketStatus = Status.Completed;
+        ticket.SyncStatus();
+
+        // Assert - Status should now be "Done"
+        ticket.Status.Should().Be("Done");
     }
 
     [Fact]

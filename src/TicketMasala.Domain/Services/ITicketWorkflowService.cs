@@ -21,4 +21,19 @@ public interface ITicketWorkflowService
     Task<bool> RequestReviewAsync(Guid ticketId, string requesterId);
     Task<bool> SubmitReviewAsync(Guid ticketId, int score, string feedback, bool approved, string reviewerId);
     Task<TimeLog> LogTimeAsync(Guid ticketId, string userId, double hours, DateTime date, string description);
+
+    /// <summary>
+    /// Resolves a ticket with billable amount and resolution notes.
+    /// Creates an outbox message for the ticket.resolved event.
+    /// </summary>
+    /// <param name="ticketGuid">The ticket GUID to resolve</param>
+    /// <param name="resolutionNotes">Notes about how the ticket was resolved</param>
+    /// <param name="billableAmount">Optional billable amount</param>
+    /// <param name="resolvedByUserId">The ID of the user resolving the ticket</param>
+    /// <returns>The resolved ticket</returns>
+    Task<Ticket> ResolveTicketAsync(
+        Guid ticketGuid,
+        string resolutionNotes,
+        decimal? billableAmount,
+        string resolvedByUserId);
 }

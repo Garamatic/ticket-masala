@@ -14,6 +14,7 @@ using TicketMasala.Web.Data;
 using TicketMasala.Web.Extensions;
 using TicketMasala.Web.Health;
 using TicketMasala.Web.Middleware;
+using TicketMasala.Web.Services;
 using TicketMasala.Web.Tenancy;
 using WebOptimizer;
 

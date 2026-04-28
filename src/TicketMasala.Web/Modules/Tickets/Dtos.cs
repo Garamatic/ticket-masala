@@ -12,7 +12,6 @@ public record TicketDetailsDto(
     string? ProjectName,
     double PriorityScore,
     string? GerdaTags,
-    bool CanEdit,
     IReadOnlyList<string> ValidNextStatuses);
 
 public record TicketSearchQuery(

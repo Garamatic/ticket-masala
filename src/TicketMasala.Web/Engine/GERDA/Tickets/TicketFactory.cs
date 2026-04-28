@@ -33,22 +33,19 @@ public class TicketFactory : ITicketFactory
     public Ticket CreateWithDefaults()
     {
 
-        return new Ticket
+        var ticket = new Ticket
         {
-            Guid = Guid.NewGuid(),
             Description = string.Empty, // Required, must be set by caller
             Title = string.Empty, // Required, must be set by caller
             DomainId = "IT", // Required, can be overridden by caller
-            Status = "New", // Required
             TicketStatus = TicketMasala.Domain.Common.Status.Pending,
             CustomFieldsJson = "{}",
-            CreationDate = _clock.UtcNow,
             CompletionTarget = _clock.UtcNow.AddDays(14),
             PriorityScore = 50,
             EstimatedEffortPoints = 0,
-            Comments = new List<TicketComment>(),
-            SubTickets = new List<Ticket>(),
         };
+        ticket.SyncStatus();
+        return ticket;
     }
 
     /// <summary>
@@ -65,23 +62,19 @@ public class TicketFactory : ITicketFactory
     {
         var ticket = new Ticket
         {
-            Guid = Guid.NewGuid(),
             Title = title,
             Description = description,
             DomainId = "IT",
-            Status = responsible != null ? ActivityType.Assigned.GetDisplayText() : ActivityType.Created.GetDisplayText(),
             TicketStatus = responsible != null ? TicketMasala.Domain.Common.Status.Assigned : TicketMasala.Domain.Common.Status.Pending,
             CustomFieldsJson = "{}",
             CreatorGuid = Guid.Parse(customer.Id),
-            CreationDate = _clock.UtcNow,
             CompletionTarget = completionTarget ?? _clock.UtcNow.AddDays(14),
             PriorityScore = 50,
             EstimatedEffortPoints = 0,
-            Comments = new List<TicketComment>(),
-            SubTickets = new List<Ticket>(),
             // V2 Grouping: Compute Hash
             ContentHash = TicketHasher.ComputeContentHash(description, customer.Id)
         };
+        ticket.SyncStatus();
 
         if (responsible != null)
         {
@@ -117,21 +110,17 @@ public class TicketFactory : ITicketFactory
 
         var ticket = new Ticket
         {
-            Guid = Guid.NewGuid(),
             Title = subject,
             Description = description,
             DomainId = "IT",
-            Status = "New",
             GerdaTags = "Email-Ingested",
-            CreationDate = _clock.UtcNow,
             CompletionTarget = _clock.UtcNow.AddDays(14),
             PriorityScore = 50,
             EstimatedEffortPoints = 0,
-            Comments = new List<TicketComment>(),
-            SubTickets = new List<Ticket>(),
             // V2 Grouping: Compute Hash
             ContentHash = TicketHasher.ComputeContentHash(description, customer?.Id ?? senderEmail)
         };
+        ticket.SyncStatus();
 
         if (customer != null)
         {

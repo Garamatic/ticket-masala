@@ -53,18 +53,15 @@ public class ProjectTemplateService : IProjectTemplateService
 
                 var ticket = new Ticket
                 {
-                    Guid = Guid.NewGuid(),
                     Title = templateTicket.Description.Length > 100
                         ? templateTicket.Description.Substring(0, 100)
                         : templateTicket.Description,
                     Description = templateTicket.Description,
                     DomainId = "IT",
-                    Status = "New",
                     EstimatedEffortPoints = templateTicket.EstimatedEffortPoints,
                     PriorityScore = (double)templateTicket.Priority * 25,
                     TicketType = templateTicket.TicketType,
                     TicketStatus = Status.Pending,
-                    CreationDate = _clock.UtcNow,
                     CreatorGuid = project.CreatorGuid,
                     Customer = project.Customers.FirstOrDefault(), // Use the primary customer
                     CustomerId = project.CustomerId,
@@ -72,6 +69,7 @@ public class ProjectTemplateService : IProjectTemplateService
                     ProjectGuid = project.Guid,
                     AiSummary = summary,
                 };
+                ticket.SyncStatus();
                 _context.Tickets.Add(ticket);
             }
             await _context.SaveChangesAsync();

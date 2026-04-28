@@ -42,12 +42,26 @@ public class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
     public string? RecommendedProjectName { get; set; }
     public string? CurrentProjectName { get; set; }
 
+    // --- RESOLUTION FIELDS (for billing integration) ---
+    /// <summary>
+    /// Billable amount for resolved tickets. Used for invoice generation.
+    /// </summary>
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal? BillableAmount { get; set; }
+
+    /// <summary>
+    /// Notes about how the ticket was resolved.
+    /// </summary>
+    [StringLength(2000)]
+    public string? ResolutionNotes { get; set; }
+
     // --- RIGID COLUMNS (Indexed, Relational) ---
     public string DomainId { get; set; } = "IT"; // e.g., "IT", "LEGAL"
 
     /// <summary>
     /// Simplified lifecycle status for triage: "New", "Triaged", "Done".
     /// Use this for basic status filtering. For workflow state, use TicketStatus.
+    /// Note: This should typically be set via SyncStatus() after setting TicketStatus.
     /// </summary>
     public string Status { get; set; } = "New";
 
@@ -180,7 +194,6 @@ public class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
 
         var ticket = new Ticket
         {
-            Guid = Guid.NewGuid(),
             Description = description.Trim(),
             Title = title.Trim(),
             CustomerId = customerId,
@@ -188,7 +201,6 @@ public class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
             ProjectGuid = projectGuid,
             WorkItemTypeCode = workItemTypeCode?.Trim(),
             TicketStatus = Common.Status.Pending,
-            CreationDate = DateTime.UtcNow,
             PriorityScore = 0.0,
             CustomFieldsJson = "{}"
         };
@@ -303,6 +315,11 @@ public class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
     }
 
     /// <summary>
+    /// Constant representing an unassigned ticket for audit logging and display.
+    /// </summary>
+    public const string UnassignedIndicator = "(unassigned)";
+
+    /// <summary>
     /// Unassigns the ticket (sets it back to unassigned state).
     /// </summary>
     public void Unassign(string unassignedByUserId)
@@ -310,7 +327,7 @@ public class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         var oldResponsibleId = ResponsibleId;
         ResponsibleId = null;
 
-        RaiseDomainEvent(new TicketAssignedEvent(Guid, "(unassigned)", oldResponsibleId, unassignedByUserId));
+        RaiseDomainEvent(new TicketAssignedEvent(Guid, UnassignedIndicator, oldResponsibleId, unassignedByUserId));
         LastModified = DateTime.UtcNow;
     }
 
@@ -355,6 +372,43 @@ public class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
     public void SetCompletionDate(DateTime? completionDate)
     {
         CompletionDate = completionDate;
+    }
+
+    /// <summary>
+    /// Resolves the ticket with billable amount and resolution notes.
+    /// Transitions the ticket to Completed status and raises a TicketResolvedEvent.
+    /// </summary>
+    /// <param name="resolutionNotes">Notes about how the ticket was resolved</param>
+    /// <param name="billableAmount">Optional billable amount for invoicing</param>
+    /// <param name="resolvedByUserId">The ID of the user resolving the ticket</param>
+    /// <exception cref="DomainException">Thrown when validation fails</exception>
+    public void Resolve(string resolutionNotes, decimal? billableAmount, string resolvedByUserId)
+    {
+        if (string.IsNullOrWhiteSpace(resolutionNotes))
+            throw new DomainException("Resolution notes are required");
+
+        if (resolutionNotes.Length > 2000)
+            throw new DomainException("Resolution notes cannot exceed 2000 characters");
+
+        if (billableAmount.HasValue && billableAmount.Value < 0)
+            throw new DomainException("Billable amount cannot be negative");
+
+        // Store resolution data
+        ResolutionNotes = resolutionNotes.Trim();
+        BillableAmount = billableAmount;
+
+        // Transition to Completed status
+        TransitionTo(Common.Status.Completed, resolvedByUserId);
+
+        // Raise domain event for billing workflow
+        RaiseDomainEvent(new TicketResolvedEvent(
+            Guid,
+            CustomerId ?? "(unknown)",
+            BillableAmount,
+            ResolutionNotes,
+            DateTime.UtcNow,
+            resolvedByUserId
+        ));
     }
 
     /// <summary>
@@ -535,6 +589,25 @@ public class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
     {
         ((List<Ticket>)SubTickets).Add(subTicket);
         subTicket.SetParentTicket(Guid);
+    }
+
+    /// <summary>
+    /// Records that child tickets were grouped under this ticket.
+    /// Raises a domain event for audit/logging purposes.
+    /// </summary>
+    public void RecordChildrenGrouped(IEnumerable<Ticket> childTickets, string groupedByUserId)
+    {
+        var childGuids = childTickets.Select(t => t.Guid).ToList();
+        RaiseDomainEvent(new TicketGroupedEvent(Guid, childGuids, groupedByUserId));
+    }
+
+    /// <summary>
+    /// Records that this ticket was ungrouped from its parent.
+    /// Raises a domain event for audit/logging purposes.
+    /// </summary>
+    public void RecordUngrouped(Guid? formerParentGuid, string ungroupedByUserId)
+    {
+        RaiseDomainEvent(new TicketUngroupedEvent(Guid, formerParentGuid, ungroupedByUserId));
     }
 
     // ═════════════════════════════════════════════════════════════════
@@ -809,7 +882,7 @@ public class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
     {
         return $"Ticket {Guid:N} | Status: {TicketStatus} | " +
                $"Customer: {CustomerId ?? "(none)"} | " +
-               $"Responsible: {ResponsibleId ?? "(unassigned)"} | " +
+               $"Responsible: {ResponsibleId ?? UnassignedIndicator} | " +
                $"Age: {GetAgeInDays():F1} days";
     }
 

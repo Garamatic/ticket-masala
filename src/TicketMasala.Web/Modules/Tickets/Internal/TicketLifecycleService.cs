@@ -77,9 +77,6 @@ internal class TicketLifecycleService : ITicketLifecycleService
     public async Task UpdateAsync(Ticket ticket, UpdateTicketCommand command, CancellationToken ct)
     {
         ticket.UpdateDescription(command.Description, command.ModifiedByUserId);
-        ticket.UpdateTitle(command.Description.Length > 50
-            ? command.Description[..47] + "..."
-            : command.Description, command.ModifiedByUserId);
 
         ticket.CompletionTarget = command.CompletionTarget;
         ticket.CustomerId = command.CustomerId;

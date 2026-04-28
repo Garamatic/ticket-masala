@@ -1,5 +1,5 @@
-using Xunit;
 using TicketMasala.Web.Modules.Tickets;
+using Xunit;
 
 namespace TicketMasala.Tests.Modules.Tickets;
 

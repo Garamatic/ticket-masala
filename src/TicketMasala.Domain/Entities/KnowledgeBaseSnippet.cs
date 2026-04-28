@@ -22,7 +22,7 @@ public class KnowledgeBaseSnippet
     public int UsageCount { get; set; } = 0; // MasalaRank Factor
     public bool IsVerified { get; set; } = false; // MasalaRank Factor
 
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public string? AuthorId { get; set; }
     public virtual ApplicationUser? Author { get; set; }

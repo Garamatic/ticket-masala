@@ -1,6 +1,6 @@
-using TicketMasala.Web.Modules.Tickets.Internal;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Engine.GERDA;
+using TicketMasala.Web.Modules.Tickets.Internal;
 
 namespace TicketMasala.Web.Modules.Tickets;
 
@@ -126,10 +126,6 @@ internal class TicketModule : ITicketModule
         if (ticket == null)
             return TicketResult<TicketDetailsDto>.Failure("Ticket not found");
 
-        // Note: we'd need to pass roles here - simplified for now
-        // In real implementation, pass roles through
-        var canEdit = true; // Simplified - would check _auth.CanEdit
-
         var dto = new TicketDetailsDto(
             ticket.Guid,
             ticket.Title,
@@ -142,7 +138,6 @@ internal class TicketModule : ITicketModule
             ticket.Project?.Name,
             ticket.PriorityScore,
             ticket.GerdaTags,
-            canEdit,
             Ticket.GetValidTransitions(ticket.TicketStatus).Split(", "));
 
         return TicketResult<TicketDetailsDto>.Success(dto);
@@ -150,7 +145,6 @@ internal class TicketModule : ITicketModule
 
     public async Task<TicketSearchResult> SearchAsync(TicketSearchQuery query, CancellationToken ct)
     {
-        // Note: requestingUserId would come from context in real implementation
-        return await _queries.SearchAsync(query, requestingUserId: null, ct);
+        return await _queries.SearchAsync(query, ct);
     }
 }

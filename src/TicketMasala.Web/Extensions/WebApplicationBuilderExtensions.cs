@@ -18,7 +18,6 @@ using TicketMasala.Web.Engine.GERDA;
 using TicketMasala.Web.Engine.GERDA.Anticipation;
 using TicketMasala.Web.Engine.GERDA.BackgroundJobs;
 using TicketMasala.Web.Engine.GERDA.Dispatching;
-using TicketMasala.Web.Modules.Tickets;
 using TicketMasala.Web.Engine.GERDA.Dispatching.Algorithms;
 using TicketMasala.Web.Engine.GERDA.Dispatching.Configuration;
 using TicketMasala.Web.Engine.GERDA.Estimating;
@@ -33,6 +32,7 @@ using TicketMasala.Web.Engine.Ingestion.Background;
 using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.Health;
 using TicketMasala.Web.Infrastructure.DomainEvents;
+using TicketMasala.Web.Modules.Tickets;
 using TicketMasala.Web.Observers;
 using TicketMasala.Web.Orchestrators;
 using TicketMasala.Web.Repositories;
@@ -94,6 +94,7 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddScoped<ITicketModule, TicketModule>();
         builder.Services.AddScoped<TicketMasala.Web.Modules.Tickets.Internal.ITicketLifecycleService, TicketMasala.Web.Modules.Tickets.Internal.TicketLifecycleService>();
         builder.Services.AddScoped<TicketMasala.Web.Modules.Tickets.Internal.ITicketQueryService, TicketMasala.Web.Modules.Tickets.Internal.TicketQueryService>();
+        // Note: TicketQueryService intentionally minimal - only needs DbContext
         builder.Services.AddScoped<TicketMasala.Web.Modules.Tickets.Internal.ITicketAuthorizationService, TicketMasala.Web.Modules.Tickets.Internal.TicketAuthorizationService>();
 
         // ============================================

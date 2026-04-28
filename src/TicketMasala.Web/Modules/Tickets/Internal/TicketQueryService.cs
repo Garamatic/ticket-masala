@@ -8,23 +8,16 @@ namespace TicketMasala.Web.Modules.Tickets.Internal;
 internal interface ITicketQueryService
 {
     Task<Ticket?> GetByIdAsync(Guid id, bool includeRelations, CancellationToken ct);
-    Task<TicketSearchResult> SearchAsync(TicketSearchQuery query, string? requestingUserId, CancellationToken ct);
+    Task<TicketSearchResult> SearchAsync(TicketSearchQuery query, CancellationToken ct);
 }
 
 internal class TicketQueryService : ITicketQueryService
 {
     private readonly MasalaDbContext _context;
-    private readonly ITicketAuthorizationService _auth;
-    private readonly ISystemClock _clock;
 
-    public TicketQueryService(
-        MasalaDbContext context,
-        ITicketAuthorizationService auth,
-        ISystemClock clock)
+    public TicketQueryService(MasalaDbContext context)
     {
         _context = context;
-        _auth = auth;
-        _clock = clock;
     }
 
     public async Task<Ticket?> GetByIdAsync(Guid id, bool includeRelations, CancellationToken ct)
@@ -40,7 +33,7 @@ internal class TicketQueryService : ITicketQueryService
         return await query.FirstOrDefaultAsync(t => t.Guid == id, ct);
     }
 
-    public async Task<TicketSearchResult> SearchAsync(TicketSearchQuery query, string? requestingUserId, CancellationToken ct)
+    public async Task<TicketSearchResult> SearchAsync(TicketSearchQuery query, CancellationToken ct)
     {
         // Implementation encapsulates the complex query logic from TicketReadService
         var dbQuery = _context.Tickets

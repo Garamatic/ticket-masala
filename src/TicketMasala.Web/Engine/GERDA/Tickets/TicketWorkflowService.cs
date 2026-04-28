@@ -334,6 +334,93 @@ public class TicketWorkflowService : ITicketWorkflowService
         return timeLog;
     }
 
+    public async Task<Ticket> ResolveTicketAsync(
+        Guid ticketGuid,
+        string resolutionNotes,
+        decimal? billableAmount,
+        string resolvedByUserId)
+    {
+        // Load ticket with customer relation for event data
+        var ticket = await _ticketRepository.GetByIdAsync(ticketGuid, includeRelations: true);
+        if (ticket == null)
+        {
+            throw new ArgumentException("Ticket not found", nameof(ticketGuid));
+        }
+
+        // Resolve the ticket (this transitions status and raises domain event)
+        ticket.Resolve(resolutionNotes, billableAmount, resolvedByUserId);
+
+        // Create outbox message for reliable event publishing
+        var customer = ticket.Customer;
+        var eventPayload = new TicketResolvedEventMessage
+        {
+            EventType = "ticket.resolved",
+            Timestamp = DateTime.UtcNow.ToString("O"),
+            Source = "ticket-masala",
+            TicketId = ticket.Guid.ToString(),
+            CustomerEmail = customer?.Email ?? "unknown@example.com",
+            CustomerName = customer?.Name ?? "Unknown Customer",
+            ServiceDescription = ticket.Title,
+            Amount = billableAmount ?? 0,
+            TenantId = ticket.DomainId,
+            ResolvedAt = DateTime.UtcNow.ToString("O"),
+            ResolutionNotes = resolutionNotes
+        };
+
+        var outboxMessage = new TicketMasala.Domain.Entities.OutboxMessage
+        {
+            Id = Guid.NewGuid(),
+            EventType = "ticket.resolved",
+            Payload = System.Text.Json.JsonSerializer.Serialize(eventPayload, new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.SnakeCaseLower,
+                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+            }),
+            RoutingKey = "event.ticket.resolved",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.OutboxMessages.Add(outboxMessage);
+
+        // Save ticket and outbox message in the same transaction
+        await _ticketRepository.UpdateAsync(ticket);
+        await _context.SaveChangesAsync();
+
+        // Audit log
+        await _auditService.LogActionAsync(ticketGuid, "Resolved", resolvedByUserId, "Ticket", null,
+            $"Billable: {billableAmount?.ToString("C") ?? "N/A"}, Notes: {resolutionNotes.Substring(0, Math.Min(100, resolutionNotes.Length))}...");
+
+        _logger.LogInformation(
+            "Ticket {TicketGuid} resolved by {UserId} with amount {Amount:C}",
+            ticketGuid,
+            resolvedByUserId,
+            billableAmount);
+
+        // Notify observers
+        await NotifyObserversUpdatedAsync(ticket);
+
+        return ticket;
+    }
+
+    /// <summary>
+    /// Message format for ticket.resolved event (matches IC-001 schema).
+    /// Uses snake_case property names for JSON serialization.
+    /// </summary>
+    private class TicketResolvedEventMessage
+    {
+        public string EventType { get; set; } = string.Empty;
+        public string Timestamp { get; set; } = string.Empty;
+        public string Source { get; set; } = string.Empty;
+        public string TicketId { get; set; } = string.Empty;
+        public string CustomerEmail { get; set; } = string.Empty;
+        public string CustomerName { get; set; } = string.Empty;
+        public string ServiceDescription { get; set; } = string.Empty;
+        public decimal Amount { get; set; }
+        public string TenantId { get; set; } = string.Empty;
+        public string ResolvedAt { get; set; } = string.Empty;
+        public string? ResolutionNotes { get; set; }
+    }
+
     private async Task NotifyObserversAssignedAsync(Ticket ticket, Employee assignee)
     {
         foreach (var observer in _observers)

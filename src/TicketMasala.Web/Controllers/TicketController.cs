@@ -48,13 +48,7 @@ public class TicketController : Controller
         if (id == null)
             return NotFound();
 
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
-        var result = await _ticketModule.GetDetailsAsync(id.Value, userId);
-
-        if (!result.IsSuccess)
-            return NotFound();
-
-        // Keep orchestrator for UI context (domain config, custom fields, etc.)
+        // Keep orchestrator for full view model and UI context
         TicketDetailsViewModel? viewModel;
         try
         {

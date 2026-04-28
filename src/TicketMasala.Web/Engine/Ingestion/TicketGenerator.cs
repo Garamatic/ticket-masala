@@ -123,14 +123,13 @@ public class TicketGenerator : ITicketGenerator
                 Description = $"{title} #{i + 1} - {desc}",
                 CreatorGuid = Guid.Parse(customer.Id),
                 ResponsibleId = agent.Id,
-                CreationDate = _clock.UtcNow.AddDays(-30 + i), // Spread over last 30 days
                 CompletionDate = _clock.UtcNow.AddDays(-30 + i + 1),
-                Status = "Completed",
                 TicketStatus = Status.Completed,
                 PriorityScore = 50,
                 EstimatedEffortPoints = 3,
                 ProjectGuid = project?.Guid // Can be null
             };
+            ticket.SyncStatus();
 
             _context.Tickets.Add(ticket);
         }

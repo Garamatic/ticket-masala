@@ -28,7 +28,7 @@ public class TicketAssignedLogHandler : IDomainEventHandler<TicketAssignedEvent>
             "Ticket {TicketGuid} {Action} from {OldResponsible} to {NewResponsible} by {AssignedBy}",
             @event.TicketGuid,
             action,
-            @event.OldResponsibleId ?? "(unassigned)",
+            @event.OldResponsibleId ?? TicketMasala.Domain.Entities.Ticket.UnassignedIndicator,
             @event.NewResponsibleId,
             @event.AssignedByUserId);
 

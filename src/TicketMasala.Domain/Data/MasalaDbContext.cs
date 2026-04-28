@@ -31,6 +31,7 @@ public class MasalaDbContext : IdentityDbContext<ApplicationUser, IdentityRole, 
     public DbSet<AuditLogEntry> AuditLogs { get; set; } = null!;
     public DbSet<TimeLog> TimeLogs { get; set; } = null!;
     public DbSet<DomainConfigVersion> DomainConfigVersions { get; set; } = null!;
+    public DbSet<OutboxMessage> OutboxMessages { get; set; } = null!;
 
     public MasalaDbContext(DbContextOptions<MasalaDbContext> options) : base(options) { }
 
@@ -73,6 +74,19 @@ public class MasalaDbContext : IdentityDbContext<ApplicationUser, IdentityRole, 
         modelBuilder.Entity<DomainConfigVersion>(entity =>
         {
             entity.HasIndex(e => e.Hash).IsUnique();
+        });
+
+        // Outbox Message Configuration
+        modelBuilder.Entity<OutboxMessage>(entity =>
+        {
+            entity.ToTable("OutboxMessages");
+
+            // Index for efficient polling of unprocessed messages
+            entity.HasIndex(e => new { e.ProcessedAt, e.ScheduledRetryAt, e.RetryCount })
+                .HasDatabaseName("IX_OutboxMessages_Pending");
+
+            entity.HasIndex(e => e.CreatedAt);
+            entity.HasIndex(e => e.EventType);
         });
 
         // 5. Project Configuration

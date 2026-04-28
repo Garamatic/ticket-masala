@@ -17,7 +17,7 @@ public record UpdateTicketCommand(
     string Description,
     string TicketStatus,
     DateTime? CompletionTarget,
-    string CustomerId,
+    string? CustomerId,
     Guid? ProjectGuid,
     Dictionary<string, string> CustomFields,
     string ModifiedByUserId,

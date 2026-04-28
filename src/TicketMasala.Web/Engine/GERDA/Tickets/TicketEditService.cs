@@ -49,6 +49,8 @@ public class TicketEditService : ITicketEditService
         }
 
         var responsibleUsers = await _ticketReadService.GetAllUsersSelectListAsync();
+        var customers = await _ticketReadService.GetCustomerSelectListAsync();
+        var projects = await _ticketReadService.GetProjectSelectListAsync();
 
         var viewModel = new EditTicketViewModel
         {
@@ -59,9 +61,9 @@ public class TicketEditService : ITicketEditService
             ResponsibleUserId = ticket.Responsible?.Id,
             CustomerId = ticket.CustomerId,
             ProjectGuid = ticket.ProjectGuid,
-            ResponsibleUsers = responsibleUsers,
-            CustomerList = (await _ticketReadService.GetCustomerSelectListAsync()).ToList(),
-            ProjectList = (await _ticketReadService.GetProjectSelectListAsync()).ToList()
+            ResponsibleUsers = responsibleUsers.ToList(),
+            CustomerList = customers.ToList(),
+            ProjectList = projects.ToList()
         };
 
         return new TicketEditContext
@@ -75,18 +77,23 @@ public class TicketEditService : ITicketEditService
     {
         var context = new TicketEditContext();
 
-        // Always populate the lists for dropdowns
+        // Fetch lists for dropdowns (needed when form validation fails and view is re-rendered)
         var responsibleUsers = await _ticketReadService.GetAllUsersSelectListAsync();
-        context.ViewModel.ResponsibleUsers = responsibleUsers.ToList();
-        context.ViewModel.CustomerList = (await _ticketReadService.GetCustomerSelectListAsync()).ToList();
-        context.ViewModel.ProjectList = (await _ticketReadService.GetProjectSelectListAsync()).ToList();
+        var customers = await _ticketReadService.GetCustomerSelectListAsync();
+        var projects = await _ticketReadService.GetProjectSelectListAsync();
 
+        context.ViewModel.ResponsibleUsers = responsibleUsers.ToList();
+        context.ViewModel.CustomerList = customers.ToList();
+        context.ViewModel.ProjectList = projects.ToList();
+
+        // Valid statuses and work item type depend on the ticket
         var reloadTicket = await _ticketReadService.GetTicketForEditAsync(ticketId);
         if (reloadTicket != null)
         {
             var validStates = _ruleEngine.GetValidNextStates(reloadTicket, user);
             var allowedStatuses = validStates.Union(new[] { reloadTicket.TicketStatus }).Distinct().ToList();
             context.ValidStatuses = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(allowedStatuses);
+            context.WorkItemTypeCode = reloadTicket.WorkItemTypeCode;
         }
 
         return context;

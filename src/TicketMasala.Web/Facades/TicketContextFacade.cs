@@ -86,22 +86,22 @@ public class TicketContextFacade : ITicketContextFacade
 
         if (context != null)
         {
-            // Domain configuration is still handled here as it's configuration, not data
-            // The ticket's domain ID should be available from the view model's WorkItemTypeCode
-            var domainId = context.WorkItemTypeCode ?? _domainConfig.GetDefaultDomainId();
+            // Domain configuration is handled here as it's configuration, not data
+            // TODO: Ticket domain ID should be stored on the ticket entity; using default is a temporary measure
+            var domainId = _domainConfig.GetDefaultDomainId();
             context.DomainId = domainId;
             context.EntityLabels = _domainConfig.GetEntityLabels(domainId);
             context.CustomFields = _domainConfig.GetCustomFields(domainId).ToList();
 
-            if (context.ViewModel != null && context.ViewModel.Guid != Guid.Empty)
+            if (context.ViewModel.Guid != Guid.Empty)
             {
                 try
                 {
-                    var customFieldsJson = context.CustomFieldValues != null
+                    var customFieldsJson = context.CustomFieldValues.Count > 0
                         ? JsonSerializer.Serialize(context.CustomFieldValues)
                         : "{}";
 
-                    if (!string.IsNullOrEmpty(customFieldsJson) && customFieldsJson != "{}")
+                    if (customFieldsJson != "{}")
                     {
                         context.CustomFieldValues = JsonSerializer.Deserialize<Dictionary<string, object>>(customFieldsJson) ?? new Dictionary<string, object>();
                     }
@@ -120,6 +120,7 @@ public class TicketContextFacade : ITicketContextFacade
     {
         var context = await _editService.GetEditReloadContextAsync(ticketId, user);
 
+        // TODO: Should use ticket's actual domain ID instead of default when ticket domain is stored on entity
         var reloadDomainId = _domainConfig.GetDefaultDomainId();
         context.DomainId = reloadDomainId;
         context.EntityLabels = _domainConfig.GetEntityLabels(reloadDomainId);

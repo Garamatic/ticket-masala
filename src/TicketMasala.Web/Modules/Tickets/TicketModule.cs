@@ -10,20 +10,17 @@ internal class TicketModule : ITicketModule
     private readonly ITicketLifecycleService _lifecycle;
     private readonly ITicketQueryService _queries;
     private readonly ITicketAuthorizationService _auth;
-    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<TicketModule> _logger;
 
     public TicketModule(
         ITicketLifecycleService lifecycle,
         ITicketQueryService queries,
         ITicketAuthorizationService auth,
-        IServiceScopeFactory scopeFactory,
         ILogger<TicketModule> logger)
     {
         _lifecycle = lifecycle;
         _queries = queries;
         _auth = auth;
-        _scopeFactory = scopeFactory;
         _logger = logger;
     }
 
@@ -33,22 +30,14 @@ internal class TicketModule : ITicketModule
         {
             _logger.LogInformation("Creating ticket for customer {CustomerId}", command.CustomerId);
 
+            // Create ticket - GERDA processing is now handled by TicketCreatedGerdaHandler
+            // which is dispatched via DomainEventDispatchingInterceptor after successful save.
+            // This replaces the fire-and-forget Task.Run pattern with proper background queue.
             var ticket = await _lifecycle.CreateAsync(command, ct);
 
-            // Trigger GERDA processing (fire and forget - module handles side effects)
-            _ = Task.Run(async () =>
-            {
-                try
-                {
-                    using var scope = _scopeFactory.CreateScope();
-                    var gerda = scope.ServiceProvider.GetRequiredService<IGerda>();
-                    await gerda.ProcessAsync(ticket.Guid);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "GERDA processing failed for ticket {TicketId}", ticket.Guid);
-                }
-            });
+            _logger.LogInformation(
+                "Ticket {TicketGuid} created. GERDA processing queued via domain event handler.",
+                ticket.Guid);
 
             return TicketResult<Guid>.Success(ticket.Guid);
         }

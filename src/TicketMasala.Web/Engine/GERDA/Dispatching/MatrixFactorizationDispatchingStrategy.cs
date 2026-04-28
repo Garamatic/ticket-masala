@@ -175,13 +175,16 @@ public class MatrixFactorizationDispatchingStrategy : IDispatchingStrategy
                         var specs = System.Text.Json.JsonSerializer.Deserialize<List<string>>(employee.Specializations);
                         if (specs != null && specs.Any())
                         {
+                            // Security: Filter out specs containing FTS5 operators to prevent injection
+                            var safeSpecs = specs.Where(s => IsValidFts5Term(s)).ToList();
+                            if (!safeSpecs.Any())
+                                continue;
+
                             // Build OR query: "spec1" OR "spec2"
-                            var matchQuery = string.Join(" OR ", specs.Select(s => $"\"{s.Replace("\"", "\"\"")}\""));
+                            // Security: Terms are validated above; quotes are doubled to escape them
+                            var matchQuery = string.Join(" OR ", safeSpecs.Select(s => $"\"{s.Replace("\"", "\"\"")}\""));
 
                             // Query rank from FTS5 table targeting specific ticket row
-                            // Note: Using string interpolation for table name in SqlQueryRaw is risky if table name dynamic, but here it's constant.
-                            // Parameterizing matchQuery is tricky with MATCH syntax in some providers, but usually safe as param.
-                            // SQLite FTS MATCH expects simple string.
                             var ranks = await _context.Database.SqlQueryRaw<double>(
                                 "SELECT rank FROM Tickets_Search WHERE rowid = {0} AND Tickets_Search MATCH {1}",
                                 ticketRowId, matchQuery)
@@ -490,5 +493,31 @@ public class MatrixFactorizationDispatchingStrategy : IDispatchingStrategy
             .OrderByDescending(x => x.Score)
             .Take(count)
             .ToList();
+    }
+
+    /// <summary>
+    /// Validates that a term is safe to use in an FTS5 MATCH expression.
+    /// Rejects terms containing FTS5 operators (AND, OR, NOT, NEAR, ^, *, etc.)
+    /// to prevent query injection attacks.
+    /// </summary>
+    private static bool IsValidFts5Term(string term)
+    {
+        if (string.IsNullOrWhiteSpace(term))
+            return false;
+
+        // FTS5 query operators that could be used for injection
+        var ftsOperators = new[] { " AND ", " OR ", " NOT ", "NEAR", "^", "*", "(", ")", "-" };
+
+        foreach (var op in ftsOperators)
+        {
+            if (term.Contains(op, StringComparison.OrdinalIgnoreCase))
+                return false;
+        }
+
+        // Only allow alphanumeric, spaces, and basic punctuation
+        return term.All(c =>
+            char.IsLetterOrDigit(c) ||
+            char.IsWhiteSpace(c) ||
+            c is '-' or '_' or '.' or ',' or '/' or '&' or '+' or '#' or '@' or '%');
     }
 }

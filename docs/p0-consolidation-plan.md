@@ -20,6 +20,12 @@ from concurrent migrations. This has been achieved:
    - All 308 tests pass with expected deprecation warnings
    - Full migration to module pattern deferred to P1 (intentional scope management)
 
+3. **Fire-and-Forget Fix**: ✅ COMPLETE
+   - Replaced Task.Run GERDA processing with domain event handler
+   - Created `TicketCreatedGerdaHandler` using `IBackgroundTaskQueue`
+   - Proper error handling and observability via queue depth
+   - Removed `IServiceScopeFactory` dependency from `TicketModule`
+
 ### Risk Reduction
 
 | Before P0 | After P0 |
@@ -28,14 +34,15 @@ from concurrent migrations. This has been achieved:
 | 3 GERDA service implementations | 1 deep module (GerdaEngine) |
 | Confusing dual orchestration pattern | Clear deprecation with migration path |
 | Silent pipeline failures | Proper result types (GerdaOutcome) |
+| Fire-and-forget Task.Run (unobservable failures) | Domain event + background queue (observable, retryable) |
 
 ### Next Steps
 
-**P1 (Hardening)**:
-- Migrate `TicketController` from `ITicketOrchestrator` to `ITicketModule`
-- Replace Task.Run fire-and-forget with domain events + background service
-- Consolidate dispatching to `AgentMatchingEngine` single path
-- Add OpenTelemetry tracing and outbox metrics
+**P1 (Hardening)** - Updated after fire-and-forget fix:
+- ✅ Replace Task.Run fire-and-forget with domain events + background service **COMPLETE**
+- ⏳ Migrate `TicketController` from `ITicketOrchestrator` to `ITicketModule`
+- ⏳ Consolidate dispatching to `AgentMatchingEngine` single path
+- ⏳ Add OpenTelemetry tracing and outbox metrics
 
 **P2 (Domain Quality)**:
 - Split `Ticket.cs` into partial classes

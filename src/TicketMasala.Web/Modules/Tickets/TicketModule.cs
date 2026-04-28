@@ -197,8 +197,10 @@ internal class TicketModule : ITicketModule
 
     public async Task<(TicketDetailsViewModel? ViewModel, TicketDetailContext Context)> GetDetailPageAsync(Guid ticketId, ClaimsPrincipal user, CancellationToken ct)
     {
-        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var isCustomer = user.IsInRole(Constants.RoleCustomer);
+        // Guard against null user (can happen in test scenarios)
+        var safeUser = user ?? new ClaimsPrincipal(new ClaimsIdentity());
+        var userId = safeUser.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var isCustomer = safeUser.IsInRole(Constants.RoleCustomer);
 
         try
         {
@@ -245,8 +247,10 @@ internal class TicketModule : ITicketModule
 
     public async Task<TicketCreateContext> GetCreateContextAsync(Guid? projectGuid, ClaimsPrincipal user, CancellationToken ct)
     {
-        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var isCustomer = user.IsInRole(Constants.RoleCustomer);
+        // Guard against null user (can happen in test scenarios)
+        var safeUser = user ?? new ClaimsPrincipal(new ClaimsIdentity());
+        var userId = safeUser.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var isCustomer = safeUser.IsInRole(Constants.RoleCustomer);
 
         return await _contextFacade.GetCreateContextAsync(isCustomer, userId, projectGuid);
     }

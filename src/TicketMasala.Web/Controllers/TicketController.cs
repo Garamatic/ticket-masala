@@ -17,14 +17,10 @@ namespace TicketMasala.Web.Controllers;
 public class TicketController : Controller
 {
     private readonly ITicketModule _ticketModule;
-    private readonly ILogger<TicketController> _logger;
 
-    public TicketController(
-        ITicketModule ticketModule,
-        ILogger<TicketController> logger)
+    public TicketController(ITicketModule ticketModule)
     {
         _ticketModule = ticketModule;
-        _logger = logger;
     }
 
     public async Task<IActionResult> Index(TicketSearchViewModel searchModel)

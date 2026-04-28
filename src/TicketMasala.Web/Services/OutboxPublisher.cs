@@ -291,13 +291,16 @@ public class OutboxPublisher : BackgroundService
             activity?.SetTag("error.transient", true);
             activity?.SetTag("retry_count", message.RetryCount);
 
+            var isPermanent = message.RetryCount >= _options.MaxRetries;
+
             _logger.LogError(ex,
-                "Failed to publish outbox message {MessageId} (attempt {RetryCount}/{MaxRetries})",
+                "Failed to publish outbox message {MessageId} (attempt {RetryCount}/{MaxRetries}). {Result}",
                 message.Id,
                 message.RetryCount,
-                _options.MaxRetries);
+                _options.MaxRetries,
+                isPermanent ? "Message will be abandoned." : "Will retry later.");
 
-            if (message.RetryCount >= _options.MaxRetries)
+            if (isPermanent)
             {
                 MessagesDeadLetteredCounter.Add(1,
                     new KeyValuePair<string, object?>("event_type", message.EventType),

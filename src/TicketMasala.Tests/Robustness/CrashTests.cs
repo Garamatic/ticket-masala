@@ -103,7 +103,7 @@ namespace TicketMasala.Tests.Robustness
         {
             // Arrange
             var mockModule = new Mock<ITicketModule>();
-            mockModule.Setup(m => m.GetCreateContextAsync(It.IsAny<Guid?>(), It.IsAny<ClaimsPrincipal>(), It.IsAny<CancellationToken>()))
+            mockModule.Setup(m => m.GetCreateContextAsync(It.IsAny<Guid?>(), It.IsAny<ClaimsPrincipal>()))
                 .ReturnsAsync(new TicketCreateContext { DomainId = "IT", Employees = new List<SelectListItem>(), Projects = new List<SelectListItem>() });
 
             var controller = new TicketController(mockModule.Object);

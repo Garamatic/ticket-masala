@@ -32,7 +32,8 @@ public class AgentMatchingEngineDispatchingStrategy : IDispatchingStrategy
         try
         {
             var employees = await _userRepository.GetAllEmployeesAsync();
-            if (!employees.Any()) return new List<DispatchResult>();
+            if (!employees.Any())
+                return new List<DispatchResult>();
 
             var customer = !string.IsNullOrEmpty(ticket.CustomerId)
                 ? await _userRepository.GetCustomerByIdAsync(ticket.CustomerId)

@@ -33,10 +33,17 @@ In Progress
 - [x] Update seeding to use factory methods
 - [x] Update `PortalsApiController` to use `CreateFromPortal()`
 
-#### Phase 3: Move Validation to Domain (Pending)
-- [ ] Extract business rules from `RuleEngineService`
-- [ ] Add state transition validation to `Ticket`
-- [ ] Add authorization checks to entity methods
+#### Phase 3: Move Validation to Domain ✅ COMPLETE
+- [x] Move `DomainRuleException` to Domain layer
+- [x] Add `ValidateCanEdit()` - combines role and state authorization
+- [x] Add `ValidateCanChangeStatus()` - checks role and transition validity
+- [x] Add `ValidateCanAssign()` - checks role and assignable state
+- [x] Add `ValidateCanView()` / `CanBeViewedBy()` - view authorization
+- [x] Add `ValidateRequiredFieldsForCurrentState()` - field validation
+- [x] Add `GetStateSummary()` - debugging/logging helper
+- [x] Update `TicketOrchestrator.UpdateTicketAsync()` to use domain validation
+- [x] Simplify `TicketWorkflowService.UpdateTicketAsync()` - validation moved to orchestrator
+- [x] Update `GlobalExceptionHandler` to use Domain namespace
 
 #### Phase 4: Domain Services (Pending)
 - [ ] Create domain services for cross-aggregate operations

@@ -667,6 +667,154 @@ public class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
     }
 
     // ═════════════════════════════════════════════════════════════════
+    // DOMAIN VALIDATION (Phase 3: Authorization & Rule Validation)
+    // ═════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Validates that the user can edit this ticket and throws DomainRuleException if not.
+    /// This combines state-based and role-based authorization.
+    /// </summary>
+    /// <param name="userId">The user attempting to edit</param>
+    /// <param name="userRoles">The roles of the user</param>
+    /// <exception cref="DomainRuleException">Thrown when user is not authorized</exception>
+    public void ValidateCanEdit(string userId, IEnumerable<string> userRoles)
+    {
+        if (!CanBeEditedBy(userId, userRoles))
+        {
+            throw new DomainRuleException("You are not authorized to edit this ticket.");
+        }
+
+        if (!CanEditInCurrentState())
+        {
+            throw new DomainRuleException(
+                $"Tickets in {TicketStatus} status cannot be edited. " +
+                "Only tickets in Pending, Assigned, or InProgress status can be edited.");
+        }
+    }
+
+    /// <summary>
+    /// Validates that the user can change the status and throws DomainRuleException if not.
+    /// </summary>
+    public void ValidateCanChangeStatus(string userId, IEnumerable<string> userRoles, Status targetStatus)
+    {
+        if (!CanChangeStatus(userId, userRoles))
+        {
+            throw new DomainRuleException("You are not authorized to change this ticket's status.");
+        }
+
+        if (!IsValidTransition(TicketStatus, targetStatus))
+        {
+            throw new DomainRuleException(
+                $"Cannot transition from {TicketStatus} to {targetStatus}. " +
+                $"Valid transitions: {GetValidTransitions(TicketStatus)}");
+        }
+    }
+
+    /// <summary>
+    /// Validates that the user can assign this ticket and throws DomainRuleException if not.
+    /// </summary>
+    public void ValidateCanAssign(string userId, IEnumerable<string> userRoles)
+    {
+        if (!userRoles.Contains(Constants.RoleAdmin) && !userRoles.Contains(Constants.RoleEmployee))
+        {
+            throw new DomainRuleException("Only administrators and employees can assign tickets.");
+        }
+
+        if (!CanBeAssigned())
+        {
+            throw new DomainRuleException(
+                $"Tickets in {TicketStatus} status cannot be assigned. " +
+                "Only tickets in Pending, Assigned, or InProgress status can be assigned.");
+        }
+    }
+
+    /// <summary>
+    /// Validates that the ticket can be viewed by the specified user.
+    /// </summary>
+    public bool CanBeViewedBy(string userId, IEnumerable<string> userRoles)
+    {
+        // Admins can view all tickets
+        if (userRoles.Contains(Constants.RoleAdmin))
+            return true;
+
+        // Employees can view tickets they are assigned to or unassigned tickets
+        if (userRoles.Contains(Constants.RoleEmployee))
+            return ResponsibleId == userId || ResponsibleId == null || CustomerId == userId;
+
+        // Customers can only view their own tickets
+        if (userRoles.Contains(Constants.RoleCustomer))
+            return CustomerId == userId;
+
+        return false;
+    }
+
+    /// <summary>
+    /// Validates view access and throws DomainRuleException if not authorized.
+    /// </summary>
+    public void ValidateCanView(string userId, IEnumerable<string> userRoles)
+    {
+        if (!CanBeViewedBy(userId, userRoles))
+        {
+            throw new DomainRuleException("You are not authorized to view this ticket.");
+        }
+    }
+
+    /// <summary>
+    /// Validates that required fields are present for the current state.
+    /// Returns a list of validation errors, or empty if valid.
+    /// </summary>
+    public IEnumerable<string> ValidateRequiredFieldsForCurrentState()
+    {
+        var errors = new List<string>();
+
+        // All tickets require a description
+        if (string.IsNullOrWhiteSpace(Description))
+            errors.Add("Description is required");
+
+        // All tickets require a title
+        if (string.IsNullOrWhiteSpace(Title))
+            errors.Add("Title is required");
+
+        // Assigned/InProgress tickets require a responsible person
+        if (TicketStatus is Common.Status.Assigned or Common.Status.InProgress &&
+            string.IsNullOrEmpty(ResponsibleId))
+        {
+            errors.Add("A responsible agent is required for Assigned/InProgress tickets");
+        }
+
+        // InProgress tickets should have an estimated effort
+        if (TicketStatus == Common.Status.InProgress && EstimatedEffortPoints <= 0)
+        {
+            errors.Add("Estimated effort points should be set when ticket is In Progress");
+        }
+
+        return errors;
+    }
+
+    /// <summary>
+    /// Validates required fields and throws DomainException if any are missing.
+    /// </summary>
+    public void ValidateRequiredFieldsOrThrow()
+    {
+        var errors = ValidateRequiredFieldsForCurrentState();
+        if (errors.Any())
+        {
+            throw new DomainException($"Validation failed: {string.Join("; ", errors)}");
+        }
+    }
+
+    /// <summary>
+    /// Gets a summary of the ticket's current state for debugging/logging.
+    /// </summary>
+    public string GetStateSummary()
+    {
+        return $"Ticket {Guid:N} | Status: {TicketStatus} | " +
+               $"Customer: {CustomerId ?? "(none)"} | " +
+               $"Responsible: {ResponsibleId ?? "(unassigned)"} | " +
+               $"Age: {GetAgeInDays():F1} days";
+    }
+
+    // ═════════════════════════════════════════════════════════════════
     // LEGACY COMPATIBILITY (for gradual migration)
     // ═════════════════════════════════════════════════════════════════
 

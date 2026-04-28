@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Exceptions;
 using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.AI;
 using TicketMasala.Web.Common;
@@ -189,32 +190,40 @@ public class TicketOrchestrator : ITicketOrchestrator
         if (ticketToUpdate == null)
             return Result.Failure("Ticket not found");
 
-        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var isCustomer = user.IsInRole(Constants.RoleCustomer);
-
-        if (isCustomer)
-        {
-            if (ticketToUpdate.CustomerId != userId)
-                return Result.Failure("Unauthorized");
-
-            if (ticketToUpdate.TicketStatus != Status.Pending && ticketToUpdate.TicketStatus != Status.Assigned)
-            {
-                return Result.Failure("You can only edit tickets that are in Pending or Assigned status.");
-            }
-        }
-
-        ticketToUpdate.Description = viewModel.Description;
-        ticketToUpdate.TicketStatus = viewModel.TicketStatus;
-        ticketToUpdate.CompletionTarget = viewModel.CompletionTarget;
-        ticketToUpdate.CustomerId = viewModel.CustomerId;
-        ticketToUpdate.ProjectGuid = viewModel.ProjectGuid;
-
-        var domainId = ticketToUpdate.DomainId ?? _domainConfig.GetDefaultDomainId();
-        var formDictionary = form.ToDictionary(x => x.Key, x => x.Value.ToString());
-        ticketToUpdate.CustomFieldsJson = _ticketReadService.ParseCustomFields(domainId, formDictionary);
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+        var userRoles = user.Claims
+            .Where(c => c.Type == ClaimTypes.Role)
+            .Select(c => c.Value)
+            .ToList();
 
         try
         {
+            // Validate authorization using domain logic (Phase 3)
+            ticketToUpdate.ValidateCanEdit(userId, userRoles);
+
+            // Track original status for transition validation
+            var originalStatus = ticketToUpdate.TicketStatus;
+
+            // Update properties
+            ticketToUpdate.Description = viewModel.Description;
+            ticketToUpdate.TicketStatus = viewModel.TicketStatus;
+            ticketToUpdate.CompletionTarget = viewModel.CompletionTarget;
+            ticketToUpdate.CustomerId = viewModel.CustomerId;
+            ticketToUpdate.ProjectGuid = viewModel.ProjectGuid;
+
+            // Validate status transition if changed
+            if (originalStatus != viewModel.TicketStatus)
+            {
+                ticketToUpdate.ValidateCanChangeStatus(userId, userRoles, viewModel.TicketStatus);
+            }
+
+            var domainId = ticketToUpdate.DomainId ?? _domainConfig.GetDefaultDomainId();
+            var formDictionary = form.ToDictionary(x => x.Key, x => x.Value.ToString());
+            ticketToUpdate.CustomFieldsJson = _ticketReadService.ParseCustomFields(domainId, formDictionary);
+
+            // Validate required fields
+            ticketToUpdate.ValidateRequiredFieldsOrThrow();
+
             var success = await _ticketWorkflowService.UpdateTicketAsync(ticketToUpdate);
             if (success)
             {
@@ -225,13 +234,19 @@ public class TicketOrchestrator : ITicketOrchestrator
                 return Result.Failure("Failed to update ticket. Please try again.");
             }
         }
-        catch (DomainRuleException ex)
+        catch (TicketMasala.Domain.Exceptions.DomainRuleException ex)
         {
+            _logger.LogWarning(ex, "Domain rule violation updating ticket {TicketId}: {Message}", id, ex.Message);
+            return Result.Failure(ex.Message);
+        }
+        catch (DomainException ex)
+        {
+            _logger.LogWarning(ex, "Domain validation failed updating ticket {TicketId}: {Message}", id, ex.Message);
             return Result.Failure(ex.Message);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating ticket");
+            _logger.LogError(ex, "Error updating ticket {TicketId}", id);
             return Result.Failure("An unexpected error occurred.");
         }
     }

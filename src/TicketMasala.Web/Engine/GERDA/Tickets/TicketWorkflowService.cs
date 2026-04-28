@@ -150,28 +150,9 @@ public class TicketWorkflowService : ITicketWorkflowService
             // PII Scrubbing
             ticket.Description = _piiScrubber.Scrub(ticket.Description);
 
-            // Validate Transition Rules
-            var entry = _context.Entry(ticket);
-            if (entry.State == EntityState.Modified)
-            {
-                var originalStatus = (Status)entry.Property(t => t.TicketStatus).OriginalValue;
-                if (originalStatus != ticket.TicketStatus)
-                {
-                    var user = _httpContextAccessor.HttpContext?.User;
-                    if (user != null)
-                    {
-                        // Create a temporary ticket with original status to check transition FROM that status
-                        var currentStatus = ticket.TicketStatus; // Logic: new status
-                        ticket.TicketStatus = originalStatus; // Set back to old status for check
-                        var canTransition = _ruleEngine.CanTransition(ticket, currentStatus, user);
-                        ticket.TicketStatus = currentStatus; // Restore new status
-                        if (!canTransition)
-                        {
-                            throw new DomainRuleException($"Transition from {originalStatus} to {ticket.TicketStatus} is not allowed by domain rules.");
-                        }
-                    }
-                }
-            }
+            // Note: Authorization and transition validation is now done in the orchestrator
+            // using domain methods (ticket.ValidateCanEdit, ticket.ValidateCanChangeStatus)
+            // before calling this service method.
 
             await _ticketRepository.UpdateAsync(ticket);
 

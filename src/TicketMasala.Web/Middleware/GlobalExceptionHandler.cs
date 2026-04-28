@@ -85,7 +85,7 @@ public class GlobalExceptionHandler : IExceptionHandler
                 Message = invalidOpEx.Message,
                 CorrelationId = correlationId
             },
-            Engine.Compiler.DomainRuleException domainEx => new ApiErrorResponse
+            TicketMasala.Domain.Exceptions.DomainRuleException domainEx => new ApiErrorResponse
             {
                 Error = "DOMAIN_RULE_VIOLATION",
                 Message = domainEx.Message,
@@ -112,7 +112,7 @@ public class GlobalExceptionHandler : IExceptionHandler
             KeyNotFoundException => StatusCodes.Status404NotFound,
             UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
             InvalidOperationException => StatusCodes.Status400BadRequest,
-            Engine.Compiler.DomainRuleException => StatusCodes.Status422UnprocessableEntity,
+            TicketMasala.Domain.Exceptions.DomainRuleException => StatusCodes.Status422UnprocessableEntity,
             _ => StatusCodes.Status500InternalServerError
         };
     }

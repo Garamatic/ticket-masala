@@ -1,30 +1,31 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using TicketMasala.Domain.Common;
 using TicketMasala.Web.Engine.Core;
-using TicketMasala.Web.Engine.GERDA.Tickets;
-using TicketMasala.Web.Engine.Projects;
-using TicketMasala.Web.Orchestrators;
+using TicketMasala.Web.Modules.Tickets;
 using TicketMasala.Web.ViewModels.Tickets;
 
 namespace TicketMasala.Web.Controllers;
 
+/// <summary>
+/// Controller for ticket search operations.
+/// Uses ITicketModule deep module for all operations.
+/// </summary>
 [Authorize]
 public class TicketSearchController : Controller
 {
-    private readonly ITicketOrchestrator _orchestrator;
+    private readonly ITicketModule _ticketModule;
     private readonly ISavedFilterService _savedFilterService;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<TicketSearchController> _logger;
 
     public TicketSearchController(
-        ITicketOrchestrator orchestrator,
+        ITicketModule ticketModule,
         ISavedFilterService savedFilterService,
         IHttpContextAccessor httpContextAccessor,
         ILogger<TicketSearchController> logger)
     {
-        _orchestrator = orchestrator;
+        _ticketModule = ticketModule;
         _savedFilterService = savedFilterService;
         _httpContextAccessor = httpContextAccessor;
         _logger = logger;
@@ -35,9 +36,8 @@ public class TicketSearchController : Controller
     {
         try
         {
-            var result = await _orchestrator.SearchTicketsAsync(searchModel, User);
+            var result = await _ticketModule.SearchForUiAsync(searchModel, User);
 
-            // Orchestrator populates SavedFilters in the result now
             ViewBag.SavedFilters = result.SavedFilters;
             ViewBag.IsCustomer = User.IsInRole(Constants.RoleCustomer);
 

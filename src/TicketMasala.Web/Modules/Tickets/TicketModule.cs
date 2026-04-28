@@ -1,41 +1,61 @@
 using System.Security.Claims;
-using Microsoft.Extensions.DependencyInjection;
+using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Entities;
+using TicketMasala.Web.AI;
+using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.GERDA;
+using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Facades;
 using TicketMasala.Web.Modules.Tickets.Internal;
 using TicketMasala.Web.ViewModels.Tickets;
 
 namespace TicketMasala.Web.Modules.Tickets;
 
+/// <summary>
+/// Deep module implementation for ticket operations.
+/// Consolidates lifecycle, query, authorization, and UI context services.
+/// </summary>
 internal class TicketModule : ITicketModule
 {
     private readonly ITicketLifecycleService _lifecycle;
     private readonly ITicketQueryService _queries;
     private readonly ITicketAuthorizationService _auth;
+    private readonly ITicketContextFacade _contextFacade;
+    private readonly ITicketReadService _readService;
+    private readonly ISavedFilterService _savedFilterService;
+    private readonly IOpenAiService _openAiService;
     private readonly ILogger<TicketModule> _logger;
 
     public TicketModule(
         ITicketLifecycleService lifecycle,
         ITicketQueryService queries,
         ITicketAuthorizationService auth,
+        ITicketContextFacade contextFacade,
+        ITicketReadService readService,
+        ISavedFilterService savedFilterService,
+        IOpenAiService openAiService,
         ILogger<TicketModule> logger)
     {
         _lifecycle = lifecycle;
         _queries = queries;
         _auth = auth;
+        _contextFacade = contextFacade;
+        _readService = readService;
+        _savedFilterService = savedFilterService;
+        _openAiService = openAiService;
         _logger = logger;
     }
+
+    // --- Core lifecycle -------------------------------------------------------
 
     public async Task<TicketResult<Guid>> CreateAsync(CreateTicketCommand command, CancellationToken ct)
     {
         try
         {
-            _logger.LogInformation("Creating ticket for customer {CustomerId}", command.CustomerId);
+            _logger.LogInformation("Creating ticket for customer {CustomerId}", command.CustomerId ?? "(null)");
 
             // Create ticket - GERDA processing is now handled by TicketCreatedGerdaHandler
             // which is dispatched via DomainEventDispatchingInterceptor after successful save.
-            // This replaces the fire-and-forget Task.Run pattern with proper background queue.
             var ticket = await _lifecycle.CreateAsync(command, ct);
 
             _logger.LogInformation(
@@ -145,49 +165,103 @@ internal class TicketModule : ITicketModule
         return await _queries.SearchAsync(query, ct);
     }
 
-    // ─── UI context methods (P1: Migrate from ITicketOrchestrator) ───────────
-    // These methods provide the UI-specific context needed by controllers.
-    // They will replace the orchestrator calls once fully implemented.
+    // --- UI context methods ----------------------------------------------------
 
-    public Task<TicketSearchViewModel> SearchForUiAsync(TicketSearchViewModel searchModel, ClaimsPrincipal user, CancellationToken ct)
+    public async Task<TicketSearchViewModel> SearchForUiAsync(TicketSearchViewModel searchModel, ClaimsPrincipal user, CancellationToken ct)
     {
-        // P1: Migrate from ITicketOrchestrator.SearchTicketsAsync
-        throw new NotImplementedException("SearchForUiAsync is planned for P1. Use ITicketOrchestrator for now.");
+        if (searchModel == null)
+            searchModel = new TicketSearchViewModel();
+
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var isCustomer = user.IsInRole(Constants.RoleCustomer);
+
+        // Apply customer filter for customer users
+        if (isCustomer && !string.IsNullOrEmpty(userId))
+        {
+            searchModel.CustomerId = userId;
+        }
+
+        // Use read service for full search with select lists
+        var result = await _readService.SearchTicketsAsync(searchModel);
+
+        // Load saved filters
+        if (!string.IsNullOrEmpty(userId))
+        {
+            result.SavedFilters = await _savedFilterService.GetFiltersForUserAsync(userId);
+        }
+
+        return result;
     }
 
-    public Task<(TicketDetailsViewModel? ViewModel, TicketDetailContext Context)> GetDetailPageAsync(Guid ticketId, ClaimsPrincipal user, CancellationToken ct)
+    public async Task<(TicketDetailsViewModel? ViewModel, TicketDetailContext Context)> GetDetailPageAsync(Guid ticketId, ClaimsPrincipal user, CancellationToken ct)
     {
-        // P1: Migrate from ITicketOrchestrator.GetTicketDetailsAsync + GetTicketDetailContextAsync
-        throw new NotImplementedException("GetDetailPageAsync is planned for P1. Use ITicketOrchestrator for now.");
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var isCustomer = user.IsInRole(Constants.RoleCustomer);
+
+        try
+        {
+            // Get view model from facade
+            var viewModel = await _contextFacade.GetTicketDetailsAsync(ticketId, userId, isCustomer);
+            if (viewModel == null)
+            {
+                return (null, new TicketDetailContext());
+            }
+
+            // Get domain context
+            var context = await _contextFacade.GetTicketDetailContextAsync(viewModel);
+
+            return (viewModel, context);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // Re-throw to let controller handle with Forbid()
+            throw;
+        }
     }
 
-    public Task<string> GenerateAiSummaryAsync(Guid ticketId, CancellationToken ct)
+    public async Task<string> GenerateAiSummaryAsync(Guid ticketId, CancellationToken ct)
     {
-        // P1: Migrate from ITicketOrchestrator.GenerateAiSummaryAsync
-        throw new NotImplementedException("GenerateAiSummaryAsync is planned for P1. Use ITicketOrchestrator for now.");
+        // Get ticket details
+        var userId = string.Empty;
+        var isCustomer = false;
+        var viewModel = await _contextFacade.GetTicketDetailsAsync(ticketId, userId, isCustomer);
+
+        if (viewModel == null)
+        {
+            throw new ArgumentException("Ticket not found");
+        }
+
+        // Build query for AI
+        var query = $"Title: {viewModel.Description} (Created: {viewModel.CreationDate})\n\n" +
+                $"Status: {viewModel.TicketStatus}\n\n" +
+                $"Discussion:\n" +
+                string.Join("\n", viewModel.Comments.OrderBy(c => c.CreatedAt).Select(c =>
+                    $"- {c.Author?.Name ?? c.Author?.UserName ?? "Unknown"} ({c.CreatedAt}): {c.Body}"));
+
+        return await _openAiService.GetResponseAsync(OpenAIPrompts.Summary, query);
     }
 
-    public Task<TicketCreateContext> GetCreateContextAsync(Guid? projectGuid, ClaimsPrincipal user, CancellationToken ct)
+    public async Task<TicketCreateContext> GetCreateContextAsync(Guid? projectGuid, ClaimsPrincipal user, CancellationToken ct)
     {
-        // P1: Migrate from ITicketOrchestrator.GetCreateContextAsync
-        throw new NotImplementedException("GetCreateContextAsync is planned for P1. Use ITicketOrchestrator for now.");
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var isCustomer = user.IsInRole(Constants.RoleCustomer);
+
+        return await _contextFacade.GetCreateContextAsync(isCustomer, userId, projectGuid);
     }
 
-    public Task<TicketEditContext?> GetEditContextAsync(Guid ticketId, ClaimsPrincipal user, CancellationToken ct)
+    public async Task<TicketEditContext?> GetEditContextAsync(Guid ticketId, ClaimsPrincipal user, CancellationToken ct)
     {
-        // P1: Migrate from ITicketOrchestrator.GetEditContextAsync
-        throw new NotImplementedException("GetEditContextAsync is planned for P1. Use ITicketOrchestrator for now.");
+        return await _contextFacade.GetEditContextAsync(ticketId, user);
     }
 
     public Task<TicketCreateContext> GetCreateReloadContextAsync(Guid? projectGuid, ClaimsPrincipal user, CancellationToken ct)
     {
-        // P1: Migrate from ITicketOrchestrator.GetCreateReloadContextAsync
-        throw new NotImplementedException("GetCreateReloadContextAsync is planned for P1. Use ITicketOrchestrator for now.");
+        // Reload uses same context as initial load
+        return GetCreateContextAsync(projectGuid, user, ct);
     }
 
-    public Task<TicketEditContext> GetEditReloadContextAsync(Guid ticketId, ClaimsPrincipal user, CancellationToken ct)
+    public async Task<TicketEditContext> GetEditReloadContextAsync(Guid ticketId, ClaimsPrincipal user, CancellationToken ct)
     {
-        // P1: Migrate from ITicketOrchestrator.GetEditReloadContextAsync
-        throw new NotImplementedException("GetEditReloadContextAsync is planned for P1. Use ITicketOrchestrator for now.");
+        return await _contextFacade.GetEditReloadContextAsync(ticketId, user);
     }
 }

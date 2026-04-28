@@ -79,10 +79,11 @@ public class TicketEditService : ITicketEditService
                 customFieldValues = JsonSerializer.Deserialize<Dictionary<string, object>>(ticket.CustomFieldsJson)
                     ?? new Dictionary<string, object>();
             }
-            catch (JsonException)
+            catch (JsonException ex)
             {
-                // Silently continue with empty custom fields on deserialization errors
+                // Log deserialization errors but continue with empty custom fields
                 // This prevents UI crashes due to corrupted JSON data
+                System.Diagnostics.Debug.WriteLine($"Failed to deserialize CustomFieldsJson for ticket {ticket.Guid}: {ex.Message}");
             }
         }
 
@@ -124,9 +125,10 @@ public class TicketEditService : ITicketEditService
                     context.CustomFieldValues = JsonSerializer.Deserialize<Dictionary<string, object>>(reloadTicket.CustomFieldsJson)
                         ?? new Dictionary<string, object>();
                 }
-                catch (JsonException)
+                catch (JsonException ex)
                 {
-                    // Silently continue with empty custom fields on deserialization errors
+                    // Log deserialization errors but continue with empty custom fields
+                    System.Diagnostics.Debug.WriteLine($"Failed to deserialize CustomFieldsJson for ticket {reloadTicket.Guid}: {ex.Message}");
                     context.CustomFieldValues = new Dictionary<string, object>();
                 }
             }

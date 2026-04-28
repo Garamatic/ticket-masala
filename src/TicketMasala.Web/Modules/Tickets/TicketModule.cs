@@ -51,7 +51,7 @@ internal class TicketModule : ITicketModule
     {
         try
         {
-            _logger.LogInformation("Creating ticket for customer {CustomerId}", command.CustomerId ?? "(null)");
+            _logger.LogInformation("Creating ticket for customer {CustomerId}", command.CustomerId);
 
             // Create ticket - GERDA processing is now handled by TicketCreatedGerdaHandler
             // which is dispatched via DomainEventDispatchingInterceptor after successful save.
@@ -139,7 +139,7 @@ internal class TicketModule : ITicketModule
         if (ticket == null)
             return TicketResult<TicketDetailsDto>.Failure("Ticket not found");
 
-        if (!_auth.CanView(ticket, requestingUserId, requestingUserRoles.ToList()))
+        if (!_auth.CanView(ticket, requestingUserId, requestingUserRoles))
             return TicketResult<TicketDetailsDto>.Failure("Not authorized to view this ticket");
 
         var dto = new TicketDetailsDto(

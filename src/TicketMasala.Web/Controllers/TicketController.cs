@@ -235,11 +235,7 @@ public class TicketController : Controller
         if (context == null)
             return NotFound();
 
-        if (context.ValidStatuses != null)
-        {
-            ViewBag.ValidStatuses = context.ValidStatuses;
-        }
-
+        ViewBag.ValidStatuses = context.ValidStatuses;
         ViewBag.DomainId = context.DomainId;
         ViewBag.EntityLabels = context.EntityLabels;
         ViewBag.CustomFields = context.CustomFields;
@@ -301,16 +297,13 @@ public class TicketController : Controller
 
         var context = await _ticketModule.GetEditReloadContextAsync(id, reloadUser);
 
-        if (context?.ValidStatuses != null)
-        {
-            ViewBag.ValidStatuses = context.ValidStatuses;
-        }
-
-        ViewBag.DomainId = context?.DomainId ?? "IT";
-        ViewBag.EntityLabels = context?.EntityLabels;
-        ViewBag.CustomFields = context?.CustomFields;
-        ViewBag.WorkItemTypeCode = context?.WorkItemTypeCode;
-        ViewBag.CustomFieldValues = context?.CustomFieldValues ?? new Dictionary<string, object>();
+        // Note: context is never null per ITicketModule contract
+        ViewBag.ValidStatuses = context.ValidStatuses;
+        ViewBag.DomainId = context.DomainId;
+        ViewBag.EntityLabels = context.EntityLabels;
+        ViewBag.CustomFields = context.CustomFields;
+        ViewBag.WorkItemTypeCode = context.WorkItemTypeCode;
+        ViewBag.CustomFieldValues = context.CustomFieldValues;
 
         return View(viewModel);
     }

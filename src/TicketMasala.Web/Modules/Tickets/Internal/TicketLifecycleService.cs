@@ -74,13 +74,8 @@ internal class TicketLifecycleService : ITicketLifecycleService
 
     public async Task UpdateAsync(Ticket ticket, UpdateTicketCommand command, CancellationToken ct)
     {
-        ticket.UpdateDescription(command.Description, command.ModifiedByUserId);
-
-        ticket.CompletionTarget = command.CompletionTarget;
-        ticket.CustomerId = command.CustomerId;
-        ticket.ProjectGuid = command.ProjectGuid;
-
-        // Handle status transition if changed (with concurrency check)
+        // Check status transition first (optimistic concurrency check)
+        // This must happen before any modifications to prevent partial updates on conflict
         var actualStatus = ticket.TicketStatus.ToString();
         if (actualStatus != command.TicketStatus)
         {
@@ -97,6 +92,13 @@ internal class TicketLifecycleService : ITicketLifecycleService
 
             ticket.TransitionTo(newStatus, command.ModifiedByUserId);
         }
+
+        // Apply other updates only after concurrency check passes
+        ticket.UpdateDescription(command.Description, command.ModifiedByUserId);
+
+        ticket.CompletionTarget = command.CompletionTarget;
+        ticket.CustomerId = command.CustomerId;
+        ticket.ProjectGuid = command.ProjectGuid;
 
         if (command.CustomFields.Any())
         {

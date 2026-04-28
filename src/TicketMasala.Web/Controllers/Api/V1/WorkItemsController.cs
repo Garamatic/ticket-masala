@@ -182,12 +182,23 @@ public class WorkItemsController : ControllerBase
         }
 
         // Resolve the ticket via workflow service
-        var ticket = await _ticketWorkflowService.ResolveTicketAsync(
+        var success = await _ticketWorkflowService.ResolveTicketAsync(
             id,
             request.ResolutionNotes,
             request.BillableAmount,
             resolvedByUserId
         );
+
+        if (!success)
+        {
+            return NotFound();
+        }
+
+        var ticket = await _ticketRepository.GetByIdAsync(id, includeRelations: true);
+        if (ticket == null)
+        {
+            return NotFound();
+        }
 
         return Ok(ticket.ToWorkItemDto(_jsonParsingService));
     }

@@ -24,14 +24,14 @@ public interface ITicketWorkflowService
 
     /// <summary>
     /// Resolves a ticket with billable amount and resolution notes.
-    /// Creates an outbox message for the ticket.resolved event.
+    /// Publishes a ticket.resolved event for downstream consumers (e.g., odoo-integration).
     /// </summary>
     /// <param name="ticketGuid">The ticket GUID to resolve</param>
     /// <param name="resolutionNotes">Notes about how the ticket was resolved</param>
     /// <param name="billableAmount">Optional billable amount</param>
     /// <param name="resolvedByUserId">The ID of the user resolving the ticket</param>
-    /// <returns>The resolved ticket</returns>
-    Task<Ticket> ResolveTicketAsync(
+    /// <returns>True if the ticket was resolved; false if not found or transition was invalid</returns>
+    Task<bool> ResolveTicketAsync(
         Guid ticketGuid,
         string resolutionNotes,
         decimal? billableAmount,

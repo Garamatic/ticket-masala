@@ -1,8 +1,10 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Enums;
+using TicketMasala.Domain.Exceptions;
 using TicketMasala.Domain.Services;
 using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Data;
@@ -10,6 +12,8 @@ using TicketMasala.Web.Engine.Compiler;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.GERDA.Configuration;
 using TicketMasala.Web.Engine.Security;
+using TicketMasala.Web.Messaging;
+using TicketMasala.Web.Messaging.Events;
 using TicketMasala.Web.Observers;
 using TicketMasala.Web.Repositories;
 
@@ -37,6 +41,7 @@ public class TicketWorkflowService : ITicketWorkflowService
     private readonly ILogger<TicketWorkflowService> _logger;
     private readonly Domain.TicketDispatchService _ticketDispatchService;
     private readonly ISystemClock _clock;
+    private readonly IRabbitMqPublisher? _rabbitMqPublisher;
 
     public TicketWorkflowService(
         MasalaDbContext context,
@@ -54,8 +59,10 @@ public class TicketWorkflowService : ITicketWorkflowService
         Domain.TicketNotificationService ticketNotificationService,
         ILogger<TicketWorkflowService> logger,
         Domain.TicketDispatchService ticketDispatchService,
-        ISystemClock clock)
+        ISystemClock clock,
+        IRabbitMqPublisher? rabbitMqPublisher = null)
     {
+        _rabbitMqPublisher = rabbitMqPublisher;
         _context = context;
         _ticketRepository = ticketRepository;
         _userRepository = userRepository;
@@ -334,91 +341,94 @@ public class TicketWorkflowService : ITicketWorkflowService
         return timeLog;
     }
 
-    public async Task<Ticket> ResolveTicketAsync(
+    public async Task<bool> ResolveTicketAsync(
         Guid ticketGuid,
         string resolutionNotes,
         decimal? billableAmount,
         string resolvedByUserId)
     {
-        // Load ticket with customer relation for event data
         var ticket = await _ticketRepository.GetByIdAsync(ticketGuid, includeRelations: true);
         if (ticket == null)
         {
-            throw new ArgumentException("Ticket not found", nameof(ticketGuid));
+            _logger.LogWarning("Ticket {TicketGuid} not found for resolution", ticketGuid);
+            return false;
         }
 
-        // Resolve the ticket (this transitions status and raises domain event)
-        ticket.Resolve(resolutionNotes, billableAmount, resolvedByUserId);
-
-        // Create outbox message for reliable event publishing
-        var customer = ticket.Customer;
-        var eventPayload = new TicketResolvedEventMessage
+        try
         {
-            EventType = "ticket.resolved",
-            Timestamp = DateTime.UtcNow.ToString("O"),
-            Source = "ticket-masala",
-            TicketId = ticket.Guid.ToString(),
-            CustomerEmail = customer?.Email ?? "unknown@example.com",
-            CustomerName = customer?.Name ?? "Unknown Customer",
-            ServiceDescription = ticket.Title,
-            Amount = billableAmount ?? 0,
-            TenantId = ticket.DomainId,
-            ResolvedAt = DateTime.UtcNow.ToString("O"),
-            ResolutionNotes = resolutionNotes
-        };
-
-        var outboxMessage = new TicketMasala.Domain.Entities.OutboxMessage
+            ticket.TransitionTo(TicketMasala.Domain.Common.Status.Completed, resolvedByUserId);
+        }
+        catch (DomainException ex)
         {
-            Id = Guid.NewGuid(),
-            EventType = "ticket.resolved",
-            Payload = System.Text.Json.JsonSerializer.Serialize(eventPayload, new System.Text.Json.JsonSerializerOptions
-            {
-                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.SnakeCaseLower,
-                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
-            }),
-            RoutingKey = "event.ticket.resolved",
-            CreatedAt = DateTime.UtcNow
-        };
+            _logger.LogError(ex, "Invalid status transition for ticket {TicketGuid}", ticketGuid);
+            return false;
+        }
 
-        _context.OutboxMessages.Add(outboxMessage);
+        // Store resolution metadata in CustomFieldsJson
+        Dictionary<string, object> dict;
+        try
+        {
+            dict = string.IsNullOrWhiteSpace(ticket.CustomFieldsJson)
+                ? new Dictionary<string, object>()
+                : JsonSerializer.Deserialize<Dictionary<string, object>>(ticket.CustomFieldsJson) ?? new Dictionary<string, object>();
+        }
+        catch (JsonException)
+        {
+            dict = new Dictionary<string, object>();
+        }
 
-        // Save ticket and outbox message in the same transaction
+        dict["resolution_notes"] = resolutionNotes;
+        if (billableAmount.HasValue)
+        {
+            dict["billable_amount"] = billableAmount.Value;
+        }
+        dict["resolved_at"] = DateTime.UtcNow.ToString("o");
+        dict["resolved_by"] = resolvedByUserId;
+
+        ticket.UpdateCustomFields(JsonSerializer.Serialize(dict), resolvedByUserId);
+
         await _ticketRepository.UpdateAsync(ticket);
-        await _context.SaveChangesAsync();
 
-        // Audit log
-        await _auditService.LogActionAsync(ticketGuid, "Resolved", resolvedByUserId, "Ticket", null,
-            $"Billable: {billableAmount?.ToString("C") ?? "N/A"}, Notes: {resolutionNotes.Substring(0, Math.Min(100, resolutionNotes.Length))}...");
+        await _auditService.LogActionAsync(ticketGuid, "Resolved", resolvedByUserId, "Ticket", null, resolutionNotes);
 
-        _logger.LogInformation(
-            "Ticket {TicketGuid} resolved by {UserId} with amount {Amount:C}",
-            ticketGuid,
-            resolvedByUserId,
-            billableAmount);
-
-        // Notify observers
         await NotifyObserversUpdatedAsync(ticket);
 
-        return ticket;
-    }
+        foreach (var observer in _observers)
+        {
+            try
+            {
+                await observer.OnTicketCompletedAsync(ticket);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Observer failed on ticket completion");
+            }
+        }
 
-    /// <summary>
-    /// Message format for ticket.resolved event (matches IC-001 schema).
-    /// Uses snake_case property names for JSON serialization.
-    /// </summary>
-    private class TicketResolvedEventMessage
-    {
-        public string EventType { get; set; } = string.Empty;
-        public string Timestamp { get; set; } = string.Empty;
-        public string Source { get; set; } = string.Empty;
-        public string TicketId { get; set; } = string.Empty;
-        public string CustomerEmail { get; set; } = string.Empty;
-        public string CustomerName { get; set; } = string.Empty;
-        public string ServiceDescription { get; set; } = string.Empty;
-        public decimal Amount { get; set; }
-        public string TenantId { get; set; } = string.Empty;
-        public string ResolvedAt { get; set; } = string.Empty;
-        public string? ResolutionNotes { get; set; }
+        if (_rabbitMqPublisher != null)
+        {
+            try
+            {
+                var evt = new TicketResolvedEvent
+                {
+                    TicketId = ticket.Guid.ToString(),
+                    CustomerEmail = ticket.Customer?.Email ?? string.Empty,
+                    CustomerName = $"{ticket.Customer?.FirstName} {ticket.Customer?.LastName}".Trim(),
+                    ServiceDescription = ticket.Title,
+                    Amount = billableAmount ?? 0m,
+                    TenantId = string.Empty,
+                    ResolvedAt = ticket.CompletionDate ?? DateTime.UtcNow,
+                    ResolutionNotes = resolutionNotes
+                };
+                await _rabbitMqPublisher.PublishAsync(evt, "ticket.resolved");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to publish ticket.resolved event for {TicketId}", ticket.Guid);
+            }
+        }
+
+        return true;
     }
 
     private async Task NotifyObserversAssignedAsync(Ticket ticket, Employee assignee)

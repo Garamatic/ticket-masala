@@ -36,6 +36,7 @@ using TicketMasala.Web.Modules.Tickets;
 using TicketMasala.Web.Observers;
 using TicketMasala.Web.Orchestrators;
 using TicketMasala.Web.Repositories;
+using TicketMasala.Web.Services;
 using TicketMasala.Web.Tenancy;
 using WebOptimizer;
 
@@ -237,6 +238,46 @@ public static class WebApplicationBuilderExtensions
                     opt.QueueLimit = 0; // No queue, immediate 429
                 });
             });
+
+        // ============================================
+        // RabbitMQ Publisher (outbound events)
+        // ============================================
+        builder.Services.AddSingleton<RabbitMQ.Client.IConnectionFactory>(sp =>
+        {
+            var config = sp.GetRequiredService<IConfiguration>();
+            var section = config.GetSection("RabbitMq");
+            return new RabbitMQ.Client.ConnectionFactory
+            {
+                HostName = section["HostName"] ?? "localhost",
+                Port = section.GetValue<int?>("Port") ?? 5672,
+                UserName = section["UserName"] ?? "guest",
+                Password = section["Password"] ?? "guest",
+                VirtualHost = section["VirtualHost"] ?? "/",
+                AutomaticRecoveryEnabled = true
+            };
+        });
+
+        builder.Services.AddSingleton<RabbitMQ.Client.IConnection>(sp =>
+        {
+            var factory = sp.GetRequiredService<RabbitMQ.Client.IConnectionFactory>();
+            var logger = sp.GetRequiredService<ILogger<TicketMasala.Web.Messaging.RabbitMqPublisher>>();
+            try
+            {
+                return factory.CreateConnectionAsync().GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to connect to RabbitMQ at startup. Publisher will not be available.");
+                throw;
+            }
+        });
+
+        builder.Services.AddSingleton<TicketMasala.Web.Messaging.IRabbitMqPublisher, TicketMasala.Web.Messaging.RabbitMqPublisher>();
+
+        // Outbox Publisher (Background Service)
+        builder.Services.AddSingleton<OutboxPublisherOptions>(sp =>
+            builder.Configuration.GetSection("OutboxPublisher").Get<OutboxPublisherOptions>() ?? new OutboxPublisherOptions());
+        builder.Services.AddHostedService<OutboxPublisher>();
 
         // Memory Cache - registered once here, used throughout the application
         builder.Services.AddMemoryCache();

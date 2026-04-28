@@ -7,6 +7,7 @@ namespace TicketMasala.Web.Services;
 /// <summary>
 /// Publishes events to RabbitMQ with snake_case JSON serialization.
 /// Uses publisher confirms for reliable delivery.
+/// This class is thread-safe and should be registered as a singleton.
 /// </summary>
 public class RabbitMqPublisher : IRabbitMqPublisher, IAsyncDisposable
 {
@@ -16,6 +17,8 @@ public class RabbitMqPublisher : IRabbitMqPublisher, IAsyncDisposable
     private readonly ILogger<RabbitMqPublisher> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
     private bool _isConnected;
+    private readonly SemaphoreSlim _connectionLock = new(1, 1);
+    private const int LockTimeoutMs = 30000; // 30 second timeout for lock acquisition
 
     public RabbitMqPublisher(
         IConfiguration configuration,
@@ -23,6 +26,9 @@ public class RabbitMqPublisher : IRabbitMqPublisher, IAsyncDisposable
     {
         _options = configuration.GetSection("RabbitMQ").Get<RabbitMqOptions>() ?? new RabbitMqOptions();
         _logger = logger;
+
+        // Validate options early
+        ValidateOptions(_options);
 
         // Configure snake_case JSON serialization per IC-001 convention
         _jsonOptions = new JsonSerializerOptions
@@ -33,16 +39,55 @@ public class RabbitMqPublisher : IRabbitMqPublisher, IAsyncDisposable
         };
     }
 
+    private static void ValidateOptions(RabbitMqOptions options)
+    {
+        if (string.IsNullOrWhiteSpace(options.HostName))
+            throw new ArgumentException("RabbitMQ HostName is required.", nameof(options.HostName));
+
+        if (options.Port <= 0 || options.Port > 65535)
+            throw new ArgumentException("RabbitMQ Port must be between 1 and 65535.", nameof(options.Port));
+
+        if (string.IsNullOrWhiteSpace(options.ExchangeName))
+            throw new ArgumentException("RabbitMQ ExchangeName is required.", nameof(options.ExchangeName));
+    }
+
     /// <inheritdoc />
     public async Task ConnectAsync(CancellationToken cancellationToken = default)
     {
-        if (_isConnected)
+        if (_isConnected && _channel is not null && !_channel.IsClosed)
         {
             return;
         }
 
+        // Use timeout to prevent indefinite waits
+        if (!await _connectionLock.WaitAsync(LockTimeoutMs, cancellationToken))
+        {
+            throw new TimeoutException($"Failed to acquire connection lock within {LockTimeoutMs}ms");
+        }
+
         try
         {
+            // Double-check after acquiring lock
+            if (_isConnected && _channel is not null && !_channel.IsClosed)
+            {
+                return;
+            }
+
+            await ConnectInternalAsync(cancellationToken);
+        }
+        finally
+        {
+            _connectionLock.Release();
+        }
+    }
+
+    private async Task ConnectInternalAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Clean up any existing broken connection
+            await CleanupConnectionAsync();
+
             var factory = new ConnectionFactory
             {
                 HostName = _options.HostName,
@@ -86,21 +131,58 @@ public class RabbitMqPublisher : IRabbitMqPublisher, IAsyncDisposable
         }
     }
 
-    /// <inheritdoc />
-    public async Task PublishAsync<T>(T message, string routingKey, CancellationToken cancellationToken = default)
+    private async Task CleanupConnectionAsync()
     {
-        if (!_isConnected || _channel == null)
+        try
         {
-            await ConnectAsync(cancellationToken);
+            if (_channel is not null)
+            {
+                await _channel.CloseAsync();
+                _channel.Dispose();
+                _channel = null;
+            }
         }
-
-        if (_channel == null)
+        catch (Exception ex)
         {
-            throw new InvalidOperationException("RabbitMQ channel is not initialized");
+            _logger.LogDebug(ex, "Error cleaning up RabbitMQ channel during reconnect");
         }
 
         try
         {
+            if (_connection is not null)
+            {
+                await _connection.CloseAsync();
+                _connection.Dispose();
+                _connection = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Error cleaning up RabbitMQ connection during reconnect");
+        }
+
+        _isConnected = false;
+    }
+
+    /// <inheritdoc />
+    public async Task PublishAsync<T>(T message, string routingKey, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(routingKey);
+
+        await ConnectAsync(cancellationToken);
+
+        if (!await _connectionLock.WaitAsync(LockTimeoutMs, cancellationToken))
+        {
+            throw new TimeoutException($"Failed to acquire publish lock within {LockTimeoutMs}ms");
+        }
+
+        try
+        {
+            if (_channel is null || _channel.IsClosed)
+            {
+                throw new InvalidOperationException("RabbitMQ channel is not available");
+            }
+
             var body = JsonSerializer.SerializeToUtf8Bytes(message, _jsonOptions);
 
             var properties = new BasicProperties
@@ -132,40 +214,56 @@ public class RabbitMqPublisher : IRabbitMqPublisher, IAsyncDisposable
                 routingKey);
             throw;
         }
+        finally
+        {
+            _connectionLock.Release();
+        }
     }
 
     /// <inheritdoc />
     public async Task CloseAsync(CancellationToken cancellationToken = default)
     {
+        if (!_isConnected)
+        {
+            return;
+        }
+
+        if (!await _connectionLock.WaitAsync(LockTimeoutMs, cancellationToken))
+        {
+            _logger.LogWarning("Failed to acquire lock for closing connection within {Timeout}ms", LockTimeoutMs);
+            return;
+        }
+
         try
         {
-            if (_channel != null)
-            {
-                await _channel.CloseAsync(cancellationToken);
-                _channel.Dispose();
-                _channel = null;
-            }
-
-            if (_connection != null)
-            {
-                await _connection.CloseAsync(cancellationToken);
-                _connection.Dispose();
-                _connection = null;
-            }
-
-            _isConnected = false;
-
+            await CleanupConnectionAsync();
             _logger.LogInformation("Disconnected from RabbitMQ");
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Error while closing RabbitMQ connection");
         }
+        finally
+        {
+            _connectionLock.Release();
+        }
     }
 
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
-        await CloseAsync();
+        try
+        {
+            await CloseAsync();
+        }
+        catch (Exception ex)
+        {
+            // Ensure we log any unexpected errors during close, but still dispose the lock
+            _logger.LogError(ex, "Unexpected error during RabbitMQ publisher disposal");
+        }
+        finally
+        {
+            _connectionLock.Dispose();
+        }
     }
 }

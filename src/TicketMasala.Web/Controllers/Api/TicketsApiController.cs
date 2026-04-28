@@ -25,6 +25,7 @@ namespace TicketMasala.Web.Controllers.Api;
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/tickets")]
 [Route("api/v{version:apiVersion}/workitems")]
+[Route("api/tickets")]
 [Produces("application/json")]
 public class TicketsApiController : ControllerBase
 {
@@ -226,6 +227,49 @@ public class TicketsApiController : ControllerBase
     }
 
     /// <summary>
+    /// Resolve a ticket and optionally attach a billable amount.
+    /// Emits a ticket.resolved event consumed by odoo-integration.
+    /// </summary>
+    [HttpPost("{id:guid}/resolve")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ResolveTicket(Guid id, [FromBody] ResolveTicketRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.ResolutionNotes))
+        {
+            throw new ArgumentException("Resolution notes are required.");
+        }
+
+        if (request.BillableAmount is < 0)
+        {
+            throw new ArgumentException("Billable amount cannot be negative.");
+        }
+
+        var userId = _userManager.GetUserId(User) ?? "system";
+
+        var success = await _ticketWorkflowService.ResolveTicketAsync(
+            id,
+            request.ResolutionNotes,
+            request.BillableAmount,
+            userId);
+
+        if (!success)
+        {
+            return NotFound(new { error = "Ticket not found or could not be resolved." });
+        }
+
+        return Ok(new
+        {
+            ticket_id = id.ToString(),
+            status = "resolved",
+            resolution_notes = request.ResolutionNotes,
+            billable_amount = request.BillableAmount
+        });
+    }
+
+    /// <summary>
     /// Find existing customer or create a new one.
     /// </summary>
     private async Task<ApplicationUser?> FindOrCreateCustomerAsync(string email, string name)
@@ -356,4 +400,10 @@ public class TicketsApiController : ControllerBase
             WorkContainerName = ticket.Project?.Name
         };
     }
+}
+
+public class ResolveTicketRequest
+{
+    public string ResolutionNotes { get; set; } = string.Empty;
+    public decimal? BillableAmount { get; set; }
 }

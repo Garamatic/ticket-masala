@@ -7,7 +7,6 @@ using TicketMasala.Web.Engine.GERDA.Dispatching.Algorithms;
 using TicketMasala.Web.Engine.GERDA.Dispatching.Configuration;
 using TicketMasala.Web.Engine.GERDA.Dispatching.Models;
 using TicketMasala.Web.Engine.GERDA.Models;
-using DispatchResultModel = TicketMasala.Web.Engine.GERDA.Dispatching.Models.DispatchResult;
 
 namespace TicketMasala.Web.Engine.GERDA.Dispatching;
 
@@ -149,8 +148,8 @@ public class DispatchingService : IDispatchingService
 
         await Task.WhenAll(employeesTask, workloadTask);
 
-        var employees = employeesTask.Result;
-        var agentWorkloads = workloadTask.Result;
+        var employees = await employeesTask;
+        var agentWorkloads = await workloadTask;
 
         // Load customer separately (cannot be parallelized with other queries as it depends on ticket.CreatorGuid)
         var customer = await _context.Users.FindAsync(ticket.CreatorGuid.ToString());

@@ -158,28 +158,6 @@ public class AgentMatchingEngine
     }
 
     /// <summary>
-    /// Calculate affinity with domain-specific context (Employee, Ticket, Customer).
-    /// Called by the consolidated dispatching flow when IAffinityScorer is available.
-    /// </summary>
-    public decimal CalculateAffinityWithContext(
-        Agent agent,
-        double mlAffinityScore,
-        string? affinityExplanation,
-        double ftsScore)
-    {
-        // Normalize ML score (typically 0-5) to 0-100 range
-        var normalizedMlScore = (decimal)(mlAffinityScore / 5.0 * 100.0);
-
-        // Incorporate FTS score if available (FTS rank is often negative, so we use presence/absence)
-        var ftsBoost = ftsScore != 0 ? 10m : 0m;
-
-        // Combine scores (weights can be configured via DispatchingConfig)
-        var combinedScore = normalizedMlScore + ftsBoost;
-
-        return Math.Min(combinedScore, 100m);
-    }
-
-    /// <summary>
     /// Calculate availability score (0-100).
     /// 100 if agent has capacity, 0 if overloaded.
     /// </summary>

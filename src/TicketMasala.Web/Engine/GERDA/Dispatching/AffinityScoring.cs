@@ -84,11 +84,10 @@ public static class AffinityScoring
 
             return 2.0; // No match, but not disqualifying
         }
-        catch (Exception ex)
+        catch
         {
             // Graceful degradation: return neutral score on parsing error
             // This ensures dispatching continues even if specializations data is malformed
-            System.Diagnostics.Debug.WriteLine($"Expertise score calculation failed: {ex.Message}");
             return 2.5; // Neutral on error
         }
     }
@@ -160,10 +159,9 @@ public static class AffinityScoring
                 }
             }
         }
-        catch (Exception ex)
+        catch
         {
             // Graceful degradation: fall through to use WorkType when metadata parsing fails
-            System.Diagnostics.Debug.WriteLine($"Metadata extraction failed: {ex.Message}");
         }
 
         // Default to WorkType as category
@@ -198,10 +196,9 @@ public static class AffinityScoring
 
             return 2.0;
         }
-        catch (Exception ex)
+        catch
         {
             // Graceful degradation: return neutral score on parsing error
-            System.Diagnostics.Debug.WriteLine($"Expertise score calculation failed: {ex.Message}");
             return 2.5;
         }
     }

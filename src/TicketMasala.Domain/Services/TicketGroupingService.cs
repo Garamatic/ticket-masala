@@ -14,6 +14,7 @@ public class TicketGroupingService : ITicketGroupingService
         IEnumerable<Ticket> childTickets,
         string groupedByUserId)
     {
+        // Note: groupedByUserId reserved for future audit logging
         // Validate parent ticket can have children
         if (parentTicket.ParentTicketGuid.HasValue)
         {
@@ -59,6 +60,8 @@ public class TicketGroupingService : ITicketGroupingService
 
     public Task UngroupTicketAsync(Ticket childTicket, string ungroupedByUserId)
     {
+        // Note: ungroupedByUserId reserved for future audit logging
+
         if (!childTicket.ParentTicketGuid.HasValue)
         {
             // Not grouped - idempotent

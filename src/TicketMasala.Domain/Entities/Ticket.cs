@@ -251,7 +251,6 @@ public class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         if (newDescription.Length > 5000)
             throw new DomainException("Description cannot exceed 5000 characters");
 
-        var oldDescription = Description;
         Description = newDescription.Trim();
         LastModified = DateTime.UtcNow;
 
@@ -535,7 +534,7 @@ public class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
     public void AddSubTicket(Ticket subTicket)
     {
         ((List<Ticket>)SubTickets).Add(subTicket);
-        subTicket.SetPropertyForSeeding(t => t.ParentTicketGuid = Guid);
+        subTicket.SetParentTicket(Guid);
     }
 
     // ═════════════════════════════════════════════════════════════════

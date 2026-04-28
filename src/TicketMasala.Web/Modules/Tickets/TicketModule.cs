@@ -9,7 +9,7 @@ internal class TicketModule : ITicketModule
     private readonly ITicketLifecycleService _lifecycle;
     private readonly ITicketQueryService _queries;
     private readonly ITicketAuthorizationService _auth;
-    private readonly IGerda _gerda;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<TicketModule> _logger;
 
     // This is the ONLY constructor - 5 dependencies, all module-internal or cross-module interfaces
@@ -17,13 +17,13 @@ internal class TicketModule : ITicketModule
         ITicketLifecycleService lifecycle,
         ITicketQueryService queries,
         ITicketAuthorizationService auth,
-        IGerda gerda,
+        IServiceScopeFactory scopeFactory,
         ILogger<TicketModule> logger)
     {
         _lifecycle = lifecycle;
         _queries = queries;
         _auth = auth;
-        _gerda = gerda;
+        _scopeFactory = scopeFactory;
         _logger = logger;
     }
 
@@ -40,7 +40,9 @@ internal class TicketModule : ITicketModule
             {
                 try
                 {
-                    await _gerda.ProcessAsync(ticket.Guid);
+                    using var scope = _scopeFactory.CreateScope();
+                    var gerda = scope.ServiceProvider.GetRequiredService<IGerda>();
+                    await gerda.ProcessAsync(ticket.Guid);
                 }
                 catch (Exception ex)
                 {

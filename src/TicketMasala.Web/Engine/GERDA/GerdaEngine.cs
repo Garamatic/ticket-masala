@@ -18,6 +18,26 @@ namespace TicketMasala.Web.Engine.GERDA;
 /// </summary>
 internal sealed class GerdaEngine : IGerda
 {
+    // ═════════════════════════════════════════════════════════════════════════════
+    // OpenTelemetry Tracing & Metrics
+    // ═════════════════════════════════════════════════════════════════════════════
+    private static readonly ActivitySource ActivitySource = new("TicketMasala.GERDA");
+    private static readonly Meter Meter = new("TicketMasala.GERDA", "1.0.0");
+
+    // Counters
+    private static readonly Counter<long> TicketsProcessedCounter =
+        Meter.CreateCounter<long>("gerda.tickets.processed", "tickets", "Total tickets processed by GERDA");
+    private static readonly Counter<long> StageExecutionsCounter =
+        Meter.CreateCounter<long>("gerda.stage.executions", "executions", "Total stage executions");
+    private static readonly Counter<long> StageFailuresCounter =
+        Meter.CreateCounter<long>("gerda.stage.failures", "failures", "Total stage execution failures");
+
+    // Histograms
+    private static readonly Histogram<double> PipelineDurationHistogram =
+        Meter.CreateHistogram<double>("gerda.pipeline.duration_ms", "ms", "Pipeline execution duration");
+    private static readonly Histogram<double> StageDurationHistogram =
+        Meter.CreateHistogram<double>("gerda.stage.duration_ms", "ms", "Individual stage execution duration");
+
     private readonly GerdaConfig _config;
     private readonly ILogger<GerdaEngine> _logger;
     private readonly ITicketRepository _ticketRepository;
@@ -66,6 +86,10 @@ internal sealed class GerdaEngine : IGerda
             return GerdaOutcome.Disabled(ticketGuid);
         }
 
+        using var activity = ActivitySource.StartActivity("GERDA.ProcessTicket", ActivityKind.Internal);
+        activity?.SetTag("ticket.guid", ticketGuid);
+        activity?.SetTag("gerda.enabled_stages", GetEnabledStagesTag());
+
         _logger.LogInformation("GERDA: Processing ticket {TicketGuid}", ticketGuid);
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
@@ -73,9 +97,34 @@ internal sealed class GerdaEngine : IGerda
         {
             // Execute stages sequentially, collecting results
             // G - Grouping
-            var parentGuid = _grouping.IsEnabled
-                ? await _grouping.CheckAndGroupAsync(ticketGuid)
-                : null;
+            Guid? parentGuid = null;
+            using (var stageActivity = ActivitySource.StartActivity("GERDA.Stage.Grouping", ActivityKind.Internal))
+            {
+                var stageStopwatch = System.Diagnostics.Stopwatch.StartNew();
+                try
+                {
+                    parentGuid = _grouping.IsEnabled
+                        ? await _grouping.CheckAndGroupAsync(ticketGuid)
+                        : null;
+
+                    StageExecutionsCounter.Add(1, new KeyValuePair<string, object?>("stage", "grouping"));
+                    stageActivity?.SetTag("stage.enabled", _grouping.IsEnabled);
+                    stageActivity?.SetTag("stage.result", parentGuid.HasValue ? "grouped" : "not_grouped");
+                }
+                catch (Exception ex)
+                {
+                    StageFailuresCounter.Add(1, new KeyValuePair<string, object?>("stage", "grouping"));
+                    stageActivity?.SetTag("error", true);
+                    stageActivity?.SetTag("error.message", ex.Message);
+                    throw;
+                }
+                finally
+                {
+                    stageStopwatch.Stop();
+                    StageDurationHistogram.Record(stageStopwatch.ElapsedMilliseconds,
+                        new KeyValuePair<string, object?>("stage", "grouping"));
+                }
+            }
 
             if (parentGuid.HasValue)
             {
@@ -84,9 +133,34 @@ internal sealed class GerdaEngine : IGerda
             }
 
             // E - Estimating
-            var effortPoints = _estimating.IsEnabled
-                ? await _estimating.EstimateAsync(ticketGuid)
-                : null;
+            double? effortPoints = null;
+            using (var stageActivity = ActivitySource.StartActivity("GERDA.Stage.Estimating", ActivityKind.Internal))
+            {
+                var stageStopwatch = System.Diagnostics.Stopwatch.StartNew();
+                try
+                {
+                    effortPoints = _estimating.IsEnabled
+                        ? await _estimating.EstimateAsync(ticketGuid)
+                        : null;
+
+                    StageExecutionsCounter.Add(1, new KeyValuePair<string, object?>("stage", "estimating"));
+                    stageActivity?.SetTag("stage.enabled", _estimating.IsEnabled);
+                    stageActivity?.SetTag("stage.result", effortPoints?.ToString() ?? "disabled");
+                }
+                catch (Exception ex)
+                {
+                    StageFailuresCounter.Add(1, new KeyValuePair<string, object?>("stage", "estimating"));
+                    stageActivity?.SetTag("error", true);
+                    stageActivity?.SetTag("error.message", ex.Message);
+                    throw;
+                }
+                finally
+                {
+                    stageStopwatch.Stop();
+                    StageDurationHistogram.Record(stageStopwatch.ElapsedMilliseconds,
+                        new KeyValuePair<string, object?>("stage", "estimating"));
+                }
+            }
 
             if (effortPoints.HasValue)
             {
@@ -96,46 +170,132 @@ internal sealed class GerdaEngine : IGerda
 
             // R - Ranking
             double? priorityScore = null;
-            if (_ranking.IsEnabled)
+            using (var stageActivity = ActivitySource.StartActivity("GERDA.Stage.Ranking", ActivityKind.Internal))
             {
-                priorityScore = await _ranking.CalculatePriorityAsync(ticketGuid);
-                if (priorityScore.HasValue)
+                var stageStopwatch = System.Diagnostics.Stopwatch.StartNew();
+                try
                 {
-                    _logger.LogInformation("GERDA-R: Ticket {TicketGuid} priority score: {Score}",
-                        ticketGuid, priorityScore.Value);
+                    if (_ranking.IsEnabled)
+                    {
+                        priorityScore = await _ranking.CalculatePriorityAsync(ticketGuid);
+                    }
+
+                    StageExecutionsCounter.Add(1, new KeyValuePair<string, object?>("stage", "ranking"));
+                    stageActivity?.SetTag("stage.enabled", _ranking.IsEnabled);
+                    stageActivity?.SetTag("stage.result", priorityScore?.ToString("F2") ?? "disabled");
                 }
+                catch (Exception ex)
+                {
+                    StageFailuresCounter.Add(1, new KeyValuePair<string, object?>("stage", "ranking"));
+                    stageActivity?.SetTag("error", true);
+                    stageActivity?.SetTag("error.message", ex.Message);
+                    throw;
+                }
+                finally
+                {
+                    stageStopwatch.Stop();
+                    StageDurationHistogram.Record(stageStopwatch.ElapsedMilliseconds,
+                        new KeyValuePair<string, object?>("stage", "ranking"));
+                }
+            }
+
+            if (priorityScore.HasValue)
+            {
+                _logger.LogInformation("GERDA-R: Ticket {TicketGuid} priority score: {Score}",
+                    ticketGuid, priorityScore.Value);
             }
 
             // D - Dispatching
             Guid? recommendedAgent = null;
-            if (_dispatching.IsEnabled)
+            using (var stageActivity = ActivitySource.StartActivity("GERDA.Stage.Dispatching", ActivityKind.Internal))
             {
-                var agentId = await _dispatching.RecommendAgentAsync(ticketGuid);
-                if (!string.IsNullOrEmpty(agentId) && Guid.TryParse(agentId, out var agentGuid))
+                var stageStopwatch = System.Diagnostics.Stopwatch.StartNew();
+                try
                 {
-                    recommendedAgent = agentGuid;
-                    _logger.LogInformation("GERDA-D: Recommended agent {AgentId} for ticket {TicketGuid}",
-                        agentId, ticketGuid);
+                    if (_dispatching.IsEnabled)
+                    {
+                        var agentId = await _dispatching.RecommendAgentAsync(ticketGuid);
+                        if (!string.IsNullOrEmpty(agentId) && Guid.TryParse(agentId, out var agentGuid))
+                        {
+                            recommendedAgent = agentGuid;
+                        }
+                    }
+
+                    StageExecutionsCounter.Add(1, new KeyValuePair<string, object?>("stage", "dispatching"));
+                    stageActivity?.SetTag("stage.enabled", _dispatching.IsEnabled);
+                    stageActivity?.SetTag("stage.result", recommendedAgent?.ToString() ?? "no_match");
                 }
+                catch (Exception ex)
+                {
+                    StageFailuresCounter.Add(1, new KeyValuePair<string, object?>("stage", "dispatching"));
+                    stageActivity?.SetTag("error", true);
+                    stageActivity?.SetTag("error.message", ex.Message);
+                    throw;
+                }
+                finally
+                {
+                    stageStopwatch.Stop();
+                    StageDurationHistogram.Record(stageStopwatch.ElapsedMilliseconds,
+                        new KeyValuePair<string, object?>("stage", "dispatching"));
+                }
+            }
+
+            if (recommendedAgent.HasValue)
+            {
+                _logger.LogInformation("GERDA-D: Recommended agent {AgentId} for ticket {TicketGuid}",
+                    recommendedAgent.Value, ticketGuid);
             }
 
             // K - Knowledge
             List<Guid> suggestedArticles = new();
-            if (_knowledge.IsEnabled)
+            using (var stageActivity = ActivitySource.StartActivity("GERDA.Stage.Knowledge", ActivityKind.Internal))
             {
-                var ticket = await _ticketRepository.GetByIdAsync(ticketGuid);
-                if (ticket != null)
+                var stageStopwatch = System.Diagnostics.Stopwatch.StartNew();
+                try
                 {
-                    var articles = await _knowledge.SuggestArticlesAsync(ticket);
-                    suggestedArticles = articles.ToList();
-                    _logger.LogInformation("GERDA-K: Found {Count} suggested articles for ticket {TicketGuid}",
-                        suggestedArticles.Count, ticketGuid);
+                    if (_knowledge.IsEnabled)
+                    {
+                        var ticket = await _ticketRepository.GetByIdAsync(ticketGuid);
+                        if (ticket != null)
+                        {
+                            var articles = await _knowledge.SuggestArticlesAsync(ticket);
+                            suggestedArticles = articles.ToList();
+                            _logger.LogInformation("GERDA-K: Found {Count} suggested articles for ticket {TicketGuid}",
+                                suggestedArticles.Count, ticketGuid);
+                        }
+                    }
+
+                    StageExecutionsCounter.Add(1, new KeyValuePair<string, object?>("stage", "knowledge"));
+                    stageActivity?.SetTag("stage.enabled", _knowledge.IsEnabled);
+                    stageActivity?.SetTag("stage.result", $"{suggestedArticles.Count}_articles");
+                }
+                catch (Exception ex)
+                {
+                    StageFailuresCounter.Add(1, new KeyValuePair<string, object?>("stage", "knowledge"));
+                    stageActivity?.SetTag("error", true);
+                    stageActivity?.SetTag("error.message", ex.Message);
+                    throw;
+                }
+                finally
+                {
+                    stageStopwatch.Stop();
+                    StageDurationHistogram.Record(stageStopwatch.ElapsedMilliseconds,
+                        new KeyValuePair<string, object?>("stage", "knowledge"));
                 }
             }
 
             stopwatch.Stop();
+            PipelineDurationHistogram.Record(stopwatch.ElapsedMilliseconds,
+                new KeyValuePair<string, object?>("ticket_guid", ticketGuid));
+            TicketsProcessedCounter.Add(1,
+                new KeyValuePair<string, object?>("result", "success"),
+                new KeyValuePair<string, object?>("stages_executed", GetEnabledStagesTag()));
+
             _logger.LogInformation("GERDA: Completed processing ticket {TicketGuid} in {ElapsedMs}ms",
                 ticketGuid, stopwatch.ElapsedMilliseconds);
+
+            activity?.SetTag("result", "success");
+            activity?.SetTag("duration_ms", stopwatch.ElapsedMilliseconds);
 
             return new GerdaOutcome(
                 ticketGuid,
@@ -148,6 +308,14 @@ internal sealed class GerdaEngine : IGerda
         }
         catch (Exception ex)
         {
+            TicketsProcessedCounter.Add(1,
+                new KeyValuePair<string, object?>("result", "failure"),
+                new KeyValuePair<string, object?>("error_type", ex.GetType().Name));
+
+            activity?.SetTag("error", true);
+            activity?.SetTag("error.message", ex.Message);
+            activity?.SetTag("error.type", ex.GetType().Name);
+
             _logger.LogError(ex, "GERDA: Error processing ticket {TicketGuid}", ticketGuid);
             throw;
         }
@@ -325,6 +493,24 @@ internal sealed class GerdaEngine : IGerda
         if (_knowledge.IsEnabled)
             stages.Add(GerdaStage.Knowledge);
         return stages;
+    }
+
+    private string GetEnabledStagesTag()
+    {
+        var stages = new List<string>();
+        if (_grouping.IsEnabled)
+            stages.Add("G");
+        if (_estimating.IsEnabled)
+            stages.Add("E");
+        if (_ranking.IsEnabled)
+            stages.Add("R");
+        if (_dispatching.IsEnabled)
+            stages.Add("D");
+        if (_knowledge.IsEnabled)
+            stages.Add("K");
+        if (_anticipation?.IsEnabled == true)
+            stages.Add("A");
+        return string.Join("", stages);
     }
 
     private static object? GetStageResult(

@@ -43,7 +43,17 @@ public class TicketController : Controller
         if (id == null)
             return NotFound();
 
-        var (viewModel, context) = await _ticketModule.GetDetailPageAsync(id.Value, User);
+        TicketDetailsViewModel? viewModel;
+        TicketDetailContext context;
+
+        try
+        {
+            (viewModel, context) = await _ticketModule.GetDetailPageAsync(id.Value, User);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
 
         if (viewModel == null)
             return NotFound();
@@ -99,7 +109,27 @@ public class TicketController : Controller
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(
+        string? description,
+        string? customerId,
+        string? responsibleId,
+        Guid? projectGuid,
+        DateTime? completionTarget,
+        string? domainId,
+        string? workItemTypeCode)
+    {
+        try
+        {
+            return await CreateInternal(description, customerId, responsibleId, projectGuid, completionTarget, domainId, workItemTypeCode);
+        }
+        catch (NullReferenceException)
+        {
+            return BadRequest("Request could not be processed due to missing context");
+        }
+    }
+
+    private async Task<IActionResult> CreateInternal(
         string? description,
         string? customerId,
         string? responsibleId,

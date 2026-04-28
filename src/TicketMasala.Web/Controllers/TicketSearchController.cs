@@ -39,7 +39,7 @@ public class TicketSearchController : Controller
             var result = await _ticketModule.SearchForUiAsync(searchModel, User);
 
             ViewBag.SavedFilters = result.SavedFilters;
-            ViewBag.IsCustomer = User.IsInRole(Constants.RoleCustomer);
+            ViewBag.IsCustomer = User?.IsInRole(Constants.RoleCustomer) ?? false;
 
             return View(result);
         }

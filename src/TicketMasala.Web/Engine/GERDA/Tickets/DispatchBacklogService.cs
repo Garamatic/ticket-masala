@@ -48,6 +48,12 @@ public class DispatchBacklogService : IDispatchBacklogService
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        // Guard against invalid pagination parameters
+        if (page < 1)
+            page = 1;
+        if (pageSize < 1)
+            pageSize = 20;
+
         // 1. Get all pending tickets
         // Note: In a real high-scale scenario, we would paginate at the DB level (Repository).
         // For now, fetching all pending is acceptable as backlog size is managed.

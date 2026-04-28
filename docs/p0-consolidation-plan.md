@@ -32,6 +32,13 @@ from concurrent migrations. This has been achieved:
    - Legacy `MatrixFactorizationDispatchingStrategy` marked `[Obsolete]`
    - Single consolidated architecture: AgentMatchingEngine + IAffinityScorer plugins
 
+5. **OpenTelemetry & Metrics**: ✅ COMPLETE
+   - GERDA: ActivitySource tracing with per-stage spans (`GERDA.Stage.*`)
+   - GERDA: Prometheus metrics (tickets processed, stage executions/failures, duration)
+   - Outbox: Observable gauge for queue depth, histograms for processing duration/retry counts
+   - Outbox: Tracing with span tags for message ID, retry count, error types
+   - Background GERDA: Queue depth histogram, processing duration, success/failure counters
+
 ### Risk Reduction
 
 | Before P0 | After P0 |
@@ -42,14 +49,15 @@ from concurrent migrations. This has been achieved:
 | Silent pipeline failures | Proper result types (GerdaOutcome) |
 | Fire-and-forget Task.Run (unobservable failures) | Domain event + background queue (observable, retryable) |
 | Dual dispatching paths (Strategy vs Engine) | Single AgentMatchingEngine + plugin architecture |
+| Limited observability (logs only) | OpenTelemetry traces + Prometheus metrics throughout |
 
 ### Next Steps
 
 **P1 (Hardening)** - Current Status:
 - ✅ Replace Task.Run fire-and-forget with domain events + background service **COMPLETE**
 - ✅ Consolidate dispatching to `AgentMatchingEngine` single path **COMPLETE**
+- ✅ Add OpenTelemetry tracing and outbox metrics **COMPLETE**
 - ⏳ Migrate `TicketController` from `ITicketOrchestrator` to `ITicketModule`
-- ⏳ Add OpenTelemetry tracing and outbox metrics
 
 **P2 (Domain Quality)**:
 - Split `Ticket.cs` into partial classes

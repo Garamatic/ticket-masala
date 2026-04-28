@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Domain.Data;
@@ -67,6 +69,29 @@ public class OutboxPublisherOptions
 /// </summary>
 public class OutboxPublisher : BackgroundService
 {
+    // ═════════════════════════════════════════════════════════════════════════════
+    // OpenTelemetry Tracing & Metrics
+    // ═════════════════════════════════════════════════════════════════════════════
+    private static readonly ActivitySource ActivitySource = new("TicketMasala.Outbox");
+    private static readonly Meter Meter = new("TicketMasala.Outbox", "1.0.0");
+
+    // Counters
+    private static readonly Counter<long> MessagesProcessedCounter =
+        Meter.CreateCounter<long>("outbox.messages.processed", "messages", "Total messages processed");
+    private static readonly Counter<long> MessagesRetriedCounter =
+        Meter.CreateCounter<long>("outbox.messages.retried", "messages", "Total message retry attempts");
+    private static readonly Counter<long> MessagesDeadLetteredCounter =
+        Meter.CreateCounter<long>("outbox.messages.dead_lettered", "messages", "Messages moved to dead letter");
+
+    // Histograms
+    private static readonly Histogram<double> ProcessingDurationHistogram =
+        Meter.CreateHistogram<double>("outbox.processing.duration_ms", "ms", "Message processing duration");
+    private static readonly Histogram<int> RetryCountHistogram =
+        Meter.CreateHistogram<int>("outbox.retry.count", "retries", "Distribution of retry counts before success/failure");
+
+    // Observable gauges (for current state)
+    private int _currentOutboxDepth = 0;
+
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<OutboxPublisher> _logger;
     private readonly OutboxPublisherOptions _options;
@@ -80,6 +105,9 @@ public class OutboxPublisher : BackgroundService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _options = options ?? new OutboxPublisherOptions();
         _options.Validate();
+
+        // Create observable gauge for outbox depth
+        Meter.CreateObservableGauge("outbox.depth", () => _currentOutboxDepth, "messages", "Current number of pending outbox messages");
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -115,9 +143,15 @@ public class OutboxPublisher : BackgroundService
 
     private async Task ProcessPendingMessagesAsync(CancellationToken cancellationToken)
     {
+        using var activity = ActivitySource.StartActivity("Outbox.ProcessBatch", ActivityKind.Internal);
         using var scope = _serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<MasalaDbContext>();
         var publisher = scope.ServiceProvider.GetRequiredService<IRabbitMqPublisher>();
+
+        // Get total outbox depth (for observable gauge)
+        _currentOutboxDepth = await context.OutboxMessages
+            .Where(m => m.ProcessedAt == null)
+            .CountAsync(cancellationToken);
 
         // Get pending messages (not processed, and eligible for retry)
         // Messages with RetryCount < MaxRetries are eligible (0-indexed, so MaxRetries=3 allows attempts at counts 0,1,2)
@@ -133,6 +167,9 @@ public class OutboxPublisher : BackgroundService
         {
             return;
         }
+
+        activity?.SetTag("batch.size", pendingMessages.Count);
+        activity?.SetTag("outbox.depth", _currentOutboxDepth);
 
         _logger.LogDebug("Processing {Count} pending outbox messages", pendingMessages.Count);
 
@@ -167,6 +204,14 @@ public class OutboxPublisher : BackgroundService
         IRabbitMqPublisher publisher,
         CancellationToken cancellationToken)
     {
+        using var activity = ActivitySource.StartActivity("Outbox.ProcessMessage", ActivityKind.Internal);
+        activity?.SetTag("message.id", message.Id);
+        activity?.SetTag("message.type", message.EventType);
+        activity?.SetTag("message.routing_key", message.RoutingKey);
+        activity?.SetTag("message.retry_count", message.RetryCount);
+
+        var stopwatch = Stopwatch.StartNew();
+
         try
         {
             await PublishMessageAsync(publisher, message, cancellationToken);
@@ -176,6 +221,22 @@ public class OutboxPublisher : BackgroundService
             message.Error = null;
             message.ScheduledRetryAt = null;
 
+            stopwatch.Stop();
+
+            // Record metrics
+            MessagesProcessedCounter.Add(1,
+                new KeyValuePair<string, object?>("event_type", message.EventType),
+                new KeyValuePair<string, object?>("result", "success"));
+            ProcessingDurationHistogram.Record(stopwatch.ElapsedMilliseconds,
+                new KeyValuePair<string, object?>("event_type", message.EventType),
+                new KeyValuePair<string, object?>("result", "success"));
+            RetryCountHistogram.Record(message.RetryCount,
+                new KeyValuePair<string, object?>("event_type", message.EventType),
+                new KeyValuePair<string, object?>("result", "success"));
+
+            activity?.SetTag("result", "success");
+            activity?.SetTag("duration_ms", stopwatch.ElapsedMilliseconds);
+
             _logger.LogInformation(
                 "Published outbox message {MessageId} of type {EventType} to {RoutingKey}",
                 message.Id,
@@ -184,10 +245,20 @@ public class OutboxPublisher : BackgroundService
         }
         catch (JsonException ex)
         {
+            stopwatch.Stop();
+
             // Permanent failure: malformed JSON won't be fixed by retrying
             message.RetryCount = _options.MaxRetries;
             message.Error = $"PERMANENT: Malformed JSON payload - {ex.Message}"[..500];
             message.ScheduledRetryAt = null;
+
+            MessagesDeadLetteredCounter.Add(1,
+                new KeyValuePair<string, object?>("event_type", message.EventType),
+                new KeyValuePair<string, object?>("reason", "malformed_json"));
+
+            activity?.SetTag("error", true);
+            activity?.SetTag("error.type", "JsonException");
+            activity?.SetTag("error.permanent", true);
 
             _logger.LogError(ex,
                 "Outbox message {MessageId} has malformed JSON and will be abandoned",
@@ -195,10 +266,21 @@ public class OutboxPublisher : BackgroundService
         }
         catch (Exception ex)
         {
+            stopwatch.Stop();
+
             // Transient failure: may succeed on retry
             message.RetryCount++;
             message.Error = ex.Message[..Math.Min(ex.Message.Length, 500)];
             message.ScheduledRetryAt = DateTime.UtcNow.Add(_options.RetryDelay);
+
+            MessagesRetriedCounter.Add(1,
+                new KeyValuePair<string, object?>("event_type", message.EventType),
+                new KeyValuePair<string, object?>("retry_count", message.RetryCount));
+
+            activity?.SetTag("error", true);
+            activity?.SetTag("error.type", ex.GetType().Name);
+            activity?.SetTag("error.transient", true);
+            activity?.SetTag("retry_count", message.RetryCount);
 
             _logger.LogError(ex,
                 "Failed to publish outbox message {MessageId} (attempt {RetryCount}/{MaxRetries})",
@@ -208,6 +290,13 @@ public class OutboxPublisher : BackgroundService
 
             if (message.RetryCount >= _options.MaxRetries)
             {
+                MessagesDeadLetteredCounter.Add(1,
+                    new KeyValuePair<string, object?>("event_type", message.EventType),
+                    new KeyValuePair<string, object?>("reason", "max_retries_exceeded"));
+
+                activity?.SetTag("error.permanent", true);
+                activity?.SetTag("error.reason", "max_retries_exceeded");
+
                 _logger.LogError(
                     "Outbox message {MessageId} exceeded max retries and will be abandoned",
                     message.Id);

@@ -76,7 +76,7 @@ internal class TicketModule : ITicketModule
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to update ticket {TicketId}", command.TicketId);
-            return TicketResult<Unit>.Failure(ex.Message);
+            return TicketResult<Unit>.Failure($"Failed to update ticket: {ex.Message}");
         }
     }
 
@@ -97,7 +97,7 @@ internal class TicketModule : ITicketModule
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to assign ticket {TicketId}", command.TicketId);
-            return TicketResult<Unit>.Failure(ex.Message);
+            return TicketResult<Unit>.Failure($"Failed to assign ticket: {ex.Message}");
         }
     }
 
@@ -118,7 +118,7 @@ internal class TicketModule : ITicketModule
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to transition ticket {TicketId} status", command.TicketId);
-            return TicketResult<Unit>.Failure(ex.Message);
+            return TicketResult<Unit>.Failure($"Failed to change ticket status: {ex.Message}");
         }
     }
 

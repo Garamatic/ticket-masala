@@ -5,25 +5,36 @@
 namespace IT_Project2526.Migrations
 {
     /// <inheritdoc />
-    public partial class AiSummaries : Migration
+    public partial class defaultvallueaimap : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "AiSummary",
-                table: "Tickets",
-                type: "TEXT",
-                nullable: true,
-                 defaultValue: "Not Started");
+            migrationBuilder.UpdateData(
+                table: "AspNetRoles",
+                keyColumn: "Id",
+                keyValue: "1",
+                column: "ConcurrencyStamp",
+                value: "9acf9d2e-bd13-4457-bdc2-142c815efd5a");
 
-            migrationBuilder.AddColumn<string>(
-            name: "ProjectAiRoadmap",
-            table: "Projects",
-             type: "nvarchar(max)",
-            nullable: false,
-            defaultValue: "Not Started");
+            migrationBuilder.UpdateData(
+                table: "AspNetRoles",
+                keyColumn: "Id",
+                keyValue: "2",
+                column: "ConcurrencyStamp",
+                value: "bc710210-035c-4550-803d-59ad26f7701b");
 
+            migrationBuilder.UpdateData(
+                table: "AspNetRoles",
+                keyColumn: "Id",
+                keyValue: "3",
+                column: "ConcurrencyStamp",
+                value: "4e7c3832-e029-41a4-bed5-a8f4ae24b66f");
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.UpdateData(
                 table: "AspNetRoles",
                 keyColumn: "Id",
@@ -44,39 +55,6 @@ namespace IT_Project2526.Migrations
                 keyValue: "3",
                 column: "ConcurrencyStamp",
                 value: "8557754b-f40a-41de-a78a-0646affdbbf8");
-        }
-
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropColumn(
-                name: "AiSummary",
-                table: "Tickets");
-
-            migrationBuilder.DropColumn(
-                name: "ProjectAiRoadmap",
-                table: "Projects");
-
-            migrationBuilder.UpdateData(
-                table: "AspNetRoles",
-                keyColumn: "Id",
-                keyValue: "1",
-                column: "ConcurrencyStamp",
-                value: "3598c83b-2265-4d1b-939a-23b9bf81f6cf");
-
-            migrationBuilder.UpdateData(
-                table: "AspNetRoles",
-                keyColumn: "Id",
-                keyValue: "2",
-                column: "ConcurrencyStamp",
-                value: "03537bd2-c547-4c06-859d-bdb8f3f4e117");
-
-            migrationBuilder.UpdateData(
-                table: "AspNetRoles",
-                keyColumn: "Id",
-                keyValue: "3",
-                column: "ConcurrencyStamp",
-                value: "ddfbf5a3-f6a5-438f-a747-9708972c3d43");
         }
     }
 }

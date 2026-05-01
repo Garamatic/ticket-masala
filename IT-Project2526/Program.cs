@@ -1,27 +1,28 @@
+using System.Reflection;
+using System.Threading.RateLimiting;
 using IT_Project2526;
 using IT_Project2526.Data;
-using IT_Project2526.Models;
-using IT_Project2526.Services;
-using IT_Project2526.Repositories;
-using IT_Project2526.Observers;
 using IT_Project2526.Health;
 using IT_Project2526.Middleware;
+using IT_Project2526.Models;
+using IT_Project2526.Observers;
+using IT_Project2526.Repositories;
+using IT_Project2526.Services;
 using IT_Project2526.Services.GERDA;
-using IT_Project2526.Services.GERDA.Models;
-using IT_Project2526.Services.GERDA.Grouping;
-using IT_Project2526.Services.GERDA.Estimating;
-using IT_Project2526.Services.GERDA.Ranking;
-using IT_Project2526.Services.GERDA.Dispatching;
 using IT_Project2526.Services.GERDA.Anticipation;
 using IT_Project2526.Services.GERDA.BackgroundJobs;
+using IT_Project2526.Services.GERDA.Dispatching;
+using IT_Project2526.Services.GERDA.Estimating;
+using IT_Project2526.Services.GERDA.Grouping;
+using IT_Project2526.Services.GERDA.Models;
+using IT_Project2526.Services.GERDA.Ranking;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using System.Threading.RateLimiting;
-using Microsoft.AspNetCore.Localization;
 using WebOptimizer;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -126,7 +127,6 @@ builder.Services.AddScoped<ITicketCommandService>(sp => sp.GetRequiredService<Ti
 
 // Factory Pattern for Ticket creation
 builder.Services.AddScoped<ITicketFactory, TicketFactory>();
-
 builder.Services.AddScoped<IDispatchBacklogService, DispatchBacklogService>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
@@ -311,11 +311,13 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownProxies.Clear();
 });
 
+builder.Services.AddRabbitMqConnector("amqp://admin:admin123@51.136.7.179:30000"); 
+builder.Services.AddRabbitMqConsumers(Assembly.GetExecutingAssembly()); 
 var app = builder.Build();
 
 // Forward headers must be first middleware
 app.UseForwardedHeaders();
-
+await app.Services.UseRabbitMqAutoDiscovery();
 // Localization Configuration
 var supportedCultures = new[] { "en", "fr", "nl" };
 var localizationOptions = new RequestLocalizationOptions()

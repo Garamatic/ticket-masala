@@ -71,7 +71,12 @@ namespace IT_Project2526
                 .WithMany() // Unidirectional: Customer does not have a specific collection for "Primary Projects", they are just in the N:M list too
                 .HasForeignKey(p => p.CustomerId)
                 .OnDelete(DeleteBehavior.SetNull);
-
+            modelBuilder.Entity<Project>()
+            .Property(p => p.ProjectAiRoadmap)
+            .HasDefaultValue("Not Started");
+            modelBuilder.Entity<Ticket>()
+           .Property(p => p.AiSummary)
+           .HasDefaultValue("Not Started");
         }
 
         public DbSet<Project> Projects { get; set; }

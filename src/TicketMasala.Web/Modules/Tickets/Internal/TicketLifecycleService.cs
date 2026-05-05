@@ -35,6 +35,9 @@ internal class TicketLifecycleService : ITicketLifecycleService
 
     public async Task<Ticket> CreateAsync(CreateTicketCommand command, CancellationToken ct = default)
     {
+        // Validate command before processing
+        command.Validate();
+
         var customer = await _userRepository.GetCustomerByIdAsync(command.CustomerId).ConfigureAwait(false);
         if (customer == null)
             throw new InvalidOperationException($"Customer {command.CustomerId} not found");
@@ -76,6 +79,10 @@ internal class TicketLifecycleService : ITicketLifecycleService
 
     public async Task UpdateAsync(Ticket ticket, UpdateTicketCommand command, CancellationToken ct = default)
     {
+        // IMPORTANT: The 'ticket' parameter should be a freshly loaded entity from the database.
+        // Callers MUST load the ticket within the same unit of work to ensure optimistic concurrency works.
+        // See TicketModule.UpdateAsync for the correct pattern.
+
         // Check status transition first (optimistic concurrency check)
         // This must happen before any modifications to prevent partial updates on conflict
         var actualStatusString = ticket.TicketStatus.ToString();
@@ -108,7 +115,10 @@ internal class TicketLifecycleService : ITicketLifecycleService
                 command.ModifiedByUserId);
         }
 
-        await _unitOfWork.Tickets.UpdateAsync(ticket).ConfigureAwait(false);
+        // Note: We do NOT call _unitOfWork.Tickets.UpdateAsync(ticket) here because
+        // the ticket is already being tracked by EF Core (it was loaded fresh in this UoW).
+        // EF Core will automatically detect changes. Calling UpdateAsync would mark all
+        // properties as modified, potentially causing unnecessary UPDATE statements.
         await _unitOfWork.CommitAsync(ct).ConfigureAwait(false);
     }
 

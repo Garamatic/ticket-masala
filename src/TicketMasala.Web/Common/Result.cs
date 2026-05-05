@@ -32,6 +32,7 @@ public class Result
     }
 
     public static Result Success() => new(true, null);
+    public static Result Success(string message) => new(true, null, message);
     public static Result Failure(string error) => new(false, error);
 
     public static Result<T> Success<T>(T value) => new(value, true, null, null);

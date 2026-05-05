@@ -26,7 +26,7 @@ public class TicketController : Controller
 
     public async Task<IActionResult> Index(TicketSearchViewModel searchModel)
     {
-        var result = await _ticketModule.SearchForUiAsync(searchModel, User);
+        var result = await _ticketModule.SearchForUiAsync(searchModel, User, HttpContext.RequestAborted);
 
         ViewBag.SavedFilters = result.SavedFilters;
         ViewBag.IsCustomer = User.IsInRole(Constants.RoleCustomer);
@@ -45,7 +45,7 @@ public class TicketController : Controller
 
         try
         {
-            (viewModel, context) = await _ticketModule.GetDetailPageAsync(id.Value, User);
+            (viewModel, context) = await _ticketModule.GetDetailPageAsync(id.Value, User, HttpContext.RequestAborted);
         }
         catch (UnauthorizedAccessException)
         {
@@ -69,7 +69,7 @@ public class TicketController : Controller
     {
         try
         {
-            var summary = await _ticketModule.GenerateAiSummaryAsync(ticketId, User);
+            var summary = await _ticketModule.GenerateAiSummaryAsync(ticketId, User, HttpContext.RequestAborted);
             return Json(new { success = true, summary });
         }
         catch (ArgumentException)
@@ -93,7 +93,7 @@ public class TicketController : Controller
     [HttpGet]
     public async Task<IActionResult> Create(Guid? projectGuid = null)
     {
-        var context = await _ticketModule.GetCreateContextAsync(projectGuid, User);
+        var context = await _ticketModule.GetCreateContextAsync(projectGuid, User, HttpContext.RequestAborted);
 
         ViewBag.Employees = context.Employees;
         ViewBag.Projects = context.Projects;
@@ -178,7 +178,7 @@ public class TicketController : Controller
                 customFields,
                 userId);
 
-            var result = await _ticketModule.CreateAsync(command);
+            var result = await _ticketModule.CreateAsync(command, HttpContext.RequestAborted);
 
             if (result.IsSuccess)
             {
@@ -190,7 +190,7 @@ public class TicketController : Controller
         }
 
         // Reload context on failure
-        var context = await _ticketModule.GetCreateReloadContextAsync(projectGuid, User);
+        var context = await _ticketModule.GetCreateReloadContextAsync(projectGuid, User, HttpContext.RequestAborted);
         ViewBag.Employees = context?.Employees ?? new List<SelectListItem>();
         ViewBag.Projects = context?.Projects ?? new List<SelectListItem>();
         ViewBag.Customers = context?.Customers ?? new List<SelectListItem>();
@@ -216,7 +216,7 @@ public class TicketController : Controller
         TicketEditContext? context;
         try
         {
-            context = await _ticketModule.GetEditContextAsync(id.Value, User);
+            context = await _ticketModule.GetEditContextAsync(id.Value, User, HttpContext.RequestAborted);
         }
         catch (UnauthorizedAccessException)
         {
@@ -274,7 +274,7 @@ public class TicketController : Controller
                 userId,
                 roles);
 
-            var result = await _ticketModule.UpdateAsync(command);
+            var result = await _ticketModule.UpdateAsync(command, HttpContext.RequestAborted);
 
             if (result.IsSuccess)
             {
@@ -285,12 +285,12 @@ public class TicketController : Controller
         }
 
         // Reload context on failure
-        var listsContext = await _ticketModule.GetCreateReloadContextAsync(viewModel.ProjectGuid, User);
+        var listsContext = await _ticketModule.GetCreateReloadContextAsync(viewModel.ProjectGuid, User, HttpContext.RequestAborted);
         viewModel.ResponsibleUsers = listsContext.Employees?.ToList() ?? new List<SelectListItem>();
         viewModel.CustomerList = listsContext.Customers?.ToList() ?? new List<SelectListItem>();
         viewModel.ProjectList = listsContext.Projects?.ToList() ?? new List<SelectListItem>();
 
-        var context = await _ticketModule.GetEditReloadContextAsync(id, User);
+        var context = await _ticketModule.GetEditReloadContextAsync(id, User, HttpContext.RequestAborted);
 
         // Defensive: context should not be null, but handle gracefully if it is
         ViewBag.ValidStatuses = context?.ValidStatuses ?? new SelectList(Enum.GetValues<Status>());
@@ -298,7 +298,7 @@ public class TicketController : Controller
         ViewBag.EntityLabels = context?.EntityLabels ?? new Domain.Configuration.EntityLabels();
         ViewBag.CustomFields = context?.CustomFields ?? new List<Domain.Configuration.CustomFieldDefinition>();
         ViewBag.WorkItemTypeCode = context?.WorkItemTypeCode;
-        ViewBag.CustomFieldValues = context?.CustomFieldValues ?? new Dictionary<string, object>();
+        ViewBag.CustomFieldValues = context?.CustomFieldValues ?? new Dictionary<string, System.Text.Json.JsonElement>();
 
         return View(viewModel);
     }

@@ -6,6 +6,9 @@ using TicketMasala.Web.ViewModels.Tickets;
 
 namespace TicketMasala.Web.Facades;
 
+// Note: CancellationToken parameters are added for interface consistency and future-proofing.
+// Currently, the underlying services don't fully support cancellation, but this prepares for that.
+
 /// <summary>
 /// Facade for ticket context operations.
 /// Uses composition with specialized services to maintain Single Responsibility.
@@ -32,13 +35,16 @@ public class TicketContextFacade : ITicketContextFacade
         _logger = logger;
     }
 
-    public async Task<TicketDetailsViewModel?> GetTicketDetailsAsync(Guid ticketId, string? userId, bool isCustomer)
+    public async Task<TicketDetailsViewModel?> GetTicketDetailsAsync(Guid ticketId, string? userId, bool isCustomer, CancellationToken ct = default)
     {
+        // Note: CancellationToken is accepted but not yet passed to underlying service (future enhancement)
         return await _detailService.GetTicketDetailsAsync(ticketId, userId, isCustomer).ConfigureAwait(false);
     }
 
     public async Task<TicketDetailContext> GetTicketDetailContextAsync(TicketDetailsViewModel viewModel)
     {
+        // Note: This method doesn't accept CancellationToken because it performs only
+        // synchronous in-memory operations (deserialization, object construction).
         var domainId = viewModel.DomainId ?? _domainConfig.GetDefaultDomainId();
 
         var context = new TicketDetailContext
@@ -53,21 +59,22 @@ public class TicketContextFacade : ITicketContextFacade
         {
             try
             {
-                context.CustomFieldValues = JsonSerializer.Deserialize<Dictionary<string, object>>(viewModel.CustomFieldsJson)
-                    ?? new Dictionary<string, object>();
+                context.CustomFieldValues = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(viewModel.CustomFieldsJson)
+                    ?? new Dictionary<string, JsonElement>();
             }
             catch (JsonException ex)
             {
                 _logger.LogWarning(ex, "Failed to deserialize CustomFieldsJson for ticket context");
-                context.CustomFieldValues = new Dictionary<string, object>();
+                context.CustomFieldValues = new Dictionary<string, JsonElement>();
             }
         }
 
         return context;
     }
 
-    public async Task<TicketCreateContext> GetCreateContextAsync(bool isCustomer, string? preselectedCustomerId = null, Guid? projectGuid = null)
+    public async Task<TicketCreateContext> GetCreateContextAsync(bool isCustomer, string? preselectedCustomerId = null, Guid? projectGuid = null, CancellationToken ct = default)
     {
+        // Note: CancellationToken is accepted but not yet passed to underlying service (future enhancement)
         var context = await _createService.GetCreateContextAsync(isCustomer, preselectedCustomerId, projectGuid).ConfigureAwait(false);
 
         // Domain configuration is still handled here as it's configuration, not data
@@ -80,8 +87,9 @@ public class TicketContextFacade : ITicketContextFacade
         return context;
     }
 
-    public async Task<TicketEditContext?> GetEditContextAsync(Guid ticketId, System.Security.Claims.ClaimsPrincipal user)
+    public async Task<TicketEditContext?> GetEditContextAsync(Guid ticketId, System.Security.Claims.ClaimsPrincipal user, CancellationToken ct = default)
     {
+        // Note: CancellationToken is accepted but not yet passed to underlying service (future enhancement)
         var context = await _editService.GetEditContextAsync(ticketId, user).ConfigureAwait(false);
 
         if (context != null)
@@ -98,8 +106,9 @@ public class TicketContextFacade : ITicketContextFacade
         return context;
     }
 
-    public async Task<TicketEditContext> GetEditReloadContextAsync(Guid ticketId, System.Security.Claims.ClaimsPrincipal user)
+    public async Task<TicketEditContext> GetEditReloadContextAsync(Guid ticketId, System.Security.Claims.ClaimsPrincipal user, CancellationToken ct = default)
     {
+        // Note: CancellationToken is accepted but not yet passed to underlying service (future enhancement)
         var context = await _editService.GetEditReloadContextAsync(ticketId, user).ConfigureAwait(false);
 
         // DomainId and WorkItemTypeCode are already set by TicketEditService from the ticket

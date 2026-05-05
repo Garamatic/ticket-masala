@@ -6,7 +6,7 @@ namespace TicketMasala.Web.Modules.Tickets.Internal;
 internal interface ITicketAuthorizationService
 {
     bool CanEdit(Ticket ticket, string userId, IEnumerable<string> roles);
-    bool CanAssign(Ticket ticket, string userId, IEnumerable<string> roles);
+    bool CanAssign(Ticket ticket, IEnumerable<string> roles);
     bool CanChangeStatus(Ticket ticket, string userId, IEnumerable<string> roles, string targetStatus);
     bool CanView(Ticket ticket, string userId, IEnumerable<string> roles);
 }
@@ -16,7 +16,7 @@ internal class TicketAuthorizationService : ITicketAuthorizationService
     public bool CanEdit(Ticket ticket, string userId, IEnumerable<string> roles)
         => ticket.CanBeEditedBy(userId, roles) && ticket.CanEditInCurrentState();
 
-    public bool CanAssign(Ticket ticket, string userId, IEnumerable<string> roles)
+    public bool CanAssign(Ticket ticket, IEnumerable<string> roles)
     {
         // Must have role AND ticket must be in assignable state
         var hasRole = roles.Contains(Constants.RoleAdmin) || roles.Contains(Constants.RoleEmployee);

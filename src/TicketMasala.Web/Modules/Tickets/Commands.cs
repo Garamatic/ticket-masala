@@ -11,7 +11,24 @@ public record CreateTicketCommand(
     string? DomainId,
     string? WorkItemTypeCode,
     Dictionary<string, string> CustomFields,
-    string CreatedByUserId);
+    string CreatedByUserId)
+{
+    /// <summary>
+    /// Validates the command at construction time.
+    /// </summary>
+    /// <exception cref="ArgumentException">Thrown when required fields are invalid.</exception>
+    public void Validate()
+    {
+        if (string.IsNullOrWhiteSpace(Description))
+            throw new ArgumentException("Description is required", nameof(Description));
+
+        if (Description.Length > 5000)
+            throw new ArgumentException("Description cannot exceed 5000 characters", nameof(Description));
+
+        if (string.IsNullOrWhiteSpace(CustomerId))
+            throw new ArgumentException("CustomerId is required", nameof(CustomerId));
+    }
+}
 
 /// <summary>
 /// Command to update a ticket.

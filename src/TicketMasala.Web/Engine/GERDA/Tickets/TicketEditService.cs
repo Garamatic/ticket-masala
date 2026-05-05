@@ -35,21 +35,22 @@ public class TicketEditService : ITicketEditService
 
     /// <summary>
     /// Deserializes custom fields JSON safely, returning empty dictionary on error.
+    /// Uses JsonElement to avoid deserialization issues with numeric types.
     /// </summary>
-    private Dictionary<string, object> DeserializeCustomFields(string? json, Guid ticketGuid)
+    private Dictionary<string, JsonElement> DeserializeCustomFields(string? json, Guid ticketGuid)
     {
         if (string.IsNullOrEmpty(json))
-            return new Dictionary<string, object>();
+            return new Dictionary<string, JsonElement>();
 
         try
         {
-            return JsonSerializer.Deserialize<Dictionary<string, object>>(json)
-                ?? new Dictionary<string, object>();
+            return JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json)
+                ?? new Dictionary<string, JsonElement>();
         }
         catch (JsonException ex)
         {
             _logger.LogWarning(ex, "Failed to deserialize CustomFieldsJson for ticket {TicketGuid}", ticketGuid);
-            return new Dictionary<string, object>();
+            return new Dictionary<string, JsonElement>();
         }
     }
 

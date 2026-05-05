@@ -89,6 +89,11 @@ public class EfCoreUnitOfWork : IUnitOfWork
             _currentTransaction = null;
             _logger.LogDebug("Explicit database transaction rolled back");
         }
+
+        // Reset change tracker to clear any tracked entities that were part of the failed transaction.
+        // This prevents subsequent operations from accidentally saving changes from the rolled-back transaction.
+        _context.ChangeTracker.Clear();
+        _logger.LogDebug("Change tracker cleared after rollback");
     }
 
     public void Dispose()
@@ -109,6 +114,7 @@ public class EfCoreUnitOfWork : IUnitOfWork
 
     public Task AddQualityReviewAsync(Domain.Entities.QualityReview review, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(review);
         _context.QualityReviews.Add(review);
         _logger.LogDebug("Quality review queued for add (pending commit)");
         return Task.CompletedTask;
@@ -116,6 +122,7 @@ public class EfCoreUnitOfWork : IUnitOfWork
 
     public Task AddTimeLogAsync(Domain.Entities.TimeLog timeLog, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(timeLog);
         _context.TimeLogs.Add(timeLog);
         _logger.LogDebug("Time log queued for add (pending commit)");
         return Task.CompletedTask;
@@ -123,6 +130,7 @@ public class EfCoreUnitOfWork : IUnitOfWork
 
     public Task AddCommentAsync(Domain.Entities.TicketComment comment, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(comment);
         _context.TicketComments.Add(comment);
         _logger.LogDebug("Comment queued for add to ticket {TicketId} (pending commit)", comment.TicketId);
         return Task.CompletedTask;

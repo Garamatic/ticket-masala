@@ -55,6 +55,21 @@ public class DomainEventDispatchingInterceptor : SaveChangesInterceptor
         return await base.SavedChangesAsync(eventData, result, cancellationToken);
     }
 
+    public override async ValueTask<InterceptionResult> ThrowingConcurrencyExceptionAsync(
+        ConcurrencyExceptionEventData eventData,
+        InterceptionResult result,
+        CancellationToken cancellationToken = default)
+    {
+        // Clean up pending events when a concurrency exception occurs
+        var context = eventData.Context;
+        if (context != null)
+        {
+            _pendingEvents.TryRemove(context, out _);
+        }
+
+        return await base.ThrowingConcurrencyExceptionAsync(eventData, result, cancellationToken);
+    }
+
     private static List<IDomainEvent> CaptureDomainEvents(DbContext context)
     {
         var events = new List<IDomainEvent>();

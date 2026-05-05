@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using TicketMasala.Domain.Configuration;
 using TicketMasala.Web.ViewModels.Tickets;
@@ -10,7 +11,7 @@ public class TicketDetailContext
     public EntityLabels EntityLabels { get; set; } = new();
     public List<CustomFieldDefinition> CustomFields { get; set; } = new();
     public string? WorkItemTypeCode { get; set; }
-    public Dictionary<string, object> CustomFieldValues { get; set; } = new();
+    public Dictionary<string, JsonElement> CustomFieldValues { get; set; } = new();
 }
 
 public class TicketCreateContext
@@ -27,6 +28,7 @@ public class TicketCreateContext
     public string? PreselectedCustomerId { get; set; }
     public Guid? PreselectedProjectId { get; set; }
     public bool IsCustomer { get; set; }
+    // Note: CustomFieldValues is intentionally NOT included here - create forms don't have existing values
 }
 
 public class TicketEditContext
@@ -37,6 +39,6 @@ public class TicketEditContext
     public EntityLabels EntityLabels { get; set; } = new();
     public List<CustomFieldDefinition> CustomFields { get; set; } = new();
     public string? WorkItemTypeCode { get; set; }
-    public Dictionary<string, object> CustomFieldValues { get; set; } = new();
+    public Dictionary<string, JsonElement> CustomFieldValues { get; set; } = new();
     public IEnumerable<SelectListItem>? ValidStatuses { get; set; }
 }

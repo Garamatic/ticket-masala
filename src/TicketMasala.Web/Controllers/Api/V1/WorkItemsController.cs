@@ -136,11 +136,12 @@ public class WorkItemsController : ControllerBase
         if (existingTicket == null)
             return NotFound();
 
-        // Update properties
-        var updatedTicket = workItem.ToTicket(existingTicket);
+        // Update properties on the tracked entity - DO NOT call _ticketRepository.UpdateAsync here
+        // The TicketWorkflowService will handle persistence with proper business rules/observers
+        workItem.ToTicket(existingTicket);
 
         // Use Service to persist to ensure Rules/Observers run
-        var result = await _ticketWorkflowService.UpdateTicketAsync(updatedTicket);
+        var result = await _ticketWorkflowService.UpdateTicketAsync(existingTicket);
 
         if (!result)
             throw new InvalidOperationException("Failed to update work item");

@@ -28,7 +28,7 @@ public class TicketSearchController : Controller
     [HttpGet]
     public async Task<IActionResult> Index(TicketSearchViewModel searchModel)
     {
-        var result = await _ticketModule.SearchForUiAsync(searchModel, User);
+        var result = await _ticketModule.SearchForUiAsync(searchModel, User, HttpContext.RequestAborted);
 
         ViewBag.SavedFilters = result.SavedFilters;
         ViewBag.IsCustomer = User.IsInRole(Constants.RoleCustomer);

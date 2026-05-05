@@ -418,6 +418,12 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         if (billableAmount.HasValue && billableAmount.Value < 0)
             throw new DomainException("Billable amount cannot be negative");
 
+        // Check if already completed to prevent duplicate transitions
+        if (TicketStatus == Common.Status.Completed)
+        {
+            throw new DomainException("Ticket is already completed. Cannot resolve again.");
+        }
+
         // Store resolution data
         ResolutionNotes = resolutionNotes.Trim();
         BillableAmount = billableAmount;

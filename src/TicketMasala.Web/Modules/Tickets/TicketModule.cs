@@ -45,7 +45,7 @@ internal class TicketModule : ITicketModule
 
     // --- Core lifecycle -------------------------------------------------------
 
-    public async Task<Common.Result<Guid>> CreateAsync(CreateTicketCommand command, CancellationToken ct)
+    public async Task<Common.Result<Guid>> CreateAsync(CreateTicketCommand command, CancellationToken ct = default)
     {
         try
         {
@@ -81,7 +81,7 @@ internal class TicketModule : ITicketModule
         }
     }
 
-    public async Task<Common.Result<Unit>> UpdateAsync(UpdateTicketCommand command, CancellationToken ct)
+    public async Task<Common.Result<Unit>> UpdateAsync(UpdateTicketCommand command, CancellationToken ct = default)
     {
         var ticket = await _queries.GetByIdAsync(command.TicketId, includeRelations: false, ct).ConfigureAwait(false);
         if (ticket == null)
@@ -112,13 +112,13 @@ internal class TicketModule : ITicketModule
         }
     }
 
-    public async Task<Common.Result<Unit>> AssignAsync(AssignTicketCommand command, CancellationToken ct)
+    public async Task<Common.Result<Unit>> AssignAsync(AssignTicketCommand command, CancellationToken ct = default)
     {
         var ticket = await _queries.GetByIdAsync(command.TicketId, includeRelations: false, ct).ConfigureAwait(false);
         if (ticket == null)
             return Common.Result.Failure<Unit>("Ticket not found");
 
-        if (!_auth.CanAssign(ticket, command.AssignedByUserId, command.AssignedByRoles))
+        if (!_auth.CanAssign(ticket, command.AssignedByRoles))
             return Common.Result.Failure<Unit>("Not authorized to assign tickets");
 
         try
@@ -138,7 +138,7 @@ internal class TicketModule : ITicketModule
         }
     }
 
-    public async Task<Common.Result<Unit>> TransitionStatusAsync(TransitionStatusCommand command, CancellationToken ct)
+    public async Task<Common.Result<Unit>> TransitionStatusAsync(TransitionStatusCommand command, CancellationToken ct = default)
     {
         var ticket = await _queries.GetByIdAsync(command.TicketId, includeRelations: false, ct).ConfigureAwait(false);
         if (ticket == null)
@@ -169,7 +169,7 @@ internal class TicketModule : ITicketModule
         }
     }
 
-    public async Task<Common.Result<TicketDetailsDto>> GetDetailsAsync(Guid ticketId, string requestingUserId, IEnumerable<string> requestingUserRoles, CancellationToken ct)
+    public async Task<Common.Result<TicketDetailsDto>> GetDetailsAsync(Guid ticketId, string requestingUserId, IEnumerable<string> requestingUserRoles, CancellationToken ct = default)
     {
         var ticket = await _queries.GetByIdAsync(ticketId, includeRelations: true, ct).ConfigureAwait(false);
         if (ticket == null)
@@ -195,14 +195,14 @@ internal class TicketModule : ITicketModule
         return Common.Result.Success(dto);
     }
 
-    public async Task<TicketSearchResult> SearchAsync(TicketSearchQuery query, CancellationToken ct)
+    public async Task<TicketSearchResult> SearchAsync(TicketSearchQuery query, CancellationToken ct = default)
     {
         return await _queries.SearchAsync(query, ct).ConfigureAwait(false);
     }
 
     // --- UI context methods ----------------------------------------------------
 
-    public async Task<TicketSearchViewModel> SearchForUiAsync(TicketSearchViewModel searchModel, ClaimsPrincipal user)
+    public async Task<TicketSearchViewModel> SearchForUiAsync(TicketSearchViewModel searchModel, ClaimsPrincipal user, CancellationToken ct = default)
     {
         searchModel ??= new TicketSearchViewModel();
 
@@ -216,6 +216,8 @@ internal class TicketModule : ITicketModule
         }
 
         // Use read service for full search with select lists
+        // Note: CancellationToken propagation to underlying services is limited but ct
+        // can still cancel the overall operation when the HTTP request is aborted.
         var result = await _readService.SearchTicketsAsync(searchModel).ConfigureAwait(false);
 
         // Load saved filters
@@ -227,7 +229,7 @@ internal class TicketModule : ITicketModule
         return result;
     }
 
-    public async Task<(TicketDetailsViewModel? ViewModel, TicketDetailContext Context)> GetDetailPageAsync(Guid ticketId, ClaimsPrincipal user)
+    public async Task<(TicketDetailsViewModel? ViewModel, TicketDetailContext Context)> GetDetailPageAsync(Guid ticketId, ClaimsPrincipal user, CancellationToken ct = default)
     {
         var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
         var isCustomer = user.IsInRole(Constants.RoleCustomer);
@@ -239,7 +241,7 @@ internal class TicketModule : ITicketModule
             .ToList();
 
         // Check existence and authorization (fail fast before loading view model)
-        var ticket = await _queries.GetByIdAsync(ticketId, includeRelations: false, CancellationToken.None).ConfigureAwait(false);
+        var ticket = await _queries.GetByIdAsync(ticketId, includeRelations: false, ct).ConfigureAwait(false);
         if (ticket == null)
         {
             return (null, new TicketDetailContext());
@@ -251,19 +253,19 @@ internal class TicketModule : ITicketModule
         }
 
         // Load view model for authorized user
-        var viewModel = await _contextFacade.GetTicketDetailsAsync(ticketId, userId, isCustomer).ConfigureAwait(false);
+        var viewModel = await _contextFacade.GetTicketDetailsAsync(ticketId, userId, isCustomer, ct).ConfigureAwait(false);
         if (viewModel == null)
         {
             return (null, new TicketDetailContext());
         }
 
-        // Get domain context
+        // Get domain context (synchronous operation, no cancellation needed)
         var context = await _contextFacade.GetTicketDetailContextAsync(viewModel).ConfigureAwait(false);
 
         return (viewModel, context);
     }
 
-    public async Task<string> GenerateAiSummaryAsync(Guid ticketId, ClaimsPrincipal user)
+    public async Task<string> GenerateAiSummaryAsync(Guid ticketId, ClaimsPrincipal user, CancellationToken ct = default)
     {
         // Get user info for authorization
         var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
@@ -271,7 +273,7 @@ internal class TicketModule : ITicketModule
         var isCustomer = user.IsInRole(Constants.RoleCustomer);
 
         // Get ticket to check authorization
-        var ticket = await _queries.GetByIdAsync(ticketId, includeRelations: false, CancellationToken.None).ConfigureAwait(false);
+        var ticket = await _queries.GetByIdAsync(ticketId, includeRelations: false, ct).ConfigureAwait(false);
         if (ticket == null)
         {
             throw new ArgumentException("Ticket not found");
@@ -283,29 +285,31 @@ internal class TicketModule : ITicketModule
         }
 
         // Use actual user context for fetching details and generating summary
-        return await GenerateAiSummaryWithDetailsAsync(ticketId, userId, isCustomer).ConfigureAwait(false);
+        return await GenerateAiSummaryWithDetailsAsync(ticketId, userId, isCustomer, ct).ConfigureAwait(false);
     }
 
+    [Obsolete("This overload bypasses authorization checks. Use the overload with ClaimsPrincipal instead.", error: true)]
     public Task<string> GenerateAiSummaryAsync(Guid ticketId)
     {
-        // Legacy overload without user context - for backward compatibility only
-        // Uses unfiltered access (assumes caller has already authorized)
-        return GenerateAiSummaryWithDetailsAsync(ticketId, userId: string.Empty, isCustomer: false);
+        // This overload is dangerous - it bypasses authorization!
+        // Marked as obsolete with error:true to prevent compilation of new code using it.
+        throw new InvalidOperationException(
+            "This overload is obsolete and insecure. Use GenerateAiSummaryAsync(Guid, ClaimsPrincipal, CancellationToken) instead.");
     }
 
-    private async Task<string> GenerateAiSummaryWithDetailsAsync(Guid ticketId, string userId, bool isCustomer)
+    private async Task<string> GenerateAiSummaryWithDetailsAsync(Guid ticketId, string userId, bool isCustomer, CancellationToken ct = default)
     {
-        var viewModel = await _contextFacade.GetTicketDetailsAsync(ticketId, userId, isCustomer).ConfigureAwait(false);
+        var viewModel = await _contextFacade.GetTicketDetailsAsync(ticketId, userId, isCustomer, ct).ConfigureAwait(false);
 
         if (viewModel == null)
         {
             throw new ArgumentException("Ticket not found");
         }
 
-        return await BuildAndSendAiSummaryAsync(viewModel).ConfigureAwait(false);
+        return await BuildAndSendAiSummaryAsync(viewModel, ct).ConfigureAwait(false);
     }
 
-    private async Task<string> BuildAndSendAiSummaryAsync(TicketDetailsViewModel viewModel)
+    private async Task<string> BuildAndSendAiSummaryAsync(TicketDetailsViewModel viewModel, CancellationToken ct = default)
     {
         // Build query for AI
         var commentLines = viewModel.Comments
@@ -317,27 +321,30 @@ internal class TicketModule : ITicketModule
                 "Discussion:\n" +
                 string.Join("\n", commentLines);
 
+        // Note: IOpenAiService doesn't support CancellationToken yet. The ct parameter is accepted
+        // for API consistency but cannot be used until the interface is updated.
+        _ = ct; // Suppress unused parameter warning
         return await _openAiService.GetResponseAsync(OpenAIPrompts.Summary, query).ConfigureAwait(false);
     }
 
-    public async Task<TicketCreateContext> GetCreateContextAsync(Guid? projectGuid, ClaimsPrincipal user)
+    public async Task<TicketCreateContext> GetCreateContextAsync(Guid? projectGuid, ClaimsPrincipal user, CancellationToken ct = default)
     {
         var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var isCustomer = user.IsInRole(Constants.RoleCustomer);
 
-        return await _contextFacade.GetCreateContextAsync(isCustomer, userId, projectGuid).ConfigureAwait(false);
+        return await _contextFacade.GetCreateContextAsync(isCustomer, userId, projectGuid, ct).ConfigureAwait(false);
     }
 
-    public async Task<TicketEditContext?> GetEditContextAsync(Guid ticketId, ClaimsPrincipal user)
+    public async Task<TicketEditContext?> GetEditContextAsync(Guid ticketId, ClaimsPrincipal user, CancellationToken ct = default)
     {
-        return await _contextFacade.GetEditContextAsync(ticketId, user).ConfigureAwait(false);
+        return await _contextFacade.GetEditContextAsync(ticketId, user, ct).ConfigureAwait(false);
     }
 
-    public Task<TicketCreateContext> GetCreateReloadContextAsync(Guid? projectGuid, ClaimsPrincipal user)
-        => GetCreateContextAsync(projectGuid, user);
+    public Task<TicketCreateContext> GetCreateReloadContextAsync(Guid? projectGuid, ClaimsPrincipal user, CancellationToken ct = default)
+        => GetCreateContextAsync(projectGuid, user, ct);
 
-    public async Task<TicketEditContext> GetEditReloadContextAsync(Guid ticketId, ClaimsPrincipal user)
+    public async Task<TicketEditContext> GetEditReloadContextAsync(Guid ticketId, ClaimsPrincipal user, CancellationToken ct = default)
     {
-        return await _contextFacade.GetEditReloadContextAsync(ticketId, user).ConfigureAwait(false);
+        return await _contextFacade.GetEditReloadContextAsync(ticketId, user, ct).ConfigureAwait(false);
     }
 }

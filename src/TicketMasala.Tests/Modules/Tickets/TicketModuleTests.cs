@@ -88,6 +88,9 @@ public class TicketModuleRegistrationTests
     {
         var type = typeof(Unit);
         Assert.True(type.IsPublic);
-        Assert.NotNull(type.GetField("Value"));
+        // Value is now a static property (not a field) for immutability
+        var valueProperty = type.GetProperty("Value");
+        Assert.NotNull(valueProperty);
+        Assert.True(valueProperty.GetMethod?.IsPublic);
     }
 }

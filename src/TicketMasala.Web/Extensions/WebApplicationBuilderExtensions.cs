@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Tenancy;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Data.Seeding;
 using TicketMasala.Web.Engine.Core;
@@ -128,6 +129,9 @@ public static class WebApplicationBuilderExtensions
         // System abstractions
         builder.Services.AddSingleton<TicketMasala.Web.Abstractions.ISystemClock, TicketMasala.Web.Services.SystemClock>();
         builder.Services.AddScoped<TicketMasala.Web.Services.IJsonParsingService, TicketMasala.Web.Services.JsonParsingService>();
+
+        // Tenancy
+        builder.Services.AddScoped<ITenantContext, DefaultTenantContext>();
 
         // Core services
         builder.Services.AddScoped<IFileStorageService, DiskFileStorageService>();

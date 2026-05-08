@@ -1,4 +1,8 @@
 using IT_Project2526.Models;
+using IT_Project2526.RabbitMQ.RabbitMQDTOs;
+using RabbitMqConnector;
+using Xunit.Sdk;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace IT_Project2526.Observers;
 
@@ -9,10 +13,11 @@ namespace IT_Project2526.Observers;
 public class LoggingTicketObserver : ITicketObserver
 {
     private readonly ILogger<LoggingTicketObserver> _logger;
-
-    public LoggingTicketObserver(ILogger<LoggingTicketObserver> logger)
+    private readonly MsgQ _msgQ;
+    public LoggingTicketObserver(ILogger<LoggingTicketObserver> logger,MsgQ msgQ)
     {
         _logger = logger;
+        _msgQ = msgQ;
     }
 
     public async Task OnTicketCreatedAsync(Ticket ticket)
@@ -22,7 +27,18 @@ public class LoggingTicketObserver : ITicketObserver
             ticket.Guid,
             ticket.CustomerId,
             ticket.Description.Length > 50 ? ticket.Description.Substring(0, 50) + "..." : ticket.Description);
-        
+
+        var ticketCreatedDto = new TicketCreatedDTO
+        {
+            TicketId = ticket.Guid,
+            CustomerEmail = ticket.Customer?.Email ?? "unknown@customer.com",
+            CustomerName = $"{ticket.Customer?.FirstName} {ticket.Customer?.LastName}".Trim(),
+            TenantId = ticket.ProjectGuid?.ToString() ?? "default-tenant",
+            Description = ticket.Description,
+            Priority = ticket.PriorityScore > 10 ? "high" : "medium",
+            CreatedAt = ticket.CreationDate
+        };
+        await _msgQ.SendMessage<TicketCreatedDTO>(ticketCreatedDto, RoutingKeys.Ticket);
         await Task.CompletedTask;
     }
 
@@ -33,8 +49,16 @@ public class LoggingTicketObserver : ITicketObserver
             ticket.Guid,
             $"{assignee.FirstName} {assignee.LastName}",
             assignee.Team);
-        
-        await Task.CompletedTask;
+
+        var ticketAssignedDto = new TicketAssignedDTO
+        {
+            TicketId = ticket.Guid,
+            AssignedTo = assignee.Id.ToString(),
+            AssignedBy = ticket.ResponsibleId ?? "System",
+            AssignedAt = DateTimeOffset.UtcNow
+        };
+
+        await _msgQ.SendMessage<TicketAssignedDTO>(ticketAssignedDto, RoutingKeys.Ticket);
     }
 
     public async Task OnTicketCompletedAsync(Ticket ticket)
@@ -48,7 +72,18 @@ public class LoggingTicketObserver : ITicketObserver
             ticket.Guid,
             resolutionTime,
             ticket.TicketStatus);
-        
+
+        var ticketResolvedDto = new TicketResolvedDTO
+        {
+            TicketId = ticket.Guid,
+            CustomerEmail = ticket.Customer?.Email ?? "unknown@customer.com",
+            CustomerName = $"{ticket.Customer?.FirstName} {ticket.Customer?.LastName}".Trim(),
+            ServiceDescription = ticket.Project?.Name ?? ticket.Description,
+            ResolvedAt = ticket.CompletionDate ?? DateTime.UtcNow,
+            TenantId = ticket.ProjectGuid?.ToString() ?? "default-tenant",
+            Amount = 0m
+        };
+        await _msgQ.SendMessage<TicketResolvedDTO>(ticketResolvedDto, RoutingKeys.Ticket);
         await Task.CompletedTask;
     }
 

@@ -60,5 +60,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\Downloads\RabbitMqConnector\RabbitMqConnector\RabbitMqConnector.csproj" />
+    <ProjectReference Include="..\RabbitMqConnector\RabbitMqConnector\RabbitMqConnector.csproj" />
   </ItemGroup>
 </Project>

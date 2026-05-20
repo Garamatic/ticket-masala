@@ -49,6 +49,9 @@ public static class GerdaServiceExtensions
         // Register stage engines (the core GERDA implementation)
         GerdaStageEngineRegistration.Register(services, config);
 
+        // Register composable execution stages and provider used by GerdaEngine.
+        GerdaStageProviderRegistration.Register(services, config);
+
         // Register the deep module facade (primary public interface)
         services.AddScoped<IGerda, GerdaEngine>();
 
@@ -73,6 +76,28 @@ public static class GerdaServiceExtensions
     {
         logger.LogInformation("GERDA registration complete. Configuration will be validated at runtime.");
         return services;
+    }
+}
+
+/// <summary>
+/// GERDA execution stage registrations for composable stage provider pattern.
+/// </summary>
+internal static class GerdaStageProviderRegistration
+{
+    public static void Register(IServiceCollection services, GerdaConfig config)
+    {
+        services.AddScoped<IGerdaExecutionStage, GroupingExecutionStage>();
+        services.AddScoped<IGerdaExecutionStage, EstimatingExecutionStage>();
+        services.AddScoped<IGerdaExecutionStage, RankingExecutionStage>();
+        services.AddScoped<IGerdaExecutionStage, DispatchingExecutionStage>();
+        services.AddScoped<IGerdaExecutionStage, KnowledgeExecutionStage>();
+
+        if (config.GerdaAI.Anticipation.IsEnabled)
+        {
+            services.AddScoped<IGerdaExecutionStage, AnticipationExecutionStage>();
+        }
+
+        services.AddScoped<IGerdaStageProvider, DefaultGerdaStageProvider>();
     }
 }
 

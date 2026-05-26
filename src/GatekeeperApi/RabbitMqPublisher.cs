@@ -148,8 +148,10 @@ public sealed class RabbitMqPublisher : IAsyncDisposable
         {
             _logger.LogError(ex, "Failed to initialize RabbitMQ publisher");
             // Clean up partial state
-            if (_channel is not null) { try { await _channel.CloseAsync(); } catch { } try { await _channel.DisposeAsync(); } catch { } _channel = null; }
-            if (_connection is not null) { try { await _connection.CloseAsync(); } catch { } try { await _connection.DisposeAsync(); } catch { } _connection = null; }
+            if (_channel is not null)
+            { try { await _channel.CloseAsync(); } catch { } try { await _channel.DisposeAsync(); } catch { } _channel = null; }
+            if (_connection is not null)
+            { try { await _connection.CloseAsync(); } catch { } try { await _connection.DisposeAsync(); } catch { } _connection = null; }
             _exchangeDeclared = false;
             throw;
         }
@@ -161,7 +163,8 @@ public sealed class RabbitMqPublisher : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        if (_disposed) return;
+        if (_disposed)
+            return;
         _disposed = true;
 
         var lockAcquired = false;
@@ -182,13 +185,17 @@ public sealed class RabbitMqPublisher : IAsyncDisposable
             {
                 if (_channel is not null)
                 {
-                    try { await _channel.CloseAsync(); } catch { }
+                    try
+                    { await _channel.CloseAsync(); }
+                    catch { }
                     await _channel.DisposeAsync();
                     _channel = null;
                 }
                 if (_connection is not null)
                 {
-                    try { await _connection.CloseAsync(); } catch { }
+                    try
+                    { await _connection.CloseAsync(); }
+                    catch { }
                     await _connection.DisposeAsync();
                     _connection = null;
                 }

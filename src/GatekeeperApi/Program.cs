@@ -1,6 +1,5 @@
 using System.IO;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace GatekeeperApi;
 
@@ -45,11 +44,14 @@ public class Program
             }
         });
 
-        app.MapPost("/api/ingest", async (
+        app.MapGet("/health", () => Results.Ok(new { status = "Healthy" }));
+        app.MapGet("/api/health", () => Results.Ok(new { status = "Healthy" }));
+
+        async Task<IResult> ProcessIngestionRequestAsync(
             HttpContext context,
             RabbitMqPublisher publisher,
             ILogger<Program> logger,
-            CancellationToken ct) =>
+            CancellationToken ct)
         {
             if (!context.Request.Headers.TryGetValue("X-Api-Key", out var extractedValue) ||
                 extractedValue != apiKey)
@@ -59,82 +61,108 @@ public class Program
                 return Results.Unauthorized();
             }
 
-            IngestionRequest? request;
             try
             {
-                request = await context.Request.ReadFromJsonAsync<IngestionRequest>(ct);
+                using var document = await JsonDocument.ParseAsync(context.Request.Body, cancellationToken: ct);
+                var root = document.RootElement;
+
+                // Check if it's a direct flat event containing 'event_type'
+                if (root.TryGetProperty("event_type", out var eventTypeProp) && eventTypeProp.ValueKind == JsonValueKind.String)
+                {
+                    var eventType = eventTypeProp.GetString();
+                    if (string.IsNullOrWhiteSpace(eventType))
+                    {
+                        return Results.BadRequest("event_type cannot be empty");
+                    }
+
+                    var routingKey = $"event.{eventType}";
+                    logger.LogInformation("Direct event received: event_type={EventType}, RemoteIp={RemoteIp}",
+                        eventType, context.Connection.RemoteIpAddress);
+
+                    // Publish the raw JSON payload as-is to RabbitMQ
+                    await publisher.PublishAsync(root, routingKey, ct);
+
+                    return Results.Accepted();
+                }
+                else
+                {
+                    // Treat as legacy IngestionRequest
+                    var request = JsonSerializer.Deserialize<IngestionRequest>(root.GetRawText(), new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+
+                    if (request == null)
+                    {
+                        logger.LogWarning("Null ingestion request from {RemoteIp}",
+                            context.Connection.RemoteIpAddress);
+                        return Results.BadRequest("Request body is required");
+                    }
+
+                    if (request.Data == null || request.Data.Count == 0)
+                    {
+                        logger.LogWarning("Ingestion request with empty data from {RemoteIp}",
+                            context.Connection.RemoteIpAddress);
+                        return Results.BadRequest("Data dictionary is required and cannot be empty");
+                    }
+
+                    // Build the integration event payload matching the ticket.created schema
+                    var ticketId = Guid.NewGuid().ToString();
+                    var now = DateTime.UtcNow.ToString("O");
+
+                    var evt = new TicketCreatedEvent
+                    {
+                        EventType = "ticket.created",
+                        Timestamp = now,
+                        Source = "gatekeeper-api",
+                        TicketId = ticketId,
+                        CustomerEmail = request.Data.GetValueOrDefault("email")?.ToString()
+                            ?? request.Data.GetValueOrDefault("CustomerEmail")?.ToString()
+                            ?? "unknown@example.com",
+                        CustomerName = request.Data.GetValueOrDefault("name")?.ToString()
+                            ?? request.Data.GetValueOrDefault("CustomerName")?.ToString()
+                            ?? "External User",
+                        TenantId = request.Data.GetValueOrDefault("tenant_id")?.ToString()
+                            ?? request.Data.GetValueOrDefault("TenantId")?.ToString()
+                            ?? string.Empty,
+                        Description = request.Data.GetValueOrDefault("description")?.ToString()
+                            ?? request.Data.GetValueOrDefault("body")?.ToString()
+                            ?? request.Data.GetValueOrDefault("subject")?.ToString()
+                            ?? $"New ticket via {request.Template}",
+                        Priority = request.Data.GetValueOrDefault("priority")?.ToString()?.ToLowerInvariant()
+                            ?? "medium",
+                        CreatedAt = now
+                    };
+
+                    await publisher.PublishAsync(evt, "event.ticket.created", ct);
+
+                    logger.LogInformation(
+                        "Published ticket.created event from IngestionRequest: TicketId={TicketId}, Template={Template}, RemoteIp={RemoteIp}",
+                        ticketId,
+                        request.Template,
+                        context.Connection.RemoteIpAddress);
+
+                    return Results.Accepted();
+                }
             }
-            catch (System.Text.Json.JsonException ex)
+            catch (JsonException ex)
             {
                 logger.LogWarning(ex, "Malformed JSON in ingestion request from {RemoteIp}",
                     context.Connection.RemoteIpAddress);
                 return Results.BadRequest("Invalid JSON format");
             }
-
-            if (request == null)
-            {
-                logger.LogWarning("Null ingestion request from {RemoteIp}",
-                    context.Connection.RemoteIpAddress);
-                return Results.BadRequest("Request body is required");
-            }
-
-            if (request.Data == null || request.Data.Count == 0)
-            {
-                logger.LogWarning("Ingestion request with empty data from {RemoteIp}",
-                    context.Connection.RemoteIpAddress);
-                return Results.BadRequest("Data dictionary is required and cannot be empty");
-            }
-
-            // Build the integration event payload matching the ticket.created schema
-            var ticketId = Guid.NewGuid().ToString();
-            var now = DateTime.UtcNow.ToString("O");
-
-            var evt = new TicketCreatedEvent
-            {
-                EventType = "ticket.created",
-                Timestamp = now,
-                Source = "gatekeeper-api",
-                TicketId = ticketId,
-                CustomerEmail = request.Data.GetValueOrDefault("email")?.ToString()
-                    ?? request.Data.GetValueOrDefault("CustomerEmail")?.ToString()
-                    ?? "unknown@example.com",
-                CustomerName = request.Data.GetValueOrDefault("name")?.ToString()
-                    ?? request.Data.GetValueOrDefault("CustomerName")?.ToString()
-                    ?? "External User",
-                TenantId = request.Data.GetValueOrDefault("tenant_id")?.ToString()
-                    ?? request.Data.GetValueOrDefault("TenantId")?.ToString()
-                    ?? string.Empty,
-                Description = request.Data.GetValueOrDefault("description")?.ToString()
-                    ?? request.Data.GetValueOrDefault("body")?.ToString()
-                    ?? request.Data.GetValueOrDefault("subject")?.ToString()
-                    ?? $"New ticket via {request.Template}",
-                Priority = request.Data.GetValueOrDefault("priority")?.ToString()?.ToLowerInvariant()
-                    ?? "medium",
-                CreatedAt = now
-            };
-
-            try
-            {
-                await publisher.PublishAsync(evt, "event.ticket.created", ct);
-            }
             catch (Exception ex)
             {
                 logger.LogError(ex,
-                    "Failed to publish ticket.created event for ingestion from {RemoteIp}. " +
+                    "Failed to publish event for ingestion from {RemoteIp}. " +
                     "RabbitMQ may be unavailable.",
                     context.Connection.RemoteIpAddress);
                 return Results.StatusCode(503); // Service Unavailable — caller can retry
             }
+        }
 
-            logger.LogInformation(
-                "Published ticket.created event: TicketId={TicketId}, Template={Template}, " +
-                "RemoteIp={RemoteIp}",
-                ticketId,
-                request.Template,
-                context.Connection.RemoteIpAddress);
-
-            return Results.Accepted();
-        });
+        app.MapPost("/api/ingest", ProcessIngestionRequestAsync);
+        app.MapPost("/ingest", ProcessIngestionRequestAsync);
 
         app.Run();
     }

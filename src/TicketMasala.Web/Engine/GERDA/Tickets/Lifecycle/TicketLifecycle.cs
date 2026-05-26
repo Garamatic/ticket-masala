@@ -6,7 +6,6 @@ using TicketMasala.Domain.Exceptions;
 using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.Security;
-using TicketMasala.Web.Messaging;
 using TicketMasala.Web.Observers;
 using TicketMasala.Web.Repositories;
 
@@ -23,9 +22,14 @@ namespace TicketMasala.Web.Engine.GERDA.Tickets.Lifecycle;
 ///   2. Apply domain mutation
 ///   3. Queue persistence
 ///   4. Queue audit log
-///   5. Commit transaction
-///   6. Notify observers (after commit)
-///   7. Publish integration events (after commit, best-effort)
+///   5. Queue outbox message (atomic with domain changes)
+///   6. Commit transaction
+///   7. Notify observers (after commit)
+///
+/// Integration events are queued to the Outbox table in the same DbContext
+/// transaction. The OutboxPublisher background service drains them to RabbitMQ.
+/// This guarantees atomicity: either the ticket changes AND the event are
+/// persisted, or neither is.
 /// </summary>
 internal sealed class TicketLifecycle : ITicketLifecycle
 {

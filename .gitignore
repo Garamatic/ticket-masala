@@ -18,6 +18,9 @@ dist/
 
 # IDE files
 .vscode/
+
+# Git worktrees
+.worktrees/
 .idea/
 *.swp
 *.bak

@@ -45,6 +45,18 @@ public sealed record GerdaOutcome(
 )
 {
     /// <summary>
+    /// Names of stages that failed during processing.
+    /// Empty when all stages succeeded (or were disabled).
+    /// </summary>
+    public IReadOnlyList<string> StageFailures { get; init; } = Array.Empty<string>();
+
+    /// <summary>
+    /// True if any stage failed during processing.
+    /// Callers should check this to distinguish partial success from total success.
+    /// </summary>
+    public bool HasPartialFailure => StageFailures.Count > 0;
+
+    /// <summary>
     /// Creates a default outcome for when GERDA is disabled.
     /// </summary>
     public static GerdaOutcome Disabled(Guid ticketGuid) => new(

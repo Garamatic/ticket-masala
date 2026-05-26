@@ -749,6 +749,28 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         return false;
     }
 
+    // ═════════════════════════════════════════════════════════════════
+    // WORKFLOW POLICY INTEGRATION (delegates to ITicketWorkflowPolicy)
+    // ═════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Determines whether the given user may transition this ticket to the target status,
+    /// according to the configured workflow policy.
+    /// </summary>
+    public bool CanTransitionTo(Status targetStatus, Workflow.ITicketWorkflowPolicy policy, Workflow.ITicketWorkflowContext context)
+    {
+        return policy.CanTransition(this, targetStatus, context);
+    }
+
+    /// <summary>
+    /// Returns all statuses this ticket may transition to for the given user,
+    /// according to the configured workflow policy.
+    /// </summary>
+    public IEnumerable<Status> GetValidNextStates(Workflow.ITicketWorkflowPolicy policy, Workflow.ITicketWorkflowContext context)
+    {
+        return policy.GetValidNextStates(this, context);
+    }
+
     /// <summary>
     /// Checks if the ticket is overdue based on completion target.
     /// </summary>

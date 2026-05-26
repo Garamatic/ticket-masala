@@ -14,6 +14,7 @@ namespace TicketMasala.Tests.Services.GERDA;
 public class RuleEngineServiceTests
 {
     private readonly Mock<IDomainConfigurationService> _domainConfigMock;
+    private readonly Mock<ILogger<TicketWorkflowPolicy>> _policyLoggerMock;
     private readonly Mock<ILogger<RuleEngineService>> _loggerMock;
     private readonly Mock<ISystemClock> _clockMock;
     private readonly RuleCompilerService _compiler;
@@ -22,6 +23,7 @@ public class RuleEngineServiceTests
     public RuleEngineServiceTests()
     {
         _domainConfigMock = new Mock<IDomainConfigurationService>();
+        _policyLoggerMock = new Mock<ILogger<TicketWorkflowPolicy>>();
         _loggerMock = new Mock<ILogger<RuleEngineService>>();
         _clockMock = new Mock<ISystemClock>();
         _clockMock.Setup(c => c.UtcNow).Returns(DateTime.UtcNow);
@@ -30,11 +32,12 @@ public class RuleEngineServiceTests
         var compilerLogger = new Mock<ILogger<RuleCompilerService>>();
         _compiler = new RuleCompilerService(compilerLogger.Object, _clockMock.Object);
 
-        _service = new RuleEngineService(
+        var policy = new TicketWorkflowPolicy(
             _domainConfigMock.Object,
             _compiler,
-            _loggerMock.Object
-        );
+            _policyLoggerMock.Object);
+
+        _service = new RuleEngineService(policy, _loggerMock.Object);
     }
 
     [Fact]

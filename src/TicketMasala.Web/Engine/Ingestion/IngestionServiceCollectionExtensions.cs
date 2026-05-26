@@ -1,4 +1,5 @@
 using System.Threading.Channels;
+using TicketMasala.Domain.Workflow;
 using TicketMasala.Web.Engine.Compiler;
 using TicketMasala.Web.Engine.Ingestion.Background;
 using TicketMasala.Web.Engine.Ingestion.Validation;
@@ -36,6 +37,7 @@ public static class IngestionServiceCollectionExtensions
         // ============================================
         services.AddScoped<ICustomFieldValidationService, CustomFieldValidationService>();
         services.AddSingleton<RuleCompilerService>();
+        services.AddScoped<ITicketWorkflowPolicy, TicketWorkflowPolicy>();
         services.AddScoped<IRuleEngineService, RuleEngineService>();
 
         return services;

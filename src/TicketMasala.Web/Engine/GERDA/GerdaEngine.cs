@@ -64,76 +64,76 @@ internal sealed class GerdaEngine : IGerda
         _logger.LogInformation("GERDA: Processing ticket {TicketGuid}", ticketGuid);
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
-        try
+        var stageFailures = new List<string>();
+        var context = new GerdaExecutionContext();
+
+        foreach (var stage in _stageProvider.GetStages())
         {
-            var context = new GerdaExecutionContext();
-            foreach (var stage in _stageProvider.GetStages())
+            using var stageActivity = ActivitySource.StartActivity($"GERDA.Stage.{stage.Stage}", ActivityKind.Internal);
+            var stageStopwatch = Stopwatch.StartNew();
+            var stageName = GetStageMetricName(stage.Stage);
+
+            try
             {
-                using var stageActivity = ActivitySource.StartActivity($"GERDA.Stage.{stage.Stage}", ActivityKind.Internal);
-                var stageStopwatch = Stopwatch.StartNew();
-                var stageName = GetStageMetricName(stage.Stage);
+                if (stage.IsEnabled)
+                {
+                    await stage.ExecuteAsync(ticketGuid, context);
+                }
 
-                try
-                {
-                    if (stage.IsEnabled)
-                    {
-                        await stage.ExecuteAsync(ticketGuid, context);
-                    }
-
-                    StageExecutionsCounter.Add(1, new KeyValuePair<string, object?>("stage", stageName));
-                    stageActivity?.SetTag("stage.enabled", stage.IsEnabled);
-                    stageActivity?.SetTag("stage.result", GetStageResultTag(stage.Stage, context, stage.IsEnabled));
-                }
-                catch (Exception ex)
-                {
-                    StageFailuresCounter.Add(1, new KeyValuePair<string, object?>("stage", stageName));
-                    stageActivity?.SetTag("error", true);
-                    stageActivity?.SetTag("error.message", ex.Message);
-                    throw;
-                }
-                finally
-                {
-                    stageStopwatch.Stop();
-                    StageDurationHistogram.Record(stageStopwatch.ElapsedMilliseconds,
-                        new KeyValuePair<string, object?>("stage", stageName));
-                }
+                StageExecutionsCounter.Add(1, new KeyValuePair<string, object?>("stage", stageName));
+                stageActivity?.SetTag("stage.enabled", stage.IsEnabled);
+                stageActivity?.SetTag("stage.result", GetStageResultTag(stage.Stage, context, stage.IsEnabled));
             }
+            catch (Exception ex)
+            {
+                StageFailuresCounter.Add(1, new KeyValuePair<string, object?>("stage", stageName));
+                stageActivity?.SetTag("error", true);
+                stageActivity?.SetTag("error.message", ex.Message);
 
-            stopwatch.Stop();
-            PipelineDurationHistogram.Record(stopwatch.ElapsedMilliseconds,
-                new KeyValuePair<string, object?>("ticket_guid", ticketGuid));
-            TicketsProcessedCounter.Add(1,
-                new KeyValuePair<string, object?>("result", "success"),
-                new KeyValuePair<string, object?>("stages_executed", GetEnabledStagesTag()));
+                _logger.LogWarning(ex,
+                    "GERDA: Stage {Stage} failed for ticket {TicketGuid}; continuing with remaining stages",
+                    stage.Stage, ticketGuid);
 
-            _logger.LogInformation("GERDA: Completed processing ticket {TicketGuid} in {ElapsedMs}ms",
-                ticketGuid, stopwatch.ElapsedMilliseconds);
-
-            activity?.SetTag("result", "success");
-            activity?.SetTag("duration_ms", stopwatch.ElapsedMilliseconds);
-
-            return new GerdaOutcome(
-                ticketGuid,
-                WasGrouped: context.ParentGuid.HasValue,
-                EstimatedEffort: context.EffortPoints,
-                PriorityScore: context.PriorityScore,
-                SuggestedAgentId: context.RecommendedAgent,
-                RelatedArticles: context.SuggestedArticles
-            );
+                stageFailures.Add(stageName);
+            }
+            finally
+            {
+                stageStopwatch.Stop();
+                StageDurationHistogram.Record(stageStopwatch.ElapsedMilliseconds,
+                    new KeyValuePair<string, object?>("stage", stageName));
+            }
         }
-        catch (Exception ex)
+
+        stopwatch.Stop();
+        PipelineDurationHistogram.Record(stopwatch.ElapsedMilliseconds,
+            new KeyValuePair<string, object?>("ticket_guid", ticketGuid));
+
+        var hasPartialFailure = stageFailures.Count > 0;
+        var overallResult = hasPartialFailure ? "partial" : "success";
+
+        TicketsProcessedCounter.Add(1,
+            new KeyValuePair<string, object?>("result", overallResult),
+            new KeyValuePair<string, object?>("stages_executed", GetEnabledStagesTag()),
+            new KeyValuePair<string, object?>("failed_stages", stageFailures.Count));
+
+        _logger.LogInformation(
+            "GERDA: Completed processing ticket {TicketGuid} in {ElapsedMs}ms ({Result}, {FailedCount} stage failures)",
+            ticketGuid, stopwatch.ElapsedMilliseconds, overallResult, stageFailures.Count);
+
+        activity?.SetTag("result", overallResult);
+        activity?.SetTag("duration_ms", stopwatch.ElapsedMilliseconds);
+        activity?.SetTag("failed_stages", stageFailures.Count);
+
+        return new GerdaOutcome(
+            ticketGuid,
+            WasGrouped: context.ParentGuid.HasValue,
+            EstimatedEffort: context.EffortPoints,
+            PriorityScore: context.PriorityScore,
+            SuggestedAgentId: context.RecommendedAgent,
+            RelatedArticles: context.SuggestedArticles)
         {
-            TicketsProcessedCounter.Add(1,
-                new KeyValuePair<string, object?>("result", "failure"),
-                new KeyValuePair<string, object?>("error_type", ex.GetType().Name));
-
-            activity?.SetTag("error", true);
-            activity?.SetTag("error.message", ex.Message);
-            activity?.SetTag("error.type", ex.GetType().Name);
-
-            _logger.LogError(ex, "GERDA: Error processing ticket {TicketGuid}", ticketGuid);
-            throw;
-        }
+            StageFailures = stageFailures
+        };
     }
 
     /// <inheritdoc />

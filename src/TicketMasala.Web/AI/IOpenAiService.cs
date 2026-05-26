@@ -4,6 +4,7 @@ namespace TicketMasala.Web.AI;
 /// Service for interacting with OpenAI-compatible APIs.
 /// Provides text generation with support for multiple providers (OpenAI, OpenRouter).
 /// </summary>
+[Obsolete("Use TicketMasala.Domain.Ports.IAIGenerationPort instead. This interface will be removed in a future release.", error: false)]
 public interface IOpenAiService
 {
     /// <summary>

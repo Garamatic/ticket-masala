@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using TicketMasala.Web.AI;
+using TicketMasala.Domain.Ports;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Facades;
@@ -20,7 +20,7 @@ internal class TicketModule : ITicketModule
     private readonly ITicketContextFacade _contextFacade;
     private readonly ITicketReadService _readService;
     private readonly ISavedFilterService _savedFilterService;
-    private readonly IOpenAiService _openAiService;
+    private readonly IAIGenerationPort _aiPort;
     private readonly ILogger<TicketModule> _logger;
 
     public TicketModule(
@@ -30,7 +30,7 @@ internal class TicketModule : ITicketModule
         ITicketContextFacade contextFacade,
         ITicketReadService readService,
         ISavedFilterService savedFilterService,
-        IOpenAiService openAiService,
+        IAIGenerationPort aiPort,
         ILogger<TicketModule> logger)
     {
         _lifecycle = lifecycle;
@@ -39,7 +39,7 @@ internal class TicketModule : ITicketModule
         _contextFacade = contextFacade;
         _readService = readService;
         _savedFilterService = savedFilterService;
-        _openAiService = openAiService;
+        _aiPort = aiPort;
         _logger = logger;
     }
 
@@ -321,10 +321,14 @@ internal class TicketModule : ITicketModule
                 "Discussion:\n" +
                 string.Join("\n", commentLines);
 
-        // Note: IOpenAiService doesn't support CancellationToken yet. The ct parameter is accepted
-        // for API consistency but cannot be used until the interface is updated.
-        _ = ct; // Suppress unused parameter warning
-        return await _openAiService.GetResponseAsync(OpenAIPrompts.Summary, query).ConfigureAwait(false);
+        var result = await _aiPort.CompleteAsync(
+            new AICompletionRequest
+            {
+                Operation = "summarize",
+                Content = query,
+            }, ct).ConfigureAwait(false);
+
+        return result.Text;
     }
 
     public async Task<TicketCreateContext> GetCreateContextAsync(Guid? projectGuid, ClaimsPrincipal user, CancellationToken ct = default)

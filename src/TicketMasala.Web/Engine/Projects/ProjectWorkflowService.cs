@@ -7,8 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Ports;
 using TicketMasala.Web.Abstractions;
-using TicketMasala.Web.AI;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Observers;
 using TicketMasala.Web.Repositories;
@@ -22,7 +22,7 @@ public class ProjectWorkflowService : IProjectWorkflowService
     private readonly IProjectRepository _projectRepository;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IEnumerable<IProjectObserver> _observers;
-    private readonly IOpenAiService _openAiService;
+    private readonly IAIGenerationPort _aiPort;
     private readonly IProjectTemplateService _templateService;
     private readonly ILogger<ProjectWorkflowService> _logger;
     private readonly ISystemClock _clock;
@@ -32,7 +32,7 @@ public class ProjectWorkflowService : IProjectWorkflowService
         IProjectRepository projectRepository,
         UserManager<ApplicationUser> userManager,
         IEnumerable<IProjectObserver> observers,
-        IOpenAiService openAiService,
+        IAIGenerationPort aiPort,
         IProjectTemplateService templateService,
         ILogger<ProjectWorkflowService> logger,
         ISystemClock clock)
@@ -41,7 +41,7 @@ public class ProjectWorkflowService : IProjectWorkflowService
         _projectRepository = projectRepository;
         _userManager = userManager;
         _observers = observers;
-        _openAiService = openAiService;
+        _aiPort = aiPort;
         _templateService = templateService;
         _logger = logger;
         _clock = clock;
@@ -80,7 +80,13 @@ public class ProjectWorkflowService : IProjectWorkflowService
         string? roadmap = null;
         try
         {
-            roadmap = await _openAiService.GetResponseAsync(OpenAIPrompts.Steps, viewModel.Description);
+            var result = await _aiPort.CompleteAsync(
+                new AICompletionRequest
+                {
+                    Operation = "roadmap",
+                    Content = viewModel.Description,
+                });
+            roadmap = result.Text;
         }
         catch (Exception ex)
         {
@@ -159,7 +165,13 @@ public class ProjectWorkflowService : IProjectWorkflowService
         string? roadmap = null;
         try
         {
-            roadmap = await _openAiService.GetResponseAsync(OpenAIPrompts.Steps, ticket.Description);
+            var result = await _aiPort.CompleteAsync(
+                new AICompletionRequest
+                {
+                    Operation = "roadmap",
+                    Content = ticket.Description,
+                });
+            roadmap = result.Text;
         }
         catch (Exception ex)
         {

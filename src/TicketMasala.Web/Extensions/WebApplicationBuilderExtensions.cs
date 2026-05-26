@@ -75,7 +75,7 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddAuthorization(options =>
         {
             options.AddPolicy("AllowAnonymous", policy => policy.RequireAssertion(_ => true));
-            if (!builder.Environment.IsDevelopment())
+            if (!builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("Testing"))
             {
                 options.FallbackPolicy = new AuthorizationPolicyBuilder()
                     .RequireAuthenticatedUser()

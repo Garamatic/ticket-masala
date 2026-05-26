@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Ports;
 using TicketMasala.Web.Abstractions;
-using TicketMasala.Web.AI;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.ViewModels.Projects;
@@ -29,7 +29,7 @@ public class ProjectsApiController : ControllerBase
     private readonly IProjectWorkflowService _projectWorkflowService;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ILogger<ProjectsApiController> _logger;
-    private readonly IOpenAiService _openAiService;
+    private readonly IAIGenerationPort _aiPort;
     private readonly ISystemClock _clock;
 
     public ProjectsApiController(
@@ -37,14 +37,14 @@ public class ProjectsApiController : ControllerBase
         IProjectWorkflowService projectWorkflowService,
         UserManager<ApplicationUser> userManager,
         ILogger<ProjectsApiController> logger,
-        IOpenAiService openAiService,
+        IAIGenerationPort aiPort,
         ISystemClock clock)
     {
         _projectReadService = projectReadService;
         _projectWorkflowService = projectWorkflowService;
         _userManager = userManager;
         _logger = logger;
-        _openAiService = openAiService;
+        _aiPort = aiPort;
         _clock = clock;
     }
 
@@ -245,8 +245,13 @@ public class ProjectsApiController : ControllerBase
     {
         try
         {
-            var roadmap = await _openAiService.GetResponseAsync(OpenAIPrompts.Steps, description);
-            return Ok(ApiResponse<string>.SuccessResponse(roadmap, _clock.UtcNow, "Roadmap generated successfully"));
+            var result = await _aiPort.CompleteAsync(
+                new AICompletionRequest
+                {
+                    Operation = "roadmap",
+                    Content = description,
+                });
+            return Ok(ApiResponse<string>.SuccessResponse(result.Text, _clock.UtcNow, "Roadmap generated successfully"));
         }
         catch (Exception ex)
         {

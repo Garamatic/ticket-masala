@@ -144,6 +144,12 @@ builder.Services.AddHttpClient("OpenRouter", client =>
         TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
 
 // Register OpenAI service for explainability
+// AI Generation Port (Domain-facing, provider-agnostic)
+builder.Services.AddTransient<TicketMasala.Domain.Ports.IAIGenerationPort, TicketMasala.Web.AI.OpenAIGenerationAdapter>();
+builder.Services.Configure<TicketMasala.Web.AI.AIOperationRegistry>(
+    builder.Configuration.GetSection("AI:Operations"));
+
+// Legacy OpenAI service (deprecated — delegates to the new port)
 builder.Services.AddTransient<TicketMasala.Web.AI.IOpenAiService, TicketMasala.Web.AI.OpenAiService>();
 builder.Services.AddScoped<TicketMasala.Domain.Services.IExplainabilityService, TicketMasala.Web.Engine.GERDA.Explainability.ExplainabilityService>();
 

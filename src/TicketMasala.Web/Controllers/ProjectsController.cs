@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Entities;
-using TicketMasala.Web.AI;
+using TicketMasala.Domain.Ports;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Engine.Ingestion;
@@ -22,18 +22,18 @@ public class ProjectsController : Controller
 {
     private readonly IProjectReadService _projectReadService;
     private readonly IProjectWorkflowService _projectWorkflowService;
-    private readonly IOpenAiService _openAiService;
+    private readonly IAIGenerationPort _aiPort;
     private readonly ILogger<ProjectsController> _logger;
 
     public ProjectsController(
         IProjectReadService projectReadService,
         IProjectWorkflowService projectWorkflowService,
-        IOpenAiService openAiService,
+        IAIGenerationPort aiPort,
         ILogger<ProjectsController> logger)
     {
         _projectReadService = projectReadService;
         _projectWorkflowService = projectWorkflowService;
-        _openAiService = openAiService;
+        _aiPort = aiPort;
         _logger = logger;
     }
 
@@ -365,8 +365,13 @@ public class ProjectsController : Controller
 
         try
         {
-            var roadmap = await _openAiService.GetResponseAsync(OpenAIPrompts.Normal, fullPrompt);
-            return Json(new { success = true, roadmap });
+            var result = await _aiPort.CompleteAsync(
+                new AICompletionRequest
+                {
+                    Operation = "roadmap",
+                    Content = fullPrompt,
+                });
+            return Json(new { success = true, roadmap = result.Text });
         }
         catch (Exception ex)
         {

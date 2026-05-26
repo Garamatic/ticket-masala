@@ -5,8 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Entities;
+using TicketMasala.Domain.Ports;
 using TicketMasala.Web.Abstractions;
-using TicketMasala.Web.AI;
 using TicketMasala.Web.Data;
 
 namespace TicketMasala.Web.Engine.Projects;
@@ -14,18 +14,18 @@ namespace TicketMasala.Web.Engine.Projects;
 public class ProjectTemplateService : IProjectTemplateService
 {
     private readonly MasalaDbContext _context;
-    private readonly IOpenAiService _openAiService;
+    private readonly IAIGenerationPort _aiPort;
     private readonly ISystemClock _clock;
     private readonly ILogger<ProjectTemplateService> _logger;
 
     public ProjectTemplateService(
         MasalaDbContext context,
-        IOpenAiService openAiService,
+        IAIGenerationPort aiPort,
         ISystemClock clock,
         ILogger<ProjectTemplateService> logger)
     {
         _context = context;
-        _openAiService = openAiService;
+        _aiPort = aiPort;
         _clock = clock;
         _logger = logger;
     }
@@ -44,7 +44,13 @@ public class ProjectTemplateService : IProjectTemplateService
                 string? summary = null;
                 try
                 {
-                    summary = await _openAiService.GetResponseAsync(OpenAIPrompts.Summary, templateTicket.Description);
+                    var result = await _aiPort.CompleteAsync(
+                        new AICompletionRequest
+                        {
+                            Operation = "summarize",
+                            Content = templateTicket.Description,
+                        });
+                    summary = result.Text;
                 }
                 catch (Exception ex)
                 {

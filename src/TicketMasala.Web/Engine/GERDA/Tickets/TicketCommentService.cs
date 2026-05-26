@@ -10,6 +10,7 @@ namespace TicketMasala.Web.Engine.GERDA.Tickets;
 /// Service responsible for ticket comment operations.
 /// Handles adding comments, notifications, and audit logging.
 /// </summary>
+[Obsolete("Use ITicketLifecycle and command records instead. This interface will be removed in a future release.", false)]
 public interface ITicketCommentService
 {
     /// <summary>

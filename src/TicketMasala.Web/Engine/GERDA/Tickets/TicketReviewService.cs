@@ -10,6 +10,7 @@ namespace TicketMasala.Web.Engine.GERDA.Tickets;
 /// Service responsible for ticket quality review operations.
 /// Handles requesting and submitting quality reviews.
 /// </summary>
+[Obsolete("Use ITicketLifecycle and command records instead. This interface will be removed in a future release.", false)]
 public interface ITicketReviewService
 {
     /// <summary>

@@ -11,6 +11,7 @@ namespace TicketMasala.Web.Engine.GERDA.Tickets;
 /// Service responsible for updating existing tickets.
 /// Handles PII scrubbing, persistence, notifications, and audit logging.
 /// </summary>
+[Obsolete("Use ITicketLifecycle and command records instead. This interface will be removed in a future release.", false)]
 public interface ITicketUpdateService
 {
     /// <summary>

@@ -2,38 +2,54 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TicketMasala.Domain.Common;
 using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.Engine.GERDA.Tickets.Lifecycle;
 
 namespace TicketMasala.Web.Controllers;
 
 [Authorize]
 public class TicketWorkflowController : Controller
 {
-    private readonly ITicketWorkflowService _ticketWorkflowService;
+    private readonly ITicketLifecycle _ticketLifecycle;
     private readonly ITicketReadService _ticketReadService;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<TicketWorkflowController> _logger;
 
     public TicketWorkflowController(
-        ITicketWorkflowService ticketWorkflowService,
+        ITicketLifecycle ticketLifecycle,
         ITicketReadService ticketReadService,
         IHttpContextAccessor httpContextAccessor,
         ILogger<TicketWorkflowController> logger)
     {
-        _ticketWorkflowService = ticketWorkflowService;
+        _ticketLifecycle = ticketLifecycle;
         _ticketReadService = ticketReadService;
         _httpContextAccessor = httpContextAccessor;
         _logger = logger;
+    }
+
+    private string? GetCurrentUserId()
+    {
+        return _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    }
+
+    private TicketContext CreateContext()
+    {
+        var userId = GetCurrentUserId();
+        if (string.IsNullOrEmpty(userId))
+            throw new InvalidOperationException("User ID not found in claims.");
+        return new TicketContext(userId);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AssignToRecommended(Guid ticketGuid, string agentId)
     {
-        var success = await _ticketWorkflowService.AssignTicketAsync(ticketGuid, agentId);
+        var result = await _ticketLifecycle.ExecuteAsync(
+            new AssignTicketCommand(ticketGuid, agentId),
+            CreateContext());
 
-        if (!success)
+        if (!result.Success)
         {
-            TempData["Error"] = "Failed to assign ticket. Please try again.";
+            TempData["Error"] = result.ErrorMessage ?? "Failed to assign ticket. Please try again.";
             return RedirectToAction("Index", "TicketSearch");
         }
 
@@ -57,13 +73,24 @@ public class TicketWorkflowController : Controller
             return RedirectToAction("Detail", "Ticket", new { id });
         }
 
-        var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var userId = GetCurrentUserId();
         if (string.IsNullOrEmpty(userId))
             return Unauthorized();
 
         try
         {
-            await _ticketWorkflowService.AddCommentAsync(id, commentBody, isInternal, userId);
+            var result = await _ticketLifecycle.ExecuteAsync(
+                new AddCommentCommand(id, commentBody, isInternal),
+                new TicketContext(userId));
+
+            if (!result.Success)
+            {
+                _logger.LogWarning("AddComment failed for ticket {TicketId}: {Error}", id, result.ErrorMessage);
+                if (Request.Headers.ContainsKey("HX-Request"))
+                    return StatusCode(500, result.ErrorMessage ?? "Error adding comment");
+                TempData["Error"] = result.ErrorMessage ?? "Failed to add comment";
+                return RedirectToAction("Detail", "Ticket", new { id });
+            }
 
             if (Request.Headers.ContainsKey("HX-Request"))
             {
@@ -94,11 +121,18 @@ public class TicketWorkflowController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> RequestReview(Guid id)
     {
-        var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var userId = GetCurrentUserId();
         if (string.IsNullOrEmpty(userId))
             return Unauthorized();
 
-        await _ticketWorkflowService.RequestReviewAsync(id, userId);
+        var result = await _ticketLifecycle.ExecuteAsync(
+            new RequestReviewCommand(id),
+            new TicketContext(userId));
+
+        if (!result.Success)
+        {
+            _logger.LogWarning("RequestReview failed for ticket {TicketId}: {Error}", id, result.ErrorMessage);
+        }
 
         if (Request.Headers.ContainsKey("HX-Request"))
         {
@@ -113,11 +147,18 @@ public class TicketWorkflowController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SubmitReview(Guid id, int score, string feedback, bool approve)
     {
-        var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var userId = GetCurrentUserId();
         if (string.IsNullOrEmpty(userId))
             return Unauthorized();
 
-        await _ticketWorkflowService.SubmitReviewAsync(id, score, feedback, approve, userId);
+        var result = await _ticketLifecycle.ExecuteAsync(
+            new SubmitReviewCommand(id, score, feedback, approve),
+            new TicketContext(userId));
+
+        if (!result.Success)
+        {
+            _logger.LogWarning("SubmitReview failed for ticket {TicketId}: {Error}", id, result.ErrorMessage);
+        }
 
         if (Request.Headers.ContainsKey("HX-Request"))
         {

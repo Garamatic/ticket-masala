@@ -3,6 +3,7 @@ using TicketMasala.Domain.Services;
 using TicketMasala.Web.Engine.GERDA.BackgroundJobs;
 using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Engine.GERDA.Tickets.Domain;
+using TicketMasala.Web.Engine.GERDA.Tickets.Lifecycle;
 using TicketMasala.Web.Engine.Ingestion;
 using TicketMasala.Web.Handlers.DomainEvents;
 using TicketMasala.Web.Infrastructure.DomainEvents;
@@ -79,6 +80,9 @@ public static class TicketServiceCollectionExtensions
         services.AddScoped<ITicketCreationService, TicketCreationService>();
         services.AddScoped<ITicketUpdateService, TicketUpdateService>();
         services.AddScoped<ITicketAssignmentFacade, TicketAssignmentFacade>();
+
+        // Deep Module: ITicketLifecycle (replaces shallow workflow services)
+        services.AddTicketLifecycle();
 
         // Specialized Services
         services.AddScoped<TicketDispatchService>();

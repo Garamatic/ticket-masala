@@ -20,6 +20,7 @@ namespace TicketMasala.Web.Engine.GERDA.Tickets;
 /// This is the canonical path for resolving tickets; prefer this over direct
 /// repository mutation or ad-hoc resolution logic.
 /// </remarks>
+[Obsolete("Use ITicketLifecycle and command records instead. This interface will be removed in a future release.", false)]
 public interface ITicketResolutionService
 {
     /// <summary>

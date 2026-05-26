@@ -18,6 +18,7 @@ namespace TicketMasala.Web.Engine.GERDA.Tickets;
 /// TicketDispatchService and observers/auditing. Domain assignment logic
 /// should be in the domain layer.
 /// </remarks>
+[Obsolete("Use ITicketLifecycle and command records instead. This interface will be removed in a future release.", false)]
 public interface ITicketAssignmentFacade
 {
     /// <summary>

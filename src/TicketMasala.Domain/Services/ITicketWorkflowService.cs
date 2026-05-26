@@ -5,6 +5,7 @@ namespace TicketMasala.Domain.Services;
 /// <summary>
 /// Core ticket workflow operations available to all services.
 /// </summary>
+[Obsolete("Use ITicketLifecycle and command records instead. This interface will be removed in a future release.", false)]
 public interface ITicketWorkflowService
 {
     Task<Ticket> CreateTicketAsync(

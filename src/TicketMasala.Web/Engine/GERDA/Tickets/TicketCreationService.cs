@@ -15,6 +15,7 @@ namespace TicketMasala.Web.Engine.GERDA.Tickets;
 /// Handles PII scrubbing, customer lookup, assignment, project association,
 /// and initial notifications.
 /// </summary>
+[Obsolete("Use ITicketLifecycle and command records instead. This interface will be removed in a future release.", false)]
 public interface ITicketCreationService
 {
     /// <summary>

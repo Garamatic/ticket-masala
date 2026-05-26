@@ -8,6 +8,7 @@ namespace TicketMasala.Web.Engine.GERDA.Tickets;
 /// <summary>
 /// Service responsible for ticket time logging operations.
 /// </summary>
+[Obsolete("Use ITicketLifecycle and command records instead. This interface will be removed in a future release.", false)]
 public interface ITicketTimeLoggingService
 {
     /// <summary>

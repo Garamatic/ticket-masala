@@ -1,5 +1,4 @@
 using TicketMasala.Domain.Events;
-using TicketMasala.Domain.Services;
 using TicketMasala.Web.Engine.GERDA.BackgroundJobs;
 using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Engine.GERDA.Tickets.Domain;
@@ -67,22 +66,22 @@ public static class TicketServiceCollectionExtensions
         // Write/Command Services
         services.AddScoped<ITicketCreateService, TicketCreateService>();
         services.AddScoped<ITicketEditService, TicketEditService>();
-        services.AddScoped<ITicketWorkflowService, TicketWorkflowService>();
         services.AddScoped<ITicketBatchService, TicketBatchService>();
 
-        // Specialized Services (Phase 1: extracted from TicketWorkflowService)
-        services.AddScoped<ITicketResolutionService, TicketResolutionService>();
-        services.AddScoped<ITicketCommentService, TicketCommentService>();
-        services.AddScoped<ITicketReviewService, TicketReviewService>();
-        services.AddScoped<ITicketTimeLoggingService, TicketTimeLoggingService>();
-
-        // Specialized Services (Phase 2: core workflow extraction)
-        services.AddScoped<ITicketCreationService, TicketCreationService>();
-        services.AddScoped<ITicketUpdateService, TicketUpdateService>();
-        services.AddScoped<ITicketAssignmentFacade, TicketAssignmentFacade>();
-
-        // Deep Module: ITicketLifecycle (replaces shallow workflow services)
+        // Deep Module: ITicketLifecycle (replaces all shallow workflow services below)
         services.AddTicketLifecycle();
+
+        // [OBSOLETE] Shallow workflow services — kept for reference during migration.
+        // Will be removed in a future release. All new code should use ITicketLifecycle.
+        // TODO: Remove these registrations once confirm no runtime regressions.
+        // services.AddScoped<ITicketWorkflowService, TicketWorkflowService>();
+        // services.AddScoped<ITicketResolutionService, TicketResolutionService>();
+        // services.AddScoped<ITicketCommentService, TicketCommentService>();
+        // services.AddScoped<ITicketReviewService, TicketReviewService>();
+        // services.AddScoped<ITicketTimeLoggingService, TicketTimeLoggingService>();
+        // services.AddScoped<ITicketCreationService, TicketCreationService>();
+        // services.AddScoped<ITicketUpdateService, TicketUpdateService>();
+        // services.AddScoped<ITicketAssignmentFacade, TicketAssignmentFacade>();
 
         // Specialized Services
         services.AddScoped<TicketDispatchService>();

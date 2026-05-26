@@ -1,11 +1,12 @@
 using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace GatekeeperApi;
 
 /// <summary>
 /// Minimal API for ingesting external tickets.
-/// This is a lightweight entry point that delegates to the main TicketMasala system.
-/// For microservices deployment, this can be scaled independently.
+/// Publishes events directly to RabbitMQ for durable, scalable processing.
 /// </summary>
 public class Program
 {
@@ -13,13 +14,8 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Register the ingestion queue and worker
-        builder.Services.AddSingleton<IngestionQueue<IngestionRequest>>();
-        builder.Services.AddHostedService<IngestionWorker>();
-
-        // Register the ingestion processor and HTTP client with resilience
-        builder.Services.AddHttpClient<IIngestionProcessor, HttpIngestionProcessor>()
-            .AddStandardResilienceHandler();
+        // Register the RabbitMQ publisher for direct event publishing
+        builder.Services.AddSingleton<RabbitMqPublisher>();
 
         var app = builder.Build();
 
@@ -31,7 +27,6 @@ public class Program
         }
 
         // Configure request size limit (10MB to prevent abuse)
-        // FileBufferingReadStream buffers large requests to disk instead of memory
         app.Use(async (context, next) =>
         {
             var originalBody = context.Request.Body;
@@ -50,7 +45,11 @@ public class Program
             }
         });
 
-        app.MapPost("/api/ingest", async (HttpContext context, IngestionQueue<IngestionRequest> queue, ILogger<Program> logger) =>
+        app.MapPost("/api/ingest", async (
+            HttpContext context,
+            RabbitMqPublisher publisher,
+            ILogger<Program> logger,
+            CancellationToken ct) =>
         {
             if (!context.Request.Headers.TryGetValue("X-Api-Key", out var extractedValue) ||
                 extractedValue != apiKey)
@@ -63,7 +62,7 @@ public class Program
             IngestionRequest? request;
             try
             {
-                request = await context.Request.ReadFromJsonAsync<IngestionRequest>();
+                request = await context.Request.ReadFromJsonAsync<IngestionRequest>(ct);
             }
             catch (System.Text.Json.JsonException ex)
             {
@@ -86,18 +85,52 @@ public class Program
                 return Results.BadRequest("Data dictionary is required and cannot be empty");
             }
 
-            var enqueued = queue.TryEnqueue(request);
-            if (!enqueued)
+            // Build the integration event payload matching the ticket.created schema
+            var ticketId = Guid.NewGuid().ToString();
+            var now = DateTime.UtcNow.ToString("O");
+
+            var evt = new TicketCreatedEvent
             {
-                logger.LogError("Queue full - ingestion request dropped from {RemoteIp}",
+                EventType = "ticket.created",
+                Timestamp = now,
+                Source = "gatekeeper-api",
+                TicketId = ticketId,
+                CustomerEmail = request.Data.GetValueOrDefault("email")?.ToString()
+                    ?? request.Data.GetValueOrDefault("CustomerEmail")?.ToString()
+                    ?? "unknown@example.com",
+                CustomerName = request.Data.GetValueOrDefault("name")?.ToString()
+                    ?? request.Data.GetValueOrDefault("CustomerName")?.ToString()
+                    ?? "External User",
+                TenantId = request.Data.GetValueOrDefault("tenant_id")?.ToString()
+                    ?? request.Data.GetValueOrDefault("TenantId")?.ToString()
+                    ?? string.Empty,
+                Description = request.Data.GetValueOrDefault("description")?.ToString()
+                    ?? request.Data.GetValueOrDefault("body")?.ToString()
+                    ?? request.Data.GetValueOrDefault("subject")?.ToString()
+                    ?? $"New ticket via {request.Template}",
+                Priority = request.Data.GetValueOrDefault("priority")?.ToString()?.ToLowerInvariant()
+                    ?? "medium",
+                CreatedAt = now
+            };
+
+            try
+            {
+                await publisher.PublishAsync(evt, "event.ticket.created", ct);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex,
+                    "Failed to publish ticket.created event for ingestion from {RemoteIp}. " +
+                    "RabbitMQ may be unavailable.",
                     context.Connection.RemoteIpAddress);
-                return Results.StatusCode(503); // Service Unavailable
+                return Results.StatusCode(503); // Service Unavailable — caller can retry
             }
 
             logger.LogInformation(
-                "Ingestion request enqueued: Template={Template}, Keys={KeyCount}, RemoteIp={RemoteIp}",
+                "Published ticket.created event: TicketId={TicketId}, Template={Template}, " +
+                "RemoteIp={RemoteIp}",
+                ticketId,
                 request.Template,
-                request.Data.Count,
                 context.Connection.RemoteIpAddress);
 
             return Results.Accepted();
@@ -114,4 +147,21 @@ public class IngestionRequest
 {
     public string Template { get; set; } = "default";
     public Dictionary<string, object> Data { get; set; } = new();
+}
+
+/// <summary>
+/// Flat snake_case event matching integration-contracts schema for ticket.created.
+/// </summary>
+public record TicketCreatedEvent
+{
+    public string EventType { get; init; } = "ticket.created";
+    public string Timestamp { get; init; } = string.Empty;
+    public string Source { get; init; } = "gatekeeper-api";
+    public string TicketId { get; init; } = string.Empty;
+    public string CustomerEmail { get; init; } = string.Empty;
+    public string CustomerName { get; init; } = string.Empty;
+    public string TenantId { get; init; } = string.Empty;
+    public string Description { get; init; } = string.Empty;
+    public string Priority { get; init; } = "medium";
+    public string CreatedAt { get; init; } = string.Empty;
 }

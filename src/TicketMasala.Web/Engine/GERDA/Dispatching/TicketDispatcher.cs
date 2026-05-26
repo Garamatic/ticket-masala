@@ -4,43 +4,36 @@ using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.GERDA.Models;
 using TicketMasala.Web.Engine.GERDA.Tickets.Lifecycle;
+using TicketMasala.Web.Repositories;
 
 namespace TicketMasala.Web.Engine.GERDA.Dispatching;
 
 /// <summary>
-/// Deep module implementation for ticket dispatching.
-///
-/// Consolidates recommendation scoring, auto-dispatch policy, and model retraining
-/// behind a single command-oriented interface.
-///
-/// Key invariants:
-/// - Recommendations always include multi-factor scoring (affinity + workload + skill + geo + language)
-/// - Auto-dispatch checks policy threshold before assignment
-/// - Assignment is delegated to ITicketLifecycle (never duplicated here)
-/// - All DB queries are batched (no N+1)
+/// Deep module for ticket dispatching. Consolidates recommendation scoring,
+/// auto-dispatch policy, and model retraining behind a single interface.
 /// </summary>
 public class TicketDispatcher : ITicketDispatcher
 {
     private readonly MasalaDbContext _context;
     private readonly GerdaConfig _config;
-    private readonly IAutoDispatchPolicy _autoDispatchPolicy;
     private readonly IAffinityScorer _affinityScorer;
     private readonly ITicketLifecycle _ticketLifecycle;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<TicketDispatcher> _logger;
 
     public TicketDispatcher(
         MasalaDbContext context,
         GerdaConfig config,
-        IAutoDispatchPolicy autoDispatchPolicy,
         IAffinityScorer affinityScorer,
         ITicketLifecycle ticketLifecycle,
+        IUnitOfWork unitOfWork,
         ILogger<TicketDispatcher> logger)
     {
         _context = context;
         _config = config;
-        _autoDispatchPolicy = autoDispatchPolicy;
         _affinityScorer = affinityScorer;
         _ticketLifecycle = ticketLifecycle;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
@@ -238,13 +231,14 @@ public class TicketDispatcher : ITicketDispatcher
             return DispatcherResult.Fail(assignResult.ErrorMessage ?? "Assignment failed");
         }
 
-        var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.Guid == command.TicketGuid, cancellationToken);
+        var ticket = await _unitOfWork.Tickets.GetByIdAsync(command.TicketGuid, includeRelations: false);
         if (ticket != null)
         {
             ticket.GerdaTags = string.IsNullOrEmpty(ticket.GerdaTags)
                 ? "AI-Dispatched"
                 : $"{ticket.GerdaTags},AI-Dispatched";
-            await _context.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.Tickets.UpdateAsync(ticket);
+            await _unitOfWork.CommitAsync(cancellationToken);
         }
 
         _logger.LogInformation(

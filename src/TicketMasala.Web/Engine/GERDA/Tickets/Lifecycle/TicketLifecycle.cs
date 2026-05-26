@@ -9,27 +9,12 @@ using TicketMasala.Web.Engine.Security;
 using TicketMasala.Web.Observers;
 using TicketMasala.Web.Repositories;
 
-using IntegrationEvent = TicketMasala.Web.Messaging.Events.TicketResolvedEvent;
-
 namespace TicketMasala.Web.Engine.GERDA.Tickets.Lifecycle;
 
 /// <summary>
-/// Deep module implementation of ticket lifecycle operations.
-///
-/// Hides all persistence, audit, observer, and event publishing choreography.
-/// Every command flows through the same invariant pipeline:
-///   1. Load entity (or create)
-///   2. Apply domain mutation
-///   3. Queue persistence
-///   4. Queue audit log
-///   5. Queue outbox message (atomic with domain changes)
-///   6. Commit transaction
-///   7. Notify observers (after commit)
-///
-/// Integration events are queued to the Outbox table in the same DbContext
-/// transaction. The OutboxPublisher background service drains them to RabbitMQ.
-/// This guarantees atomicity: either the ticket changes AND the event are
-/// persisted, or neither is.
+/// Deep module for ticket lifecycle operations. All commands flow through:
+/// load → mutate → queue persistence/audit/outbox → commit → notify observers.
+/// Outbox messages are queued atomically within the same DbContext transaction.
 /// </summary>
 internal sealed class TicketLifecycle : ITicketLifecycle
 {
@@ -59,14 +44,23 @@ internal sealed class TicketLifecycle : ITicketLifecycle
         ISystemClock clock,
         ILogger<TicketLifecycle> logger)
     {
-        _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
-        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
-        _auditService = auditService ?? throw new ArgumentNullException(nameof(auditService));
-        _ticketObservers = ticketObservers ?? throw new ArgumentNullException(nameof(ticketObservers));
-        _commentObservers = commentObservers ?? throw new ArgumentNullException(nameof(commentObservers));
-        _piiScrubber = piiScrubber ?? throw new ArgumentNullException(nameof(piiScrubber));
-        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ArgumentNullException.ThrowIfNull(unitOfWork);
+        ArgumentNullException.ThrowIfNull(userRepository);
+        ArgumentNullException.ThrowIfNull(auditService);
+        ArgumentNullException.ThrowIfNull(ticketObservers);
+        ArgumentNullException.ThrowIfNull(commentObservers);
+        ArgumentNullException.ThrowIfNull(piiScrubber);
+        ArgumentNullException.ThrowIfNull(clock);
+        ArgumentNullException.ThrowIfNull(logger);
+
+        _unitOfWork = unitOfWork;
+        _userRepository = userRepository;
+        _auditService = auditService;
+        _ticketObservers = ticketObservers;
+        _commentObservers = commentObservers;
+        _piiScrubber = piiScrubber;
+        _clock = clock;
+        _logger = logger;
     }
 
     public async Task<TicketResult> ExecuteAsync(
@@ -103,9 +97,7 @@ internal sealed class TicketLifecycle : ITicketLifecycle
         }
     }
 
-    // ═════════════════════════════════════════════════════════════════
-    // COMMAND HANDLERS
-    // ═════════════════════════════════════════════════════════════════
+    // Command handlers
 
     private async Task<TicketResult> HandleCreateAsync(
         CreateTicketCommand cmd,
@@ -121,14 +113,10 @@ internal sealed class TicketLifecycle : ITicketLifecycle
         if (!string.IsNullOrWhiteSpace(cmd.ResponsibleId))
             responsible = await _userRepository.GetEmployeeByIdAsync(cmd.ResponsibleId);
 
-        var title = description.Length > 50 ? description[..47] + "..." : description;
-
         var ticket = Ticket.CreateFromPortal(
             description,
             cmd.CustomerId,
             completionTarget: cmd.CompletionTarget ?? _clock.UtcNow.AddDays(14));
-
-        ticket.Title = title;
         if (responsible != null)
         {
             ticket.Responsible = responsible;
@@ -149,8 +137,8 @@ internal sealed class TicketLifecycle : ITicketLifecycle
             }
         }
 
-        await AuditAsync(ticket.Guid, "Created", ctx.UserId, ct);
-        await CommitAsync(ct);
+        await _auditService.LogActionAsync(ticket.Guid, "Created", ctx.UserId);
+        await _unitOfWork.CommitAsync(ct);
         await NotifyTicketObserversAsync(ticket, responsible, ct);
 
         return TicketResult.Ok(ticket);
@@ -168,10 +156,10 @@ internal sealed class TicketLifecycle : ITicketLifecycle
         ticket.Resolve(cmd.ResolutionNotes, cmd.BillableAmount, ctx.UserId);
 
         await _unitOfWork.Tickets.UpdateAsync(ticket);
-        await AuditAsync(ticket.Guid, "Resolved", ctx.UserId, ct,
+        await _auditService.LogActionAsync(ticket.Guid, "Resolved", ctx.UserId,
             newValue: $"Amount: {cmd.BillableAmount}, Notes: {cmd.ResolutionNotes}");
         await QueueResolvedEventAsync(ticket, cmd.ResolutionNotes, ct);
-        await CommitAsync(ct);
+        await _unitOfWork.CommitAsync(ct);
         await NotifyTicketObserversAsync(ticket, ct: ct);
 
         return TicketResult.Ok(ticket);
@@ -197,10 +185,11 @@ internal sealed class TicketLifecycle : ITicketLifecycle
             Ticket = ticket
         };
 
+        ticket.AddComment(comment);
         await _unitOfWork.AddCommentAsync(comment);
-        await AuditAsync(ticket.Guid, "Commented", ctx.UserId, ct,
+        await _auditService.LogActionAsync(ticket.Guid, "Commented", ctx.UserId,
             newValue: cmd.IsInternal ? "Internal Note" : "Public Reply");
-        await CommitAsync(ct);
+        await _unitOfWork.CommitAsync(ct);
         await NotifyCommentObserversAsync(ticket, comment, ct);
 
         return TicketResult.Ok(comment);
@@ -231,8 +220,8 @@ internal sealed class TicketLifecycle : ITicketLifecycle
         };
 
         await _unitOfWork.AddTimeLogAsync(timeLog);
-        await AuditAsync(ticket.Guid, "TimeLogged", ctx.UserId, ct, newValue: $"{cmd.Hours} hours");
-        await CommitAsync(ct);
+        await _auditService.LogActionAsync(ticket.Guid, "TimeLogged", ctx.UserId, newValue: $"{cmd.Hours} hours");
+        await _unitOfWork.CommitAsync(ct);
 
         return TicketResult.Ok(timeLog);
     }
@@ -259,8 +248,8 @@ internal sealed class TicketLifecycle : ITicketLifecycle
             ticket.ProjectGuid = cmd.ProjectGuid.Value;
 
         await _unitOfWork.Tickets.UpdateAsync(ticket);
-        await AuditAsync(ticket.Guid, "Updated", ctx.UserId, ct);
-        await CommitAsync(ct);
+        await _auditService.LogActionAsync(ticket.Guid, "Updated", ctx.UserId);
+        await _unitOfWork.CommitAsync(ct);
         await NotifyTicketObserversAsync(ticket, ct: ct);
 
         return TicketResult.Ok(ticket);
@@ -287,9 +276,9 @@ internal sealed class TicketLifecycle : ITicketLifecycle
             ticket.ProjectGuid = cmd.ProjectGuid.Value;
 
         await _unitOfWork.Tickets.UpdateAsync(ticket);
-        await AuditAsync(ticket.Guid, "Assigned", ctx.UserId, ct,
+        await _auditService.LogActionAsync(ticket.Guid, "Assigned", ctx.UserId,
             newValue: $"Agent: {cmd.AgentId}, Project: {cmd.ProjectGuid}");
-        await CommitAsync(ct);
+        await _unitOfWork.CommitAsync(ct);
         await NotifyTicketObserversAsync(ticket, assigned, ct);
 
         return TicketResult.Ok(ticket);
@@ -307,8 +296,8 @@ internal sealed class TicketLifecycle : ITicketLifecycle
         ticket.SetReviewStatus(ReviewStatus.Pending);
 
         await _unitOfWork.Tickets.UpdateAsync(ticket);
-        await AuditAsync(ticket.Guid, "ReviewRequested", ctx.UserId, ct);
-        await CommitAsync(ct);
+        await _auditService.LogActionAsync(ticket.Guid, "ReviewRequested", ctx.UserId);
+        await _unitOfWork.CommitAsync(ct);
 
         return TicketResult.Ok(ticket);
     }
@@ -337,9 +326,9 @@ internal sealed class TicketLifecycle : ITicketLifecycle
 
         await _unitOfWork.AddQualityReviewAsync(review);
         await _unitOfWork.Tickets.UpdateAsync(ticket);
-        await AuditAsync(ticket.Guid, cmd.Approved ? "ReviewApproved" : "ReviewRejected", ctx.UserId, ct,
+        await _auditService.LogActionAsync(ticket.Guid, cmd.Approved ? "ReviewApproved" : "ReviewRejected", ctx.UserId,
             propertyName: "QualityReview", newValue: cmd.Feedback);
-        await CommitAsync(ct);
+        await _unitOfWork.CommitAsync(ct);
 
         return TicketResult.Ok(ticket);
     }
@@ -356,9 +345,9 @@ internal sealed class TicketLifecycle : ITicketLifecycle
         ticket.TransitionTo(cmd.NewStatus, ctx.UserId);
 
         await _unitOfWork.Tickets.UpdateAsync(ticket);
-        await AuditAsync(ticket.Guid, "StatusChanged", ctx.UserId, ct,
+        await _auditService.LogActionAsync(ticket.Guid, "StatusChanged", ctx.UserId,
             propertyName: "TicketStatus", newValue: cmd.NewStatus.ToString());
-        await CommitAsync(ct);
+        await _unitOfWork.CommitAsync(ct);
         await NotifyTicketObserversAsync(ticket, null, ct);
 
         return TicketResult.Ok(ticket);
@@ -369,6 +358,8 @@ internal sealed class TicketLifecycle : ITicketLifecycle
         TicketContext ctx,
         CancellationToken ct)
     {
+        // TODO: Each HandleAssignAsync commits independently. For true batch atomicity,
+        // extract the core assignment logic into a non-committing helper and commit once here.
         var failures = new List<string>();
         int successCount = 0;
 
@@ -396,20 +387,7 @@ internal sealed class TicketLifecycle : ITicketLifecycle
         };
     }
 
-    // ═════════════════════════════════════════════════════════════════
-    // SHARED CHOREOGRAPHY
-    // ═════════════════════════════════════════════════════════════════
-
-    private Task AuditAsync(Guid ticketId, string action, string userId, CancellationToken ct,
-        string? propertyName = null, string? oldValue = null, string? newValue = null)
-    {
-        return _auditService.LogActionAsync(ticketId, action, userId, propertyName, oldValue, newValue);
-    }
-
-    private async Task CommitAsync(CancellationToken ct)
-    {
-        await _unitOfWork.CommitAsync(ct);
-    }
+    // Shared choreography
 
     private async Task NotifyTicketObserversAsync(Ticket ticket, Employee? assignee = null, CancellationToken ct = default)
     {
@@ -464,7 +442,7 @@ internal sealed class TicketLifecycle : ITicketLifecycle
     {
         try
         {
-            var evt = new IntegrationEvent
+            var evt = new TicketMasala.Web.Messaging.Events.TicketResolvedEvent
             {
                 TicketId = ticket.Guid.ToString(),
                 CustomerEmail = ticket.Customer?.Email ?? string.Empty,

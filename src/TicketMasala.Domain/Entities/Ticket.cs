@@ -5,20 +5,8 @@ using TicketMasala.Domain.Exceptions;
 
 namespace TicketMasala.Domain.Entities;
 
-/// <summary>
-/// Represents a work item (ticket) in the system.
-/// This is the core domain entity for tracking and managing work.
-/// Now implements Rich Domain Model pattern with encapsulated behavior.
-/// </summary>
 public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
 {
-    // ═════════════════════════════════════════════════════════════════
-    // DOMAIN PROPERTIES
-    // ═════════════════════════════════════════════════════════════════
-    // Note: Properties use public setters for EF Core compatibility.
-    // Domain methods (SetDomain, UpdateTitle, TransitionTo, etc.) should be
-    // used for business operations to ensure validation and event raising.
-
     public TicketType? TicketType { get; set; }
 
     public string Description { get; set; } = string.Empty;
@@ -26,7 +14,6 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
     public DateTime? CompletionTarget { get; set; }
     public DateTime? CompletionDate { get; set; }
 
-    // GERDA AI fields
     public int EstimatedEffortPoints { get; set; } = 0;
 
     /// <summary>
@@ -39,83 +26,40 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
     [StringLength(1000)]
     public string? GerdaTags { get; set; } // Comma-separated: "AI-Dispatched,Spam-Cluster"
 
-    // GERDA Dispatch fields
     public string? RecommendedProjectName { get; set; }
     public string? CurrentProjectName { get; set; }
 
-    // --- RESOLUTION FIELDS (for billing integration) ---
-    /// <summary>
-    /// Billable amount for resolved tickets. Used for invoice generation.
-    /// </summary>
     [Column(TypeName = "decimal(18,2)")]
     public decimal? BillableAmount { get; set; }
 
-    /// <summary>
-    /// Notes about how the ticket was resolved.
-    /// </summary>
     [StringLength(2000)]
     public string? ResolutionNotes { get; set; }
 
-    // --- RIGID COLUMNS (Indexed, Relational) ---
-    /// <summary>
-    /// Domain identifier (e.g., "IT", "LEGAL").
-    /// </summary>
     public string DomainId { get; set; } = "IT"; // TODO: Migrate callers to SetDomain()
 
-    /// <summary>
-    /// Simplified lifecycle status for triage: "New", "Triaged", "Done".
-    /// Use this for basic status filtering. For workflow state, use TicketStatus.
-    /// Note: This should typically be set via SyncStatus() after setting TicketStatus.
-    /// </summary>
     public string Status { get; set; } = "New";
 
-    /// <summary>
-    /// Workflow state for ticket processing (Pending, InProgress, Completed, etc.).
-    /// This is the primary status for business logic and GERDA workflow.
-    /// </summary>
     public Status TicketStatus { get; set; } = Common.Status.Pending; // TODO: Migrate callers to TransitionTo()
 
     public string Title { get; set; } = string.Empty;
 
-    // Used for Duplicate Detection (SHA256)
     [MaxLength(64)]
     public string? ContentHash { get; set; }
 
-    // Link to the Config Version active when this ticket was created
     [MaxLength(50)]
     public string? ConfigVersionId { get; set; }
 
-    // --- FLEXIBLE STORAGE (The "Masala" Model) ---
     [Column(TypeName = "TEXT")]
     public string CustomFieldsJson { get; set; } = "{}";
 
-    // --- GENERATED COLUMNS (The Performance Secret) ---
-    // These properties do not exist in C# memory as settable values.
-    // They are projected by the database from the JSON blob.
-    public double? ComputedPriority { get; private set; } // Indexable Priority
-    public string? ComputedCategory { get; private set; } // Indexable Category
+    public double? ComputedPriority { get; private set; }
+    public string? ComputedCategory { get; private set; }
 
-    // ═════════════════════════════════════════════════════════════════
-    // DOMAIN EXTENSIBILITY FIELDS
-    // ═════════════════════════════════════════════════════════════════
-
-    /// <summary>
-    /// The domain this ticket belongs to (e.g., "IT", "Gardening", "TaxLaw").
-    /// Defaults to "IT" for backward compatibility.
-    /// </summary>
     [StringLength(50)]
     public string? WorkItemTypeCode { get; set; }
 
-    /// <summary>
-    /// JSON blob storing domain-specific custom field values.
-    /// Schema is validated against the domain configuration.
-    /// </summary>
-    [Column(TypeName = "TEXT")] // For SQLite compatibility; use nvarchar(max) for SQL Server
+    [Column(TypeName = "TEXT")]
     public string? DomainCustomFieldsJson { get; set; }
-
-    // ═════════════════════════════════════════════════════════════════
-    // NAVIGATION PROPERTIES (Managed by EF Core, not directly set)
-    // ═════════════════════════════════════════════════════════════════
 
     public Guid? ParentTicketGuid { get; set; }
     public string? CustomerId { get; set; }
@@ -125,13 +69,11 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
 
     public Guid? SolvedByArticleId { get; set; }
 
-    // AI-generated ticket summary
     [StringLength(2000)]
     public string? AiSummary { get; set; }
 
     public ReviewStatus ReviewStatus { get; set; } = ReviewStatus.None;
 
-    // Navigation properties
     public virtual Project? Project { get; set; }
     public virtual ApplicationUser? Customer { get; set; }
     public virtual Employee? Responsible { get; set; }
@@ -139,41 +81,16 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
     public virtual ICollection<Ticket> SubTickets { get; set; } = new List<Ticket>();
     public virtual Ticket? ParentTicket { get; set; }
 
-    // ═════════════════════════════════════════════════════════════════
-    // CONSTRUCTOR (EF Core requires parameterless constructor)
-    // ═════════════════════════════════════════════════════════════════
-
     /// <summary>
     /// Parameterless constructor required by EF Core.
     /// Do not use directly - use Ticket.Create() factory method instead.
     /// </summary>
     public Ticket()
     {
-        Description = string.Empty;
-        Title = string.Empty;
-        DomainId = "IT";
-        CustomFieldsJson = "{}";
-        TicketStatus = Common.Status.Pending;
-        // Note: WatcherIds is initialized by property initializer
-        SyncStatus(); // Ensure Status is synchronized on creation
+        SyncStatus();
     }
 
-    // ═════════════════════════════════════════════════════════════════
-    // FACTORY METHODS (Phase 2: Rich creation with validation)
-    // ═════════════════════════════════════════════════════════════════
-
-    /// <summary>
-    /// Creates a new ticket with validation and business rules.
-    /// This is the primary way to create tickets in the domain.
-    /// </summary>
-    /// <param name="description">The ticket description (required, max 5000 chars)</param>
-    /// <param name="title">The ticket title (required, max 200 chars)</param>
-    /// <param name="customerId">The ID of the customer creating the ticket</param>
-    /// <param name="domainId">The domain ID (defaults to "IT")</param>
-    /// <param name="projectGuid">Optional project association</param>
-    /// <param name="workItemTypeCode">Optional work item type code</param>
-    /// <returns>A new ticket with domain event raised</returns>
-    /// <exception cref="DomainException">Thrown when validation fails</exception>
+    /// <summary>Creates a new ticket with validation and domain events.</summary>
     public static Ticket Create(
         string description,
         string title,
@@ -182,14 +99,12 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         Guid? projectGuid = null,
         string? workItemTypeCode = null)
     {
-        // Validate description
         if (string.IsNullOrWhiteSpace(description))
             throw new DomainException("Ticket description is required");
 
         if (description.Length > 5000)
             throw new DomainException("Description cannot exceed 5000 characters");
 
-        // Validate title
         if (string.IsNullOrWhiteSpace(title))
             throw new DomainException("Ticket title is required");
 
@@ -211,7 +126,6 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
 
         ticket.SyncStatus();
 
-        // Raise domain event
         if (!string.IsNullOrEmpty(customerId))
         {
             ticket.RaiseDomainEvent(new TicketCreatedEvent(ticket.Guid, customerId, ticket.DomainId));
@@ -220,11 +134,7 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         return ticket;
     }
 
-    /// <summary>
-    /// Creates a ticket from portal submission with minimal required fields.
-    /// Note: Domain events are suppressed during creation and raised after all
-    /// properties are set to ensure event data is complete.
-    /// </summary>
+    /// <summary>Creates a ticket from portal submission with minimal required fields.</summary>
     public static Ticket CreateFromPortal(
         string description,
         string? customerId,
@@ -232,12 +142,10 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         string? tags = null,
         DateTime? completionTarget = null)
     {
-        // Auto-generate title from description
         var title = description.Length > 50
             ? description[..47] + "..."
             : description;
 
-        // Create ticket without raising domain event yet
         var ticket = new Ticket
         {
             Description = description.Trim(),
@@ -251,7 +159,6 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
 
         ticket.SyncStatus();
 
-        // Apply optional values BEFORE raising domain event
         if (priorityScore.HasValue)
             ticket.SetPriorityScore(priorityScore.Value);
 
@@ -261,7 +168,6 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         if (completionTarget.HasValue)
             ticket.SetCompletionTarget(completionTarget.Value);
 
-        // Now raise domain event with complete data
         if (!string.IsNullOrEmpty(customerId))
         {
             ticket.RaiseDomainEvent(new TicketCreatedEvent(ticket.Guid, customerId, ticket.DomainId));
@@ -270,16 +176,7 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         return ticket;
     }
 
-    // ═════════════════════════════════════════════════════════════════
-    // DOMAIN BEHAVIOR METHODS (Phase 2: Encapsulated business logic)
-    // ═════════════════════════════════════════════════════════════════
-
-    /// <summary>
-    /// Updates the ticket description with validation.
-    /// </summary>
-    /// <param name="newDescription">The new description</param>
-    /// <param name="updatedByUserId">The user making the update</param>
-    /// <exception cref="DomainException">Thrown when validation fails</exception>
+    /// <summary>Updates the ticket description with validation.</summary>
     public void UpdateDescription(string newDescription, string updatedByUserId)
     {
         if (string.IsNullOrWhiteSpace(newDescription))
@@ -294,9 +191,7 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         RaiseDomainEvent(new TicketUpdatedEvent(Guid, nameof(Description), updatedByUserId));
     }
 
-    /// <summary>
-    /// Updates the ticket title with validation.
-    /// </summary>
+    /// <summary>Updates the ticket title with validation.</summary>
     public void UpdateTitle(string newTitle, string updatedByUserId)
     {
         if (string.IsNullOrWhiteSpace(newTitle))
@@ -311,12 +206,7 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         RaiseDomainEvent(new TicketUpdatedEvent(Guid, nameof(Title), updatedByUserId));
     }
 
-    /// <summary>
-    /// Assigns the ticket to an employee.
-    /// </summary>
-    /// <param name="responsibleId">The employee ID to assign to</param>
-    /// <param name="assignedByUserId">The user performing the assignment</param>
-    /// <exception cref="DomainException">Thrown when assignment is invalid</exception>
+    /// <summary>Assigns the ticket to an employee, raising domain events.</summary>
     public void AssignTo(string responsibleId, string assignedByUserId)
     {
         if (string.IsNullOrWhiteSpace(responsibleId))
@@ -325,7 +215,6 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         var oldResponsibleId = ResponsibleId;
         ResponsibleId = responsibleId;
 
-        // Auto-transition to Assigned status if currently Pending
         if (TicketStatus == Common.Status.Pending)
         {
             var oldStatus = TicketStatus;
@@ -339,14 +228,9 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         LastModified = DateTime.UtcNow;
     }
 
-    /// <summary>
-    /// Constant representing an unassigned ticket for audit logging and display.
-    /// </summary>
     public const string UnassignedIndicator = "(unassigned)";
 
-    /// <summary>
-    /// Unassigns the ticket (sets it back to unassigned state).
-    /// </summary>
+    /// <summary>Unassigns the ticket.</summary>
     public void Unassign(string unassignedByUserId)
     {
         var oldResponsibleId = ResponsibleId;
@@ -356,12 +240,7 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         LastModified = DateTime.UtcNow;
     }
 
-    /// <summary>
-    /// Transitions the ticket to a new status with state machine validation.
-    /// </summary>
-    /// <param name="newStatus">The target status</param>
-    /// <param name="changedByUserId">The user changing the status</param>
-    /// <exception cref="DomainException">Thrown when transition is invalid</exception>
+    /// <summary>Transitions the ticket to a new status with state machine validation.</summary>
     public void TransitionTo(Status newStatus, string changedByUserId)
     {
         if (!IsValidTransition(TicketStatus, newStatus))
@@ -375,13 +254,11 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         TicketStatus = newStatus;
         SyncStatus();
 
-        // Set completion date if transitioning to Completed
         if (newStatus == Common.Status.Completed && !CompletionDate.HasValue)
         {
             CompletionDate = DateTime.UtcNow;
         }
 
-        // Clear completion date if reopening
         if (oldStatus == Common.Status.Completed && newStatus != Common.Status.Completed)
         {
             CompletionDate = null;
@@ -391,22 +268,13 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         LastModified = DateTime.UtcNow;
     }
 
-    /// <summary>
-    /// Sets the completion date directly (for seeding/migration scenarios).
-    /// </summary>
+
     public void SetCompletionDate(DateTime? completionDate)
     {
         CompletionDate = completionDate;
     }
 
-    /// <summary>
-    /// Resolves the ticket with billable amount and resolution notes.
-    /// Transitions the ticket to Completed status and raises a TicketResolvedEvent.
-    /// </summary>
-    /// <param name="resolutionNotes">Notes about how the ticket was resolved</param>
-    /// <param name="billableAmount">Optional billable amount for invoicing</param>
-    /// <param name="resolvedByUserId">The ID of the user resolving the ticket</param>
-    /// <exception cref="DomainException">Thrown when validation fails</exception>
+    /// <summary>Resolves the ticket, transitions to Completed, and raises TicketResolvedEvent.</summary>
     public void Resolve(string resolutionNotes, decimal? billableAmount, string resolvedByUserId)
     {
         if (string.IsNullOrWhiteSpace(resolutionNotes))
@@ -418,20 +286,13 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         if (billableAmount.HasValue && billableAmount.Value < 0)
             throw new DomainException("Billable amount cannot be negative");
 
-        // Check if already completed to prevent duplicate transitions
         if (TicketStatus == Common.Status.Completed)
-        {
             throw new DomainException("Ticket is already completed. Cannot resolve again.");
-        }
 
-        // Store resolution data
         ResolutionNotes = resolutionNotes.Trim();
         BillableAmount = billableAmount;
 
-        // Transition to Completed status
         TransitionTo(Common.Status.Completed, resolvedByUserId);
-
-        // Raise domain event for billing workflow
         RaiseDomainEvent(new TicketResolvedEvent(
             Guid,
             CustomerId ?? "(unknown)",
@@ -442,9 +303,7 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         ));
     }
 
-    /// <summary>
-    /// Updates custom fields JSON with validation.
-    /// </summary>
+    /// <summary>Updates custom fields JSON with validation.</summary>
     public void UpdateCustomFields(string customFieldsJson, string updatedByUserId)
     {
         if (string.IsNullOrWhiteSpace(customFieldsJson))
@@ -456,9 +315,7 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         RaiseDomainEvent(new TicketUpdatedEvent(Guid, nameof(CustomFieldsJson), updatedByUserId));
     }
 
-    /// <summary>
-    /// Adds a tag to the GerdaTags collection.
-    /// </summary>
+    /// <summary>Adds a tag to the GerdaTags collection.</summary>
     public void AddGerdaTag(string tag)
     {
         if (string.IsNullOrWhiteSpace(tag))
@@ -476,9 +333,7 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         }
     }
 
-    /// <summary>
-    /// Sets the GERDA AI summary.
-    /// </summary>
+    /// <summary>Sets the GERDA AI summary.</summary>
     public void SetAiSummary(string? summary)
     {
         if (!string.IsNullOrEmpty(summary) && summary.Length > 2000)
@@ -488,65 +343,49 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         LastModified = DateTime.UtcNow;
     }
 
-    /// <summary>
-    /// Sets the priority score (typically called by GERDA AI).
-    /// </summary>
+    /// <summary>Sets the priority score (0-100).</summary>
     public void SetPriorityScore(double score)
     {
         PriorityScore = Math.Clamp(score, 0.0, 100.0);
     }
 
-    /// <summary>
-    /// Sets the completion target date.
-    /// </summary>
+
     public void SetCompletionTarget(DateTime target)
     {
         CompletionTarget = target;
     }
 
-    /// <summary>
-    /// Sets the content hash for duplicate detection.
-    /// </summary>
+
     public void SetContentHash(string? hash)
     {
         ContentHash = hash;
     }
 
-    /// <summary>
-    /// Sets the config version ID.
-    /// </summary>
+
     public void SetConfigVersionId(string? configVersionId)
     {
         ConfigVersionId = configVersionId;
     }
 
-    /// <summary>
-    /// Sets GERDA tags (replaces existing tags).
-    /// </summary>
+    /// <summary>Sets GERDA tags (replaces existing).</summary>
     public void SetGerdaTags(string? tags)
     {
         GerdaTags = tags;
     }
 
-    /// <summary>
-    /// Sets the estimated effort points (typically called by GERDA AI).
-    /// </summary>
+    /// <summary>Sets the estimated effort points.</summary>
     public void SetEstimatedEffortPoints(int points)
     {
         EstimatedEffortPoints = Math.Max(0, points);
     }
 
-    /// <summary>
-    /// Sets the project association.
-    /// </summary>
+
     public void SetProject(Guid? projectGuid)
     {
         ProjectGuid = projectGuid;
     }
 
-    /// <summary>
-    /// Sets the domain ID (e.g., "IT", "LEGAL").
-    /// </summary>
+    /// <summary>Sets the domain ID (e.g., "IT", "LEGAL").</summary>
     public void SetDomain(string domainId)
     {
         if (string.IsNullOrWhiteSpace(domainId))
@@ -555,34 +394,25 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         DomainId = domainId.Trim();
     }
 
-    /// <summary>
-    /// Sets the customer ID.
-    /// </summary>
+
     public void SetCustomer(string? customerId)
     {
         CustomerId = customerId;
     }
 
-    /// <summary>
-    /// Sets the parent ticket for grouping.
-    /// </summary>
+
     public void SetParentTicket(Guid? parentTicketGuid)
     {
         ParentTicketGuid = parentTicketGuid;
     }
 
-    /// <summary>
-    /// Sets the responsible employee (for direct assignment without full domain logic).
-    /// Use AssignTo() for proper domain behavior with events.
-    /// </summary>
+    /// <summary>Sets the responsible employee ID directly (bypasses domain events).</summary>
     public void SetResponsibleId(string? responsibleId)
     {
         ResponsibleId = responsibleId;
     }
 
-    /// <summary>
-    /// Sets the responsible employee navigation property.
-    /// </summary>
+    /// <summary>Sets the responsible employee navigation property.</summary>
     public void SetResponsible(Employee? responsible)
     {
         Responsible = responsible;
@@ -592,89 +422,63 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         }
     }
 
-    /// <summary>
-    /// Sets the domain custom fields JSON.
-    /// </summary>
+
     public void SetDomainCustomFieldsJson(string? json)
     {
         DomainCustomFieldsJson = json;
     }
 
-    /// <summary>
-    /// Sets the work item type code.
-    /// </summary>
+
     public void SetWorkItemTypeCode(string? typeCode)
     {
         WorkItemTypeCode = typeCode;
     }
 
-    /// <summary>
-    /// Sets the review status.
-    /// </summary>
+    /// <summary>Sets the review status.</summary>
     public void SetReviewStatus(ReviewStatus status)
     {
         ReviewStatus = status;
     }
 
-    /// <summary>
-    /// Sets the ticket type.
-    /// </summary>
+
     public void SetTicketType(TicketType? type)
     {
         TicketType = type;
     }
 
-    /// <summary>
-    /// Adds a comment to the ticket.
-    /// </summary>
+    /// <summary>Adds a comment to the ticket.</summary>
     public void AddComment(TicketComment comment)
     {
-        ((List<TicketComment>)Comments).Add(comment);
+        Comments.Add(comment);
     }
 
-    /// <summary>
-    /// Adds a sub-ticket.
-    /// </summary>
+    /// <summary>Adds a sub-ticket.</summary>
     public void AddSubTicket(Ticket subTicket)
     {
-        ((List<Ticket>)SubTickets).Add(subTicket);
+        SubTickets.Add(subTicket);
         subTicket.SetParentTicket(Guid);
     }
 
-    /// <summary>
-    /// Records that child tickets were grouped under this ticket.
-    /// Raises a domain event for audit/logging purposes.
-    /// </summary>
+    /// <summary>Records that child tickets were grouped under this ticket.</summary>
     public void RecordChildrenGrouped(IEnumerable<Ticket> childTickets, string groupedByUserId)
     {
         var childGuids = childTickets.Select(t => t.Guid).ToList();
         RaiseDomainEvent(new TicketGroupedEvent(Guid, childGuids, groupedByUserId));
     }
 
-    /// <summary>
-    /// Records that this ticket was ungrouped from its parent.
-    /// Raises a domain event for audit/logging purposes.
-    /// </summary>
+    /// <summary>Records that this ticket was ungrouped from its parent.</summary>
     public void RecordUngrouped(Guid? formerParentGuid, string ungroupedByUserId)
     {
         RaiseDomainEvent(new TicketUngroupedEvent(Guid, formerParentGuid, ungroupedByUserId));
     }
 
-    // ═════════════════════════════════════════════════════════════════
-    // QUERY METHODS (Pure functions for business logic)
-    // ═════════════════════════════════════════════════════════════════
-
-    /// <summary>
-    /// Determines if the ticket can be edited in its current state.
-    /// </summary>
+    /// <summary>Determines if the ticket can be edited in its current state.</summary>
     public bool CanEditInCurrentState()
     {
         return TicketStatus is Common.Status.Pending or Common.Status.Assigned or Common.Status.InProgress;
     }
 
-    /// <summary>
-    /// Determines if the ticket can be edited by the specified user.
-    /// </summary>
+    /// <summary>Determines if the ticket can be edited by the specified user.</summary>
     public bool CanBeEditedBy(string userId, IEnumerable<string> userRoles)
     {
         if (userRoles.Contains(Constants.RoleAdmin))
@@ -689,17 +493,13 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         return false;
     }
 
-    /// <summary>
-    /// Determines if the ticket can be assigned in its current state.
-    /// </summary>
+    /// <summary>Determines if the ticket can be assigned in its current state.</summary>
     public bool CanBeAssigned()
     {
         return TicketStatus is Common.Status.Pending or Common.Status.Assigned or Common.Status.InProgress;
     }
 
-    /// <summary>
-    /// Checks if a status transition is valid.
-    /// </summary>
+    /// <summary>Checks if a status transition is valid.</summary>
     public static bool IsValidTransition(Status from, Status to)
     {
         return from switch
@@ -713,9 +513,7 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         };
     }
 
-    /// <summary>
-    /// Gets valid transitions from a given status.
-    /// </summary>
+    /// <summary>Gets valid transitions from a given status.</summary>
     public static string GetValidTransitions(Status from)
     {
         var transitions = from switch
@@ -731,49 +529,33 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         return string.Join(", ", transitions.Select(t => t.ToString()));
     }
 
-    /// <summary>
-    /// Determines if a user can change the ticket status.
-    /// </summary>
+    /// <summary>Determines if a user can change the ticket status.</summary>
     public bool CanChangeStatus(string userId, IEnumerable<string> userRoles)
     {
-        // Admins and employees can always change status
         if (userRoles.Contains(Constants.RoleAdmin) || userRoles.Contains(Constants.RoleEmployee))
             return true;
 
-        // Customers can only cancel their own pending tickets
         if (userRoles.Contains(Constants.RoleCustomer))
-        {
             return CustomerId == userId && TicketStatus == Common.Status.Pending;
-        }
 
         return false;
     }
 
-    // ═════════════════════════════════════════════════════════════════
-    // WORKFLOW POLICY INTEGRATION (delegates to ITicketWorkflowPolicy)
-    // ═════════════════════════════════════════════════════════════════
+    // Workflow policy integration
 
-    /// <summary>
-    /// Determines whether the given user may transition this ticket to the target status,
-    /// according to the configured workflow policy.
-    /// </summary>
+    /// <summary>Determines if the user may transition this ticket to the target status.</summary>
     public bool CanTransitionTo(Status targetStatus, Workflow.ITicketWorkflowPolicy policy, Workflow.ITicketWorkflowContext context)
     {
         return policy.CanTransition(this, targetStatus, context);
     }
 
-    /// <summary>
-    /// Returns all statuses this ticket may transition to for the given user,
-    /// according to the configured workflow policy.
-    /// </summary>
+    /// <summary>Returns all statuses this ticket may transition to for the given user.</summary>
     public IEnumerable<Status> GetValidNextStates(Workflow.ITicketWorkflowPolicy policy, Workflow.ITicketWorkflowContext context)
     {
         return policy.GetValidNextStates(this, context);
     }
 
-    /// <summary>
-    /// Checks if the ticket is overdue based on completion target.
-    /// </summary>
+    /// <summary>Checks if the ticket is overdue based on completion target.</summary>
     public bool IsOverdue()
     {
         return CompletionTarget.HasValue &&
@@ -782,22 +564,13 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
                TicketStatus != Common.Status.Cancelled;
     }
 
-    /// <summary>
-    /// Gets the ticket age in days.
-    /// </summary>
+    /// <summary>Gets the ticket age in days.</summary>
     public double GetAgeInDays()
     {
         return (DateTime.UtcNow - CreationDate).TotalDays;
     }
 
-    // ═════════════════════════════════════════════════════════════════
-    // HELPER METHODS
-    // ═════════════════════════════════════════════════════════════════
-
-    /// <summary>
-    /// Ensures Status and TicketStatus remain synchronized when TicketStatus changes.
-    /// Call this after modifying TicketStatus to update the simplified Status field.
-    /// </summary>
+    /// <summary>Ensures Status and TicketStatus remain synchronized.</summary>
     public void SyncStatus()
     {
         Status = TicketStatus switch
@@ -810,17 +583,7 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         };
     }
 
-    // ═════════════════════════════════════════════════════════════════
-    // DOMAIN VALIDATION (Phase 3: Authorization & Rule Validation)
-    // ═════════════════════════════════════════════════════════════════
-
-    /// <summary>
-    /// Validates that the user can edit this ticket and throws DomainRuleException if not.
-    /// This combines state-based and role-based authorization.
-    /// </summary>
-    /// <param name="userId">The user attempting to edit</param>
-    /// <param name="userRoles">The roles of the user</param>
-    /// <exception cref="DomainRuleException">Thrown when user is not authorized</exception>
+    /// <summary>Validates that the user can edit this ticket.</summary>
     public void ValidateCanEdit(string userId, IEnumerable<string> userRoles)
     {
         if (!CanBeEditedBy(userId, userRoles))
@@ -836,9 +599,7 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         }
     }
 
-    /// <summary>
-    /// Validates that the user can change the status and throws DomainRuleException if not.
-    /// </summary>
+    /// <summary>Validates that the user can change the status.</summary>
     public void ValidateCanChangeStatus(string userId, IEnumerable<string> userRoles, Status targetStatus)
     {
         if (!CanChangeStatus(userId, userRoles))
@@ -854,9 +615,7 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         }
     }
 
-    /// <summary>
-    /// Validates that the user can assign this ticket and throws DomainRuleException if not.
-    /// </summary>
+    /// <summary>Validates that the user can assign this ticket.</summary>
     public void ValidateCanAssign(string userId, IEnumerable<string> userRoles)
     {
         if (!userRoles.Contains(Constants.RoleAdmin) && !userRoles.Contains(Constants.RoleEmployee))
@@ -872,29 +631,22 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         }
     }
 
-    /// <summary>
-    /// Validates that the ticket can be viewed by the specified user.
-    /// </summary>
+    /// <summary>Validates that the ticket can be viewed by the specified user.</summary>
     public bool CanBeViewedBy(string userId, IEnumerable<string> userRoles)
     {
-        // Admins can view all tickets
         if (userRoles.Contains(Constants.RoleAdmin))
             return true;
 
-        // Employees can view tickets they are assigned to or unassigned tickets
         if (userRoles.Contains(Constants.RoleEmployee))
             return ResponsibleId == userId || ResponsibleId == null || CustomerId == userId;
 
-        // Customers can only view their own tickets
         if (userRoles.Contains(Constants.RoleCustomer))
             return CustomerId == userId;
 
         return false;
     }
 
-    /// <summary>
-    /// Validates view access and throws DomainRuleException if not authorized.
-    /// </summary>
+    /// <summary>Validates view access and throws if not authorized.</summary>
     public void ValidateCanView(string userId, IEnumerable<string> userRoles)
     {
         if (!CanBeViewedBy(userId, userRoles))
@@ -903,41 +655,30 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         }
     }
 
-    /// <summary>
-    /// Validates that required fields are present for the current state.
-    /// Returns a list of validation errors, or empty if valid.
-    /// </summary>
+    /// <summary>Validates that required fields are present for the current state.</summary>
     public IEnumerable<string> ValidateRequiredFieldsForCurrentState()
     {
         var errors = new List<string>();
 
-        // All tickets require a description
         if (string.IsNullOrWhiteSpace(Description))
             errors.Add("Description is required");
 
-        // All tickets require a title
         if (string.IsNullOrWhiteSpace(Title))
             errors.Add("Title is required");
 
-        // Assigned/InProgress tickets require a responsible person
         if (TicketStatus is Common.Status.Assigned or Common.Status.InProgress &&
             string.IsNullOrEmpty(ResponsibleId))
         {
             errors.Add("A responsible agent is required for Assigned/InProgress tickets");
         }
 
-        // InProgress tickets should have an estimated effort
         if (TicketStatus == Common.Status.InProgress && EstimatedEffortPoints <= 0)
-        {
             errors.Add("Estimated effort points should be set when ticket is In Progress");
-        }
 
         return errors;
     }
 
-    /// <summary>
-    /// Validates required fields and throws DomainException if any are missing.
-    /// </summary>
+    /// <summary>Validates required fields and throws if any are missing.</summary>
     public void ValidateRequiredFieldsOrThrow()
     {
         var errors = ValidateRequiredFieldsForCurrentState();
@@ -947,9 +688,7 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         }
     }
 
-    /// <summary>
-    /// Gets a summary of the ticket's current state for debugging/logging.
-    /// </summary>
+    /// <summary>Gets a summary of the ticket's current state.</summary>
     public string GetStateSummary()
     {
         return $"Ticket {Guid:N} | Status: {TicketStatus} | " +
@@ -958,27 +697,11 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
                $"Age: {GetAgeInDays():F1} days";
     }
 
-    // ═════════════════════════════════════════════════════════════════
-    // LEGACY COMPATIBILITY (for gradual migration)
-    // ═════════════════════════════════════════════════════════════════
-
     /// <summary>
-    /// [LEGACY] Direct property setters for seeding and migration scenarios.
-    /// ⚠️ WARNING: This method bypasses ALL domain validation and business rules.
-    /// Use only for:
-    /// - Data seeding (test/development data)
-    /// - Database migrations (one-time data fixes)
-    /// - Importing legacy data (known-good historical data)
-    /// 
-    /// NEVER use for:
-    /// - Regular business operations
-    /// - User-initiated changes
-    /// - New feature development
-    /// 
-    /// This method will be removed in Phase 4 of the domain model migration.
+    /// [LEGACY] Direct property setters for seeding and migration scenarios only.
+    /// Bypasses ALL domain validation. Disallowed in production unless
+    /// TICKETMASALA_ALLOW_SEED_BYPASS=true is set.
     /// </summary>
-    /// <param name="setter">Action that performs direct property mutation.</param>
-    /// <exception cref="InvalidOperationException">Thrown in production environments when attempted.</exception>
     public void SetPropertyForSeeding(Action<Ticket> setter)
     {
 #if !DEBUG && !TESTING

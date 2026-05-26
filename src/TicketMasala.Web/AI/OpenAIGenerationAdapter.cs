@@ -31,7 +31,6 @@ public sealed class OpenAIGenerationAdapter : IAIGenerationPort
     private readonly string _fastModel;
     private readonly string _qualityModel;
 
-    // Limits for input validation
     private const int MaxQueryLength = 8000;
     private const int CacheExpirationMinutes = 5;
 
@@ -49,33 +48,18 @@ public sealed class OpenAIGenerationAdapter : IAIGenerationPort
         _settings = settings.Value;
         _operationRegistry = operationRegistry.Value;
 
-        // Resolve API key from env or config
         var apiKey = ResolveApiKey(_settings.ApiKey);
-        var baseUrl = ResolveBaseUrl(_settings.BaseUrl, apiKey);
-
         if (string.IsNullOrWhiteSpace(apiKey))
         {
             _logger.LogWarning("OpenAI API key is not configured. Adapter will return error messages.");
-            _openAiClient = new OpenAIClient(new System.ClientModel.ApiKeyCredential("dummy"));
-        }
-        else
-        {
-            var credential = new System.ClientModel.ApiKeyCredential(apiKey);
-            var clientOptions = string.IsNullOrEmpty(baseUrl)
-                ? null
-                : new OpenAIClientOptions { Endpoint = new Uri(baseUrl) };
-
-            _openAiClient = clientOptions != null
-                ? new OpenAIClient(credential, clientOptions)
-                : new OpenAIClient(credential);
         }
 
-        // Use configured models from MasalaOptions if available, else defaults
+        _openAiClient = BuildClient(apiKey, _settings.BaseUrl);
+
         var gerdaOptions = masalaOptions?.Value.Gerda;
         _fastModel = gerdaOptions?.OpenAiModelFast ?? "openai/gpt-4o-mini";
         _qualityModel = gerdaOptions?.OpenAiModel ?? "openai/gpt-4o";
 
-        // Configure retry policy: 3 retries with exponential backoff
         _retryPolicy = Policy
             .Handle<HttpRequestException>()
             .Or<TaskCanceledException>()
@@ -101,10 +85,8 @@ public sealed class OpenAIGenerationAdapter : IAIGenerationPort
     {
         ValidateInput(request.Content, MaxQueryLength, nameof(request.Content));
 
-        // Resolve operation configuration
         if (!_operationRegistry.Operations.TryGetValue(request.Operation, out var operationConfig))
         {
-            // Fallback: treat the operation as a passthrough with no special templating
             operationConfig = new AIOperationConfig
             {
                 SystemTemplate = "You are a helpful assistant.",
@@ -117,7 +99,6 @@ public sealed class OpenAIGenerationAdapter : IAIGenerationPort
         var (systemPrompt, userPrompt) = BuildPrompts(operationConfig, request);
         var cacheKey = ComputeCacheKey(model, request.Operation, request.Content, request.Directive);
 
-        // Check cache first
         if (_cache.TryGetValue(cacheKey, out AICompletion? cachedResponse) && cachedResponse != null)
         {
             _logger.LogDebug("AI response served from cache for operation {Operation}", request.Operation);
@@ -182,7 +163,6 @@ public sealed class OpenAIGenerationAdapter : IAIGenerationPort
                 },
             };
 
-            // Cache the response
             _cache.Set(cacheKey, response, TimeSpan.FromMinutes(CacheExpirationMinutes));
 
             return response;
@@ -197,6 +177,23 @@ public sealed class OpenAIGenerationAdapter : IAIGenerationPort
             _logger.LogError(ex, "AI API call failed after all retries for operation {Operation}", request.Operation);
             throw new InvalidOperationException($"Failed to get AI response for operation '{request.Operation}': {ex.Message}", ex);
         }
+    }
+
+    private static OpenAIClient BuildClient(string apiKey, string? configuredBaseUrl)
+    {
+        var baseUrl = ResolveBaseUrl(configuredBaseUrl, apiKey);
+
+        if (string.IsNullOrWhiteSpace(apiKey))
+            return new OpenAIClient(new System.ClientModel.ApiKeyCredential("dummy"));
+
+        var credential = new System.ClientModel.ApiKeyCredential(apiKey);
+        var clientOptions = string.IsNullOrEmpty(baseUrl)
+            ? null
+            : new OpenAIClientOptions { Endpoint = new Uri(baseUrl) };
+
+        return clientOptions != null
+            ? new OpenAIClient(credential, clientOptions)
+            : new OpenAIClient(credential);
     }
 
     private static (string SystemPrompt, string UserPrompt) BuildPrompts(
@@ -234,7 +231,6 @@ public sealed class OpenAIGenerationAdapter : IAIGenerationPort
             throw new ArgumentException($"Input exceeds maximum length of {maxLength} characters.", paramName);
         }
 
-        // Basic prompt injection detection
         var dangerousPatterns = new[] { "<script", "javascript:", "ignore previous", "ignore all previous", "disregard" };
         foreach (var pattern in dangerousPatterns)
         {
@@ -274,8 +270,14 @@ public sealed class OpenAIGenerationAdapter : IAIGenerationPort
 
         using var doc = JsonDocument.Parse(body);
         var root = doc.RootElement;
-        var message = root
-            .GetProperty("choices")[0]
+
+        if (!root.TryGetProperty("choices", out var choicesElement) ||
+            choicesElement.GetArrayLength() == 0)
+        {
+            throw new InvalidOperationException("OpenRouter returned no choices in the response.");
+        }
+
+        var message = choicesElement[0]
             .GetProperty("message")
             .GetProperty("content")
             .GetString();
@@ -344,13 +346,11 @@ public sealed class OpenAIGenerationAdapter : IAIGenerationPort
     private static string ResolveApiKey(string configuredKey)
     {
         var envKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
+        if (!string.IsNullOrWhiteSpace(envKey))
+            return envKey;
 
-        var sanitizedConfiguredKey = string.IsNullOrWhiteSpace(configuredKey) || configuredKey == "placeholder-key"
-            ? null
+        return string.IsNullOrWhiteSpace(configuredKey) || configuredKey == "placeholder-key"
+            ? ""
             : configuredKey;
-
-        return !string.IsNullOrWhiteSpace(envKey)
-            ? envKey
-            : (sanitizedConfiguredKey ?? "");
     }
 }

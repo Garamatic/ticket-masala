@@ -1,12 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using TicketMasala.Domain.Common;
-using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Engine.GERDA.Tickets.Lifecycle;
-using TicketMasala.Web.Repositories;
 using TicketMasala.Web.ViewModels.GERDA;
 
 namespace TicketMasala.Web.Engine.GERDA.Tickets;
@@ -25,16 +19,13 @@ public interface ITicketBatchService
 /// </summary>
 public class TicketBatchService : ITicketBatchService
 {
-    private readonly IProjectRepository _projectRepository;
     private readonly ITicketLifecycle _ticketLifecycle;
     private readonly ILogger<TicketBatchService> _logger;
 
     public TicketBatchService(
-        IProjectRepository projectRepository,
         ITicketLifecycle ticketLifecycle,
         ILogger<TicketBatchService> logger)
     {
-        _projectRepository = projectRepository;
         _ticketLifecycle = ticketLifecycle;
         _logger = logger;
     }
@@ -45,15 +36,12 @@ public class TicketBatchService : ITicketBatchService
     {
         var result = new BatchAssignResult();
 
-        var allProjects = await _projectRepository.GetActiveProjectsAsync();
-        var projectLookup = allProjects.ToDictionary(p => p.Name, p => p.Guid, StringComparer.OrdinalIgnoreCase);
-
         foreach (var ticketGuid in request.TicketGuids)
         {
             try
             {
                 var (assignedAgentId, assignedProjectGuid) = await DetermineAssignmentAsync(
-                    ticketGuid, request, getRecommendedAgent, projectLookup);
+                    ticketGuid, request, getRecommendedAgent);
 
                 if (string.IsNullOrEmpty(assignedAgentId) && !assignedProjectGuid.HasValue)
                 {
@@ -61,7 +49,6 @@ public class TicketBatchService : ITicketBatchService
                     continue;
                 }
 
-                // Delegate to TicketLifecycle deep module — all choreography (audit, observers, outbox) included
                 var lifecycleResult = await _ticketLifecycle.ExecuteAsync(
                     new AssignTicketCommand(ticketGuid, assignedAgentId, assignedProjectGuid),
                     new TicketContext("system"));
@@ -88,9 +75,14 @@ public class TicketBatchService : ITicketBatchService
     {
         foreach (var id in ticketIds)
         {
-            await _ticketLifecycle.ExecuteAsync(
+            var result = await _ticketLifecycle.ExecuteAsync(
                 new AssignTicketCommand(id, agentId),
                 new TicketContext("system"));
+
+            if (!result.Success)
+            {
+                _logger.LogWarning("Batch assign failed for ticket {TicketGuid}: {Error}", id, result.ErrorMessage);
+            }
         }
     }
 
@@ -98,9 +90,14 @@ public class TicketBatchService : ITicketBatchService
     {
         foreach (var id in ticketIds)
         {
-            await _ticketLifecycle.ExecuteAsync(
+            var result = await _ticketLifecycle.ExecuteAsync(
                 new TransitionStatusCommand(id, status),
                 new TicketContext("system"));
+
+            if (!result.Success)
+            {
+                _logger.LogWarning("Batch status update failed for ticket {TicketGuid}: {Error}", id, result.ErrorMessage);
+            }
         }
     }
 
@@ -129,18 +126,12 @@ public class TicketBatchService : ITicketBatchService
     private async Task<(string? AgentId, Guid? ProjectId)> DetermineAssignmentAsync(
         Guid ticketGuid,
         BatchAssignRequest request,
-        Func<Guid, Task<string?>> getRecommendedAgent,
-        Dictionary<string, Guid> projectLookup)
+        Func<Guid, Task<string?>> getRecommendedAgent)
     {
         if (request.UseGerdaRecommendations)
         {
             var agentId = await getRecommendedAgent(ticketGuid);
-
-            // Note: project determination requires ticket data; lifecycle command
-            // only supports agent + project. Project lookup is best-effort here.
-            // For full GERDA project recommendation, use the GERDA pipeline directly.
-            Guid? projectGuid = request.ForceProjectGuid;
-            return (agentId, projectGuid);
+            return (agentId, request.ForceProjectGuid);
         }
 
         return (request.ForceAgentId, request.ForceProjectGuid);

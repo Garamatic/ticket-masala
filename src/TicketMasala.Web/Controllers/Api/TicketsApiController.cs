@@ -6,13 +6,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Abstractions;
-using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Engine.GERDA.Tickets.Lifecycle;
-using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.ViewModels.Api;
 using TicketMasala.Web.ViewModels.Tickets;
@@ -65,12 +62,7 @@ public class TicketsApiController : ControllerBase
         _clock = clock;
     }
 
-    /// <summary>
-    /// Submit a ticket via the external intake API (anonymous, snake_case payload).
-    /// Accepts the flat event schema used by partner portals and integration tests.
-    /// The root POST /api/tickets route enables unauthenticated ticket submission;
-    /// callers are rate-limited by the ExternalSubmission policy.
-    /// </summary>
+    /// <summary>Submit a ticket via the external intake API (anonymous, snake_case).</summary>
     [HttpPost]
     [AllowAnonymous]
     [EnableRateLimiting("ExternalSubmission")]
@@ -130,12 +122,7 @@ public class TicketsApiController : ControllerBase
         });
     }
 
-    /// <summary>
-    /// Create a ticket from an external website (e.g., partner company site).
-    /// Rate limited to prevent abuse.
-    /// </summary>
-    /// <param name="request">External ticket request data</param>
-    /// <returns>Ticket ID and reference number</returns>
+    /// <summary>Create a ticket from an external website.</summary>
     [HttpPost("external")]
     [AllowAnonymous]
     [EnableRateLimiting("ExternalSubmission")]
@@ -145,28 +132,28 @@ public class TicketsApiController : ControllerBase
     public async Task<ActionResult<ExternalTicketResponse>> CreateExternalTicket(
         [FromBody] ExternalTicketRequest request)
     {
-        // Validate input lengths (anti-spam)
+        // Validate input lengths
         if (string.IsNullOrWhiteSpace(request.Subject) || request.Subject.Length > MaxExternalSubjectLength)
         {
-            throw new ArgumentException($"Subject is required and must be less than {MaxExternalSubjectLength} characters.");
+            return BadRequest(new ExternalTicketResponse { Success = false, Message = $"Subject is required and must be less than {MaxExternalSubjectLength} characters." });
         }
 
         if (string.IsNullOrWhiteSpace(request.Description) || request.Description.Length > MaxExternalDescriptionLength)
         {
-            throw new ArgumentException($"Description is required and must be less than {MaxExternalDescriptionLength} characters.");
+            return BadRequest(new ExternalTicketResponse { Success = false, Message = $"Description is required and must be less than {MaxExternalDescriptionLength} characters." });
         }
 
         if (string.IsNullOrWhiteSpace(request.CustomerEmail) || !IsValidEmail(request.CustomerEmail))
         {
-            throw new ArgumentException("Valid email address is required.");
+            return BadRequest(new ExternalTicketResponse { Success = false, Message = "Valid email address is required." });
         }
 
         if (!string.IsNullOrEmpty(request.CustomerName) && request.CustomerName.Length > MaxExternalNameLength)
         {
-            throw new ArgumentException($"Name must be less than {MaxExternalNameLength} characters.");
+            return BadRequest(new ExternalTicketResponse { Success = false, Message = $"Name must be less than {MaxExternalNameLength} characters." });
         }
 
-        // Sanitize inputs to prevent injection
+        // Sanitize inputs
         var sanitizedSubject = SanitizeInput(request.Subject);
         var sanitizedDescription = SanitizeInput(request.Description);
         var sanitizedCustomerName = SanitizeInput(request.CustomerName ?? "External User");
@@ -177,7 +164,8 @@ public class TicketsApiController : ControllerBase
 
         if (customer == null)
         {
-            throw new InvalidOperationException("Failed to create customer account.");
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                new ExternalTicketResponse { Success = false, Message = "Failed to create customer account." });
         }
 
         var body = $"**{sanitizedSubject}**\n\n{sanitizedDescription}\n\n---\n*Submitted via: {sanitizedSourceSite}*";
@@ -188,12 +176,13 @@ public class TicketsApiController : ControllerBase
 
         if (!createResult.Success)
         {
-            throw new InvalidOperationException(createResult.ErrorMessage ?? "Failed to create external ticket");
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                new ExternalTicketResponse { Success = false, Message = createResult.ErrorMessage ?? "Failed to create external ticket" });
         }
 
         var ticket = createResult.Ticket!;
 
-        // Add external source tag
+        // Append external source tag
         AppendExternalTag(ticket, sanitizedSourceSite);
 
         await _ticketRepository.UpdateAsync(ticket);
@@ -214,9 +203,7 @@ public class TicketsApiController : ControllerBase
         });
     }
 
-    /// <summary>
-    /// Get all tickets (authenticated users only).
-    /// </summary>
+    /// <summary>Get all tickets.</summary>
     [HttpGet]
     [Authorize]
     [Obsolete("Use /api/v1/work-items endpoints instead")]
@@ -227,9 +214,7 @@ public class TicketsApiController : ControllerBase
         return Ok(tickets);
     }
 
-    /// <summary>
-    /// Get a specific ticket by ID.
-    /// </summary>
+    /// <summary>Get a specific ticket by ID.</summary>
     [HttpGet("{id:guid}")]
     [Authorize]
     [Obsolete("Use /api/v1/work-items endpoints instead")]
@@ -247,12 +232,7 @@ public class TicketsApiController : ControllerBase
         return Ok(ticket);
     }
 
-    /// <summary>
-    /// Create a new WorkItem (Universal Entity Model terminology).
-    /// Valid DomainId values are sourced from masala_domains.yaml configuration.
-    /// </summary>
-    /// <param name="request">WorkItem creation request</param>
-    /// <returns>Created WorkItem response</returns>
+    /// <summary>Create a new WorkItem.</summary>
     [HttpPost("create")]
     [Authorize]
     [ProducesResponseType(typeof(WorkItemResponse), StatusCodes.Status201Created)]
@@ -263,10 +243,9 @@ public class TicketsApiController : ControllerBase
         _logger.LogInformation("Creating WorkItem with title: {Title}, domain: {Domain}",
             request.Title, request.DomainId);
 
-        // Validate required fields
         if (string.IsNullOrEmpty(request.CustomerId))
         {
-            throw new ArgumentException("CustomerId is required.");
+            return BadRequest(new { error = "CustomerId is required." });
         }
 
         // Map custom fields to JSON
@@ -286,7 +265,8 @@ public class TicketsApiController : ControllerBase
 
         if (!createResult.Success)
         {
-            throw new InvalidOperationException(createResult.ErrorMessage ?? "Failed to create work item");
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                new { error = createResult.ErrorMessage ?? "Failed to create work item" });
         }
 
         var ticket = createResult.Ticket!;
@@ -306,10 +286,7 @@ public class TicketsApiController : ControllerBase
             MapToWorkItemResponse(ticket));
     }
 
-    /// <summary>
-    /// Resolve a ticket and optionally attach a billable amount.
-    /// Emits a ticket.resolved event consumed by odoo-integration.
-    /// </summary>
+    /// <summary>Resolve a ticket and optionally attach a billable amount.</summary>
     [HttpPost("{id:guid}/resolve")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -319,12 +296,12 @@ public class TicketsApiController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(request.ResolutionNotes))
         {
-            throw new ArgumentException("Resolution notes are required.");
+            return BadRequest(new { error = "Resolution notes are required." });
         }
 
         if (request.BillableAmount is < 0)
         {
-            throw new ArgumentException("Billable amount cannot be negative.");
+            return BadRequest(new { error = "Billable amount cannot be negative." });
         }
 
         var userId = _userManager.GetUserId(User) ?? "system";
@@ -347,9 +324,7 @@ public class TicketsApiController : ControllerBase
         });
     }
 
-    /// <summary>
-    /// Find existing customer or create a new one.
-    /// </summary>
+    /// <summary>Find existing customer or create a new one.</summary>
     private async Task<ApplicationUser?> FindOrCreateCustomerAsync(string email, string name)
     {
         // Try to find existing customer
@@ -391,14 +366,7 @@ public class TicketsApiController : ControllerBase
         return null;
     }
 
-    /// <summary>
-    /// Generates a cryptographically secure random password that always satisfies
-    /// ASP.NET Identity's default policy (uppercase, lowercase, digit, non-alphanumeric).
-    ///
-    /// Strategy: seed with one character from each required class, fill the rest
-    /// from the full pool, then Fisher-Yates shuffle so mandatory characters are
-    /// at unpredictable positions.
-    /// </summary>
+    /// <summary>Generates a cryptographically secure random password.</summary>
     private static string GenerateSecurePassword()
     {
         const string upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -431,9 +399,7 @@ public class TicketsApiController : ControllerBase
     }
 
 
-    /// <summary>
-    /// Validates email format.
-    /// </summary>
+    /// <summary>Validates email format.</summary>
     private static bool IsValidEmail(string email)
     {
         if (string.IsNullOrWhiteSpace(email))
@@ -456,9 +422,7 @@ public class TicketsApiController : ControllerBase
         "expression("
     };
 
-    /// <summary>
-    /// Sanitizes user input to prevent injection attacks.
-    /// </summary>
+    /// <summary>Sanitizes user input.</summary>
     private static string SanitizeInput(string input)
     {
         if (string.IsNullOrWhiteSpace(input))
@@ -472,9 +436,7 @@ public class TicketsApiController : ControllerBase
         return input.Trim();
     }
 
-    /// <summary>
-    /// Appends an external source tag to a ticket.
-    /// </summary>
+    /// <summary>Appends an external source tag to a ticket.</summary>
     private static void AppendExternalTag(Ticket ticket, string source)
     {
         ticket.GerdaTags = string.IsNullOrEmpty(ticket.GerdaTags)
@@ -482,9 +444,7 @@ public class TicketsApiController : ControllerBase
             : $"{ticket.GerdaTags},External-Request,{source}";
     }
 
-    /// <summary>
-    /// Maps internal Ticket entity to WorkItemResponse DTO.
-    /// </summary>
+    /// <summary>Maps Ticket entity to WorkItemResponse DTO.</summary>
     private static WorkItemResponse MapToWorkItemResponse(Ticket ticket)
     {
         return new WorkItemResponse

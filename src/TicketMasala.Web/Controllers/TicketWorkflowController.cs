@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TicketMasala.Domain.Common;
 using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Engine.GERDA.Tickets.Lifecycle;
 
@@ -26,10 +25,10 @@ public class TicketWorkflowController : Controller
         _logger = logger;
     }
 
+    private bool IsHtmxRequest => Request.Headers.ContainsKey("HX-Request");
+
     private string? GetCurrentUserId()
-    {
-        return _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-    }
+        => _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
     private TicketContext CreateContext()
     {
@@ -43,9 +42,13 @@ public class TicketWorkflowController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AssignToRecommended(Guid ticketGuid, string agentId)
     {
+        var userId = GetCurrentUserId();
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
         var result = await _ticketLifecycle.ExecuteAsync(
             new AssignTicketCommand(ticketGuid, agentId),
-            CreateContext());
+            new TicketContext(userId));
 
         if (!result.Success)
         {
@@ -64,10 +67,8 @@ public class TicketWorkflowController : Controller
     {
         if (string.IsNullOrWhiteSpace(commentBody))
         {
-            if (Request.Headers.ContainsKey("HX-Request"))
-            {
+            if (IsHtmxRequest)
                 return BadRequest("Comment body is required");
-            }
 
             TempData["Error"] = "Comment cannot be empty";
             return RedirectToAction("Detail", "Ticket", new { id });
@@ -86,20 +87,18 @@ public class TicketWorkflowController : Controller
             if (!result.Success)
             {
                 _logger.LogWarning("AddComment failed for ticket {TicketId}: {Error}", id, result.ErrorMessage);
-                if (Request.Headers.ContainsKey("HX-Request"))
+                if (IsHtmxRequest)
                     return StatusCode(500, result.ErrorMessage ?? "Error adding comment");
                 TempData["Error"] = result.ErrorMessage ?? "Failed to add comment";
                 return RedirectToAction("Detail", "Ticket", new { id });
             }
 
-            if (Request.Headers.ContainsKey("HX-Request"))
+            if (IsHtmxRequest)
             {
                 var ticketDetails = await _ticketReadService.GetTicketDetailsAsync(id);
-                if (ticketDetails != null)
-                {
-                    return PartialView("_CommentListPartial", ticketDetails.Comments);
-                }
-                return StatusCode(500, "Ticket not found");
+                return ticketDetails != null
+                    ? PartialView("_CommentListPartial", ticketDetails.Comments)
+                    : StatusCode(500, "Ticket not found");
             }
 
             TempData["Success"] = "Comment added successfully";
@@ -107,10 +106,8 @@ public class TicketWorkflowController : Controller
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error adding comment to ticket {TicketId}", id);
-            if (Request.Headers.ContainsKey("HX-Request"))
-            {
+            if (IsHtmxRequest)
                 return StatusCode(500, "Error adding comment");
-            }
             TempData["Error"] = "Failed to add comment";
         }
 
@@ -132,9 +129,13 @@ public class TicketWorkflowController : Controller
         if (!result.Success)
         {
             _logger.LogWarning("RequestReview failed for ticket {TicketId}: {Error}", id, result.ErrorMessage);
+            if (IsHtmxRequest)
+                return StatusCode(500, result.ErrorMessage ?? "Failed to request review");
+            TempData["Error"] = result.ErrorMessage ?? "Failed to request review";
+            return RedirectToAction("Detail", "Ticket", new { id });
         }
 
-        if (Request.Headers.ContainsKey("HX-Request"))
+        if (IsHtmxRequest)
         {
             var ticketDetails = await _ticketReadService.GetTicketDetailsAsync(id);
             return PartialView("_QualityReviewPartial", ticketDetails);
@@ -158,9 +159,13 @@ public class TicketWorkflowController : Controller
         if (!result.Success)
         {
             _logger.LogWarning("SubmitReview failed for ticket {TicketId}: {Error}", id, result.ErrorMessage);
+            if (IsHtmxRequest)
+                return StatusCode(500, result.ErrorMessage ?? "Failed to submit review");
+            TempData["Error"] = result.ErrorMessage ?? "Failed to submit review";
+            return RedirectToAction("Detail", "Ticket", new { id });
         }
 
-        if (Request.Headers.ContainsKey("HX-Request"))
+        if (IsHtmxRequest)
         {
             var ticketDetails = await _ticketReadService.GetTicketDetailsAsync(id);
             return PartialView("_QualityReviewPartial", ticketDetails);

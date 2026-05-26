@@ -2,18 +2,19 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.Engine.GERDA.Tickets.Lifecycle;
 
 namespace TicketMasala.Web.Controllers;
 
 [Authorize]
 public class TicketCommentsController : Controller
 {
-    private readonly ITicketWorkflowService _ticketWorkflowService;
+    private readonly ITicketLifecycle _ticketLifecycle;
     private readonly ILogger<TicketCommentsController> _logger;
 
-    public TicketCommentsController(ITicketWorkflowService ticketWorkflowService, ILogger<TicketCommentsController> logger)
+    public TicketCommentsController(ITicketLifecycle ticketLifecycle, ILogger<TicketCommentsController> logger)
     {
-        _ticketWorkflowService = ticketWorkflowService;
+        _ticketLifecycle = ticketLifecycle;
         _logger = logger;
     }
 
@@ -33,7 +34,16 @@ public class TicketCommentsController : Controller
 
         try
         {
-            await _ticketWorkflowService.AddCommentAsync(id, commentBody, isInternal, userId);
+            var result = await _ticketLifecycle.ExecuteAsync(
+                new AddCommentCommand(id, commentBody, isInternal),
+                new TicketContext(userId));
+
+            if (!result.Success)
+            {
+                _logger.LogWarning("AddComment failed for ticket {TicketId}: {Error}", id, result.ErrorMessage);
+                TempData["Error"] = result.ErrorMessage ?? "Failed to add comment.";
+                return RedirectToAction("Detail", "Ticket", new { id });
+            }
             TempData["Success"] = "Comment added successfully.";
         }
         catch (Exception ex)
@@ -55,7 +65,15 @@ public class TicketCommentsController : Controller
 
         try
         {
-            await _ticketWorkflowService.RequestReviewAsync(id, userId);
+            var result = await _ticketLifecycle.ExecuteAsync(
+                new RequestReviewCommand(id),
+                new TicketContext(userId));
+
+            if (!result.Success)
+            {
+                _logger.LogWarning("RequestReview failed for ticket {TicketId}: {Error}", id, result.ErrorMessage);
+                TempData["Error"] = result.ErrorMessage ?? "Failed to request review.";
+            }
             TempData["Success"] = "Review requested successfully.";
         }
         catch (Exception ex)
@@ -78,7 +96,15 @@ public class TicketCommentsController : Controller
 
         try
         {
-            await _ticketWorkflowService.SubmitReviewAsync(id, score, feedback, approve, userId);
+            var result = await _ticketLifecycle.ExecuteAsync(
+                new SubmitReviewCommand(id, score, feedback, approve),
+                new TicketContext(userId));
+
+            if (!result.Success)
+            {
+                _logger.LogWarning("SubmitReview failed for ticket {TicketId}: {Error}", id, result.ErrorMessage);
+                TempData["Error"] = result.ErrorMessage ?? "Failed to submit review.";
+            }
             TempData["Success"] = approve ? "Review approved." : "Review rejected.";
         }
         catch (Exception ex)

@@ -7,13 +7,14 @@ using TicketMasala.Web;
 using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.Engine.GERDA.Tickets.Lifecycle;
 using TicketMasala.Web.Utilities;
 
 namespace TicketMasala.Web.Engine.Ingestion;
 
 public class TicketGenerator : ITicketGenerator
 {
-    private readonly ITicketWorkflowService _ticketWorkflowService;
+    private readonly ITicketLifecycle _ticketLifecycle;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly MasalaDbContext _context;
     private readonly ILogger<TicketGenerator> _logger;
@@ -21,13 +22,13 @@ public class TicketGenerator : ITicketGenerator
 
 
     public TicketGenerator(
-        ITicketWorkflowService ticketWorkflowService,
+        ITicketLifecycle ticketLifecycle,
         UserManager<ApplicationUser> userManager,
         MasalaDbContext context,
         ILogger<TicketGenerator> logger,
         ISystemClock clock)
     {
-        _ticketWorkflowService = ticketWorkflowService;
+        _ticketLifecycle = ticketLifecycle;
         _userManager = userManager;
         _context = context;
         _logger = logger;
@@ -139,13 +140,9 @@ public class TicketGenerator : ITicketGenerator
     private async Task GeneratePendingTicketAsync(ApplicationUser customer, string title, string desc, CancellationToken ct)
     {
         var project = await _context.Projects.FirstOrDefaultAsync(ct);
-        await _ticketWorkflowService.CreateTicketAsync(
-           description: $"{title} - {desc}",
-           customerId: customer.Id,
-           responsibleId: null,
-           projectGuid: project?.Guid ?? Guid.Empty,
-           completionTarget: _clock.UtcNow.AddDays(2)
-       );
+        await _ticketLifecycle.ExecuteAsync(
+           new CreateTicketCommand($"{title} - {desc}", customer.Id, null, project?.Guid ?? Guid.Empty, _clock.UtcNow.AddDays(2)),
+           new TicketContext(customer.Id));
     }
 
     public async Task GenerateRandomTicketAsync(CancellationToken cancellationToken = default)
@@ -194,18 +191,29 @@ public class TicketGenerator : ITicketGenerator
         var description = RandomDataHelper.GenerateTicketDescription();
 
         // Create ticket using the service method which handles defaults and notifications
-        var ticket = await _ticketWorkflowService.CreateTicketAsync(
-            description: $"{title} - {description}",
-            customerId: randomCustomer.Id,
-            responsibleId: null, // Let GERDA or manual assignment handle this
-            projectGuid: project.Guid,
-            completionTarget: _clock.UtcNow.AddDays(Random.Shared.Next(1, 14))
-        );
+        var result = await _ticketLifecycle.ExecuteAsync(
+            new CreateTicketCommand(
+                $"{title} - {description}",
+                randomCustomer.Id,
+                null,
+                project.Guid,
+                _clock.UtcNow.AddDays(Random.Shared.Next(1, 14))),
+            new TicketContext(randomCustomer.Id));
+
+        if (!result.Success)
+        {
+            _logger.LogWarning("Random ticket generation failed: {Error}", result.ErrorMessage);
+            return;
+        }
+
+        var ticket = result.Ticket!;
 
         // Enhance with random priority
         ticket.PriorityScore = Random.Shared.NextDouble() * 100;
 
-        await _ticketWorkflowService.UpdateTicketAsync(ticket);
+        // Direct field mutation - no full update pipeline needed for seed data
+        // TODO: use UpdateTicketCommand when it supports full field updates
+        await _context.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Generated random ticket: {Title} for Customer: {Customer}", title, randomCustomer.UserName);
     }

@@ -10,6 +10,7 @@ using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.Engine.GERDA.Tickets.Lifecycle;
 using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.ViewModels.Api;
@@ -29,7 +30,7 @@ namespace TicketMasala.Web.Controllers.Api;
 [Produces("application/json")]
 public class TicketsApiController : ControllerBase
 {
-    private readonly ITicketWorkflowService _ticketWorkflowService;
+    private readonly ITicketLifecycle _ticketLifecycle;
     private readonly ITicketReadService _ticketReadService;
     private readonly IUserRepository _userRepository;
     private readonly ITicketRepository _ticketRepository;
@@ -44,7 +45,7 @@ public class TicketsApiController : ControllerBase
     private const int MaxExternalNameLength = 100;
 
     public TicketsApiController(
-        ITicketWorkflowService ticketWorkflowService,
+        ITicketLifecycle ticketLifecycle,
         ITicketReadService ticketReadService,
         IUserRepository userRepository,
         ITicketRepository ticketRepository,
@@ -53,7 +54,7 @@ public class TicketsApiController : ControllerBase
         ILogger<TicketsApiController> logger,
         ISystemClock clock)
     {
-        _ticketWorkflowService = ticketWorkflowService;
+        _ticketLifecycle = ticketLifecycle;
         _ticketReadService = ticketReadService;
         _userRepository = userRepository;
         _ticketRepository = ticketRepository;
@@ -116,13 +117,16 @@ public class TicketsApiController : ControllerBase
         // Create the ticket
         var description = $"**{sanitizedSubject}**\n\n{sanitizedDescription}\n\n---\n*Submitted via: {sanitizedSourceSite}*";
 
-        var ticket = await _ticketWorkflowService.CreateTicketAsync(
-            description: description,
-            customerId: customer.Id,
-            responsibleId: null, // GERDA will assign
-            projectGuid: null,
-            completionTarget: _clock.UtcNow.AddDays(14)
-        );
+        var createResult = await _ticketLifecycle.ExecuteAsync(
+            new CreateTicketCommand(description, customer.Id),
+            new TicketContext("external"));
+
+        if (!createResult.Success)
+        {
+            throw new InvalidOperationException(createResult.ErrorMessage ?? "Failed to create external ticket");
+        }
+
+        var ticket = createResult.Ticket!;
 
         // Add external source tag
         ticket.GerdaTags = string.IsNullOrEmpty(ticket.GerdaTags)
@@ -208,13 +212,21 @@ public class TicketsApiController : ControllerBase
             : "{}";
 
         // Create the ticket using internal service
-        var ticket = await _ticketWorkflowService.CreateTicketAsync(
-            description: $"**{request.Title}**\n\n{request.Description}",
-            customerId: request.CustomerId,
-            responsibleId: request.AssigneeId,
-            projectGuid: request.WorkContainerId,
-            completionTarget: request.CompletionTarget ?? _clock.UtcNow.AddDays(14)
-        );
+        var createResult = await _ticketLifecycle.ExecuteAsync(
+            new CreateTicketCommand(
+                $"**{request.Title}**\n\n{request.Description}",
+                request.CustomerId,
+                request.AssigneeId,
+                request.WorkContainerId,
+                request.CompletionTarget ?? _clock.UtcNow.AddDays(14)),
+            new TicketContext(_userManager.GetUserId(User) ?? "system"));
+
+        if (!createResult.Success)
+        {
+            throw new InvalidOperationException(createResult.ErrorMessage ?? "Failed to create work item");
+        }
+
+        var ticket = createResult.Ticket!;
 
         // Update domain-specific fields
         ticket.SetDomain(request.DomainId);
@@ -254,11 +266,11 @@ public class TicketsApiController : ControllerBase
 
         var userId = _userManager.GetUserId(User) ?? "system";
 
-        var success = await _ticketWorkflowService.ResolveTicketAsync(
-            id,
-            request.ResolutionNotes,
-            request.BillableAmount,
-            userId);
+        var resolveResult = await _ticketLifecycle.ExecuteAsync(
+            new ResolveTicketCommand(id, request.ResolutionNotes, request.BillableAmount),
+            new TicketContext(userId));
+
+        var success = resolveResult.Success;
 
         if (!success)
         {

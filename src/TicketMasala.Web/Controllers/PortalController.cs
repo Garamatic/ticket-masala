@@ -6,6 +6,7 @@ using TicketMasala.Domain.Common;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.GERDA;
 using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.Engine.GERDA.Tickets.Lifecycle;
 using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.ViewModels.Portal;
 using TicketMasala.Web.ViewModels.Tickets;
@@ -15,18 +16,18 @@ namespace TicketMasala.Web.Controllers;
 [Authorize(Roles = Constants.RoleCustomer)]
 public class PortalController : Controller
 {
-    private readonly ITicketWorkflowService _ticketWorkflowService;
+    private readonly ITicketLifecycle _ticketLifecycle;
     private readonly ITicketReadService _ticketReadService;
     private readonly IGerda _gerda;
     private readonly ILogger<PortalController> _logger;
 
     public PortalController(
-        ITicketWorkflowService ticketWorkflowService,
+        ITicketLifecycle ticketLifecycle,
         ITicketReadService ticketReadService,
         IGerda gerda,
         ILogger<PortalController> logger)
     {
-        _ticketWorkflowService = ticketWorkflowService;
+        _ticketLifecycle = ticketLifecycle;
         _ticketReadService = ticketReadService;
         _gerda = gerda;
         _logger = logger;
@@ -79,13 +80,19 @@ public class PortalController : Controller
             // Create ticket - Customer is implicitly the Creator and CustomerId
             var fullDescription = $"subject: {model.Title}\n\n{model.Description}";
 
-            var ticket = await _ticketWorkflowService.CreateTicketAsync(
-                fullDescription,
-                userId!,
-                responsibleId: null,
-                projectGuid: model.ProjectGuid,
-                completionTarget: null
-            );
+            var result = await _ticketLifecycle.ExecuteAsync(
+                new CreateTicketCommand(fullDescription, userId!, null, model.ProjectGuid, null),
+                new TicketContext(userId!));
+
+            if (!result.Success)
+            {
+                _logger.LogError("Portal ticket creation failed: {Error}", result.ErrorMessage);
+                ModelState.AddModelError("", result.ErrorMessage ?? "An error occurred while creating the ticket. Please try again.");
+                model.Projects = await GetCustomerProjectsSelectList(userId!);
+                return View(model);
+            }
+
+            var ticket = result.Ticket!;
 
             // Trigger GERDA processing
             _logger.LogInformation("Processing customer portal ticket {TicketGuid} with GERDA AI", ticket.Guid);

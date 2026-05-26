@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Entities;
+using TicketMasala.Web.Engine.GERDA.Tickets.Lifecycle;
 using TicketMasala.Web.Observers;
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.ViewModels.GERDA;
@@ -24,7 +25,7 @@ public class TicketBatchService : ITicketBatchService
     private readonly IProjectRepository _projectRepository;
     private readonly IUserRepository _userRepository;
     private readonly IEnumerable<ITicketObserver> _observers;
-    private readonly ITicketWorkflowService _ticketWorkflowService;
+    private readonly ITicketLifecycle _ticketLifecycle;
     private readonly ILogger<TicketBatchService> _logger;
 
     public TicketBatchService(
@@ -32,14 +33,14 @@ public class TicketBatchService : ITicketBatchService
         IProjectRepository projectRepository,
         IUserRepository userRepository,
         IEnumerable<ITicketObserver> observers,
-        ITicketWorkflowService ticketWorkflowService,
+        ITicketLifecycle ticketLifecycle,
         ILogger<TicketBatchService> logger)
     {
         _ticketRepository = ticketRepository;
         _projectRepository = projectRepository;
         _userRepository = userRepository;
         _observers = observers;
-        _ticketWorkflowService = ticketWorkflowService;
+        _ticketLifecycle = ticketLifecycle;
         _logger = logger;
     }
 
@@ -112,7 +113,9 @@ public class TicketBatchService : ITicketBatchService
     {
         foreach (var id in ticketIds)
         {
-            await _ticketWorkflowService.AssignTicketAsync(id, agentId);
+            await _ticketLifecycle.ExecuteAsync(
+                new AssignTicketCommand(id, agentId),
+                new TicketContext("system"));
         }
     }
 
@@ -124,7 +127,7 @@ public class TicketBatchService : ITicketBatchService
             if (ticket != null)
             {
                 ticket.TicketStatus = status;
-                await _ticketWorkflowService.UpdateTicketAsync(ticket);
+                await _ticketRepository.UpdateAsync(ticket);
             }
         }
     }

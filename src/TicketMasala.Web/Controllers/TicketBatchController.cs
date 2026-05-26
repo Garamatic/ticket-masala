@@ -4,6 +4,7 @@ using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.Engine.GERDA.Tickets.Lifecycle;
 using TicketMasala.Web.ViewModels.Tickets;
 
 namespace TicketMasala.Web.Controllers;
@@ -13,7 +14,7 @@ public class TicketBatchController : Controller
 {
     private readonly ITicketBatchService _ticketBatchService;
     private readonly ITicketReadService _ticketReadService;
-    private readonly ITicketWorkflowService _ticketWorkflowService;
+    private readonly ITicketLifecycle _ticketLifecycle;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<TicketBatchController> _logger;
     private readonly ISystemClock _clock;
@@ -21,14 +22,14 @@ public class TicketBatchController : Controller
     public TicketBatchController(
         ITicketBatchService ticketBatchService,
         ITicketReadService ticketReadService,
-        ITicketWorkflowService ticketWorkflowService,
+        ITicketLifecycle ticketLifecycle,
         IHttpContextAccessor httpContextAccessor,
         ILogger<TicketBatchController> logger,
         ISystemClock clock)
     {
         _ticketBatchService = ticketBatchService;
         _ticketReadService = ticketReadService;
-        _ticketWorkflowService = ticketWorkflowService;
+        _ticketLifecycle = ticketLifecycle;
         _httpContextAccessor = httpContextAccessor;
         _logger = logger;
         _clock = clock;
@@ -139,7 +140,16 @@ public class TicketBatchController : Controller
 
         try
         {
-            await _ticketWorkflowService.LogTimeAsync(id, userId, hours, date, description);
+            var logResult = await _ticketLifecycle.ExecuteAsync(
+                new LogTimeCommand(id, hours, date, description),
+                new TicketContext(userId));
+
+            if (!logResult.Success)
+            {
+                _logger.LogWarning("LogTime failed for ticket {TicketId}: {Error}", id, logResult.ErrorMessage);
+                TempData["Error"] = logResult.ErrorMessage ?? "Failed to log time. Please try again.";
+                return RedirectToAction("Detail", "Ticket", new { id });
+            }
             TempData["Success"] = $"Successfully logged {hours} hours on this ticket.";
         }
         catch (Exception ex)

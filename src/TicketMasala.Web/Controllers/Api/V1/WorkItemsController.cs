@@ -3,6 +3,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.Engine.GERDA.Tickets.Lifecycle;
 using TicketMasala.Web.Extensions;
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.Services;
@@ -19,18 +20,18 @@ namespace TicketMasala.Web.Controllers.Api.V1;
 [Authorize]
 public class WorkItemsController : ControllerBase
 {
-    private readonly ITicketWorkflowService _ticketWorkflowService;
+    private readonly ITicketLifecycle _ticketLifecycle;
     private readonly ITicketRepository _ticketRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IJsonParsingService _jsonParsingService;
 
     public WorkItemsController(
-        ITicketWorkflowService ticketWorkflowService,
+        ITicketLifecycle ticketLifecycle,
         ITicketRepository ticketRepository,
         IUnitOfWork unitOfWork,
         IJsonParsingService jsonParsingService)
     {
-        _ticketWorkflowService = ticketWorkflowService;
+        _ticketLifecycle = ticketLifecycle;
         _ticketRepository = ticketRepository;
         _unitOfWork = unitOfWork;
         _jsonParsingService = jsonParsingService;
@@ -85,18 +86,28 @@ public class WorkItemsController : ControllerBase
             throw new ArgumentException("CustomerId is required and could not be determined from context.");
         }
 
+        // Resolve current user for audit context
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "system";
+
         // Use Service for Create to ensure business rules/observers run
-        var ticket = await _ticketWorkflowService.CreateTicketAsync(
-            workItem.Description,
-            customerId,
-            workItem.AssignedHandlerId,
-            workItem.ContainerId,
-            workItem.CompletionTarget
-        );
+        var result = await _ticketLifecycle.ExecuteAsync(
+            new CreateTicketCommand(
+                workItem.Description,
+                customerId,
+                workItem.AssignedHandlerId,
+                workItem.ContainerId,
+                workItem.CompletionTarget),
+            new TicketContext(currentUserId));
+
+        if (!result.Success)
+        {
+            throw new InvalidOperationException(result.ErrorMessage ?? "Failed to create work item");
+        }
+
+        var ticket = result.Ticket!;
 
         // Post-creation update for fields not in Service.Create signature
         // Use domain methods to ensure proper validation and event raising
-        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "system";
 
         if (!string.IsNullOrEmpty(workItem.Title) && workItem.Title != "New Ticket")
         {
@@ -140,11 +151,9 @@ public class WorkItemsController : ControllerBase
         // The TicketWorkflowService will handle persistence with proper business rules/observers
         workItem.ToTicket(existingTicket);
 
-        // Use Service to persist to ensure Rules/Observers run
-        var result = await _ticketWorkflowService.UpdateTicketAsync(existingTicket);
-
-        if (!result)
-            throw new InvalidOperationException("Failed to update work item");
+        // Persist changes directly (TODO: migrate to UpdateTicketCommand for full observer/audit support)
+        await _ticketRepository.UpdateAsync(existingTicket);
+        await _unitOfWork.CommitAsync();
 
         return NoContent();
     }
@@ -185,12 +194,11 @@ public class WorkItemsController : ControllerBase
         }
 
         // Resolve the ticket via workflow service
-        var success = await _ticketWorkflowService.ResolveTicketAsync(
-            id,
-            request.ResolutionNotes,
-            request.BillableAmount,
-            resolvedByUserId
-        );
+        var resolveResult = await _ticketLifecycle.ExecuteAsync(
+            new ResolveTicketCommand(id, request.ResolutionNotes, request.BillableAmount),
+            new TicketContext(resolvedByUserId));
+
+        var success = resolveResult.Success;
 
         if (!success)
         {

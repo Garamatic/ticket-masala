@@ -3,23 +3,23 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Moq;
-using TicketMasala.Domain.Services;
 using TicketMasala.Web.Controllers;
+using TicketMasala.Web.Engine.GERDA.Tickets.Lifecycle;
 using Xunit;
 
 namespace TicketMasala.Tests.Controllers;
 
 public class TicketCommentsControllerTests
 {
-    private readonly Mock<ITicketWorkflowService> _mockTicketWorkflowService;
+    private readonly Mock<ITicketLifecycle> _mockTicketLifecycle;
     private readonly TicketCommentsController _controller;
 
     public TicketCommentsControllerTests()
     {
-        _mockTicketWorkflowService = new Mock<ITicketWorkflowService>();
+        _mockTicketLifecycle = new Mock<ITicketLifecycle>();
         var mockLogger = new Mock<Microsoft.Extensions.Logging.ILogger<TicketCommentsController>>();
 
-        _controller = new TicketCommentsController(_mockTicketWorkflowService.Object, mockLogger.Object);
+        _controller = new TicketCommentsController(_mockTicketLifecycle.Object, mockLogger.Object);
 
         // Set up user claims
         var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
@@ -46,15 +46,18 @@ public class TicketCommentsControllerTests
         var comment = "This is a comment";
         var isInternal = false;
 
+        _mockTicketLifecycle.Setup(x => x.ExecuteAsync(
+            It.Is<AddCommentCommand>(c => c.TicketGuid == ticketId && c.Body == comment && c.IsInternal == isInternal),
+            It.Is<TicketContext>(ctx => ctx.UserId == "test-user-id")))
+            .ReturnsAsync(new TicketResult { Success = true, Comment = new TicketMasala.Domain.Entities.TicketComment { Body = comment } });
+
         // Act
         var result = await _controller.AddComment(ticketId, comment, isInternal);
 
         // Assert
-        _mockTicketWorkflowService.Verify(s => s.AddCommentAsync(
-            ticketId,
-            comment,
-            isInternal,
-            "test-user-id"), Times.Once);
+        _mockTicketLifecycle.Verify(x => x.ExecuteAsync(
+            It.Is<AddCommentCommand>(c => c.TicketGuid == ticketId && c.Body == comment && c.IsInternal == isInternal),
+            It.Is<TicketContext>(ctx => ctx.UserId == "test-user-id")), Times.Once);
 
         var redirect = Assert.IsType<RedirectToActionResult>(result);
         Assert.Equal("Detail", redirect.ActionName);
@@ -72,11 +75,9 @@ public class TicketCommentsControllerTests
         var result = await _controller.AddComment(ticketId, "", false);
 
         // Assert
-        _mockTicketWorkflowService.Verify(s => s.AddCommentAsync(
-            It.IsAny<Guid>(),
-            It.IsAny<string>(),
-            It.IsAny<bool>(),
-            It.IsAny<string>()), Times.Never);
+        _mockTicketLifecycle.Verify(x => x.ExecuteAsync(
+            It.IsAny<AddCommentCommand>(),
+            It.IsAny<TicketContext>()), Times.Never);
 
         var redirect = Assert.IsType<RedirectToActionResult>(result);
         Assert.Equal("Detail", redirect.ActionName);
@@ -88,11 +89,18 @@ public class TicketCommentsControllerTests
         // Arrange
         var ticketGuid = Guid.NewGuid();
 
+        _mockTicketLifecycle.Setup(x => x.ExecuteAsync(
+            It.Is<RequestReviewCommand>(c => c.TicketGuid == ticketGuid),
+            It.Is<TicketContext>(ctx => ctx.UserId == "test-user-id")))
+            .ReturnsAsync(new TicketResult { Success = true });
+
         // Act
         var result = await _controller.RequestReview(ticketGuid);
 
         // Assert
-        _mockTicketWorkflowService.Verify(s => s.RequestReviewAsync(ticketGuid, "test-user-id"), Times.Once);
+        _mockTicketLifecycle.Verify(x => x.ExecuteAsync(
+            It.Is<RequestReviewCommand>(c => c.TicketGuid == ticketGuid),
+            It.Is<TicketContext>(ctx => ctx.UserId == "test-user-id")), Times.Once);
 
         var redirect = Assert.IsType<RedirectToActionResult>(result);
         Assert.Equal("Detail", redirect.ActionName);
@@ -107,16 +115,18 @@ public class TicketCommentsControllerTests
         var feedback = "Great work!";
         var approve = true;
 
+        _mockTicketLifecycle.Setup(x => x.ExecuteAsync(
+            It.Is<SubmitReviewCommand>(c => c.TicketGuid == ticketGuid && c.Score == score && c.Feedback == feedback && c.Approved == approve),
+            It.Is<TicketContext>(ctx => ctx.UserId == "test-user-id")))
+            .ReturnsAsync(new TicketResult { Success = true });
+
         // Act
         var result = await _controller.SubmitReview(ticketGuid, score, feedback, approve);
 
         // Assert
-        _mockTicketWorkflowService.Verify(s => s.SubmitReviewAsync(
-            ticketGuid,
-            score,
-            feedback,
-            approve,
-            "test-user-id"), Times.Once);
+        _mockTicketLifecycle.Verify(x => x.ExecuteAsync(
+            It.Is<SubmitReviewCommand>(c => c.TicketGuid == ticketGuid && c.Score == score && c.Feedback == feedback && c.Approved == approve),
+            It.Is<TicketContext>(ctx => ctx.UserId == "test-user-id")), Times.Once);
 
         var redirect = Assert.IsType<RedirectToActionResult>(result);
         Assert.Equal("Detail", redirect.ActionName);

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using TicketMasala.Domain.Common;
 using TicketMasala.Web.Engine.GERDA.Dispatching;
 using TicketMasala.Web.Engine.GERDA.Tickets;
+using TicketMasala.Web.Engine.GERDA.Tickets.Lifecycle;
 using TicketMasala.Web.ViewModels.Dashboard; // Check if needed
 using TicketMasala.Web.ViewModels.GERDA;
 using TicketMasala.Web.ViewModels.Tickets; // Check if needed
@@ -16,20 +17,20 @@ public class DispatchController : Controller
     private readonly IDispatchingService? _dispatchingService;
     private readonly IDispatchBacklogService? _dispatchBacklogService;
     private readonly ITicketReadService _ticketReadService;
-    private readonly ITicketWorkflowService _ticketWorkflowService;
+    private readonly ITicketLifecycle _ticketLifecycle;
     private readonly ITicketBatchService _ticketBatchService;
 
     public DispatchController(
         ILogger<DispatchController> logger,
         ITicketReadService ticketReadService,
-        ITicketWorkflowService ticketWorkflowService,
+        ITicketLifecycle ticketLifecycle,
         ITicketBatchService ticketBatchService,
         IDispatchingService? dispatchingService = null,
         IDispatchBacklogService? dispatchBacklogService = null)
     {
         _logger = logger;
         _ticketReadService = ticketReadService;
-        _ticketWorkflowService = ticketWorkflowService;
+        _ticketLifecycle = ticketLifecycle;
         _ticketBatchService = ticketBatchService;
         _dispatchingService = dispatchingService;
         _dispatchBacklogService = dispatchBacklogService;
@@ -77,7 +78,11 @@ public class DispatchController : Controller
     {
         try
         {
-            var success = await _ticketWorkflowService.AssignTicketWithProjectAsync(ticketGuid, agentId, projectGuid);
+            var assignResult = await _ticketLifecycle.ExecuteAsync(
+                new AssignTicketCommand(ticketGuid, agentId, projectGuid),
+                new TicketContext("system"));
+
+            var success = assignResult.Success;
 
             if (!success)
             {

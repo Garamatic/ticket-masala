@@ -86,6 +86,7 @@ internal sealed class TicketLifecycle : ITicketLifecycle
                 AssignTicketCommand c => await HandleAssignAsync(c, context, cancellationToken),
                 RequestReviewCommand c => await HandleRequestReviewAsync(c, context, cancellationToken),
                 SubmitReviewCommand c => await HandleSubmitReviewAsync(c, context, cancellationToken),
+                TransitionStatusCommand c => await HandleTransitionStatusAsync(c, context, cancellationToken),
                 BatchAssignCommand c => await HandleBatchAssignAsync(c, context, cancellationToken),
                 _ => TicketResult.Fail($"Unknown command type: {command.GetType().Name}")
             };
@@ -343,12 +344,32 @@ internal sealed class TicketLifecycle : ITicketLifecycle
         return TicketResult.Ok(ticket);
     }
 
+    private async Task<TicketResult> HandleTransitionStatusAsync(
+        TransitionStatusCommand cmd,
+        TicketContext ctx,
+        CancellationToken ct)
+    {
+        var ticket = await _unitOfWork.Tickets.GetByIdAsync(cmd.TicketGuid, includeRelations: false);
+        if (ticket == null)
+            return TicketResult.Fail("Ticket not found");
+
+        ticket.TransitionTo(cmd.NewStatus, ctx.UserId);
+
+        await _unitOfWork.Tickets.UpdateAsync(ticket);
+        await AuditAsync(ticket.Guid, "StatusChanged", ctx.UserId, ct,
+            propertyName: "TicketStatus", newValue: cmd.NewStatus.ToString());
+        await CommitAsync(ct);
+        await NotifyTicketObserversAsync(ticket, null, ct);
+
+        return TicketResult.Ok(ticket);
+    }
+
     private async Task<TicketResult> HandleBatchAssignAsync(
         BatchAssignCommand cmd,
         TicketContext ctx,
         CancellationToken ct)
     {
-        var results = new List<string>();
+        var failures = new List<string>();
         int successCount = 0;
 
         foreach (var ticketGuid in cmd.TicketGuids)
@@ -360,21 +381,18 @@ internal sealed class TicketLifecycle : ITicketLifecycle
             if (result.Success)
                 successCount++;
             else
-                results.Add($"{ticketGuid}: {result.ErrorMessage}");
+                failures.Add($"{ticketGuid}: {result.ErrorMessage}");
         }
 
         if (successCount == 0)
-            return TicketResult.Fail($"All {cmd.TicketGuids.Count} assignments failed: {string.Join("; ", results)}");
+            return TicketResult.Fail($"All {cmd.TicketGuids.Count} assignments failed: {string.Join("; ", failures)}");
 
-        var warning = results.Count > 0
-            ? $"{successCount}/{cmd.TicketGuids.Count} succeeded. Failures: {string.Join("; ", results)}"
-            : null;
-
-        // Batch result doesn't return a single ticket
         return new TicketResult
         {
             Success = true,
-            Warnings = warning != null ? new[] { warning } : Array.Empty<string>()
+            Warnings = failures.Count > 0
+                ? [$"{successCount}/{cmd.TicketGuids.Count} succeeded. Failures: {string.Join("; ", failures)}"]
+                : []
         };
     }
 

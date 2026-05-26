@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
@@ -65,6 +66,71 @@ public class TicketsApiController : ControllerBase
     }
 
     /// <summary>
+    /// Submit a ticket via the external intake API (anonymous, snake_case payload).
+    /// Accepts the flat event schema used by partner portals and integration tests.
+    /// The root POST /api/tickets route enables unauthenticated ticket submission;
+    /// callers are rate-limited by the ExternalSubmission policy.
+    /// </summary>
+    [HttpPost]
+    [AllowAnonymous]
+    [EnableRateLimiting("ExternalSubmission")]
+    [ProducesResponseType(typeof(ExternalTicketResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ExternalTicketResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<ActionResult<ExternalTicketResponse>> SubmitTicket(
+        [FromBody] FlatTicketRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.CustomerEmail))
+            return BadRequest(new ExternalTicketResponse { Success = false, Message = "customer_email is required." });
+
+        if (!IsValidEmail(request.CustomerEmail))
+            return BadRequest(new ExternalTicketResponse { Success = false, Message = "customer_email must be a valid email address." });
+
+        var description = SanitizeInput(request.Description ?? request.Subject ?? "No description provided.");
+        if (description.Length > MaxExternalDescriptionLength)
+            return BadRequest(new ExternalTicketResponse { Success = false, Message = $"description must be less than {MaxExternalDescriptionLength} characters." });
+
+        var sanitizedName = SanitizeInput(request.CustomerName ?? "External User");
+        if (sanitizedName.Length > MaxExternalNameLength)
+            return BadRequest(new ExternalTicketResponse { Success = false, Message = $"customer_name must be less than {MaxExternalNameLength} characters." });
+
+        var customer = await FindOrCreateCustomerAsync(request.CustomerEmail, sanitizedName);
+        if (customer == null)
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                new ExternalTicketResponse { Success = false, Message = "Failed to create customer account." });
+
+        var source = SanitizeInput(request.Source ?? "external-api");
+        var body = $"{description}\n\n---\n*Submitted via: {source}*";
+
+        var createResult = await _ticketLifecycle.ExecuteAsync(
+            new CreateTicketCommand(body, customer.Id),
+            new TicketContext("external"));
+
+        if (!createResult.Success)
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                new ExternalTicketResponse { Success = false, Message = createResult.ErrorMessage ?? "Ticket creation failed." });
+
+        var ticket = createResult.Ticket!;
+
+        AppendExternalTag(ticket, source);
+
+        await _ticketRepository.UpdateAsync(ticket);
+        await _unitOfWork.CommitAsync();
+
+        _logger.LogInformation(
+            "External ticket {TicketId} submitted via /api/tickets for {Email} (source: {Source})",
+            ticket.Guid, customer.Email, source);
+
+        return Ok(new ExternalTicketResponse
+        {
+            Success = true,
+            TicketId = ticket.Guid.ToString(),
+            ReferenceNumber = ticket.Guid.ToString()[..8].ToUpper(),
+            Message = "Your request has been submitted successfully"
+        });
+    }
+
+    /// <summary>
     /// Create a ticket from an external website (e.g., partner company site).
     /// Rate limited to prevent abuse.
     /// </summary>
@@ -114,11 +180,10 @@ public class TicketsApiController : ControllerBase
             throw new InvalidOperationException("Failed to create customer account.");
         }
 
-        // Create the ticket
-        var description = $"**{sanitizedSubject}**\n\n{sanitizedDescription}\n\n---\n*Submitted via: {sanitizedSourceSite}*";
+        var body = $"**{sanitizedSubject}**\n\n{sanitizedDescription}\n\n---\n*Submitted via: {sanitizedSourceSite}*";
 
         var createResult = await _ticketLifecycle.ExecuteAsync(
-            new CreateTicketCommand(description, customer.Id),
+            new CreateTicketCommand(body, customer.Id),
             new TicketContext("external"));
 
         if (!createResult.Success)
@@ -129,9 +194,7 @@ public class TicketsApiController : ControllerBase
         var ticket = createResult.Ticket!;
 
         // Add external source tag
-        ticket.GerdaTags = string.IsNullOrEmpty(ticket.GerdaTags)
-            ? $"External-Request,{sanitizedSourceSite}"
-            : $"{ticket.GerdaTags},External-Request,{sanitizedSourceSite}";
+        AppendExternalTag(ticket, sanitizedSourceSite);
 
         await _ticketRepository.UpdateAsync(ticket);
         await _unitOfWork.CommitAsync();
@@ -228,10 +291,10 @@ public class TicketsApiController : ControllerBase
 
         var ticket = createResult.Ticket!;
 
-        // Update domain-specific fields
+        var modifiedBy = request.CustomerId ?? "system";
         ticket.SetDomain(request.DomainId);
-        ticket.UpdateTitle(request.Title, request.CustomerId ?? "system");
-        ticket.UpdateCustomFields(customFieldsJson, request.CustomerId ?? "system");
+        ticket.UpdateTitle(request.Title, modifiedBy);
+        ticket.UpdateCustomFields(customFieldsJson, modifiedBy);
         await _ticketRepository.UpdateAsync(ticket);
         await _unitOfWork.CommitAsync();
 
@@ -270,9 +333,7 @@ public class TicketsApiController : ControllerBase
             new ResolveTicketCommand(id, request.ResolutionNotes, request.BillableAmount),
             new TicketContext(userId));
 
-        var success = resolveResult.Success;
-
-        if (!success)
+        if (!resolveResult.Success)
         {
             return NotFound(new { error = "Ticket not found or could not be resolved." });
         }
@@ -331,24 +392,44 @@ public class TicketsApiController : ControllerBase
     }
 
     /// <summary>
-    /// Generates a cryptographically secure random password.
+    /// Generates a cryptographically secure random password that always satisfies
+    /// ASP.NET Identity's default policy (uppercase, lowercase, digit, non-alphanumeric).
+    ///
+    /// Strategy: seed with one character from each required class, fill the rest
+    /// from the full pool, then Fisher-Yates shuffle so mandatory characters are
+    /// at unpredictable positions.
     /// </summary>
     private static string GenerateSecurePassword()
     {
-        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
-        using var random = System.Security.Cryptography.RandomNumberGenerator.Create();
-        var password = new char[20];
-        var byteBuffer = new byte[sizeof(int)];
+        const string upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const string lower = "abcdefghijklmnopqrstuvwxyz";
+        const string digits = "0123456789";
+        const string special = "!@#$%^&*";
+        const string all = upper + lower + digits + special;
+        const int length = 20;
 
-        for (int i = 0; i < password.Length; i++)
+        var password = new char[length];
+
+        // Guarantee at least one character from each required class
+        password[0] = upper[System.Security.Cryptography.RandomNumberGenerator.GetInt32(upper.Length)];
+        password[1] = lower[System.Security.Cryptography.RandomNumberGenerator.GetInt32(lower.Length)];
+        password[2] = digits[System.Security.Cryptography.RandomNumberGenerator.GetInt32(digits.Length)];
+        password[3] = special[System.Security.Cryptography.RandomNumberGenerator.GetInt32(special.Length)];
+
+        // Fill remaining positions from the full pool
+        for (int i = 4; i < length; i++)
+            password[i] = all[System.Security.Cryptography.RandomNumberGenerator.GetInt32(all.Length)];
+
+        // Fisher-Yates shuffle so mandatory chars land at random positions
+        for (int i = length - 1; i > 0; i--)
         {
-            random.GetBytes(byteBuffer);
-            var randomInt = BitConverter.ToInt32(byteBuffer, 0) & int.MaxValue;
-            password[i] = chars[randomInt % chars.Length];
+            int j = System.Security.Cryptography.RandomNumberGenerator.GetInt32(i + 1);
+            (password[i], password[j]) = (password[j], password[i]);
         }
 
         return new string(password);
     }
+
 
     /// <summary>
     /// Validates email format.
@@ -362,6 +443,19 @@ public class TicketsApiController : ControllerBase
         return Regex.IsMatch(email, emailPattern, RegexOptions.IgnoreCase);
     }
 
+    private static readonly string[] DangerousPatterns = new[]
+    {
+        "<script",
+        "</script",
+        "javascript:",
+        "onerror=",
+        "onload=",
+        "onclick=",
+        "onmouseover=",
+        "eval(",
+        "expression("
+    };
+
     /// <summary>
     /// Sanitizes user input to prevent injection attacks.
     /// </summary>
@@ -370,27 +464,22 @@ public class TicketsApiController : ControllerBase
         if (string.IsNullOrWhiteSpace(input))
             return input;
 
-        // Remove potentially dangerous patterns
-        var dangerousPatterns = new[]
+        foreach (var pattern in DangerousPatterns)
         {
-            "<script",
-            "</script",
-            "javascript:",
-            "onerror=",
-            "onload=",
-            "onclick=",
-            "onmouseover=",
-            "eval(",
-            "expression("
-        };
-
-        var sanitized = input;
-        foreach (var pattern in dangerousPatterns)
-        {
-            sanitized = sanitized.Replace(pattern, "", StringComparison.OrdinalIgnoreCase);
+            input = input.Replace(pattern, "", StringComparison.OrdinalIgnoreCase);
         }
 
-        return sanitized.Trim();
+        return input.Trim();
+    }
+
+    /// <summary>
+    /// Appends an external source tag to a ticket.
+    /// </summary>
+    private static void AppendExternalTag(Ticket ticket, string source)
+    {
+        ticket.GerdaTags = string.IsNullOrEmpty(ticket.GerdaTags)
+            ? $"External-Request,{source}"
+            : $"{ticket.GerdaTags},External-Request,{source}";
     }
 
     /// <summary>
@@ -424,3 +513,36 @@ public class ResolveTicketRequest
     public string ResolutionNotes { get; set; } = string.Empty;
     public decimal? BillableAmount { get; set; }
 }
+
+/// <summary>
+/// Flat snake_case ticket intake payload consumed by POST /api/tickets.
+/// Matches the event shape generated by partner portals and integration tests.
+/// </summary>
+public class FlatTicketRequest
+{
+    [JsonPropertyName("customer_email")]
+    public string? CustomerEmail { get; set; }
+
+    [JsonPropertyName("customer_name")]
+    public string? CustomerName { get; set; }
+
+    [JsonPropertyName("description")]
+    public string? Description { get; set; }
+
+    /// <summary>Alternative to description for backwards compat.</summary>
+    [JsonPropertyName("subject")]
+    public string? Subject { get; set; }
+
+    [JsonPropertyName("priority")]
+    public string? Priority { get; set; }
+
+    [JsonPropertyName("tenant_id")]
+    public string? TenantId { get; set; }
+
+    [JsonPropertyName("source")]
+    public string? Source { get; set; }
+
+    [JsonPropertyName("ticket_id")]
+    public string? TicketId { get; set; }
+}
+

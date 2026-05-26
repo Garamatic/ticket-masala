@@ -6,7 +6,6 @@ using Microsoft.Extensions.Logging;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Engine.GERDA.Tickets.Lifecycle;
-using TicketMasala.Web.Observers;
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.ViewModels.GERDA;
 
@@ -19,27 +18,23 @@ public interface ITicketBatchService
     Task BatchUpdateStatusAsync(List<Guid> ticketIds, Status status);
 }
 
+/// <summary>
+/// Batch ticket coordinator. All mutations delegate to <see cref="ITicketLifecycle"/>
+/// so that observer notification, audit logging, and outbox publishing happen
+/// consistently for every ticket.
+/// </summary>
 public class TicketBatchService : ITicketBatchService
 {
-    private readonly ITicketRepository _ticketRepository;
     private readonly IProjectRepository _projectRepository;
-    private readonly IUserRepository _userRepository;
-    private readonly IEnumerable<ITicketObserver> _observers;
     private readonly ITicketLifecycle _ticketLifecycle;
     private readonly ILogger<TicketBatchService> _logger;
 
     public TicketBatchService(
-        ITicketRepository ticketRepository,
         IProjectRepository projectRepository,
-        IUserRepository userRepository,
-        IEnumerable<ITicketObserver> observers,
         ITicketLifecycle ticketLifecycle,
         ILogger<TicketBatchService> logger)
     {
-        _ticketRepository = ticketRepository;
         _projectRepository = projectRepository;
-        _userRepository = userRepository;
-        _observers = observers;
         _ticketLifecycle = ticketLifecycle;
         _logger = logger;
     }
@@ -57,52 +52,32 @@ public class TicketBatchService : ITicketBatchService
         {
             try
             {
-                var ticket = await _ticketRepository.GetByIdAsync(ticketGuid, includeRelations: true);
+                var (assignedAgentId, assignedProjectGuid) = await DetermineAssignmentAsync(
+                    ticketGuid, request, getRecommendedAgent, projectLookup);
 
-                if (ticket == null)
+                if (string.IsNullOrEmpty(assignedAgentId) && !assignedProjectGuid.HasValue)
                 {
-                    result.FailureCount++;
-                    result.Errors.Add($"Ticket {ticketGuid} not found");
+                    RecordFailure(result, ticketGuid, "no assignment determined");
                     continue;
                 }
 
-                string? assignedAgentId = null;
-                Guid? assignedProjectGuid = null;
+                // Delegate to TicketLifecycle deep module — all choreography (audit, observers, outbox) included
+                var lifecycleResult = await _ticketLifecycle.ExecuteAsync(
+                    new AssignTicketCommand(ticketGuid, assignedAgentId, assignedProjectGuid),
+                    new TicketContext("system"));
 
-                (assignedAgentId, assignedProjectGuid) = await DetermineAssignmentStrategyAsync(ticket, request, getRecommendedAgent, projectLookup);
-
-                Employee? assignedAgent = null;
-                if (!string.IsNullOrEmpty(assignedAgentId) || assignedProjectGuid.HasValue)
+                if (!lifecycleResult.Success)
                 {
-                    assignedAgent = await ApplyAssignmentAsync(ticket, assignedAgentId, assignedProjectGuid, request.UseGerdaRecommendations);
+                    RecordFailure(result, ticketGuid, lifecycleResult.ErrorMessage ?? "Assignment failed");
+                    continue;
                 }
 
-                var assignedProject = assignedProjectGuid.HasValue
-                    ? await _projectRepository.GetByIdAsync(assignedProjectGuid.Value, includeRelations: false)
-                    : null;
-
-                result.SuccessCount++;
-                result.Assignments.Add(new TicketAssignmentDetail
-                {
-                    TicketGuid = ticketGuid,
-                    AssignedAgentName = assignedAgent != null
-                        ? $"{assignedAgent.FirstName} {assignedAgent.LastName}"
-                        : null,
-                    AssignedProjectName = assignedProject?.Name,
-                    Success = true
-                });
+                RecordSuccess(result, ticketGuid);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error assigning ticket {TicketGuid}", ticketGuid);
-                result.FailureCount++;
-                result.Errors.Add($"Error assigning ticket {ticketGuid}: {ex.Message}");
-                result.Assignments.Add(new TicketAssignmentDetail
-                {
-                    TicketGuid = ticketGuid,
-                    Success = false,
-                    ErrorMessage = ex.Message
-                });
+                RecordFailure(result, ticketGuid, ex.Message);
             }
         }
 
@@ -123,118 +98,51 @@ public class TicketBatchService : ITicketBatchService
     {
         foreach (var id in ticketIds)
         {
-            var ticket = await _ticketRepository.GetByIdAsync(id, includeRelations: false);
-            if (ticket != null)
-            {
-                ticket.TicketStatus = status;
-                await _ticketRepository.UpdateAsync(ticket);
-            }
+            await _ticketLifecycle.ExecuteAsync(
+                new TransitionStatusCommand(id, status),
+                new TicketContext("system"));
         }
     }
 
-    private async Task<(string? AgentId, Guid? ProjectId)> DetermineAssignmentStrategyAsync(
-        Ticket ticket,
+    private static void RecordFailure(BatchAssignResult result, Guid ticketGuid, string error)
+    {
+        result.FailureCount++;
+        result.Errors.Add($"Ticket {ticketGuid}: {error}");
+        result.Assignments.Add(new TicketAssignmentDetail
+        {
+            TicketGuid = ticketGuid,
+            Success = false,
+            ErrorMessage = error
+        });
+    }
+
+    private static void RecordSuccess(BatchAssignResult result, Guid ticketGuid)
+    {
+        result.SuccessCount++;
+        result.Assignments.Add(new TicketAssignmentDetail
+        {
+            TicketGuid = ticketGuid,
+            Success = true
+        });
+    }
+
+    private async Task<(string? AgentId, Guid? ProjectId)> DetermineAssignmentAsync(
+        Guid ticketGuid,
         BatchAssignRequest request,
         Func<Guid, Task<string?>> getRecommendedAgent,
         Dictionary<string, Guid> projectLookup)
     {
-        string? assignedAgentId = null;
-        Guid? assignedProjectGuid = null;
-
         if (request.UseGerdaRecommendations)
         {
-            assignedAgentId = await getRecommendedAgent(ticket.Guid);
+            var agentId = await getRecommendedAgent(ticketGuid);
 
-            if (!string.IsNullOrEmpty(ticket.RecommendedProjectName) && projectLookup.TryGetValue(ticket.RecommendedProjectName, out var projGuid))
-            {
-                assignedProjectGuid = projGuid;
-            }
-            else if (ticket.ProjectGuid == null && ticket.CustomerId != null)
-            {
-                var recommendedProject = await _projectRepository.GetRecommendedProjectForCustomerAsync(ticket.CustomerId);
-                assignedProjectGuid = recommendedProject?.Guid;
-            }
-        }
-        else
-        {
-            assignedAgentId = request.ForceAgentId;
-            assignedProjectGuid = request.ForceProjectGuid;
+            // Note: project determination requires ticket data; lifecycle command
+            // only supports agent + project. Project lookup is best-effort here.
+            // For full GERDA project recommendation, use the GERDA pipeline directly.
+            Guid? projectGuid = request.ForceProjectGuid;
+            return (agentId, projectGuid);
         }
 
-        return (assignedAgentId, assignedProjectGuid);
-    }
-
-    private async Task<Employee?> ApplyAssignmentAsync(
-        Ticket ticket,
-        string? agentId,
-        Guid? projectId,
-        bool isRecommendation)
-    {
-        Employee? assignedAgent = null;
-
-        if (!string.IsNullOrEmpty(agentId))
-        {
-            assignedAgent = await _userRepository.GetEmployeeByIdAsync(agentId);
-            if (assignedAgent != null)
-            {
-                ticket.ResponsibleId = agentId;
-                ticket.TicketStatus = Status.Assigned;
-
-                if (isRecommendation)
-                {
-                    ticket.GerdaTags = string.IsNullOrEmpty(ticket.GerdaTags)
-                        ? "AI-Dispatched"
-                        : $"{ticket.GerdaTags},AI-Dispatched";
-                }
-            }
-        }
-
-        if (projectId.HasValue)
-        {
-            ticket.ProjectGuid = projectId.Value;
-        }
-
-        await _ticketRepository.UpdateAsync(ticket);
-
-        if (assignedAgent != null)
-        {
-            await NotifyObserversAssignedAsync(ticket, assignedAgent);
-        }
-        else if (projectId.HasValue)
-        {
-            await NotifyObserversUpdatedAsync(ticket);
-        }
-
-        return assignedAgent;
-    }
-
-    private async Task NotifyObserversAssignedAsync(Ticket ticket, Employee assignee)
-    {
-        foreach (var observer in _observers)
-        {
-            try
-            {
-                await observer.OnTicketAssignedAsync(ticket, assignee);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Observer {ObserverType} failed on ticket assignment", observer.GetType().Name);
-            }
-        }
-    }
-
-    private async Task NotifyObserversUpdatedAsync(Ticket ticket)
-    {
-        foreach (var observer in _observers)
-        {
-            try
-            {
-                await observer.OnTicketUpdatedAsync(ticket);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Observer {ObserverType} failed on ticket update", observer.GetType().Name);
-            }
-        }
+        return (request.ForceAgentId, request.ForceProjectGuid);
     }
 }

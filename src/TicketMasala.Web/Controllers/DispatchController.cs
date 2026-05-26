@@ -14,7 +14,7 @@ namespace TicketMasala.Web.Controllers;
 public class DispatchController : Controller
 {
     private readonly ILogger<DispatchController> _logger;
-    private readonly IDispatchingService? _dispatchingService;
+    private readonly ITicketDispatcher? _dispatcher;
     private readonly IDispatchBacklogService? _dispatchBacklogService;
     private readonly ITicketReadService _ticketReadService;
     private readonly ITicketLifecycle _ticketLifecycle;
@@ -25,14 +25,14 @@ public class DispatchController : Controller
         ITicketReadService ticketReadService,
         ITicketLifecycle ticketLifecycle,
         ITicketBatchService ticketBatchService,
-        IDispatchingService? dispatchingService = null,
+        ITicketDispatcher? dispatcher = null,
         IDispatchBacklogService? dispatchBacklogService = null)
     {
         _logger = logger;
         _ticketReadService = ticketReadService;
         _ticketLifecycle = ticketLifecycle;
         _ticketBatchService = ticketBatchService;
-        _dispatchingService = dispatchingService;
+        _dispatcher = dispatcher;
         _dispatchBacklogService = dispatchBacklogService;
     }
 
@@ -120,11 +120,15 @@ public class DispatchController : Controller
                 request,
                 async (ticketGuid) =>
                 {
-                    if (_dispatchingService?.IsEnabled == true)
-                    {
-                        return await _dispatchingService.GetRecommendedAgentAsync(ticketGuid);
-                    }
-                    return null;
+                    if (_dispatcher?.IsEnabled != true)
+                        return null;
+
+                    var dispatchResult = await _dispatcher.ExecuteAsync(
+                        new RecommendAgentsCommand(ticketGuid, 1));
+
+                    return dispatchResult.Success && dispatchResult.Recommendations.Count > 0
+                        ? dispatchResult.Recommendations[0].AgentId
+                        : null;
                 });
 
             _logger.LogInformation(
@@ -156,14 +160,15 @@ public class DispatchController : Controller
     {
         try
         {
-            if (_dispatchingService?.IsEnabled != true)
+            if (_dispatcher?.IsEnabled != true)
             {
                 return Json(new { success = false, message = "GERDA Dispatching is disabled" });
             }
 
-            var success = await _dispatchingService.AutoDispatchTicketAsync(ticketGuid);
+            var dispatchResult = await _dispatcher.ExecuteAsync(
+                new AutoDispatchCommand(ticketGuid));
 
-            if (success)
+            if (dispatchResult.Success && dispatchResult.WasAutoAssigned)
             {
                 var ticket = await _ticketReadService.GetTicketForEditAsync(ticketGuid);
 
@@ -197,15 +202,21 @@ public class DispatchController : Controller
     {
         try
         {
-            if (_dispatchingService?.IsEnabled != true)
+            if (_dispatcher?.IsEnabled != true)
             {
                 return Json(new { success = false, message = "GERDA Dispatching is disabled" });
             }
 
             _logger.LogInformation("Manually triggering dispatch model retraining...");
-            await _dispatchingService.RetrainModelAsync();
+            var retrainResult = await _dispatcher.ExecuteAsync(new RetrainCommand());
 
-            return Json(new { success = true, message = "Model retraining triggered successfully." });
+            return Json(new
+            {
+                success = retrainResult.Success,
+                message = retrainResult.Success
+                    ? "Model retraining triggered successfully."
+                    : (retrainResult.ErrorMessage ?? "Retraining failed")
+            });
         }
         catch (Exception ex)
         {

@@ -6,6 +6,8 @@ namespace TicketMasala.Web.Engine.GERDA.Dispatching;
 /// </summary>
 public class NoOpDispatcher : ITicketDispatcher
 {
+    public bool IsEnabled => false;
+
     public Task<DispatcherResult> ExecuteAsync(IDispatchCommand command, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(command switch

@@ -8,31 +8,35 @@ namespace TicketMasala.Web.Engine.GERDA.Pipeline.Stages;
 /// </summary>
 public class DispatchingStage : IGerdaStage
 {
-    private readonly IDispatchingService? _dispatchingService;
+    private readonly ITicketDispatcher? _dispatcher;
     private readonly ILogger<DispatchingStage> _logger;
 
-    public DispatchingStage(IDispatchingService? dispatchingService, ILogger<DispatchingStage> logger)
+    public DispatchingStage(ITicketDispatcher? dispatcher, ILogger<DispatchingStage> logger)
     {
-        _dispatchingService = dispatchingService;
+        _dispatcher = dispatcher;
         _logger = logger;
     }
 
     public string StageName => "Dispatching";
-    public bool IsEnabled => _dispatchingService?.IsEnabled ?? false;
+    public bool IsEnabled => _dispatcher?.IsEnabled ?? false;
 
     public async Task ExecuteAsync(Guid ticketGuid, GerdaPipelineContext context)
     {
-        if (_dispatchingService == null)
+        if (_dispatcher == null || !_dispatcher.IsEnabled)
             return;
 
-        var recommendedAgent = await _dispatchingService.GetRecommendedAgentAsync(ticketGuid);
+        var result = await _dispatcher.ExecuteAsync(new RecommendAgentsCommand(ticketGuid, 1));
 
-        if (!string.IsNullOrEmpty(recommendedAgent) && Guid.TryParse(recommendedAgent, out var agentGuid))
+        if (result.Success && result.Recommendations.Count > 0)
         {
-            context.RecommendedAgentId = agentGuid;
-            _logger.LogInformation(
-                "GERDA-D: Recommended agent {AgentId} for ticket {TicketGuid}",
-                recommendedAgent, ticketGuid);
+            var topAgent = result.Recommendations[0];
+            if (Guid.TryParse(topAgent.AgentId, out var agentGuid))
+            {
+                context.RecommendedAgentId = agentGuid;
+                _logger.LogInformation(
+                    "GERDA-D: Recommended agent {AgentId} (score {Score:F2}) for ticket {TicketGuid}",
+                    topAgent.AgentId, topAgent.Score, ticketGuid);
+            }
         }
     }
 }

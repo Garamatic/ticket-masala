@@ -16,6 +16,11 @@ namespace TicketMasala.Web.Engine.GERDA.Dispatching;
 public interface ITicketDispatcher
 {
     /// <summary>
+    /// True if dispatching is enabled in configuration.
+    /// </summary>
+    bool IsEnabled { get; }
+
+    /// <summary>
     /// Execute a dispatch command.
     /// </summary>
     /// <param name="command">The command to execute</param>

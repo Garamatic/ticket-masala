@@ -26,7 +26,6 @@ public class TicketLifecycleTests
     private readonly Mock<ICommentObserver> _commentObserver = new();
     private readonly Mock<IPiiScrubberService> _scrubber = new();
     private readonly Mock<ISystemClock> _clock = new();
-    private readonly Mock<IEventPublisher> _publisher = new();
     private readonly MasalaDbContext _dbContext;
 
     public TicketLifecycleTests()
@@ -42,14 +41,14 @@ public class TicketLifecycleTests
         _uow.Setup(x => x.AddCommentAsync(It.IsAny<TicketComment>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _uow.Setup(x => x.AddTimeLogAsync(It.IsAny<TimeLog>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _uow.Setup(x => x.AddQualityReviewAsync(It.IsAny<QualityReview>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _uow.Setup(x => x.AddOutboxMessageAsync(It.IsAny<OutboxMessage>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
         _scrubber.Setup(x => x.Scrub(It.IsAny<string>())).Returns<string>(s => s);
         _clock.SetupGet(x => x.UtcNow).Returns(new DateTime(2024, 1, 15, 10, 30, 0, DateTimeKind.Utc));
     }
 
     private TicketLifecycle CreateSUT(IEnumerable<ITicketObserver>? ticketObservers = null,
-        IEnumerable<ICommentObserver>? commentObservers = null,
-        IEventPublisher? publisher = null)
+        IEnumerable<ICommentObserver>? commentObservers = null)
     {
         return new TicketLifecycle(
             _uow.Object,
@@ -59,7 +58,6 @@ public class TicketLifecycleTests
             commentObservers ?? new[] { _commentObserver.Object },
             _scrubber.Object,
             _clock.Object,
-            publisher ?? _publisher.Object,
             new NullLogger<TicketLifecycle>());
     }
 
@@ -128,7 +126,7 @@ public class TicketLifecycleTests
     // ═════════════════════════════════════════════════════════════════
 
     [Fact]
-    public async Task ResolveTicket_WithValidData_ResolvesAndPublishesEvent()
+    public async Task ResolveTicket_WithValidData_ResolvesAndQueuesOutboxMessage()
     {
         var ticket = new TicketBuilder().WithStatus(Status.InProgress).Build();
         await _dbContext.Tickets.AddAsync(ticket);
@@ -148,7 +146,11 @@ public class TicketLifecycleTests
         _uow.Verify(x => x.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
         _ticketObserver.Verify(x => x.OnTicketUpdatedAsync(It.Is<Ticket>(t => t.Guid == ticket.Guid)), Times.Once);
         _ticketObserver.Verify(x => x.OnTicketCompletedAsync(It.Is<Ticket>(t => t.Guid == ticket.Guid)), Times.Once);
-        _publisher.Verify(x => x.PublishAsync(It.IsAny<object>(), "ticket.resolved", It.IsAny<CancellationToken>()), Times.Once);
+        _uow.Verify(x => x.AddOutboxMessageAsync(
+            It.Is<OutboxMessage>(m =>
+                m.EventType == "ticket.resolved" &&
+                m.RoutingKey == "event.ticket.resolved"),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -161,7 +163,7 @@ public class TicketLifecycleTests
 
         Assert.False(result.Success);
         Assert.Contains("Ticket not found", result.ErrorMessage);
-        _publisher.Verify(x => x.PublishAsync(It.IsAny<object>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _uow.Verify(x => x.AddOutboxMessageAsync(It.IsAny<OutboxMessage>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -177,26 +179,35 @@ public class TicketLifecycleTests
             Ctx());
 
         Assert.False(result.Success);
-        _publisher.Verify(x => x.PublishAsync(It.IsAny<object>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _uow.Verify(x => x.AddOutboxMessageAsync(It.IsAny<OutboxMessage>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task ResolveTicket_WhenPublisherThrows_CommandStillSucceeds()
+    public async Task ResolveTicket_QueuesOutboxMessageWithCorrectSchema()
     {
         var ticket = new TicketBuilder().WithStatus(Status.InProgress).Build();
         await _dbContext.Tickets.AddAsync(ticket);
         await _dbContext.SaveChangesAsync();
 
-        var throwingPub = new Mock<IEventPublisher>();
-        throwingPub.Setup(x => x.PublishAsync(It.IsAny<object>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new InvalidOperationException("Publisher crash"));
+        OutboxMessage? capturedMessage = null;
+        _uow.Setup(x => x.AddOutboxMessageAsync(It.IsAny<OutboxMessage>(), It.IsAny<CancellationToken>()))
+            .Callback<OutboxMessage, CancellationToken>((msg, _) => capturedMessage = msg)
+            .Returns(Task.CompletedTask);
 
-        var sut = CreateSUT(publisher: throwingPub.Object);
+        var sut = CreateSUT();
         var result = await sut.ExecuteAsync(
             new ResolveTicketCommand(ticket.Guid, "Notes", 100m),
             Ctx());
 
         Assert.True(result.Success);
+        Assert.NotNull(capturedMessage);
+        Assert.Equal("ticket.resolved", capturedMessage!.EventType);
+        Assert.Equal("event.ticket.resolved", capturedMessage.RoutingKey);
+        Assert.Contains("ticket_id", capturedMessage.Payload);
+        Assert.Contains("customer_email", capturedMessage.Payload);
+        Assert.Contains("timestamp", capturedMessage.Payload);
+        Assert.Contains("source", capturedMessage.Payload);
+        Assert.Contains("ticket-masala", capturedMessage.Payload);
     }
 
     // ═════════════════════════════════════════════════════════════════
@@ -371,22 +382,23 @@ public class TicketLifecycleTests
             Ctx());
 
         Assert.True(result.Success);
-        _publisher.Verify(x => x.PublishAsync(It.IsAny<object>(), "ticket.resolved", It.IsAny<CancellationToken>()), Times.Once);
+        _uow.Verify(x => x.AddOutboxMessageAsync(It.IsAny<OutboxMessage>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task ResolveTicket_WithoutPublisher_NoCrash()
+    public async Task ResolveTicket_AlwaysQueuesOutboxMessage()
     {
         var ticket = new TicketBuilder().WithStatus(Status.InProgress).Build();
         await _dbContext.Tickets.AddAsync(ticket);
         await _dbContext.SaveChangesAsync();
 
-        var sut = CreateSUT(publisher: null);
+        var sut = CreateSUT();
         var result = await sut.ExecuteAsync(
             new ResolveTicketCommand(ticket.Guid, "Notes", 100m),
             Ctx());
 
         Assert.True(result.Success);
+        _uow.Verify(x => x.AddOutboxMessageAsync(It.IsAny<OutboxMessage>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

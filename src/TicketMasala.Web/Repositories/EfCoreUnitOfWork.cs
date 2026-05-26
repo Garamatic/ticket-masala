@@ -135,4 +135,15 @@ public class EfCoreUnitOfWork : IUnitOfWork
         _logger.LogDebug("Comment queued for add to ticket {TicketId} (pending commit)", comment.TicketId);
         return Task.CompletedTask;
     }
+
+    public Task AddOutboxMessageAsync(Domain.Entities.OutboxMessage message, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(message);
+        _context.OutboxMessages.Add(message);
+        _logger.LogDebug(
+            "Outbox message queued for add: EventType={EventType}, RoutingKey={RoutingKey} (pending commit)",
+            message.EventType,
+            message.RoutingKey);
+        return Task.CompletedTask;
+    }
 }

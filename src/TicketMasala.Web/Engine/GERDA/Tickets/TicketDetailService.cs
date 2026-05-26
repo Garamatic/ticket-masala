@@ -20,18 +20,18 @@ public interface ITicketDetailService
 public class TicketDetailService : ITicketDetailService
 {
     private readonly ITicketReadService _ticketReadService;
-    private readonly IDispatchingService _dispatchingService;
+    private readonly ITicketDispatcher _ticketDispatcher;
     private readonly IKnowledgeService _knowledgeService;
     private readonly ILogger<TicketDetailService> _logger;
 
     public TicketDetailService(
         ITicketReadService ticketReadService,
-        IDispatchingService dispatchingService,
+        ITicketDispatcher ticketDispatcher,
         IKnowledgeService knowledgeService,
         ILogger<TicketDetailService> logger)
     {
         _ticketReadService = ticketReadService;
-        _dispatchingService = dispatchingService;
+        _ticketDispatcher = ticketDispatcher;
         _knowledgeService = knowledgeService;
         _logger = logger;
     }
@@ -55,10 +55,10 @@ public class TicketDetailService : ITicketDetailService
         {
             try
             {
-                var recommendations = await _dispatchingService.GetTopRecommendedAgentsAsync(ticketId, 1).ConfigureAwait(false);
-                if (recommendations != null && recommendations.Any())
+                var dispatchResult = await _ticketDispatcher.ExecuteAsync(new RecommendAgentsCommand(ticketId, 1)).ConfigureAwait(false);
+                if (dispatchResult.Success && dispatchResult.Recommendations.Count > 0)
                 {
-                    var topRecommendation = recommendations.First();
+                    var topRecommendation = dispatchResult.Recommendations.First();
                     var agent = await _ticketReadService.GetEmployeeByIdAsync(topRecommendation.AgentId).ConfigureAwait(false);
                     if (agent != null)
                     {

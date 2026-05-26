@@ -92,8 +92,8 @@ public class EnrichmentBackgroundService : BackgroundService
         {
             try
             {
-                var dispatchService = scope.ServiceProvider.GetRequiredService<IDispatchingService>();
-                await dispatchService.AutoDispatchTicketAsync(workItem.TicketId);
+                var dispatcher = scope.ServiceProvider.GetRequiredService<ITicketDispatcher>();
+                await dispatcher.ExecuteAsync(new AutoDispatchCommand(workItem.TicketId));
             }
             catch (Exception ex)
             {

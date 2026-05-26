@@ -106,15 +106,21 @@ public class GerdaBackgroundService : BackgroundService
     private async Task RetrainDispatchingModel(CancellationToken stoppingToken)
     {
         using var scope = _serviceScopeFactory.CreateScope();
-        var dispatchingService = scope.ServiceProvider.GetRequiredService<IDispatchingService>();
+        var dispatcher = scope.ServiceProvider.GetRequiredService<ITicketDispatcher>();
 
         try
         {
             _logger.LogInformation("Starting ML model retraining for dispatching service");
 
-            await dispatchingService.RetrainModelAsync();
-
-            _logger.LogInformation("ML model retraining completed successfully");
+            var result = await dispatcher.ExecuteAsync(new RetrainCommand());
+            if (result.Success)
+            {
+                _logger.LogInformation("ML model retraining completed successfully (last trained: {LastTrained})", result.LastTrained);
+            }
+            else
+            {
+                _logger.LogWarning("ML model retraining returned unsuccessful: {Error}", result.ErrorMessage);
+            }
         }
         catch (Exception ex)
         {

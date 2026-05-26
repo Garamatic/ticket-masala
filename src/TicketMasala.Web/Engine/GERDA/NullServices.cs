@@ -30,42 +30,6 @@ public class NullRankingService : IRankingService
 }
 
 /// <summary>
-/// Null object implementation for IDispatchingService.
-/// Used when dispatching functionality is disabled to avoid null checks.
-/// </summary>
-public class NullDispatchingService : IDispatchingService
-{
-    public bool IsEnabled => false;
-
-    public DateTime? LastModelTrainingTime => null;
-
-    public Task<string?> GetRecommendedAgentAsync(Guid ticketGuid)
-    {
-        return Task.FromResult<string?>(null);
-    }
-
-    public Task<List<DispatchResult>> GetTopRecommendedAgentsAsync(Guid ticketGuid, int count = 3)
-    {
-        return Task.FromResult(new List<DispatchResult>());
-    }
-
-    public Task<bool> AutoDispatchTicketAsync(Guid ticketGuid)
-    {
-        return Task.FromResult(false);
-    }
-
-    public Task RetrainModelAsync()
-    {
-        return Task.CompletedTask;
-    }
-
-    public Task<string?> GetRecommendedProjectManagerAsync(Guid ticketGuid)
-    {
-        return Task.FromResult<string?>(null);
-    }
-}
-
-/// <summary>
 /// Null object implementation for IKnowledgeService.
 /// Used when knowledge base functionality is disabled to avoid null checks.
 /// </summary>

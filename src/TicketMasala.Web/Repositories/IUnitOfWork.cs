@@ -69,4 +69,11 @@ public interface IUnitOfWork : IDisposable
     /// Committed with other changes when CommitAsync() is called.
     /// </summary>
     Task AddCommentAsync(Domain.Entities.TicketComment comment, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Add an outbox message within the current unit of work.
+    /// The OutboxPublisher background service will drain this to RabbitMQ.
+    /// Committed with other changes when CommitAsync() is called.
+    /// </summary>
+    Task AddOutboxMessageAsync(Domain.Entities.OutboxMessage message, CancellationToken cancellationToken = default);
 }

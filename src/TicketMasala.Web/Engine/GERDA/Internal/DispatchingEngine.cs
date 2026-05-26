@@ -8,22 +8,27 @@ namespace TicketMasala.Web.Engine.GERDA;
 /// </summary>
 internal sealed class DispatchingEngine : IDispatchingEngine
 {
-    private readonly IDispatchingService _dispatchingService;
+    private readonly ITicketDispatcher _ticketDispatcher;
     private readonly GerdaConfig _config;
 
     public DispatchingEngine(
-        IDispatchingService dispatchingService,
+        ITicketDispatcher ticketDispatcher,
         GerdaConfig config)
     {
-        _dispatchingService = dispatchingService;
+        _ticketDispatcher = ticketDispatcher;
         _config = config;
     }
 
-    public bool IsEnabled => _config.GerdaAI.Dispatching.IsEnabled && _dispatchingService.IsEnabled;
+    public bool IsEnabled => _config.GerdaAI.Dispatching.IsEnabled;
 
-    public Task<string?> RecommendAgentAsync(Guid ticketGuid)
+    public async Task<string?> RecommendAgentAsync(Guid ticketGuid)
     {
-        return _dispatchingService.GetRecommendedAgentAsync(ticketGuid);
+        var result = await _ticketDispatcher.ExecuteAsync(new RecommendAgentsCommand(ticketGuid, 1));
+        if (result.Success && result.Recommendations.Count > 0)
+        {
+            return result.Recommendations.First().AgentId;
+        }
+        return null;
     }
 }
 

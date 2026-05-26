@@ -22,7 +22,7 @@ public class DispatchBacklogServiceTests
     private readonly Mock<ITicketRepository> _mockTicketRepo;
     private readonly Mock<IUserRepository> _mockUserRepo;
     private readonly Mock<IProjectRepository> _mockProjectRepo;
-    private readonly Mock<IDispatchingService> _mockDispatchService;
+    private readonly Mock<ITicketDispatcher> _mockDispatcher;
     private readonly Mock<ILogger<DispatchBacklogService>> _mockLogger;
 
     public DispatchBacklogServiceTests()
@@ -30,7 +30,7 @@ public class DispatchBacklogServiceTests
         _mockTicketRepo = new Mock<ITicketRepository>();
         _mockUserRepo = new Mock<IUserRepository>();
         _mockProjectRepo = new Mock<IProjectRepository>();
-        _mockDispatchService = new Mock<IDispatchingService>();
+        _mockDispatcher = new Mock<ITicketDispatcher>();
         _mockLogger = new Mock<ILogger<DispatchBacklogService>>();
     }
 
@@ -46,7 +46,7 @@ public class DispatchBacklogServiceTests
             _mockUserRepo.Object,
             _mockProjectRepo.Object,
             mockClock.Object,
-            _mockDispatchService.Object,
+            _mockDispatcher.Object,
             _mockLogger.Object);
 
         var ticket = new Ticket
@@ -70,11 +70,12 @@ public class DispatchBacklogServiceTests
 
         _mockProjectRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Project>());
 
-        _mockDispatchService.Setup(d => d.IsEnabled).Returns(true);
         var reasons = new List<string> { "High affinity", "Low workload" };
-        var dispatchResult = new DispatchResult(agent.Id, 0.9) { Reasons = reasons };
-        _mockDispatchService.Setup(d => d.GetTopRecommendedAgentsAsync(ticket.Guid, 3))
-            .ReturnsAsync(new List<DispatchResult> { dispatchResult });
+        _mockDispatcher.Setup(d => d.ExecuteAsync(It.Is<RecommendAgentsCommand>(c => c.TicketGuid == ticket.Guid && c.Count == 3), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(DispatcherResult.WithRecommendations(new List<AgentRecommendation>
+            {
+                new() { AgentId = agent.Id, Score = 0.9, Reasons = reasons }
+            }));
 
         // Act
         var result = await service.BuildDispatchBacklogViewModelAsync();

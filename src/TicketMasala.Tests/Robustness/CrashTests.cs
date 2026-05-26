@@ -41,7 +41,7 @@ namespace TicketMasala.Tests.Robustness
             mockUserRepo.Setup(r => r.GetAllEmployeesAsync()).ReturnsAsync(new List<Employee>());
             var mockProjectRepo = new Mock<IProjectRepository>();
             mockProjectRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Project>());
-            var mockDispatch = new Mock<IDispatchingService>();
+            var mockDispatch = new Mock<ITicketDispatcher>();
             var mockLogger = new Mock<ILogger<DispatchBacklogService>>();
 
             var service = new DispatchBacklogService(
@@ -150,7 +150,7 @@ namespace TicketMasala.Tests.Robustness
             mockUserRepo.Setup(r => r.GetAllEmployeesAsync()).ReturnsAsync(new List<Employee>());
             var mockProjectRepo = new Mock<IProjectRepository>();
             mockProjectRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Project>());
-            var mockDispatch = new Mock<IDispatchingService>();
+            var mockDispatch = new Mock<ITicketDispatcher>();
             var mockLogger = new Mock<ILogger<DispatchBacklogService>>();
 
             var service = new DispatchBacklogService(

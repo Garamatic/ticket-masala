@@ -252,12 +252,6 @@ internal static class GerdaLegacyServiceRegistration
 
     private static void RegisterDispatchingService(IServiceCollection services, GerdaConfig config, GerdaOptions options)
     {
-        if (!config.GerdaAI.Dispatching.IsEnabled)
-        {
-            services.AddScoped<IDispatchingService, NoOpDispatchingService>();
-            return;
-        }
-
         // Dispatching configuration
         services.AddScoped<DispatchingConfig>(sp =>
         {
@@ -277,9 +271,6 @@ internal static class GerdaLegacyServiceRegistration
         // ML.NET model and affinity scorer
         RegisterAffinityScorer(services, options);
 
-        // Legacy strategy registration
-        services.AddScoped<IDispatchingStrategy, ZoneBasedDispatchingStrategy>();
-
         // Core dispatching components
         services.AddScoped<AgentMatchingEngine>(sp =>
         {
@@ -289,10 +280,11 @@ internal static class GerdaLegacyServiceRegistration
             return new AgentMatchingEngine(dispatchConfig, logger, affinityScorer);
         });
 
-        // Consolidated dispatching services
-        services.AddScoped<IDispatchingService, DispatchingService>();
+        // Deep module: ITicketDispatcher (replaces IDispatchingService)
+        services.AddTicketDispatcher();
+
+        // Supporting services
         services.AddScoped<IDispatchBacklogService, DispatchBacklogService>();
-        services.AddScoped<IDispatchingStrategySelector, DomainDispatchingStrategySelector>();
         services.AddScoped<IAutoDispatchPolicy, ScoreThresholdAutoDispatchPolicy>();
         services.AddScoped<IProjectManagerRecommendationService, WorkloadAndSuccessProjectManagerRecommendationService>();
     }

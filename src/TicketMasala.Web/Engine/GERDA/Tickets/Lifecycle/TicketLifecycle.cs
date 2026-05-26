@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Exceptions;
@@ -34,8 +36,14 @@ internal sealed class TicketLifecycle : ITicketLifecycle
     private readonly IEnumerable<ICommentObserver> _commentObservers;
     private readonly IPiiScrubberService _piiScrubber;
     private readonly ISystemClock _clock;
-    private readonly IEventPublisher? _eventPublisher;
     private readonly ILogger<TicketLifecycle> _logger;
+
+    private static readonly JsonSerializerOptions OutboxJsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+        WriteIndented = false,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    };
 
     public TicketLifecycle(
         IUnitOfWork unitOfWork,
@@ -45,7 +53,6 @@ internal sealed class TicketLifecycle : ITicketLifecycle
         IEnumerable<ICommentObserver> commentObservers,
         IPiiScrubberService piiScrubber,
         ISystemClock clock,
-        IEventPublisher? eventPublisher,
         ILogger<TicketLifecycle> logger)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
@@ -55,7 +62,6 @@ internal sealed class TicketLifecycle : ITicketLifecycle
         _commentObservers = commentObservers ?? throw new ArgumentNullException(nameof(commentObservers));
         _piiScrubber = piiScrubber ?? throw new ArgumentNullException(nameof(piiScrubber));
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
-        _eventPublisher = eventPublisher;
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -159,9 +165,9 @@ internal sealed class TicketLifecycle : ITicketLifecycle
         await _unitOfWork.Tickets.UpdateAsync(ticket);
         await AuditAsync(ticket.Guid, "Resolved", ctx.UserId, ct,
             newValue: $"Amount: {cmd.BillableAmount}, Notes: {cmd.ResolutionNotes}");
+        await QueueResolvedEventAsync(ticket, cmd.ResolutionNotes, ct);
         await CommitAsync(ct);
         await NotifyTicketObserversAsync(ticket, ct: ct);
-        await PublishResolvedEventAsync(ticket, cmd.ResolutionNotes, ct);
 
         return TicketResult.Ok(ticket);
     }
@@ -432,11 +438,8 @@ internal sealed class TicketLifecycle : ITicketLifecycle
         }
     }
 
-    private async Task PublishResolvedEventAsync(Ticket ticket, string originalResolutionNotes, CancellationToken ct)
+    private async Task QueueResolvedEventAsync(Ticket ticket, string originalResolutionNotes, CancellationToken ct)
     {
-        if (_eventPublisher == null)
-            return;
-
         try
         {
             var evt = new IntegrationEvent
@@ -448,15 +451,32 @@ internal sealed class TicketLifecycle : ITicketLifecycle
                 Amount = ticket.BillableAmount ?? 0m,
                 TenantId = string.Empty,
                 ResolvedAt = ticket.CompletionDate ?? DateTime.UtcNow,
-                ResolutionNotes = ticket.ResolutionNotes ?? originalResolutionNotes
+                ResolutionNotes = ticket.ResolutionNotes ?? originalResolutionNotes,
+                Timestamp = _clock.UtcNow.ToString("O"),
+                Source = "ticket-masala"
             };
 
-            await _eventPublisher.PublishAsync(evt, "ticket.resolved", ct);
-            _logger.LogDebug("Published ticket.resolved for {TicketId}", ticket.Guid);
+            var payload = JsonSerializer.Serialize(evt, OutboxJsonOptions);
+
+            var outboxMessage = new OutboxMessage
+            {
+                Id = Guid.NewGuid(),
+                EventType = evt.EventType,
+                Payload = payload,
+                RoutingKey = "event.ticket.resolved",
+                CreatedAt = _clock.UtcNow
+            };
+
+            await _unitOfWork.AddOutboxMessageAsync(outboxMessage, ct);
+
+            _logger.LogDebug(
+                "Queued ticket.resolved outbox message for {TicketId} (routing: event.ticket.resolved)",
+                ticket.Guid);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to publish ticket.resolved for {TicketId}", ticket.Guid);
+            _logger.LogError(ex, "Failed to queue ticket.resolved outbox message for {TicketId}", ticket.Guid);
+            throw; // Re-throw so the transaction rolls back if outbox queuing fails
         }
     }
 }

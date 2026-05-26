@@ -204,9 +204,6 @@ public static class WebApplicationExtensions
                         var estimatingName = domain.AiStrategies?.Estimating ?? "CategoryLookup";
                         strategyFactory.GetStrategy<TicketMasala.Web.Engine.GERDA.Estimating.IEstimatingStrategy, int>(estimatingName);
 
-                        var dispatchingName = domain.AiStrategies?.Dispatching ?? "MatrixFactorization";
-                        strategyFactory.GetStrategy<TicketMasala.Web.Engine.GERDA.Dispatching.IDispatchingStrategy, List<TicketMasala.Web.Engine.GERDA.Dispatching.DispatchResult>>(dispatchingName);
-
                         logger.LogInformation("Domain '{Domain}' strategies validated.", domain.DisplayName);
                     }
                     catch (Exception ex)

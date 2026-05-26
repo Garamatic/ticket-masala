@@ -25,7 +25,7 @@ public class DispatchBacklogService : IDispatchBacklogService
     private readonly IUserRepository _userRepository;
     private readonly IProjectRepository _projectRepository;
     private readonly ISystemClock _clock;
-    private readonly IDispatchingService _dispatchingService;
+    private readonly ITicketDispatcher _ticketDispatcher;
     private readonly ILogger<DispatchBacklogService> _logger;
 
     public DispatchBacklogService(
@@ -33,14 +33,14 @@ public class DispatchBacklogService : IDispatchBacklogService
         IUserRepository userRepository,
         IProjectRepository projectRepository,
         ISystemClock clock,
-        IDispatchingService dispatchingService,
+        ITicketDispatcher ticketDispatcher,
         ILogger<DispatchBacklogService> logger)
     {
         _ticketRepository = ticketRepository;
         _userRepository = userRepository;
         _projectRepository = projectRepository;
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
-        _dispatchingService = dispatchingService;
+        _ticketDispatcher = ticketDispatcher;
         _logger = logger;
     }
 
@@ -62,7 +62,7 @@ public class DispatchBacklogService : IDispatchBacklogService
         var pendingTickets = allTickets
             .Where(t => t.TicketStatus == Status.Pending ||
                        (t.TicketStatus == Status.Assigned && t.ResponsibleId == null))
-            .OrderByDescending(t => t.CreationDate) // Prioritize newest or oldest? Usually oldest first, but let's stick to existing
+            .OrderByDescending(t => t.CreationDate)
             .ToList();
 
         // 2. Pagination Logic
@@ -114,54 +114,49 @@ public class DispatchBacklogService : IDispatchBacklogService
             CustomerName = t.Customer != null ? $"{t.Customer.FirstName} {t.Customer.LastName}" : "Unknown",
             CustomerId = t.CustomerId,
             GerdaTags = t.GerdaTags,
-            // RecommendedProjectGuid not present on Ticket entity, inferred from name or left null for now
             CurrentProjectGuid = t.ProjectGuid
         }).ToList();
 
         // 7. Get Recommendations for current page
-        if (_dispatchingService.IsEnabled)
+        var employeeMap = employees.ToDictionary(e => e.Id);
+
+        foreach (var info in ticketDispatchInfos)
         {
-            // Create lookup for efficiency
-            var employeeMap = employees.ToDictionary(e => e.Id);
-
-            foreach (var info in ticketDispatchInfos)
+            try
             {
-                try
+                var dispatchResult = await _ticketDispatcher.ExecuteAsync(new RecommendAgentsCommand(info.Guid, 3));
+                if (dispatchResult.Success && dispatchResult.Recommendations.Any())
                 {
-                    var recommendations = await _dispatchingService.GetTopRecommendedAgentsAsync(info.Guid, 3);
-                    if (recommendations != null && recommendations.Any())
-                    {
-                        info.RecommendedAgents = recommendations
-                            .Select(r =>
+                    info.RecommendedAgents = dispatchResult.Recommendations
+                        .Select(r =>
+                        {
+                            if (!employeeMap.TryGetValue(r.AgentId, out var agent))
+                                return null;
+
+                            var workload = agentWorkloads.GetValueOrDefault(r.AgentId, (0, 0));
+
+                            return new ViewModels.GERDA.AgentRecommendation
                             {
-                                if (!employeeMap.TryGetValue(r.AgentId, out var agent))
-                                    return null;
-
-                                var workload = agentWorkloads.GetValueOrDefault(r.AgentId, (0, 0));
-
-                                return new AgentRecommendation
-                                {
-                                    AgentId = r.AgentId,
-                                    AgentName = $"{agent.FirstName} {agent.LastName}",
-                                    Score = r.Score,
-                                    Team = agent.Team,
-                                    CurrentWorkload = workload.Item1,
-                                    MaxCapacity = agent.MaxCapacityPoints,
-                                    Specializations = agent.Specializations,
-                                    Language = agent.Language,
-                                    Region = agent.Region,
-                                    Reasons = r.Reasons,
-                                    Explanation = r.Explanation
-                                };
-                            })
-                            .Where(r => r != null)
-                            .ToList()!;
-                    }
+                                AgentId = r.AgentId,
+                                AgentName = $"{agent.FirstName} {agent.LastName}",
+                                Score = r.Score,
+                                Team = agent.Team,
+                                CurrentWorkload = workload.Item1,
+                                MaxCapacity = agent.MaxCapacityPoints,
+                                Specializations = agent.Specializations,
+                                Language = agent.Language,
+                                Region = agent.Region,
+                                Reasons = r.Reasons,
+                                Explanation = r.Explanation
+                            };
+                        })
+                        .Where(r => r != null)
+                        .ToList()!;
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to get GERDA recommendations for ticket {TicketId}", info.Guid);
-                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to get GERDA recommendations for ticket {TicketId}", info.Guid);
             }
         }
 
@@ -189,7 +184,7 @@ public class DispatchBacklogService : IDispatchBacklogService
         {
             TotalUnassignedTickets = totalItems,
             TicketsWithProjectRecommendation = pendingTickets.Count(t => !string.IsNullOrEmpty(t.RecommendedProjectName)),
-            TicketsWithAgentRecommendation = 0, // Hard to calc without running AI on all, 0 is safer fallback
+            TicketsWithAgentRecommendation = 0,
             TotalAvailableAgents = agentInfos.Count(a => a.IsAvailable),
             OverloadedAgents = agentInfos.Count(a => a.WorkloadPercentage >= 100),
             AverageTicketAge = pendingTickets.Any()
@@ -218,7 +213,7 @@ public class DispatchBacklogService : IDispatchBacklogService
             PageSize = pageSize,
             TotalItems = totalItems,
             TotalPages = totalPages,
-            LastModelTrainingTime = _dispatchingService.LastModelTrainingTime
+            LastModelTrainingTime = null // TODO: expose LastTrained on DispatcherResult or add query command
         };
     }
 }

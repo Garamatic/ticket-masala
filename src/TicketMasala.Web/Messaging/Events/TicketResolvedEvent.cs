@@ -7,6 +7,8 @@ namespace TicketMasala.Web.Messaging.Events;
 public record TicketResolvedEvent
 {
     public string EventType { get; init; } = "ticket.resolved";
+    public string Timestamp { get; init; } = DateTime.UtcNow.ToString("o");
+    public string Source { get; init; } = "ticket-masala";
     public string TicketId { get; init; } = string.Empty;
     public string CustomerEmail { get; init; } = string.Empty;
     public string CustomerName { get; init; } = string.Empty;

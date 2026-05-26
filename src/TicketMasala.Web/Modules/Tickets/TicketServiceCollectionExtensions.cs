@@ -84,7 +84,6 @@ public static class TicketServiceCollectionExtensions
         // services.AddScoped<ITicketAssignmentFacade, TicketAssignmentFacade>();
 
         // Specialized Services
-        services.AddScoped<TicketDispatchService>();
         services.AddScoped<TicketReportingService>();
         services.AddScoped<TicketNotificationService>();
         services.AddScoped<ITicketFactory, TicketFactory>();

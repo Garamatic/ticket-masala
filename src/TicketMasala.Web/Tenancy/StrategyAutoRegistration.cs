@@ -41,15 +41,6 @@ public static class StrategyAutoRegistration
                 }
             }
 
-            // Register dispatching strategies
-            if (typeof(IDispatchingStrategy).IsAssignableFrom(type))
-            {
-                if (!IsAlreadyRegistered(services, typeof(IDispatchingStrategy), type))
-                {
-                    services.AddScoped(typeof(IDispatchingStrategy), type);
-                }
-            }
-
             // Register estimating strategies
             if (typeof(IEstimatingStrategy).IsAssignableFrom(type))
             {

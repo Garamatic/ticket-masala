@@ -12,14 +12,9 @@ public static class LifecycleServiceExtensions
     /// </summary>
     public static IServiceCollection AddTicketLifecycle(this IServiceCollection services)
     {
-        // Port adapter: existing RabbitMQ publisher → IEventPublisher port
-        services.AddScoped<IEventPublisher>(sp =>
-        {
-            var rabbitMq = sp.GetService<IRabbitMqPublisher>();
-            return new RabbitMqEventPublisher(rabbitMq);
-        });
-
-        // Deep module
+        // Deep module: events are now queued to the Outbox table atomically
+        // within the same DbContext transaction. The OutboxPublisher background
+        // service drains them to RabbitMQ. No direct IEventPublisher needed.
         services.AddScoped<ITicketLifecycle, TicketLifecycle>();
 
         return services;

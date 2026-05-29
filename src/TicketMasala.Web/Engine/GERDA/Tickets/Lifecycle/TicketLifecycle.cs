@@ -284,7 +284,10 @@ internal sealed class TicketLifecycle : ITicketLifecycle
         await _unitOfWork.Tickets.UpdateAsync(ticket);
         await _auditService.LogActionAsync(ticket.Guid, "Assigned", ctx.UserId,
             newValue: $"Agent: {cmd.AgentId}, Project: {cmd.ProjectGuid}");
-        await QueueAssignedEventAsync(ticket, assigned, ctx.UserId, ct);
+        if (assigned != null)
+        {
+            await QueueAssignedEventAsync(ticket, assigned, ctx.UserId, ct);
+        }
         await _unitOfWork.CommitAsync(ct);
         await NotifyTicketObserversAsync(ticket, assigned, ct);
 

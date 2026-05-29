@@ -1,0 +1,88 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\gortz\\source\\repos\\ticket-masala\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{9681B0FC-A377-42B5-A901-39D93D93C836}|IT-Project2526\\IT-Project2526.csproj|c:\\users\\gortz\\source\\repos\\ticket-masala\\it-project2526\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9681B0FC-A377-42B5-A901-39D93D93C836}|IT-Project2526\\IT-Project2526.csproj|solutionrelative:it-project2526\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9681B0FC-A377-42B5-A901-39D93D93C836}|IT-Project2526\\IT-Project2526.csproj|c:\\users\\gortz\\source\\repos\\ticket-masala\\it-project2526\\it-project2526.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{9681B0FC-A377-42B5-A901-39D93D93C836}|IT-Project2526\\IT-Project2526.csproj|solutionrelative:it-project2526\\it-project2526.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4BE4FEEF-BB43-C33A-F9A8-8A848E3F99D1}|MailingService\\MailingService.csproj|c:\\users\\gortz\\source\\repos\\ticket-masala\\mailingservice\\handlers\\ticketassignedhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4BE4FEEF-BB43-C33A-F9A8-8A848E3F99D1}|MailingService\\MailingService.csproj|solutionrelative:mailingservice\\handlers\\ticketassignedhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9681B0FC-A377-42B5-A901-39D93D93C836}|IT-Project2526\\IT-Project2526.csproj|c:\\users\\gortz\\source\\repos\\ticket-masala\\it-project2526\\rabbitmq\\rabbitmqtest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9681B0FC-A377-42B5-A901-39D93D93C836}|IT-Project2526\\IT-Project2526.csproj|solutionrelative:it-project2526\\rabbitmq\\rabbitmqtest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\gortz\\source\\repos\\ticket-masala\\IT-Project2526\\Program.cs",
+              "RelativeDocumentMoniker": "IT-Project2526\\Program.cs",
+              "ToolTip": "C:\\Users\\gortz\\source\\repos\\ticket-masala\\IT-Project2526\\Program.cs",
+              "RelativeToolTip": "IT-Project2526\\Program.cs",
+              "ViewState": "AgIAAC8BAAAAAAAAAAAawDsBAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-31T10:00:14.038Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "IT-Project2526",
+              "DocumentMoniker": "C:\\Users\\gortz\\source\\repos\\ticket-masala\\IT-Project2526\\IT-Project2526.csproj",
+              "RelativeDocumentMoniker": "IT-Project2526\\IT-Project2526.csproj",
+              "ToolTip": "C:\\Users\\gortz\\source\\repos\\ticket-masala\\IT-Project2526\\IT-Project2526.csproj",
+              "RelativeToolTip": "IT-Project2526\\IT-Project2526.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAEIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-05-31T09:56:15.736Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "RabbitMqTest.cs",
+              "DocumentMoniker": "C:\\Users\\gortz\\source\\repos\\ticket-masala\\IT-Project2526\\RabbitMQ\\RabbitMqTest.cs",
+              "RelativeDocumentMoniker": "IT-Project2526\\RabbitMQ\\RabbitMqTest.cs",
+              "ToolTip": "C:\\Users\\gortz\\source\\repos\\ticket-masala\\IT-Project2526\\RabbitMQ\\RabbitMqTest.cs",
+              "RelativeToolTip": "IT-Project2526\\RabbitMQ\\RabbitMqTest.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-31T09:54:03.307Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "TicketAssignedHandler.cs",
+              "DocumentMoniker": "C:\\Users\\gortz\\source\\repos\\ticket-masala\\MailingService\\Handlers\\TicketAssignedHandler.cs",
+              "RelativeDocumentMoniker": "MailingService\\Handlers\\TicketAssignedHandler.cs",
+              "ToolTip": "C:\\Users\\gortz\\source\\repos\\ticket-masala\\MailingService\\Handlers\\TicketAssignedHandler.cs",
+              "RelativeToolTip": "MailingService\\Handlers\\TicketAssignedHandler.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAABIAAAA/AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-30T10:36:34.053Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

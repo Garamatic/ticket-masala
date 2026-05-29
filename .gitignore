@@ -34,3 +34,5 @@ seed_output.log
 seed_final.log
 *.azure.backup.*
 config/tenants/**/data/
+/.vs/TicketMasala/FileContentIndex/0e77a2dd-9536-4240-92bf-3739764c4105.vsidx
+/.vs/TicketMasala/FileContentIndex/bea847bd-44db-4035-a220-1a10076acaaf.vsidx

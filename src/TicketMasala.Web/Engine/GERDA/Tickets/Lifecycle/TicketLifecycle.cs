@@ -127,6 +127,11 @@ internal sealed class TicketLifecycle : ITicketLifecycle
 
         await _unitOfWork.Tickets.AddAsync(ticket);
 
+        if (responsible != null)
+        {
+            await QueueAssignedEventAsync(ticket, responsible, ctx.UserId, ct);
+        }
+
         if (cmd.ProjectGuid.HasValue && cmd.ProjectGuid.Value != Guid.Empty)
         {
             var project = await _unitOfWork.Projects.GetByIdAsync(cmd.ProjectGuid.Value, includeRelations: true);
@@ -440,6 +445,15 @@ internal sealed class TicketLifecycle : ITicketLifecycle
         }
     }
 
+    private static string MapPriorityScore(double score) => score switch
+    {
+        <= 0 => "medium",
+        <= 5 => "low",
+        <= 10 => "medium",
+        <= 15 => "high",
+        _ => "urgent"
+    };
+
     private async Task QueueCreatedEventAsync(Ticket ticket, CancellationToken ct)
     {
         var evt = new TicketMasala.Web.Messaging.Events.TicketCreatedEvent
@@ -449,7 +463,7 @@ internal sealed class TicketLifecycle : ITicketLifecycle
             CustomerName = $"{ticket.Customer?.FirstName} {ticket.Customer?.LastName}".Trim(),
             TenantId = string.Empty,
             Description = ticket.Title,
-            Priority = ticket.PriorityScore > 0 ? ticket.PriorityScore.ToString() : "medium",
+            Priority = MapPriorityScore(ticket.PriorityScore),
             CreatedAt = ticket.CreationDate.ToString("O"),
             Timestamp = _clock.UtcNow.ToString("O"),
             Source = "ticket-masala"

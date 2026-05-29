@@ -131,10 +131,17 @@
                                             </li>
 
                                             <li class="sidebar-item">
-                                                <a class="sidebar-link @(currentController == "Dispatch" && currentAction == "DispatchBacklog" ? "active" : "")" 
+                                                <a class="sidebar-link @(currentController == "Dispatch" && currentAction == "DispatchBacklog" ? "active" : "")"
                                        asp-controller="Dispatch" asp-action="DispatchBacklog">
                                                     <i class="fas fa-robot sidebar-icon"></i>
                                                     <span>@Localizer["GERDA Dispatch"]</span>
+                                                </a>
+                                            </li>
+                                            <li class="sidebar-item">
+                                                <a class="sidebar-link @(currentController == "Home" && currentAction == "AgentChat" ? "active" : "")"
+                                       asp-controller="Home" asp-action="AgentChat">
+                                                    <i class="fas fa-brain sidebar-icon"></i>
+                                                    <span>AI Agent</span>
                                                 </a>
                                             </li>
                                             <!-- Admin Panel Section -->

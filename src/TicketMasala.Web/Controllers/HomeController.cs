@@ -23,6 +23,12 @@ public class HomeController : Controller
         _httpContextAccessor = httpContextAccessor;
     }
 
+    [Authorize]
+    public IActionResult AgentChat()
+    {
+        return View();
+    }
+
     [AllowAnonymous]
     public async Task<IActionResult> Index()
     {

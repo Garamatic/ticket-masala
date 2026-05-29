@@ -463,6 +463,8 @@ internal sealed class TicketLifecycle : ITicketLifecycle
         var evt = new TicketMasala.Web.Messaging.Events.TicketAssignedEvent
         {
             TicketId = ticket.Guid.ToString(),
+            CustomerEmail = ticket.Customer?.Email ?? string.Empty,
+            CustomerName = $"{ticket.Customer?.FirstName} {ticket.Customer?.LastName}".Trim(),
             AssignedTo = assignee?.Id ?? ticket.ResponsibleId ?? string.Empty,
             AssignedBy = assignedBy,
             AssignedAt = _clock.UtcNow.ToString("O"),
@@ -494,29 +496,21 @@ internal sealed class TicketLifecycle : ITicketLifecycle
 
     private async Task QueueOutboxMessageAsync<T>(string eventType, string ticketId, string routingKey, T evt, CancellationToken ct)
     {
-        try
+        var payload = JsonSerializer.Serialize(evt, OutboxJsonOptions);
+
+        var outboxMessage = new OutboxMessage
         {
-            var payload = JsonSerializer.Serialize(evt, OutboxJsonOptions);
+            Id = Guid.NewGuid(),
+            EventType = eventType,
+            Payload = payload,
+            RoutingKey = routingKey,
+            CreatedAt = _clock.UtcNow
+        };
 
-            var outboxMessage = new OutboxMessage
-            {
-                Id = Guid.NewGuid(),
-                EventType = eventType,
-                Payload = payload,
-                RoutingKey = routingKey,
-                CreatedAt = _clock.UtcNow
-            };
+        await _unitOfWork.AddOutboxMessageAsync(outboxMessage, ct);
 
-            await _unitOfWork.AddOutboxMessageAsync(outboxMessage, ct);
-
-            _logger.LogDebug(
-                "Queued {EventType} outbox message for {TicketId} (routing: {RoutingKey})",
-                eventType, ticketId, routingKey);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to queue {EventType} outbox message for {TicketId}", eventType, ticketId);
-            throw;
-        }
+        _logger.LogDebug(
+            "Queued {EventType} outbox message for {TicketId} (routing: {RoutingKey})",
+            eventType, ticketId, routingKey);
     }
 }

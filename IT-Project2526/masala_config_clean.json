@@ -1,0 +1,147 @@
+{
+  "AppInstanceName": "Ticket Masala - Generic Demo",
+  "AppDescription": "A highly configurable ticketing and case management system.",
+  "DefaultSlaThresholdDays": 30,
+  "Roles": {
+    "SuperUser": "Director",
+    "ProjectManager": "Line Manager",
+    "Handler": "Agent",
+    "Viewer": "Auditor"
+  },
+  "Queues": [
+    {
+      "Name": "Customer Support (IT)",
+      "Code": "ITCS",
+      "Description": "General IT support requests.",
+      "IsActive": true,
+      "AutoArchiveDays": 180,
+      "SlaDefaults": {
+        "Password Reset": 1,
+        "Hardware Request": 3,
+        "Software Bug": 7,
+        "System Outage": 1,
+        "Other": 5
+      },
+      "UrgencyMultipliers": {
+        "Password Reset": 1.5,
+        "Hardware Request": 2.0,
+        "Software Bug": 1.8,
+        "System Outage": 5.0,
+        "Other": 1.0
+      }
+    },
+    {
+      "Name": "DevOps & Infrastructure",
+      "Code": "DEVOPS",
+      "Description": "Tickets related to system stability and development operations.",
+      "IsActive": true,
+      "AutoArchiveDays": 365,
+      "SlaDefaults": {
+        "Deployment": 2,
+        "Security Patch": 1,
+        "Performance Issue": 5,
+        "Infrastructure Change": 14,
+        "Other": 7
+      },
+      "UrgencyMultipliers": {
+        "Deployment": 2.5,
+        "Security Patch": 5.0,
+        "Performance Issue": 3.0,
+        "Infrastructure Change": 1.5,
+        "Other": 1.0
+      }
+    },
+    {
+      "Name": "HR Enquiries",
+      "Code": "HR",
+      "Description": "Human Resources related queries and requests.",
+      "IsActive": true,
+      "AutoArchiveDays": 90,
+      "SlaDefaults": {
+        "Leave Request": 3,
+        "Payroll Issue": 2,
+        "Onboarding": 7,
+        "Policy Question": 5,
+        "Other": 5
+      },
+      "UrgencyMultipliers": {
+        "Leave Request": 1.5,
+        "Payroll Issue": 3.0,
+        "Onboarding": 2.0,
+        "Policy Question": 1.0,
+        "Other": 1.0
+      }
+    },
+    {
+      "Name": "VAT Disputes (Tax)",
+      "Code": "VATD",
+      "Description": "Processing of VAT related disputes.",
+      "IsActive": false,
+      "AutoArchiveDays": 730,
+      "SlaDefaults": {
+        "Address Change": 5,
+        "Refund Request": 30,
+        "Fraud Investigation": 90,
+        "Other": 14
+      },
+      "UrgencyMultipliers": {
+        "Address Change": 1.0,
+        "Refund Request": 2.0,
+        "Fraud Investigation": 3.5,
+        "Other": 1.0
+      }
+    }
+  ],
+  "GerdaAI": {
+    "IsEnabled": true,
+    "SpamDetection": {
+      "IsEnabled": true,
+      "TimeWindowMinutes": 60,
+      "MaxTicketsPerUser": 5,
+      "Action": "AutoMerge",
+      "GroupedTicketPrefix": "[GROUPED] "
+    },
+    "ComplexityEstimation": {
+      "IsEnabled": true,
+      "CategoryComplexityMap": [
+        { "Category": "Password Reset", "EffortPoints": 1 },
+        { "Category": "Address Change", "EffortPoints": 1 },
+        { "Category": "Hardware Request", "EffortPoints": 3 },
+        { "Category": "Software Bug", "EffortPoints": 8 },
+        { "Category": "Refund Request", "EffortPoints": 8 },
+        { "Category": "System Outage", "EffortPoints": 13 },
+        { "Category": "Fraud Investigation", "EffortPoints": 13 },
+        { "Category": "Other", "EffortPoints": 5 }
+      ],
+      "DefaultEffortPoints": 5
+    },
+    "Ranking": {
+      "IsEnabled": true,
+      "SlaWeight": 100,
+      "ComplexityWeight": 1,
+      "RecalculationFrequencyMinutes": 1440
+    },
+    "Dispatching": {
+      "IsEnabled": true,
+      "MinHistoryForAffinityMatch": 3,
+      "MaxAssignedTicketsPerAgent": 15,
+      "RetrainRecommendationModelFrequencyHours": 24
+    },
+    "Anticipation": {
+      "IsEnabled": true,
+      "ForecastHorizonDays": 30,
+      "InflowHistoryYears": 3,
+      "MinHistoryForForecasting": 90,
+      "CapacityRefreshFrequencyHours": 12,
+      "RiskThresholdPercentage": 20
+    }
+  },
+  "MockData": {
+    "GenerateOnStartup": true,
+    "NumberOfProjects": 5,
+    "NumberOfUsers": 20,
+    "NumberOfTickets": 1000,
+    "SpammerClientCount": 3,
+    "SeasonalSpikeMonths": [6, 10]
+  }
+}

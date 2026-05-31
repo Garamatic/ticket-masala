@@ -1,0 +1,95 @@
+@model IT_Project2526.Models.ProjectTemplate
+@using IT_Project2526.Utilities
+
+@{
+    ViewData["Title"] = "Edit Template";
+}
+
+<h1>Edit Project Template</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Guid" />
+            <div class="form-group">
+                <label asp-for="Name" class="control-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Description" class="control-label"></label>
+                <textarea asp-for="Description" class="form-control"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <div class="form-group mt-3">
+                <input type="submit" value="Save" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<hr />
+
+<h3>Template Tickets</h3>
+<p>These tickets will be automatically created when a project is created from this template.</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Description</th>
+            <th>Effort</th>
+            <th>Priority</th>
+            <th>Type</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var ticket in Model.Tickets)
+        {
+            <tr>
+                <td>@ticket.Description</td>
+                <td>@ticket.EstimatedEffortPoints</td>
+                <td>@ticket.Priority</td>
+                <td>@ticket.TicketType</td>
+                <td>
+                    <form asp-action="DeleteTicket" method="post" style="display:inline;">
+                        <input type="hidden" name="id" value="@ticket.Guid" />
+                        <button type="submit" class="btn btn-sm btn-danger">Remove</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="card mt-3">
+    <div class="card-header">Add Ticket to Template</div>
+    <div class="card-body">
+        <form asp-action="AddTicket" method="post">
+            <input type="hidden" name="templateId" value="@Model.Guid" />
+            <div class="row">
+                <div class="col-md-4">
+                    <input type="text" name="description" class="form-control" placeholder="Ticket Description" required />
+                </div>
+                <div class="col-md-2">
+                    <input type="number" name="effort" class="form-control" placeholder="Effort (1-100)" value="5" min="1" max="100" required />
+                </div>
+                <div class="col-md-2">
+                    <select name="priority" class="form-select" asp-items="Html.GetEnumSelectList<Priority>()"></select>
+                </div>
+                <div class="col-md-2">
+                    <select name="type" class="form-select" asp-items="Html.GetEnumSelectList<TicketType>()"></select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-success">Add</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -22,6 +22,10 @@ public static class DatabaseServiceCollectionExtensions
         var tenantConnectionResolver = new TenantConnectionResolver(configuration);
         if (environment.IsEnvironment("Testing"))
         {
+            // DomainEventDispatchingInterceptor is intentionally NOT registered here.
+            // The in-memory Testing environment does not support transactional interceptor
+            // logic. Domain-event-to-outbox behavior is covered by dedicated integration
+            // tests in DomainEventOutboxIntegrationTests.
             services.AddDbContext<MasalaDbContext>(options =>
             {
                 options.UseInMemoryDatabase("MasalaInMemoryDb");
@@ -59,7 +63,7 @@ public static class DatabaseServiceCollectionExtensions
         // Register TenantConnectionResolver for DI
         services.AddSingleton<TenantConnectionResolver>();
 
-        // Register domain event interceptor (must be scoped to match DbContext lifetime)
+        // Register domain event interceptor (scoped — uses IServiceScopeFactory internally)
         services.AddScoped<DomainEventDispatchingInterceptor>();
 
         return services;

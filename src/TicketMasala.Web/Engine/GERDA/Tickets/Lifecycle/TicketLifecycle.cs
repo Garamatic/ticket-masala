@@ -1,5 +1,3 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Exceptions;
@@ -12,9 +10,10 @@ using TicketMasala.Web.Repositories;
 namespace TicketMasala.Web.Engine.GERDA.Tickets.Lifecycle;
 
 /// <summary>
-/// Deep module for ticket lifecycle operations. All commands flow through:
-/// load → mutate → queue persistence/audit/outbox → commit → notify observers.
-/// Outbox messages are queued atomically within the same DbContext transaction.
+/// Deep module for ticket lifecycle operations.
+/// All commands flow through: load → mutate → commit → notify observers.
+/// Outbox messages are produced atomically by DomainEventDispatchingInterceptor
+/// when aggregates raise domain events during mutation.
 /// </summary>
 internal sealed class TicketLifecycle : ITicketLifecycle
 {
@@ -26,13 +25,6 @@ internal sealed class TicketLifecycle : ITicketLifecycle
     private readonly IPiiScrubberService _piiScrubber;
     private readonly ISystemClock _clock;
     private readonly ILogger<TicketLifecycle> _logger;
-
-    private static readonly JsonSerializerOptions OutboxJsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-        WriteIndented = false,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-    };
 
     public TicketLifecycle(
         IUnitOfWork unitOfWork,
@@ -117,19 +109,14 @@ internal sealed class TicketLifecycle : ITicketLifecycle
             description,
             cmd.CustomerId,
             completionTarget: cmd.CompletionTarget ?? _clock.UtcNow.AddDays(14));
-        if (responsible != null)
-        {
-            ticket.Responsible = responsible;
-            ticket.ResponsibleId = responsible.Id;
-            ticket.TicketStatus = Status.Assigned;
-            ticket.SyncStatus();
-        }
-
         await _unitOfWork.Tickets.AddAsync(ticket);
 
         if (responsible != null)
         {
-            await QueueAssignedEventAsync(ticket, responsible, ctx.UserId, ct);
+            // Use AssignTo so domain events (TicketAssignedEvent, TicketStatusChangedEvent)
+            // are raised and picked up by the interceptor for outbox publishing.
+            ticket.AssignTo(responsible.Id, ctx.UserId);
+            ticket.Responsible = responsible;
         }
 
         if (cmd.ProjectGuid.HasValue && cmd.ProjectGuid.Value != Guid.Empty)
@@ -143,7 +130,6 @@ internal sealed class TicketLifecycle : ITicketLifecycle
         }
 
         await _auditService.LogActionAsync(ticket.Guid, "Created", ctx.UserId);
-        await QueueCreatedEventAsync(ticket, ct);
         await _unitOfWork.CommitAsync(ct);
         await NotifyTicketObserversAsync(ticket, responsible, ct);
 
@@ -164,7 +150,6 @@ internal sealed class TicketLifecycle : ITicketLifecycle
         await _unitOfWork.Tickets.UpdateAsync(ticket);
         await _auditService.LogActionAsync(ticket.Guid, "Resolved", ctx.UserId,
             newValue: $"Amount: {cmd.BillableAmount}, Notes: {cmd.ResolutionNotes}");
-        await QueueResolvedEventAsync(ticket, cmd.ResolutionNotes, ct);
         await _unitOfWork.CommitAsync(ct);
         await NotifyTicketObserversAsync(ticket, ct: ct);
 
@@ -284,10 +269,6 @@ internal sealed class TicketLifecycle : ITicketLifecycle
         await _unitOfWork.Tickets.UpdateAsync(ticket);
         await _auditService.LogActionAsync(ticket.Guid, "Assigned", ctx.UserId,
             newValue: $"Agent: {cmd.AgentId}, Project: {cmd.ProjectGuid}");
-        if (assigned != null)
-        {
-            await QueueAssignedEventAsync(ticket, assigned, ctx.UserId, ct);
-        }
         await _unitOfWork.CommitAsync(ct);
         await NotifyTicketObserversAsync(ticket, assigned, ct);
 
@@ -457,78 +438,4 @@ internal sealed class TicketLifecycle : ITicketLifecycle
         _ => "urgent"
     };
 
-    private async Task QueueCreatedEventAsync(Ticket ticket, CancellationToken ct)
-    {
-        var evt = new RabbitMqConnector.Contracts.TicketCreatedEvent
-        {
-            TicketId = ticket.Guid.ToString(),
-            CustomerEmail = ticket.Customer?.Email ?? string.Empty,
-            CustomerName = $"{ticket.Customer?.FirstName} {ticket.Customer?.LastName}".Trim(),
-            TenantId = string.Empty,
-            Description = ticket.Title,
-            Priority = MapPriorityScore(ticket.PriorityScore),
-            CreatedAt = ticket.CreationDate.ToString("O"),
-            Timestamp = _clock.UtcNow.ToString("O"),
-            Source = "ticket-masala"
-        };
-
-        await QueueOutboxMessageAsync(evt.EventType, evt.TicketId, "event.ticket.created", evt, ct);
-    }
-
-    private async Task QueueAssignedEventAsync(Ticket ticket, Employee? assignee, string assignedBy, CancellationToken ct)
-    {
-        var evt = new RabbitMqConnector.Contracts.TicketAssignedEvent
-        {
-            TicketId = ticket.Guid.ToString(),
-            CustomerEmail = ticket.Customer?.Email ?? string.Empty,
-            CustomerName = $"{ticket.Customer?.FirstName} {ticket.Customer?.LastName}".Trim(),
-            AssignedTo = assignee?.Id ?? ticket.ResponsibleId ?? string.Empty,
-            AssignedBy = assignedBy,
-            AssignedAt = _clock.UtcNow.ToString("O"),
-            Timestamp = _clock.UtcNow.ToString("O"),
-            Source = "ticket-masala"
-        };
-
-        await QueueOutboxMessageAsync(evt.EventType, evt.TicketId, "event.ticket.assigned", evt, ct);
-    }
-
-    private async Task QueueResolvedEventAsync(Ticket ticket, string originalResolutionNotes, CancellationToken ct)
-    {
-        var evt = new RabbitMqConnector.Contracts.TicketResolvedEvent
-        {
-            TicketId = ticket.Guid.ToString(),
-            CustomerEmail = ticket.Customer?.Email ?? string.Empty,
-            CustomerName = $"{ticket.Customer?.FirstName} {ticket.Customer?.LastName}".Trim(),
-            ServiceDescription = ticket.Title,
-            Amount = ticket.BillableAmount ?? 0m,
-            TenantId = string.Empty,
-            ResolvedAt = (ticket.CompletionDate ?? DateTime.UtcNow).ToString("O"),
-            ResolutionNotes = ticket.ResolutionNotes ?? originalResolutionNotes,
-            Timestamp = _clock.UtcNow.ToString("O"),
-            Source = "ticket-masala"
-        };
-
-        await QueueOutboxMessageAsync(evt.EventType, evt.TicketId, "event.ticket.resolved", evt, ct);
-    }
-
-    private async Task QueueOutboxMessageAsync<T>(string eventType, string ticketId, string routingKey, T evt, CancellationToken ct)
-    {
-        var payload = JsonSerializer.Serialize(evt, OutboxJsonOptions);
-
-        var outboxMessage = new OutboxMessage
-        {
-            Id = Guid.NewGuid(),
-            EventType = eventType,
-            Payload = payload,
-            RoutingKey = routingKey,
-            CorrelationId = System.Diagnostics.Activity.Current?.Id,
-            CreatedAt = _clock.UtcNow
-        };
-
-        await _unitOfWork.AddOutboxMessageAsync(outboxMessage, ct);
-
-        _logger.LogDebug(
-            "Queued {EventType} outbox message for {TicketId} (routing: {RoutingKey}, correlation: {CorrelationId})",
-            eventType, ticketId, routingKey, outboxMessage.CorrelationId);
-    }
 }

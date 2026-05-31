@@ -7,7 +7,8 @@ namespace TicketMasala.Web.Infrastructure.DomainEvents;
 /// Implement this to react to domain events (e.g., send notifications, update caches).
 /// </summary>
 /// <typeparam name="TEvent">The type of domain event this handler processes.</typeparam>
-public interface IDomainEventHandler<in TEvent> where TEvent : IDomainEvent
+public interface IDomainEventHandler<in TEvent> : IDomainEventHandler
+    where TEvent : IDomainEvent
 {
     /// <summary>
     /// Handles the domain event.

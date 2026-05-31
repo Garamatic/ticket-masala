@@ -41,6 +41,8 @@ public class TicketLifecycleTests
         _uow.Setup(x => x.AddCommentAsync(It.IsAny<TicketComment>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _uow.Setup(x => x.AddTimeLogAsync(It.IsAny<TimeLog>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _uow.Setup(x => x.AddQualityReviewAsync(It.IsAny<QualityReview>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        // AddOutboxMessageAsync is now handled by DomainEventDispatchingInterceptor.
+        // The mock Setup is kept for backward compat but the call is no longer expected.
         _uow.Setup(x => x.AddOutboxMessageAsync(It.IsAny<OutboxMessage>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
         _scrubber.Setup(x => x.Scrub(It.IsAny<string>())).Returns<string>(s => s);
@@ -146,11 +148,6 @@ public class TicketLifecycleTests
         _uow.Verify(x => x.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
         _ticketObserver.Verify(x => x.OnTicketUpdatedAsync(It.Is<Ticket>(t => t.Guid == ticket.Guid)), Times.Once);
         _ticketObserver.Verify(x => x.OnTicketCompletedAsync(It.Is<Ticket>(t => t.Guid == ticket.Guid)), Times.Once);
-        _uow.Verify(x => x.AddOutboxMessageAsync(
-            It.Is<OutboxMessage>(m =>
-                m.EventType == "ticket.resolved" &&
-                m.RoutingKey == "event.ticket.resolved"),
-            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -163,7 +160,6 @@ public class TicketLifecycleTests
 
         Assert.False(result.Success);
         Assert.Contains("Ticket not found", result.ErrorMessage);
-        _uow.Verify(x => x.AddOutboxMessageAsync(It.IsAny<OutboxMessage>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -179,20 +175,14 @@ public class TicketLifecycleTests
             Ctx());
 
         Assert.False(result.Success);
-        _uow.Verify(x => x.AddOutboxMessageAsync(It.IsAny<OutboxMessage>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task ResolveTicket_QueuesOutboxMessageWithCorrectSchema()
+    public async Task ResolveTicket_SetsCompletedStatus()
     {
         var ticket = new TicketBuilder().WithStatus(Status.InProgress).Build();
         await _dbContext.Tickets.AddAsync(ticket);
         await _dbContext.SaveChangesAsync();
-
-        OutboxMessage? capturedMessage = null;
-        _uow.Setup(x => x.AddOutboxMessageAsync(It.IsAny<OutboxMessage>(), It.IsAny<CancellationToken>()))
-            .Callback<OutboxMessage, CancellationToken>((msg, _) => capturedMessage = msg)
-            .Returns(Task.CompletedTask);
 
         var sut = CreateSUT();
         var result = await sut.ExecuteAsync(
@@ -200,14 +190,9 @@ public class TicketLifecycleTests
             Ctx());
 
         Assert.True(result.Success);
-        Assert.NotNull(capturedMessage);
-        Assert.Equal("ticket.resolved", capturedMessage!.EventType);
-        Assert.Equal("event.ticket.resolved", capturedMessage.RoutingKey);
-        Assert.Contains("ticket_id", capturedMessage.Payload);
-        Assert.Contains("customer_email", capturedMessage.Payload);
-        Assert.Contains("timestamp", capturedMessage.Payload);
-        Assert.Contains("source", capturedMessage.Payload);
-        Assert.Contains("ticket-masala", capturedMessage.Payload);
+        Assert.Equal(Status.Completed, result.Ticket!.TicketStatus);
+        Assert.Equal("Notes", result.Ticket.ResolutionNotes);
+        Assert.Equal(100m, result.Ticket.BillableAmount);
     }
 
     // ═════════════════════════════════════════════════════════════════
@@ -382,11 +367,10 @@ public class TicketLifecycleTests
             Ctx());
 
         Assert.True(result.Success);
-        _uow.Verify(x => x.AddOutboxMessageAsync(It.IsAny<OutboxMessage>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task ResolveTicket_AlwaysQueuesOutboxMessage()
+    public async Task ResolveTicket_AlwaysSucceeds()
     {
         var ticket = new TicketBuilder().WithStatus(Status.InProgress).Build();
         await _dbContext.Tickets.AddAsync(ticket);
@@ -398,7 +382,6 @@ public class TicketLifecycleTests
             Ctx());
 
         Assert.True(result.Success);
-        _uow.Verify(x => x.AddOutboxMessageAsync(It.IsAny<OutboxMessage>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

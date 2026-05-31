@@ -13,8 +13,8 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Register the RabbitMQ publisher for direct event publishing
-        builder.Services.AddSingleton<RabbitMqPublisher>();
+        // Register the shared RabbitMQ publisher for direct event publishing
+        builder.Services.AddSingleton<RabbitMqConnector.IRabbitMqPublisher, RabbitMqConnector.RabbitMqPublisher>();
 
         var app = builder.Build();
 
@@ -50,7 +50,7 @@ public class Program
 
         async Task<IResult> ProcessIngestionRequestAsync(
             HttpContext context,
-            RabbitMqPublisher publisher,
+            RabbitMqConnector.IRabbitMqPublisher publisher,
             ILogger<Program> logger,
             CancellationToken ct)
         {
@@ -165,7 +165,7 @@ public class Program
 
     private static async Task<IResult> PublishLegacyTicketAsync(
         JsonElement root,
-        RabbitMqPublisher publisher,
+        RabbitMqConnector.IRabbitMqPublisher publisher,
         ILogger<Program> logger,
         System.Net.IPAddress? remoteIp,
         CancellationToken ct)
@@ -190,7 +190,7 @@ public class Program
         var ticketId = Guid.NewGuid().ToString();
         var now = DateTime.UtcNow.ToString("O");
 
-        var evt = new TicketCreatedEvent
+        var evt = new RabbitMqConnector.Contracts.TicketCreatedEvent
         {
             EventType = "ticket.created",
             Timestamp = now,
@@ -225,19 +225,4 @@ public class IngestionRequest
     public Dictionary<string, object> Data { get; set; } = new();
 }
 
-/// <summary>
-/// Flat snake_case event matching integration-contracts schema for ticket.created.
-/// </summary>
-public record TicketCreatedEvent
-{
-    public string EventType { get; init; } = "ticket.created";
-    public string Timestamp { get; init; } = string.Empty;
-    public string Source { get; init; } = "gatekeeper-api";
-    public string TicketId { get; init; } = string.Empty;
-    public string CustomerEmail { get; init; } = string.Empty;
-    public string CustomerName { get; init; } = string.Empty;
-    public string TenantId { get; init; } = string.Empty;
-    public string Description { get; init; } = string.Empty;
-    public string Priority { get; init; } = "medium";
-    public string CreatedAt { get; init; } = string.Empty;
-}
+

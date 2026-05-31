@@ -1,10 +1,11 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Text.Json;
+using System.Threading;
 using Microsoft.EntityFrameworkCore;
+using RabbitMqConnector;
 using TicketMasala.Domain.Data;
 using TicketMasala.Domain.Entities;
-using TicketMasala.Web.Messaging;
 
 namespace TicketMasala.Web.Services;
 
@@ -89,8 +90,8 @@ public class OutboxPublisher : BackgroundService
     private static readonly Histogram<int> RetryCountHistogram =
         Meter.CreateHistogram<int>("outbox.retry.count", "retries", "Distribution of retry counts before success/failure");
 
-    // Observable gauges (for current state)
-    private int _currentOutboxDepth = 0;
+    // Observable gauges (for current state) — use long for Interlocked compatibility
+    private long _currentOutboxDepth = 0;
 
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<OutboxPublisher> _logger;
@@ -106,8 +107,8 @@ public class OutboxPublisher : BackgroundService
         _options = options ?? new OutboxPublisherOptions();
         _options.Validate();
 
-        // Create observable gauge for outbox depth
-        Meter.CreateObservableGauge("outbox.depth", () => _currentOutboxDepth, "messages", "Current number of pending outbox messages");
+        // Create observable gauge for outbox depth (thread-safe read via Interlocked)
+        Meter.CreateObservableGauge("outbox.depth", () => Interlocked.Read(ref _currentOutboxDepth), "messages", "Current number of pending outbox messages");
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -148,10 +149,11 @@ public class OutboxPublisher : BackgroundService
         var context = scope.ServiceProvider.GetRequiredService<MasalaDbContext>();
         var publisher = scope.ServiceProvider.GetRequiredService<IRabbitMqPublisher>();
 
-        // Get total outbox depth (for observable gauge)
-        _currentOutboxDepth = await context.OutboxMessages
+        // Get total outbox depth (for observable gauge) — thread-safe update
+        var depth = await context.OutboxMessages
             .Where(m => m.ProcessedAt == null)
             .CountAsync(cancellationToken);
+        Interlocked.Exchange(ref _currentOutboxDepth, depth);
 
         // Get pending messages (not processed, and eligible for retry)
         // Messages with RetryCount < MaxRetries are eligible (0-indexed, so MaxRetries=3 allows attempts at counts 0,1,2)
@@ -317,12 +319,18 @@ public class OutboxPublisher : BackgroundService
     }
 
     private static async Task PublishMessageAsync(
-        IRabbitMqPublisher publisher,
+        RabbitMqConnector.IRabbitMqPublisher publisher,
         OutboxMessage message,
         CancellationToken cancellationToken)
     {
         // Validate payload is valid JSON before attempting to publish
         using var document = JsonDocument.Parse(message.Payload);
+
+        // Propagate correlation ID from outbox message to current activity
+        if (!string.IsNullOrEmpty(message.CorrelationId) && Activity.Current is not null)
+        {
+            Activity.Current.SetTag("correlation.id", message.CorrelationId);
+        }
 
         // Pass the JsonDocument.RootElement which avoids double-serialization
         // JsonElement serializes back to the original JSON structure

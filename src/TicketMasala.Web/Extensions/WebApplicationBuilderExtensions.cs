@@ -203,8 +203,8 @@ public static class WebApplicationBuilderExtensions
     /// </summary>
     private static WebApplicationBuilder AddMasalaMessaging(this WebApplicationBuilder builder)
     {
-        // RabbitMQ Publisher (outbound events) - lazy connection
-        builder.Services.AddSingleton<TicketMasala.Web.Messaging.IRabbitMqPublisher, TicketMasala.Web.Messaging.RabbitMqPublisher>();
+        // RabbitMQ Publisher (outbound events) - lazy connection, shared library
+        builder.Services.AddSingleton<RabbitMqConnector.IRabbitMqPublisher, RabbitMqConnector.RabbitMqPublisher>();
 
         // Outbox Publisher (Background Service)
         builder.Services.AddSingleton<OutboxPublisherOptions>(sp =>

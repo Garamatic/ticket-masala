@@ -459,7 +459,7 @@ internal sealed class TicketLifecycle : ITicketLifecycle
 
     private async Task QueueCreatedEventAsync(Ticket ticket, CancellationToken ct)
     {
-        var evt = new TicketMasala.Web.Messaging.Events.TicketCreatedEvent
+        var evt = new RabbitMqConnector.Contracts.TicketCreatedEvent
         {
             TicketId = ticket.Guid.ToString(),
             CustomerEmail = ticket.Customer?.Email ?? string.Empty,
@@ -477,7 +477,7 @@ internal sealed class TicketLifecycle : ITicketLifecycle
 
     private async Task QueueAssignedEventAsync(Ticket ticket, Employee? assignee, string assignedBy, CancellationToken ct)
     {
-        var evt = new TicketMasala.Web.Messaging.Events.TicketAssignedEvent
+        var evt = new RabbitMqConnector.Contracts.TicketAssignedEvent
         {
             TicketId = ticket.Guid.ToString(),
             CustomerEmail = ticket.Customer?.Email ?? string.Empty,
@@ -494,7 +494,7 @@ internal sealed class TicketLifecycle : ITicketLifecycle
 
     private async Task QueueResolvedEventAsync(Ticket ticket, string originalResolutionNotes, CancellationToken ct)
     {
-        var evt = new TicketMasala.Web.Messaging.Events.TicketResolvedEvent
+        var evt = new RabbitMqConnector.Contracts.TicketResolvedEvent
         {
             TicketId = ticket.Guid.ToString(),
             CustomerEmail = ticket.Customer?.Email ?? string.Empty,
@@ -502,7 +502,7 @@ internal sealed class TicketLifecycle : ITicketLifecycle
             ServiceDescription = ticket.Title,
             Amount = ticket.BillableAmount ?? 0m,
             TenantId = string.Empty,
-            ResolvedAt = ticket.CompletionDate ?? DateTime.UtcNow,
+            ResolvedAt = (ticket.CompletionDate ?? DateTime.UtcNow).ToString("O"),
             ResolutionNotes = ticket.ResolutionNotes ?? originalResolutionNotes,
             Timestamp = _clock.UtcNow.ToString("O"),
             Source = "ticket-masala"
@@ -521,13 +521,14 @@ internal sealed class TicketLifecycle : ITicketLifecycle
             EventType = eventType,
             Payload = payload,
             RoutingKey = routingKey,
+            CorrelationId = System.Diagnostics.Activity.Current?.Id,
             CreatedAt = _clock.UtcNow
         };
 
         await _unitOfWork.AddOutboxMessageAsync(outboxMessage, ct);
 
         _logger.LogDebug(
-            "Queued {EventType} outbox message for {TicketId} (routing: {RoutingKey})",
-            eventType, ticketId, routingKey);
+            "Queued {EventType} outbox message for {TicketId} (routing: {RoutingKey}, correlation: {CorrelationId})",
+            eventType, ticketId, routingKey, outboxMessage.CorrelationId);
     }
 }

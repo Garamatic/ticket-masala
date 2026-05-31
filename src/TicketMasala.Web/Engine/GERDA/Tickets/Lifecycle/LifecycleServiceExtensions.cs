@@ -1,5 +1,3 @@
-using TicketMasala.Web.Messaging;
-
 namespace TicketMasala.Web.Engine.GERDA.Tickets.Lifecycle;
 
 /// <summary>

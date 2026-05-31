@@ -20,6 +20,7 @@ using TicketMasala.Web.Extensions;
 using TicketMasala.Web.Health;
 using TicketMasala.Web.Middleware;
 using TicketMasala.Web.Services;
+using RabbitMqConnector;
 using TicketMasala.Web.Tenancy;
 using WebOptimizer;
 
@@ -93,7 +94,7 @@ builder.Services.AddOpenTelemetry()
     {
         // Explicitly include our application ActivitySources
         t.AddSource("TicketMasala.Outbox");
-        t.AddSource("TicketMasala.Messaging");
+        t.AddSource("RabbitMqConnector.Messaging");
         // GERDA deep module registers its own sources internally via AddGerda()
         // AspNetCore instrumentation for HTTP request spans
         t.AddAspNetCoreInstrumentation(options =>
@@ -144,9 +145,8 @@ builder.Services.AddHttpClient("OpenRouter", client =>
     .WaitAndRetryAsync(3, retryAttempt =>
         TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
 
-//add RabbitMQ connector and consumers
-builder.Services.AddRabbitMqConnector("amqp://admin:admin123@51.136.7.179:30000");
-builder.Services.AddRabbitMqConsumers(Assembly.GetExecutingAssembly());
+// RabbitMQ Publisher (shared library, reads from configuration)
+builder.Services.AddRabbitMqPublisher();
 
 // Register OpenAI service for explainability
 // AI Generation Port (Domain-facing, provider-agnostic)

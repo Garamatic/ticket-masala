@@ -42,7 +42,7 @@ public class ProjectsControllerTests : IClassFixture<CustomWebApplicationFactory
                     options.DefaultAuthenticateScheme = "Test";
                     options.DefaultChallengeScheme = "Test";
                 })
-                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", options => { });
+                .AddScheme<TestAuthOptions, TestAuthHandler>("Test", options => { options.Role = role; });
 
                 // Mock IDomainUiService
                 var mockDomainUi = new Moq.Mock<IDomainUiService>();

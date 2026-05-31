@@ -43,7 +43,9 @@ public static class DomainEventExtensions
         //    These run AFTER the DB save (in-process like GERDA, notifications).
         var handlerInterfaceType = typeof(IDomainEventHandler<>);
         var handlerAssemblies = AppDomain.CurrentDomain.GetAssemblies()
-            .Where(a => !a.IsDynamic && a.GetName().Name?.StartsWith("TicketMasala") == true);
+            .Where(a => !a.IsDynamic
+                && a.GetName().Name?.StartsWith("TicketMasala") == true
+                && !a.GetName().Name!.EndsWith(".Tests"));
 
         foreach (var assembly in handlerAssemblies)
         {
@@ -70,7 +72,9 @@ public static class DomainEventExtensions
         //    events to integration contracts before outbox serialization.
         var mapperType = typeof(IDomainEventContractMapper);
         var mapperAssemblies = AppDomain.CurrentDomain.GetAssemblies()
-            .Where(a => !a.IsDynamic && a.GetName().Name?.StartsWith("TicketMasala") == true);
+            .Where(a => !a.IsDynamic
+                && a.GetName().Name?.StartsWith("TicketMasala") == true
+                && !a.GetName().Name!.EndsWith(".Tests"));
 
         foreach (var assembly in mapperAssemblies)
         {

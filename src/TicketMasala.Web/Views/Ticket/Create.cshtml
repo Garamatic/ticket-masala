@@ -60,6 +60,7 @@
                     <div class="mb-3">
                         <label for="Description" class="form-label">Description <span class="text-danger">*</span></label>
                         <textarea name="Description" id="Description" class="form-control" rows="4" placeholder="Describe the @workItemLabel.ToLower()..." required></textarea>
+                        @Html.ValidationMessage("Description", "", new { @class = "text-danger" })
                     </div>
                 </div>
             </div>
@@ -80,6 +81,7 @@
                                     }
                                 }
                             </select>
+                            @Html.ValidationMessage("CustomerId", "", new { @class = "text-danger" })
                         </div>
                     </div>
                 }

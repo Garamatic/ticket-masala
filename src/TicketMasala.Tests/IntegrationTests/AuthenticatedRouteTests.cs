@@ -17,9 +17,16 @@ using Xunit;
 
 namespace TicketMasala.Tests.IntegrationTests;
 
-public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
+public class TestAuthOptions : AuthenticationSchemeOptions
 {
-    public TestAuthHandler(IOptionsMonitor<AuthenticationSchemeOptions> options,
+    public string Role { get; set; } = "Customer";
+    public string NameIdentifier { get; set; } = "test-customer-id";
+    public string Name { get; set; } = "Test Customer";
+}
+
+public class TestAuthHandler : AuthenticationHandler<TestAuthOptions>
+{
+    public TestAuthHandler(IOptionsMonitor<TestAuthOptions> options,
         ILoggerFactory logger, UrlEncoder encoder)
         : base(options, logger, encoder)
     {
@@ -28,9 +35,9 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         var claims = new[] {
-            new Claim(ClaimTypes.Name, "Test Customer"),
-            new Claim(ClaimTypes.NameIdentifier, "test-customer-id"),
-            new Claim(ClaimTypes.Role, "Customer")
+            new Claim(ClaimTypes.Name, Options.Name),
+            new Claim(ClaimTypes.NameIdentifier, Options.NameIdentifier),
+            new Claim(ClaimTypes.Role, Options.Role)
         };
         // Use IdentityConstants.ApplicationScheme so SignInManager.IsSignedIn returns true
         var identity = new ClaimsIdentity(claims, "Identity.Application"); // Hardcoding string to avoid reference hell if package isn't directly compatible in test project
@@ -64,7 +71,7 @@ public class AuthenticatedRouteTests : IClassFixture<CustomWebApplicationFactory
                     options.DefaultAuthenticateScheme = "Test";
                     options.DefaultChallengeScheme = "Test";
                 })
-                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", options => { });
+                .AddScheme<TestAuthOptions, TestAuthHandler>("Test", options => { });
 
                 // Mock IDomainUiService (consumed by _Layout.cshtml)
                 var mockDomainUi = new Moq.Mock<TicketMasala.Web.Engine.GERDA.Configuration.IDomainUiService>();

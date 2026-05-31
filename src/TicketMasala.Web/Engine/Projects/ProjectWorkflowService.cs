@@ -126,7 +126,15 @@ public class ProjectWorkflowService : IProjectWorkflowService
         }
 
         _context.Projects.Add(project);
-        await _context.SaveChangesAsync();
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save project {ProjectName}: {Error}", project.Name, ex.Message);
+            throw new InvalidOperationException($"Failed to save project: {ex.Message}", ex);
+        }
 
         // Apply Template
         if (viewModel.SelectedTemplateId.HasValue)

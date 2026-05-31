@@ -17,6 +17,7 @@ using TicketMasala.Domain.Entities;
 using TicketMasala.Web;
 using TicketMasala.Web.Data;
 using TicketMasala.Web.ViewModels.Api;
+using TicketMasala.Web.ViewModels.Projects;
 using Xunit;
 
 namespace TicketMasala.Tests.IntegrationTests.Api;
@@ -45,7 +46,7 @@ public class ProjectsApiControllerTests : IClassFixture<CustomWebApplicationFact
                     options.DefaultAuthenticateScheme = "Test";
                     options.DefaultChallengeScheme = "Test";
                 })
-                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", options => { });
+                .AddScheme<TestAuthOptions, TestAuthHandler>("Test", options => { options.Role = role; });
 
                 // Seed test user
                 var sp = services.BuildServiceProvider(new ServiceProviderOptions
@@ -121,7 +122,7 @@ public class ProjectsApiControllerTests : IClassFixture<CustomWebApplicationFact
         return client;
     }
 
-    [Fact(DisplayName = "GET /api/v1/projects - Authenticated user can get all projects", Skip = "Skipped - requires specific role/permissions")]
+    [Fact(DisplayName = "GET /api/v1/projects - Authenticated user can get all projects")]
     public async Task GetAll_AuthenticatedUser_ReturnsProjectList()
     {
         // Arrange
@@ -138,7 +139,7 @@ public class ProjectsApiControllerTests : IClassFixture<CustomWebApplicationFact
         Assert.True(content.Contains("success") || content.StartsWith("{"), "Expected JSON response with success indicator");
     }
 
-    [Fact(DisplayName = "GET /api/v1/projects/{id} - Returns 404 for non-existent project", Skip = "Skipped - returns different status due to auth checks")]
+    [Fact(DisplayName = "GET /api/v1/projects/{id} - Returns 404 for non-existent project")]
     public async Task GetById_NonExistentProject_ReturnsNotFound()
     {
         // Arrange
@@ -171,7 +172,7 @@ public class ProjectsApiControllerTests : IClassFixture<CustomWebApplicationFact
             $"Expected Unauthorized or Redirect but got {response.StatusCode}");
     }
 
-    [Fact(DisplayName = "GET /api/v1/projects/customer/{customerId} - Returns projects for customer", Skip = "Skipped - may require specific permissions")]
+    [Fact(DisplayName = "GET /api/v1/projects/customer/{customerId} - Returns projects for customer")]
     public async Task GetByCustomer_ValidCustomerId_ReturnsProjects()
     {
         // Arrange
@@ -186,7 +187,7 @@ public class ProjectsApiControllerTests : IClassFixture<CustomWebApplicationFact
         Assert.NotNull(content);
     }
 
-    [Fact(DisplayName = "GET /api/v1/projects/search - Search endpoint works", Skip = "Skipped - may require specific permissions")]
+    [Fact(DisplayName = "GET /api/v1/projects/search - Search endpoint works")]
     public async Task Search_WithQuery_ReturnsResults()
     {
         // Arrange
@@ -199,7 +200,7 @@ public class ProjectsApiControllerTests : IClassFixture<CustomWebApplicationFact
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
-    [Fact(DisplayName = "GET /api/v1/projects/statistics/{customerId} - Returns statistics", Skip = "Skipped - requires specific permissions")]
+    [Fact(DisplayName = "GET /api/v1/projects/statistics/{customerId} - Returns statistics")]
     public async Task GetStatistics_ValidCustomerId_ReturnsStatistics()
     {
         // Arrange
@@ -214,42 +215,46 @@ public class ProjectsApiControllerTests : IClassFixture<CustomWebApplicationFact
         Assert.NotNull(content);
     }
 
-    [Fact(DisplayName = "POST /api/v1/projects - Creates new project", Skip = "Skipped due to app Result handling bug")]
+    [Fact(DisplayName = "POST /api/v1/projects - Creates new project")]
     public async Task Create_ValidProject_ReturnsCreatedProject()
     {
         // Arrange
-        var client = CreateAuthenticatedClient("test-proj-api-6", "test.proj.api6@test.com", "Employee", "test.proj.api6@test.com");
-        var request = new NewProjectApiRequest
+        var userId = Guid.NewGuid().ToString();
+        var client = CreateAuthenticatedClient(userId, "test.proj.api6@test.com", "Employee", "test.proj.api6@test.com");
+        var request = new NewProject
         {
             Name = "API Test Project",
             Description = "Created via API integration test",
-            SelectedCustomerId = "test-proj-api-6",
-            SelectedProjectManagerId = "test-proj-api-6"
+            SelectedCustomerId = userId,
+            SelectedProjectManagerId = userId,
+            IsNewCustomer = false,
+            ProjectType = "Standard"
         };
 
         var json = JsonSerializer.Serialize(request);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var content = new StringContent(json, Encoding.UTF8, MediaTypeHeaderValue.Parse("application/json"));
 
         // Act
         var response = await client.PostAsync("/api/v1/projects", content);
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var responseContent = await response.Content.ReadAsStringAsync();
+        Assert.True(
+            response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.Created,
+            $"Expected OK or Created but got {response.StatusCode}. Response: {responseContent}");
     }
 
-    [Fact(DisplayName = "PUT /api/v1/projects/{id}/status - Updates project status", Skip = "Skipped - requires existing project and specific permissions")]
+    [Fact(DisplayName = "PUT /api/v1/projects/{id}/status - Updates project status")]
     public async Task UpdateStatus_ValidStatus_ReturnsSuccess()
     {
         // Arrange
         var client = CreateAuthenticatedClient("test-proj-api-7", "test.proj.api7@test.com", "Employee", "test.proj.api7@test.com");
         var projectId = Guid.NewGuid();
-        var request = new StatusUpdateRequest { Status = Status.InProgress };
-
-        var json = JsonSerializer.Serialize(request);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var json = JsonSerializer.Serialize(Status.InProgress);
+        var content = new StringContent(json, Encoding.UTF8, MediaTypeHeaderValue.Parse("application/json"));
 
         // Act
-        var response = await client.PutAsync($"/api/v1/projects/{projectId}/status", content);
+        var response = await client.PatchAsync($"/api/v1/projects/{projectId}/status", content);
 
         // Assert
         Assert.True(
@@ -258,19 +263,17 @@ public class ProjectsApiControllerTests : IClassFixture<CustomWebApplicationFact
             $"Expected OK or NotFound but got {response.StatusCode}");
     }
 
-    [Fact(DisplayName = "PUT /api/v1/projects/{id}/assign - Assigns project manager", Skip = "Skipped - requires existing project and specific permissions")]
+    [Fact(DisplayName = "PUT /api/v1/projects/{id}/assign - Assigns project manager")]
     public async Task AssignManager_ValidManagerId_ReturnsSuccess()
     {
         // Arrange
         var client = CreateAuthenticatedClient("test-proj-api-8", "test.proj.api8@test.com", "Employee", "test.proj.api8@test.com");
         var projectId = Guid.NewGuid();
-        var request = new AssignManagerRequest { ManagerId = "test-proj-api-8" };
-
-        var json = JsonSerializer.Serialize(request);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var json = JsonSerializer.Serialize("test-proj-api-8");
+        var content = new StringContent(json, Encoding.UTF8, MediaTypeHeaderValue.Parse("application/json"));
 
         // Act
-        var response = await client.PutAsync($"/api/v1/projects/{projectId}/assign", content);
+        var response = await client.PatchAsync($"/api/v1/projects/{projectId}/assign-manager", content);
 
         // Assert
         Assert.True(
@@ -279,11 +282,11 @@ public class ProjectsApiControllerTests : IClassFixture<CustomWebApplicationFact
             $"Expected OK or NotFound but got {response.StatusCode}");
     }
 
-    [Fact(DisplayName = "DELETE /api/v1/projects/{id} - Deletes project", Skip = "Skipped - requires existing project and admin permissions")]
+    [Fact(DisplayName = "DELETE /api/v1/projects/{id} - Deletes project")]
     public async Task Delete_ExistingProject_ReturnsSuccess()
     {
         // Arrange
-        var client = CreateAuthenticatedClient("test-proj-api-9", "test.proj.api9@test.com", "Employee", "test.proj.api9@test.com");
+        var client = CreateAuthenticatedClient("test-proj-api-9", "test.proj.api9@test.com", "Admin", "test.proj.api9@test.com");
         var projectId = Guid.NewGuid();
 
         // Act

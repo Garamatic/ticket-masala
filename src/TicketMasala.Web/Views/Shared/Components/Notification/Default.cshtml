@@ -1,0 +1,40 @@
+@model TicketMasala.Web.ViewComponents.NotificationViewModel
+
+<li class="nav-item dropdown">
+    <a class="nav-link position-relative" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fas fa-bell"></i>
+        @if (Model.UnreadCount > 0)
+        {
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                @Model.UnreadCount
+                <span class="visually-hidden">unread notifications</span>
+            </span>
+        }
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" aria-labelledby="notificationDropdown" style="min-width: 300px;">
+        <li><h6 class="dropdown-header">Notifications</h6></li>
+        @if (Model.Notifications.Any())
+        {
+            @foreach (var notification in Model.Notifications)
+            {
+                <li>
+                    <a class="dropdown-item @(notification.IsRead ? "" : "bg-light fw-bold")" href="@(notification.LinkUrl ?? "#")">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fas fa-info-circle text-primary"></i>
+                            <div class="flex-grow-1">
+                                <div class="small">@notification.Message</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">@notification.CreatedAt.ToString("g")</div>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+            }
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-center small text-primary" href="/Notification">View all</a></li>
+        }
+        else
+        {
+            <li><span class="dropdown-item text-muted">No notifications</span></li>
+        }
+    </ul>
+</li>

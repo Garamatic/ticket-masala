@@ -1,4 +1,4 @@
-﻿using MailingService.Models;
+using RabbitMqConnector.Contracts;
 using MailingService.Services;
 
 public class InvoiceCreatedHandler : IEventHandler<InvoiceCreatedEvent>
@@ -17,9 +17,9 @@ public class InvoiceCreatedHandler : IEventHandler<InvoiceCreatedEvent>
     public async Task HandleAsync(InvoiceCreatedEvent message)
     {
         var html = _templateService.BuildInvoiceCreatedTemplate(
-            message.InvoiceId?.ToString() ?? "",
+            message.InvoiceId,
             message.OdooInvoiceId,
-            message.TicketId.ToString(),
+            message.TicketId,
             message.Amount,
             message.Currency,
             message.Status,

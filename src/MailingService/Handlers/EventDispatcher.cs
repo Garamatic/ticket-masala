@@ -1,6 +1,6 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
-using MailingService.Models;
+using RabbitMqConnector.Contracts;
 
 public class EventDispatcher
 {
@@ -45,6 +45,7 @@ public class EventDispatcher
     }
 
     private async Task Handle<T, THandler>(string message)
+        where T : RabbitMqConnector.Contracts.IEvent
         where THandler : IEventHandler<T>
     {
         var obj = JsonSerializer.Deserialize<T>(message);

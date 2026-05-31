@@ -1,4 +1,4 @@
-﻿using MailingService.Models;
+using RabbitMqConnector.Contracts;
 using MailingService.Services;
 
 public class TicketAssignedHandler : IEventHandler<TicketAssignedEvent>
@@ -17,7 +17,7 @@ public class TicketAssignedHandler : IEventHandler<TicketAssignedEvent>
     public async Task HandleAsync(TicketAssignedEvent message)
     {
         var html = _templateService.BuildTicketAssignedTemplate(
-            message.TicketId.ToString(),
+            message.TicketId,
             message.AssignedTo,
             message.AssignedBy,
             message.AssignedAt

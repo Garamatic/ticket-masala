@@ -1,4 +1,4 @@
-﻿using MailingService.Models;
+using RabbitMqConnector.Contracts;
 using MailingService.Services;
 
 public class TicketCreatedHandler : IEventHandler<TicketCreatedEvent>
@@ -18,7 +18,7 @@ public class TicketCreatedHandler : IEventHandler<TicketCreatedEvent>
     {
         var html = _templateService.BuildTicketCreatedTemplate(
             message.CustomerName,
-            message.TicketId.ToString(),
+            message.TicketId,
             message.Priority,
             message.Description
         );

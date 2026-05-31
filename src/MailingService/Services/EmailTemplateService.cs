@@ -56,14 +56,14 @@ public class EmailTemplateService
     string ticketId,
     string assignedTo,
     string assignedBy,
-    DateTime assignedAt)
+    string assignedAt)
     {
         return $@"
         <h2>Ticket Assigned</h2>
         <p><strong>Ticket:</strong> {ticketId}</p>
         <p><strong>Assigned To:</strong> {assignedTo}</p>
         <p><strong>Assigned By:</strong> {assignedBy}</p>
-        <p><strong>Date:</strong> {assignedAt:yyyy-MM-dd HH:mm}</p>
+        <p><strong>Date:</strong> {assignedAt}</p>
     ";
     }
 
@@ -72,7 +72,7 @@ public class EmailTemplateService
     string ticketId,
     string serviceDescription,
     decimal amount,
-    DateTime resolvedAt,
+    string resolvedAt,
     string? resolutionNotes)
     {
         return $@"
@@ -85,7 +85,7 @@ public class EmailTemplateService
         <p><strong>Ticket ID:</strong> {ticketId}</p>
         <p><strong>Service:</strong> {serviceDescription}</p>
         <p><strong>Amount:</strong> €{amount:F2}</p>
-        <p><strong>Resolved At:</strong> {resolvedAt:yyyy-MM-dd HH:mm}</p>
+        <p><strong>Resolved At:</strong> {resolvedAt}</p>
 
         {(string.IsNullOrEmpty(resolutionNotes)
                 ? ""
@@ -105,7 +105,7 @@ public class EmailTemplateService
     decimal amount,
     string currency,
     string status,
-    DateTime createdAt)
+    string createdAt)
     {
         return $@"
         <h2>Your Invoice is Ready</h2>
@@ -117,7 +117,7 @@ public class EmailTemplateService
         <p><strong>Ticket ID:</strong> {ticketId}</p>
         <p><strong>Amount:</strong> {amount:F2} {currency}</p>
         <p><strong>Status:</strong> {status}</p>
-        <p><strong>Created:</strong> {createdAt:yyyy-MM-dd HH:mm}</p>
+        <p><strong>Created:</strong> {createdAt}</p>
 
         <br/>
         <p>Please proceed with payment at your earliest convenience.</p>
@@ -156,7 +156,7 @@ public class EmailTemplateService
     string odooInvoiceId,
     decimal amount,
     string paymentMethod,
-    DateTime paidAt)
+    string paidAt)
     {
         return $@"
         <h2>Payment Received - Thank You!</h2>
@@ -167,7 +167,7 @@ public class EmailTemplateService
         <p><strong>Odoo Invoice ID:</strong> {odooInvoiceId}</p>
         <p><strong>Amount Paid:</strong> €{amount:F2}</p>
         <p><strong>Payment Method:</strong> {paymentMethod}</p>
-        <p><strong>Payment Date:</strong> {paidAt:yyyy-MM-dd HH:mm}</p>
+        <p><strong>Payment Date:</strong> {paidAt}</p>
 
         <br/>
         <p>Your invoice has been marked as paid.</p>
@@ -181,7 +181,7 @@ public class EmailTemplateService
     string userId,
     string email,
     string role,
-    DateTime createdAt)
+    string createdAt)
     {
         return $@"
         <h2>Welcome to Garamatic!</h2>
@@ -193,7 +193,7 @@ public class EmailTemplateService
         <p><strong>User ID:</strong> {userId}</p>
         <p><strong>Email:</strong> {email}</p>
         <p><strong>Role:</strong> {role}</p>
-        <p><strong>Created:</strong> {createdAt:yyyy-MM-dd HH:mm}</p>
+        <p><strong>Created:</strong> {createdAt}</p>
 
         <br/>
         <p>You can now log in and start using our services.</p>

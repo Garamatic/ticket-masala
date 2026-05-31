@@ -1,4 +1,4 @@
-﻿using MailingService.Models;
+using RabbitMqConnector.Contracts;
 using MailingService.Services;
 
 public class UserCreatedHandler : IEventHandler<UserCreatedEvent>
@@ -18,7 +18,7 @@ public class UserCreatedHandler : IEventHandler<UserCreatedEvent>
     {
         var html = _templateService.BuildUserCreatedTemplate(
             message.Name,
-            message.UserId.ToString(),
+            message.UserId,
             message.Email,
             message.Role,
             message.CreatedAt

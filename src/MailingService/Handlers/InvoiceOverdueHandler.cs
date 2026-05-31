@@ -1,4 +1,4 @@
-﻿using MailingService.Models;
+using RabbitMqConnector.Contracts;
 using MailingService.Services;
 
 public class InvoiceOverdueHandler : IEventHandler<InvoiceOverdueEvent>
@@ -17,7 +17,7 @@ public class InvoiceOverdueHandler : IEventHandler<InvoiceOverdueEvent>
     public async Task HandleAsync(InvoiceOverdueEvent message)
     {
         var html = _templateService.BuildInvoiceOverdueTemplate(
-            message.InvoiceId.ToString(),
+            message.InvoiceId,
             message.OdooInvoiceId,
             message.Amount,
             message.DaysOverdue

@@ -1,4 +1,4 @@
-﻿using MailingService.Models;
+using RabbitMqConnector.Contracts;
 using MailingService.Services;
 
 public class PaymentReceivedHandler : IEventHandler<PaymentReceivedEvent>
@@ -17,7 +17,7 @@ public class PaymentReceivedHandler : IEventHandler<PaymentReceivedEvent>
     public async Task HandleAsync(PaymentReceivedEvent message)
     {
         var html = _templateService.BuildPaymentReceivedTemplate(
-            message.InvoiceId.ToString(),
+            message.InvoiceId,
             message.OdooInvoiceId,
             message.Amount,
             message.PaymentMethod,

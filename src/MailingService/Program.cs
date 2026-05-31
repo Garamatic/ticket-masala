@@ -10,22 +10,23 @@ Console.WriteLine($"Environment: {builder.Environment.EnvironmentName}");
 Console.WriteLine($"RabbitMQ:Host = {builder.Configuration["RabbitMQ:Host"]}");
 Console.WriteLine($"RabbitMQ:Port = {builder.Configuration["RabbitMQ:Port"]}");
 
-// Creates one RabbitMQ connection for the whole app lifetime.
-builder.Services.AddSingleton<IConnection>(sp =>
+// Registers RabbitMQ connection factory; Worker creates connection asynchronously in StartAsync.
+builder.Services.AddSingleton<IConnectionFactory>(sp =>
 {
     var host = builder.Configuration["RabbitMQ:Host"] ?? "localhost";
     var port = int.TryParse(builder.Configuration["RabbitMQ:Port"], out var p) ? p : 5672;
     var username = builder.Configuration["RabbitMQ:Username"] ?? "guest";
     var password = builder.Configuration["RabbitMQ:Password"] ?? "guest";
 
-    var factory = new ConnectionFactory
+    return new ConnectionFactory
     {
         HostName = host,
         Port = port,
         UserName = username,
-        Password = password
+        Password = password,
+        AutomaticRecoveryEnabled = true,
+        TopologyRecoveryEnabled = true
     };
-    return factory.CreateConnectionAsync().GetAwaiter().GetResult();
 });
 
 // Background worker that consumes RabbitMQ messages

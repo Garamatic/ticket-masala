@@ -94,6 +94,7 @@ public static class RabbitMqConnectorExtensions
         services.AddSingleton<IPersistentConnection, Connection>();
         services.AddSingleton<IRabbitInitializer, RabbitInitializer>();
         services.AddSingleton<IMsgQ, MsgQ>();
+        services.AddSingleton<MsgQ>(sp => (MsgQ)sp.GetRequiredService<IMsgQ>());
 
         return services;
     }

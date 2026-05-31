@@ -62,7 +62,8 @@ builder.Services.AddDbContext<ITProjectDB>(options =>
         });
     }
 });
-
+builder.Services.AddRabbitMqConnector("amqp://admin:admin123@51.136.7.179:30000");
+builder.Services.AddRabbitMqConsumers(Assembly.GetExecutingAssembly());
 //Identity configuration
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
@@ -311,8 +312,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownProxies.Clear();
 });
 
-builder.Services.AddRabbitMqConnector("amqp://admin:admin123@51.136.7.179:30000"); 
-builder.Services.AddRabbitMqConsumers(Assembly.GetExecutingAssembly()); 
+
 var app = builder.Build();
 
 // Forward headers must be first middleware

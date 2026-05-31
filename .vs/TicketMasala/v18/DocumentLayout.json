@@ -3,8 +3,20 @@
   "WorkspaceRootPath": "C:\\Users\\gortz\\source\\repos\\ticket-masala\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\gortz\\source\\repos\\ticket-masala\\MailingService\\.vs\\MailingService\\v18\\DocumentLayout.backup.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:MailingService\\.vs\\MailingService\\v18\\DocumentLayout.backup.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+      "AbsoluteMoniker": "D:0:0:{A1FF62D1-85F3-48C1-9D0C-313011DAE754}|src\\TicketMasala.Web\\TicketMasala.Web.csproj|c:\\users\\gortz\\source\\repos\\ticket-masala\\src\\ticketmasala.web\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1FF62D1-85F3-48C1-9D0C-313011DAE754}|src\\TicketMasala.Web\\TicketMasala.Web.csproj|solutionrelative:src\\ticketmasala.web\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{489D0CCE-428C-33BE-EFF7-1E24855843CE}|RabbitMqConnector\\RabbitMqConnector\\RabbitMqConnector.csproj|c:\\users\\gortz\\source\\repos\\ticket-masala\\rabbitmqconnector\\rabbitmqconnector\\connection.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{489D0CCE-428C-33BE-EFF7-1E24855843CE}|RabbitMqConnector\\RabbitMqConnector\\RabbitMqConnector.csproj|solutionrelative:rabbitmqconnector\\rabbitmqconnector\\connection.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{489D0CCE-428C-33BE-EFF7-1E24855843CE}|RabbitMqConnector\\RabbitMqConnector\\RabbitMqConnector.csproj|c:\\users\\gortz\\source\\repos\\ticket-masala\\rabbitmqconnector\\rabbitmqconnector\\msgq.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{489D0CCE-428C-33BE-EFF7-1E24855843CE}|RabbitMqConnector\\RabbitMqConnector\\RabbitMqConnector.csproj|solutionrelative:rabbitmqconnector\\rabbitmqconnector\\msgq.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1FF62D1-85F3-48C1-9D0C-313011DAE754}|src\\TicketMasala.Web\\TicketMasala.Web.csproj|c:\\users\\gortz\\source\\repos\\ticket-masala\\src\\ticketmasala.web\\controllers\\ticketcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1FF62D1-85F3-48C1-9D0C-313011DAE754}|src\\TicketMasala.Web\\TicketMasala.Web.csproj|solutionrelative:src\\ticketmasala.web\\controllers\\ticketcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -14,24 +26,59 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "DocumentLayout.backup.json",
-              "DocumentMoniker": "C:\\Users\\gortz\\source\\repos\\ticket-masala\\MailingService\\.vs\\MailingService\\v18\\DocumentLayout.backup.json",
-              "RelativeDocumentMoniker": "MailingService\\.vs\\MailingService\\v18\\DocumentLayout.backup.json",
-              "ToolTip": "C:\\Users\\gortz\\source\\repos\\ticket-masala\\MailingService\\.vs\\MailingService\\v18\\DocumentLayout.backup.json",
-              "RelativeToolTip": "MailingService\\.vs\\MailingService\\v18\\DocumentLayout.backup.json",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-05-31T10:15:41.586Z",
+              "DocumentIndex": 1,
+              "Title": "Connection.cs",
+              "DocumentMoniker": "C:\\Users\\gortz\\source\\repos\\ticket-masala\\RabbitMqConnector\\RabbitMqConnector\\Connection.cs",
+              "RelativeDocumentMoniker": "RabbitMqConnector\\RabbitMqConnector\\Connection.cs",
+              "ToolTip": "C:\\Users\\gortz\\source\\repos\\ticket-masala\\RabbitMqConnector\\RabbitMqConnector\\Connection.cs",
+              "RelativeToolTip": "RabbitMqConnector\\RabbitMqConnector\\Connection.cs",
+              "ViewState": "AgIAAD4AAAAAAAAAAAAowEoAAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-31T10:39:27.483Z",
               "EditorCaption": ""
             },
             {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "MsgQ.cs",
+              "DocumentMoniker": "C:\\Users\\gortz\\source\\repos\\ticket-masala\\RabbitMqConnector\\RabbitMqConnector\\MsgQ.cs",
+              "RelativeDocumentMoniker": "RabbitMqConnector\\RabbitMqConnector\\MsgQ.cs",
+              "ToolTip": "C:\\Users\\gortz\\source\\repos\\ticket-masala\\RabbitMqConnector\\RabbitMqConnector\\MsgQ.cs",
+              "RelativeToolTip": "RabbitMqConnector\\RabbitMqConnector\\MsgQ.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-31T10:39:22.612Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "TicketController.cs",
+              "DocumentMoniker": "C:\\Users\\gortz\\source\\repos\\ticket-masala\\src\\TicketMasala.Web\\Controllers\\TicketController.cs",
+              "RelativeDocumentMoniker": "src\\TicketMasala.Web\\Controllers\\TicketController.cs",
+              "ToolTip": "C:\\Users\\gortz\\source\\repos\\ticket-masala\\src\\TicketMasala.Web\\Controllers\\TicketController.cs",
+              "RelativeToolTip": "src\\TicketMasala.Web\\Controllers\\TicketController.cs",
+              "ViewState": "AgIAADMBAAAAAAAAAAAAADMBAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-31T10:32:37.526Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\gortz\\source\\repos\\ticket-masala\\src\\TicketMasala.Web\\Program.cs",
+              "RelativeDocumentMoniker": "src\\TicketMasala.Web\\Program.cs",
+              "ToolTip": "C:\\Users\\gortz\\source\\repos\\ticket-masala\\src\\TicketMasala.Web\\Program.cs",
+              "RelativeToolTip": "src\\TicketMasala.Web\\Program.cs",
+              "ViewState": "AgIAAIUAAAAAAAAAAAAAAJEAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-31T10:32:08.98Z",
+              "EditorCaption": ""
             }
           ]
         }

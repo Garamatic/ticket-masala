@@ -30,6 +30,8 @@
   <!-- Config files are now at repo root /config/ -->
 
   <ItemGroup>
+    <ProjectReference Include="..\..\MailingService\MailingService.csproj" />
+    <ProjectReference Include="..\..\RabbitMqConnector\RabbitMqConnector\RabbitMqConnector.csproj" />
     <ProjectReference Include="..\TicketMasala.Domain\TicketMasala.Domain.csproj" />
   </ItemGroup>
 

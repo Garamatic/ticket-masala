@@ -1,4 +1,5 @@
 using System.IO;
+using System.Reflection;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
@@ -142,6 +143,10 @@ builder.Services.AddHttpClient("OpenRouter", client =>
 .AddTransientHttpErrorPolicy(policy => policy
     .WaitAndRetryAsync(3, retryAttempt =>
         TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
+
+//add RabbitMQ connector and consumers
+builder.Services.AddRabbitMqConnector("amqp://admin:admin123@51.136.7.179:30000");
+builder.Services.AddRabbitMqConsumers(Assembly.GetExecutingAssembly());
 
 // Register OpenAI service for explainability
 // AI Generation Port (Domain-facing, provider-agnostic)

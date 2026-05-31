@@ -15,9 +15,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TicketMasala.Domain", "src\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TicketMasala.Domain.Tests", "src\TicketMasala.Domain.Tests\TicketMasala.Domain.Tests.csproj", "{81770BCF-EDA7-4F4F-BE2D-D73003E46A10}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MailingService", "MailingService\MailingService.csproj", "{4BE4FEEF-BB43-C33A-F9A8-8A848E3F99D1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MailingService", "src\MailingService\MailingService.csproj", "{4BE4FEEF-BB43-C33A-F9A8-8A848E3F99D1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RabbitMqConnector", "RabbitMqConnector\RabbitMqConnector\RabbitMqConnector.csproj", "{489D0CCE-428C-33BE-EFF7-1E24855843CE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RabbitMqConnector", "src\RabbitMqConnector\RabbitMqConnector\RabbitMqConnector.csproj", "{489D0CCE-428C-33BE-EFF7-1E24855843CE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

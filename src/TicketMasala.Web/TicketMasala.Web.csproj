@@ -30,8 +30,7 @@
   <!-- Config files are now at repo root /config/ -->
 
   <ItemGroup>
-    <ProjectReference Include="..\..\MailingService\MailingService.csproj" />
-    <ProjectReference Include="..\..\RabbitMqConnector\RabbitMqConnector\RabbitMqConnector.csproj" />
+    <ProjectReference Include="..\RabbitMqConnector\RabbitMqConnector\RabbitMqConnector.csproj" />
     <ProjectReference Include="..\TicketMasala.Domain\TicketMasala.Domain.csproj" />
   </ItemGroup>
 
@@ -67,7 +66,7 @@
     <PackageReference Include="Microsoft.ML.Recommender" Version="0.23.0" />
     <PackageReference Include="Microsoft.ML.TimeSeries" Version="5.0.0" />
     <PackageReference Include="OpenAI" Version="2.8.0" />
-    <PackageReference Include="RabbitMQ.Client" Version="7.0.0" />
+    <PackageReference Include="RabbitMQ.Client" Version="7.2.1" />
     <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.7" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />

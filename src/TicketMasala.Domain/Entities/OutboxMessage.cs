@@ -35,6 +35,12 @@ public class OutboxMessage
     public string RoutingKey { get; set; } = string.Empty;
 
     /// <summary>
+    /// Correlation ID for distributed tracing across services.
+    /// </summary>
+    [StringLength(200)]
+    public string? CorrelationId { get; set; }
+
+    /// <summary>
     /// When the message was created.
     /// </summary>
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

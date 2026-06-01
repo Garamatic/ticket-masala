@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using TicketMasala.Web.Engine.Core;
 
@@ -16,7 +17,7 @@ public class NotificationViewComponent : ViewComponent
 
     public async Task<IViewComponentResult> InvokeAsync()
     {
-        var userId = (User as System.Security.Claims.ClaimsPrincipal)?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var userId = (User as ClaimsPrincipal)?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId))
         {
             return View("Default", new NotificationViewModel());
@@ -41,10 +42,4 @@ public class NotificationViewComponent : ViewComponent
             return View("Default", new NotificationViewModel());
         }
     }
-}
-
-public class NotificationViewModel
-{
-    public List<TicketMasala.Domain.Entities.Notification> Notifications { get; set; } = new();
-    public int UnreadCount { get; set; }
 }

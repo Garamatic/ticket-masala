@@ -42,12 +42,14 @@ public static class DomainEventExtensions
         // ── 3. Scan and register all IDomainEventHandler<T> implementations ───────
         //    These run AFTER the DB save (in-process like GERDA, notifications).
         var handlerInterfaceType = typeof(IDomainEventHandler<>);
-        var handlerAssemblies = AppDomain.CurrentDomain.GetAssemblies()
+        var ticketMasalaAssemblies = AppDomain.CurrentDomain.GetAssemblies()
             .Where(a => !a.IsDynamic
-                && a.GetName().Name?.StartsWith("TicketMasala") == true
-                && !a.GetName().Name!.EndsWith(".Tests"));
+                && a.GetName().Name is { } name
+                && name.StartsWith("TicketMasala")
+                && !name.EndsWith(".Tests"))
+            .ToList();
 
-        foreach (var assembly in handlerAssemblies)
+        foreach (var assembly in ticketMasalaAssemblies)
         {
             var handlerTypes = assembly.GetTypes()
                 .Where(t => t.IsClass && !t.IsAbstract && typeof(IDomainEventHandler).IsAssignableFrom(t));
@@ -57,10 +59,10 @@ public static class DomainEventExtensions
                 if (type.IsGenericTypeDefinition)
                     continue;
 
-                var implementedInterface = type.GetInterfaces()
-                    .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == handlerInterfaceType);
+                var implementedInterfaces = type.GetInterfaces()
+                    .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == handlerInterfaceType);
 
-                if (implementedInterface != null)
+                foreach (var implementedInterface in implementedInterfaces)
                 {
                     services.AddTransient(implementedInterface, type);
                 }
@@ -71,12 +73,8 @@ public static class DomainEventExtensions
         //    These run INSIDE SavingChangesAsync via the interceptor to map domain
         //    events to integration contracts before outbox serialization.
         var mapperType = typeof(IDomainEventContractMapper);
-        var mapperAssemblies = AppDomain.CurrentDomain.GetAssemblies()
-            .Where(a => !a.IsDynamic
-                && a.GetName().Name?.StartsWith("TicketMasala") == true
-                && !a.GetName().Name!.EndsWith(".Tests"));
 
-        foreach (var assembly in mapperAssemblies)
+        foreach (var assembly in ticketMasalaAssemblies)
         {
             var mapperTypes = assembly.GetTypes()
                 .Where(t => t is { IsClass: true, IsAbstract: false } && mapperType.IsAssignableFrom(t));

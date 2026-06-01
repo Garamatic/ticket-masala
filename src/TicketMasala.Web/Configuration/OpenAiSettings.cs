@@ -8,4 +8,5 @@ public class OpenAiSettings
 
     public string ApiKey { get; set; } = string.Empty;
     public string? BaseUrl { get; set; }
+    public string Provider { get; set; } = "openai";
 }

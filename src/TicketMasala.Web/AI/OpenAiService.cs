@@ -136,7 +136,7 @@ public sealed class OpenAiService : IOpenAiService
         {
             var response = await _retryPolicy.ExecuteAsync(async ct =>
             {
-                if (IsOpenRouter(model))
+                if (_settings.Provider?.ToLowerInvariant() == "openrouter")
                 {
                     return await CallOpenRouterWithSystemPromptAsync(model, systemPrompt, userMessage, ct);
                 }
@@ -210,7 +210,7 @@ public sealed class OpenAiService : IOpenAiService
         {
             var result = await _retryPolicy.ExecuteAsync(async ct =>
             {
-                if (IsOpenRouter(model))
+                if (_settings.Provider?.ToLowerInvariant() == "openrouter")
                 {
                     var routerContent = await CallOpenRouterAsync(model, prompt, ct);
                     return (Content: routerContent, PromptTokens: 0, CompletionTokens: 0);

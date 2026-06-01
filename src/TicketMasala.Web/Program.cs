@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.RateLimiting;
@@ -149,7 +150,18 @@ builder.Services.AddRabbitMqPublisher();
 
 // Register OpenAI service for explainability
 // AI Generation Port (Domain-facing, provider-agnostic)
-builder.Services.AddTransient<TicketMasala.Domain.Ports.IAIGenerationPort, TicketMasala.Web.AI.OpenAIGenerationAdapter>();
+builder.Services.AddTransient<TicketMasala.Domain.Ports.IAIGenerationPort>(sp =>
+{
+    var settings = sp.GetRequiredService<IOptions<OpenAiSettings>>().Value;
+    var provider = settings.Provider?.ToLowerInvariant() ?? "openai";
+
+    return provider switch
+    {
+        "openai" or "openrouter" or "ollama" or "llamacpp" =>
+            ActivatorUtilities.CreateInstance<OpenAIGenerationAdapter>(sp),
+        _ => throw new NotSupportedException($"LLM provider '{provider}' is not supported.")
+    };
+});
 builder.Services.Configure<TicketMasala.Web.AI.AIOperationRegistry>(
     builder.Configuration.GetSection("AI:Operations"));
 

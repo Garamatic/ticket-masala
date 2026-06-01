@@ -154,7 +154,7 @@ public sealed class OpenAIGenerationAdapter : IAIGenerationPort
                 Diagnostics = new Dictionary<string, object>
                 {
                     ["model"] = model,
-                    ["provider"] = IsOpenRouter(model) ? "openrouter" : "openai",
+                    ["provider"] = _settings.Provider?.ToLowerInvariant() ?? "openai",
                     ["prompt_tokens"] = result.PromptTokens,
                     ["completion_tokens"] = result.CompletionTokens,
                     ["total_tokens"] = result.PromptTokens + result.CompletionTokens,

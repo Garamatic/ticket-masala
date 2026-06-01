@@ -113,9 +113,8 @@ builder.Services.AddOpenTelemetry()
         {
             options.RecordException = true;
         });
-        // Console exporter for local development
-        // Replace with .AddOtlpExporter() when an OTLP collector is available
-        t.AddConsoleExporter();
+        // OTLP exporter for production telemetry
+        // t.AddOtlpExporter();
     });
 
 // Configure OpenRouter HTTP client with retry policy

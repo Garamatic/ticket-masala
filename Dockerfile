@@ -30,9 +30,6 @@ COPY config/tenants/whitman /app/tenants/whitman
 COPY config/tenants/liberty /app/tenants/liberty
 COPY config/tenants/hennessey /app/tenants/hennessey
 
-# Set permissions for the 'app' user (UID 1654 in Chiseled)
-RUN chown -R 1654:1654 /app
-
 # STAGE 3: Runtime (Chiseled Noble Extra - Includes ICU, Minimal surface)
 FROM mcr.microsoft.com/dotnet/nightly/aspnet:10.0-noble-chiseled-extra AS final
 WORKDIR /app

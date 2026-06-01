@@ -7,10 +7,15 @@ namespace TicketMasala.Web.Middleware;
 public class SecurityHeadersMiddleware
 {
     private readonly RequestDelegate _next;
+    private readonly string _connectSrc;
 
-    public SecurityHeadersMiddleware(RequestDelegate next)
+    public SecurityHeadersMiddleware(RequestDelegate next, IConfiguration configuration)
     {
         _next = next;
+        var agenticUrl = configuration["Agentic:ApiUrl"]?.TrimEnd('/');
+        _connectSrc = string.IsNullOrEmpty(agenticUrl)
+            ? "connect-src 'self'; "
+            : $"connect-src 'self' {agenticUrl}; ";
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -22,7 +27,7 @@ public class SecurityHeadersMiddleware
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://cdnjs.cloudflare.com; " +
             "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; " +
             "img-src 'self' data: https:; " +
-            "connect-src 'self'; " +
+            _connectSrc +
             "frame-ancestors 'self'; " +
             "form-action 'self'; " +
             "base-uri 'self';");

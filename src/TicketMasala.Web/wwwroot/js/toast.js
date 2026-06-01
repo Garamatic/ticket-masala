@@ -3,7 +3,10 @@
  * Simple, dependency-free toast notifications
  */
 
-class ToastNotification {
+(function() {
+    if (window.toast) return;
+
+    class ToastNotification {
     constructor() {
         this.container = null;
         this.init();
@@ -91,3 +94,4 @@ window.toast = new ToastNotification();
 // toast.error('An error occurred');
 // toast.warning('Please save your changes');
 // toast.info('Loading data...');
+})();

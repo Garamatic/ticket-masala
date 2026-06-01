@@ -24,8 +24,9 @@ public class HomeController : Controller
     }
 
     [Authorize]
-    public IActionResult AgentChat()
+    public IActionResult AgentChat(Guid? ticketId = null)
     {
+        ViewBag.TicketId = ticketId;
         return View();
     }
 

@@ -7,9 +7,11 @@
 @inject IWebHostEnvironment env
 @inject TicketMasala.Web.Engine.GERDA.Configuration.IDomainUiService DomainUi
 @inject TicketMasala.Web.Engine.GERDA.Configuration.IDomainConfigurationService DomainConfig
+@inject IConfiguration Configuration
 
 @{
     var title = ViewData["Title"] ?? "Ticket Masala";
+    var agenticUrl = Configuration["Agentic:ApiUrl"] ?? "http://localhost:3001";
     var description = ViewData["Description"] ?? "Project and Ticket Management System";
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
@@ -53,6 +55,39 @@
     <link rel="stylesheet" href="~/css/design-system.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/theme.css" asp-append-version="true" />
+
+    <style>
+        .floating-chat-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366F1, #8B5CF6);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        .floating-chat-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+            color: white;
+        }
+        .floating-chat-btn i {
+            animation: pulse-brain 2s ease-in-out infinite;
+        }
+        @@keyframes pulse-brain {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+    </style>
 
     @* Load tenant-specific theme if available *@
     @* Load tenant-specific theme if available *@
@@ -120,6 +155,14 @@
                                         </a>
                                     </li>
 
+                                    <li class="sidebar-item">
+                                        <a class="sidebar-link @(currentController == "Home" && currentAction == "AgentChat" ? "active" : "")"
+                                   asp-controller="Home" asp-action="AgentChat">
+                                            <i class="fas fa-brain sidebar-icon"></i>
+                                            <span>AI Agent</span>
+                                        </a>
+                                    </li>
+
                             @if (User.IsInRole("Admin"))
                             {
                                             <li class="sidebar-item">
@@ -135,13 +178,6 @@
                                        asp-controller="Dispatch" asp-action="DispatchBacklog">
                                                     <i class="fas fa-robot sidebar-icon"></i>
                                                     <span>@Localizer["GERDA Dispatch"]</span>
-                                                </a>
-                                            </li>
-                                            <li class="sidebar-item">
-                                                <a class="sidebar-link @(currentController == "Home" && currentAction == "AgentChat" ? "active" : "")"
-                                       asp-controller="Home" asp-action="AgentChat">
-                                                    <i class="fas fa-brain sidebar-icon"></i>
-                                                    <span>AI Agent</span>
                                                 </a>
                                             </li>
                                             <!-- Admin Panel Section -->
@@ -444,12 +480,26 @@
                     </div>
                 </div>
             </footer>
+
+            <!-- Floating AI Chat Button (visible on all pages except chat itself) -->
+            @if (currentController != "Home" || currentAction != "AgentChat")
+            {
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <a asp-controller="Home" asp-action="AgentChat" class="floating-chat-btn" title="Chat with AI Agent">
+                        <i class="fas fa-brain"></i>
+                    </a>
+                }
+            }
         </div>
     </div>
 
     <!-- Core Scripts (CDN) -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Global Config -->
+    <script>window.__AGENTIC_URL__ = '@agenticUrl';</script>
 
     <!-- Site Scripts -->
     <script src="~/js/site.js" asp-append-version="true"></script>

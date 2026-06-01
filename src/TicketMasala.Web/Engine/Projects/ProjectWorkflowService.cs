@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -9,9 +5,7 @@ using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Ports;
 using TicketMasala.Web.Abstractions;
-using TicketMasala.Web.Data;
 using TicketMasala.Web.Observers;
-using TicketMasala.Web.Repositories;
 using TicketMasala.Web.ViewModels.Projects;
 
 namespace TicketMasala.Web.Engine.Projects;
@@ -19,7 +13,6 @@ namespace TicketMasala.Web.Engine.Projects;
 public class ProjectWorkflowService : IProjectWorkflowService
 {
     private readonly MasalaDbContext _context;
-    private readonly IProjectRepository _projectRepository;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IEnumerable<IProjectObserver> _observers;
     private readonly IAIGenerationPort _aiPort;
@@ -29,7 +22,6 @@ public class ProjectWorkflowService : IProjectWorkflowService
 
     public ProjectWorkflowService(
         MasalaDbContext context,
-        IProjectRepository projectRepository,
         UserManager<ApplicationUser> userManager,
         IEnumerable<IProjectObserver> observers,
         IAIGenerationPort aiPort,
@@ -38,7 +30,6 @@ public class ProjectWorkflowService : IProjectWorkflowService
         ISystemClock clock)
     {
         _context = context;
-        _projectRepository = projectRepository;
         _userManager = userManager;
         _observers = observers;
         _aiPort = aiPort;
@@ -49,6 +40,11 @@ public class ProjectWorkflowService : IProjectWorkflowService
 
     public async Task<Project> CreateProjectAsync(NewProject viewModel, string userId)
     {
+        if (!Guid.TryParse(userId, out var creatorGuid))
+        {
+            throw new ArgumentException("Invalid user ID", nameof(userId));
+        }
+
         ApplicationUser? customer;
 
         if (viewModel.IsNewCustomer)
@@ -62,8 +58,19 @@ public class ProjectWorkflowService : IProjectWorkflowService
                 UserName = viewModel.NewCustomerEmail
             };
 
-            await _userManager.CreateAsync(customer);
-            await _userManager.AddToRoleAsync(customer, Constants.RoleCustomer);
+            var createResult = await _userManager.CreateAsync(customer);
+            if (!createResult.Succeeded)
+            {
+                var errors = string.Join(", ", createResult.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"Failed to create customer: {errors}");
+            }
+
+            var roleResult = await _userManager.AddToRoleAsync(customer, Constants.RoleCustomer);
+            if (!roleResult.Succeeded)
+            {
+                var errors = string.Join(", ", roleResult.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"Failed to add customer role: {errors}");
+            }
         }
         else
         {
@@ -101,10 +108,22 @@ public class ProjectWorkflowService : IProjectWorkflowService
             Customer = customer,
             CustomerId = customer.Id,
             CompletionTarget = viewModel.CreationDate,
-            CreatorGuid = Guid.Parse(userId),
+            CreatorGuid = creatorGuid,
             ProjectAiRoadmap = roadmap,
             CreationDate = _clock.UtcNow
         };
+
+        // Set project manager if provided
+        if (!string.IsNullOrEmpty(viewModel.SelectedProjectManagerId))
+        {
+            var manager = await _context.Users.OfType<Employee>()
+                .FirstOrDefaultAsync(e => e.Id == viewModel.SelectedProjectManagerId);
+            if (manager != null)
+            {
+                project.ProjectManager = manager;
+                project.ProjectManagerId = manager.Id;
+            }
+        }
 
         // Add primary customer to stakeholders
         project.Customers.Add(customer);
@@ -126,15 +145,7 @@ public class ProjectWorkflowService : IProjectWorkflowService
         }
 
         _context.Projects.Add(project);
-        try
-        {
-            await _context.SaveChangesAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to save project {ProjectName}: {Error}", project.Name, ex.Message);
-            throw new InvalidOperationException($"Failed to save project: {ex.Message}", ex);
-        }
+        await _context.SaveChangesAsync();
 
         // Apply Template
         if (viewModel.SelectedTemplateId.HasValue)
@@ -152,6 +163,11 @@ public class ProjectWorkflowService : IProjectWorkflowService
 
     public async Task<Guid?> CreateProjectFromTicketAsync(CreateProjectFromTicketViewModel viewModel, string userId)
     {
+        if (!Guid.TryParse(userId, out var creatorGuid))
+        {
+            throw new ArgumentException("Invalid user ID", nameof(userId));
+        }
+
         var ticket = await _context.Tickets
             .Include(t => t.Customer)
             .FirstOrDefaultAsync(t => t.Guid == viewModel.TicketId);
@@ -186,6 +202,14 @@ public class ProjectWorkflowService : IProjectWorkflowService
             _logger.LogWarning(ex, "Failed to generate AI roadmap for project from ticket");
         }
 
+        // Load project manager if provided
+        Employee? manager = null;
+        if (!string.IsNullOrEmpty(viewModel.SelectedPMId))
+        {
+            manager = await _context.Users.OfType<Employee>()
+                .FirstOrDefaultAsync(e => e.Id == viewModel.SelectedPMId);
+        }
+
         var project = new Project
         {
             Name = viewModel.ProjectName,
@@ -194,8 +218,9 @@ public class ProjectWorkflowService : IProjectWorkflowService
             Customer = customer,
             CustomerId = customer?.Id,
             CompletionTarget = viewModel.TargetCompletionDate,
-            CreatorGuid = Guid.Parse(userId),
-            ProjectManagerId = viewModel.SelectedPMId,
+            CreatorGuid = creatorGuid,
+            ProjectManager = manager,
+            ProjectManagerId = manager?.Id,
             ProjectAiRoadmap = roadmap,
             CreationDate = _clock.UtcNow
         };
@@ -255,11 +280,13 @@ public class ProjectWorkflowService : IProjectWorkflowService
             if (manager != null)
             {
                 project.ProjectManager = manager;
+                project.ProjectManagerId = manager.Id;
             }
         }
         else
         {
             project.ProjectManager = null; // Unassign if cleared
+            project.ProjectManagerId = null;
         }
 
         if (!string.IsNullOrEmpty(viewModel.SelectedCustomerId))
@@ -279,7 +306,6 @@ public class ProjectWorkflowService : IProjectWorkflowService
             project.CustomerId = null;
         }
 
-        _context.Projects.Update(project);
         await _context.SaveChangesAsync();
 
         _logger.LogInformation("Project updated successfully: {ProjectId}", projectGuid);
@@ -303,6 +329,10 @@ public class ProjectWorkflowService : IProjectWorkflowService
         if (status == Status.Completed)
         {
             project.CompletionDate = _clock.UtcNow;
+        }
+        else
+        {
+            project.CompletionDate = null;
         }
 
         await _context.SaveChangesAsync();
@@ -333,7 +363,7 @@ public class ProjectWorkflowService : IProjectWorkflowService
 
     public async Task<bool> DeleteProjectAsync(Guid projectGuid)
     {
-        var project = await _context.Projects.FirstOrDefaultAsync(p => p.Guid == projectGuid);
+        var project = await _context.Projects.FirstOrDefaultAsync(p => p.Guid == projectGuid && p.ValidUntil == null);
         if (project != null)
         {
             project.ValidUntil = _clock.UtcNow;

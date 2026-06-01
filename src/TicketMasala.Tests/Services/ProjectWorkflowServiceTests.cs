@@ -5,12 +5,8 @@ using Moq;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Data;
 using TicketMasala.Domain.Entities;
-using TicketMasala.Domain.Ports;
-using TicketMasala.Domain.Repositories;
 using TicketMasala.Tests.TestDoubles;
-using TicketMasala.Web;
 using TicketMasala.Web.Abstractions;
-using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.Projects;
 using TicketMasala.Web.Observers;
 using TicketMasala.Web.ViewModels.Projects;
@@ -34,7 +30,6 @@ public class ProjectWorkflowServiceTests
 
     private ProjectWorkflowService CreateService(MasalaDbContext context)
     {
-        var mockProjectRepo = new Mock<IProjectRepository>();
         var mockUserManager = MockUserManager();
         var mockObservers = new List<IProjectObserver>();
         var stubAi = new InMemoryAIGenerationAdapter(new Dictionary<string, string>
@@ -46,7 +41,6 @@ public class ProjectWorkflowServiceTests
 
         return new ProjectWorkflowService(
             context,
-            mockProjectRepo.Object,
             mockUserManager.Object,
             mockObservers,
             stubAi,
@@ -61,6 +55,14 @@ public class ProjectWorkflowServiceTests
         var store = new Mock<IUserStore<ApplicationUser>>();
         var mockUserManager = new Mock<UserManager<ApplicationUser>>(
             store.Object, null!, null!, null!, null!, null!, null!, null!, null!);
+
+        mockUserManager.Setup(x => x.CreateAsync(It.IsAny<ApplicationUser>()))
+            .ReturnsAsync(IdentityResult.Success);
+        mockUserManager.Setup(x => x.AddToRoleAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
+            .ReturnsAsync(IdentityResult.Success);
+        mockUserManager.Setup(x => x.FindByIdAsync(It.IsAny<string>()))
+            .ReturnsAsync((string id) => new Employee { Id = id, UserName = "test@example.com", Email = "test@example.com" });
+
         return mockUserManager;
     }
 
@@ -91,7 +93,7 @@ public class ProjectWorkflowServiceTests
         {
             Name = "Original Name",
             Description = "Original Description",
-            Status = TicketMasala.Domain.Common.Status.Pending,
+            Status = Status.Pending,
             Customer = customer
         };
 

@@ -5,14 +5,11 @@ using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TicketMasala.Domain.Data;
 using TicketMasala.Domain.Entities;
-using TicketMasala.Web;
-using TicketMasala.Web.Data;
 using Xunit;
 
 namespace TicketMasala.Tests.IntegrationTests;
@@ -99,7 +96,7 @@ public class AuthenticatedRouteTests : IClassFixture<CustomWebApplicationFactory
                             FirstName = "Test",
                             LastName = "Customer",
                             PhoneNumber = "555-0100",
-                            Phone = "555-0100" // Both properties exist in model
+                            Phone = "555-0100"
                         });
                         db.SaveChanges();
                     }
@@ -116,7 +113,6 @@ public class AuthenticatedRouteTests : IClassFixture<CustomWebApplicationFactory
         var response = await client.GetAsync("/Ticket");
 
         // Assert
-        Assert.NotEqual(HttpStatusCode.InternalServerError, response.StatusCode);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var content = await response.Content.ReadAsStringAsync();

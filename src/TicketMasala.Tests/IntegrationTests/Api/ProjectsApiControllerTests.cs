@@ -1,22 +1,14 @@
 using System.Net;
 using System.Net.Http.Headers;
-using System.Security.Claims;
 using System.Text;
-using System.Text.Encodings.Web;
 using System.Text.Json;
-using Microsoft.AspNetCore.Authentication;
+
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Data;
 using TicketMasala.Domain.Entities;
-using TicketMasala.Web;
-using TicketMasala.Web.Data;
-using TicketMasala.Web.ViewModels.Api;
 using TicketMasala.Web.ViewModels.Projects;
 using Xunit;
 
@@ -28,7 +20,6 @@ namespace TicketMasala.Tests.IntegrationTests.Api;
 public class ProjectsApiControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly CustomWebApplicationFactory _factory;
-    private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true };
 
     public ProjectsApiControllerTests(CustomWebApplicationFactory factory)
     {
@@ -46,7 +37,7 @@ public class ProjectsApiControllerTests : IClassFixture<CustomWebApplicationFact
                     options.DefaultAuthenticateScheme = "Test";
                     options.DefaultChallengeScheme = "Test";
                 })
-                .AddScheme<TestAuthOptions, TestAuthHandler>("Test", options => { options.Role = role; });
+                .AddScheme<TestAuthOptions, TestAuthHandler>("Test", options => { options.Role = role; options.NameIdentifier = userId; });
 
                 // Seed test user
                 var sp = services.BuildServiceProvider(new ServiceProviderOptions
@@ -139,8 +130,8 @@ public class ProjectsApiControllerTests : IClassFixture<CustomWebApplicationFact
         Assert.True(content.Contains("success") || content.StartsWith("{"), "Expected JSON response with success indicator");
     }
 
-    [Fact(DisplayName = "GET /api/v1/projects/{id} - Returns 404 for non-existent project")]
-    public async Task GetById_NonExistentProject_ReturnsNotFound()
+    [Fact(DisplayName = "GET /api/v1/projects/{id} - Handles non-existent project gracefully")]
+    public async Task GetById_NonExistentProject_ReturnsNotFoundOrOk()
     {
         // Arrange
         var client = CreateAuthenticatedClient("test-proj-api-2", "test.proj.api2@test.com", "Employee", "test.proj.api2@test.com");
@@ -244,7 +235,7 @@ public class ProjectsApiControllerTests : IClassFixture<CustomWebApplicationFact
             $"Expected OK or Created but got {response.StatusCode}. Response: {responseContent}");
     }
 
-    [Fact(DisplayName = "PUT /api/v1/projects/{id}/status - Updates project status")]
+    [Fact(DisplayName = "PATCH /api/v1/projects/{id}/status - Updates project status")]
     public async Task UpdateStatus_ValidStatus_ReturnsSuccess()
     {
         // Arrange
@@ -263,7 +254,7 @@ public class ProjectsApiControllerTests : IClassFixture<CustomWebApplicationFact
             $"Expected OK or NotFound but got {response.StatusCode}");
     }
 
-    [Fact(DisplayName = "PUT /api/v1/projects/{id}/assign - Assigns project manager")]
+    [Fact(DisplayName = "PATCH /api/v1/projects/{id}/assign - Assigns project manager")]
     public async Task AssignManager_ValidManagerId_ReturnsSuccess()
     {
         // Arrange
@@ -282,8 +273,8 @@ public class ProjectsApiControllerTests : IClassFixture<CustomWebApplicationFact
             $"Expected OK or NotFound but got {response.StatusCode}");
     }
 
-    [Fact(DisplayName = "DELETE /api/v1/projects/{id} - Deletes project")]
-    public async Task Delete_ExistingProject_ReturnsSuccess()
+    [Fact(DisplayName = "DELETE /api/v1/projects/{id} - Handles existing or non-existent project")]
+    public async Task Delete_Project_ReturnsSuccessOrNotFound()
     {
         // Arrange
         var client = CreateAuthenticatedClient("test-proj-api-9", "test.proj.api9@test.com", "Admin", "test.proj.api9@test.com");
@@ -300,29 +291,4 @@ public class ProjectsApiControllerTests : IClassFixture<CustomWebApplicationFact
     }
 }
 
-/// <summary>
-/// Request model for creating projects via API
-/// </summary>
-public class NewProjectApiRequest
-{
-    public string? Name { get; set; }
-    public string? Description { get; set; }
-    public string? SelectedCustomerId { get; set; }
-    public string? SelectedProjectManagerId { get; set; }
-}
 
-/// <summary>
-/// Request model for status updates
-/// </summary>
-public class StatusUpdateRequest
-{
-    public Status Status { get; set; }
-}
-
-/// <summary>
-/// Request model for manager assignment
-/// </summary>
-public class AssignManagerRequest
-{
-    public string? ManagerId { get; set; }
-}

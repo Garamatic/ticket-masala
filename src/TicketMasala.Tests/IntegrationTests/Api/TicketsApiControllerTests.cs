@@ -1,22 +1,13 @@
 using System.Net;
 using System.Net.Http.Headers;
-using System.Security.Claims;
 using System.Text;
-using System.Text.Encodings.Web;
 using System.Text.Json;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Data;
 using TicketMasala.Domain.Entities;
-using TicketMasala.Web;
-using TicketMasala.Web.Data;
-using TicketMasala.Web.ViewModels.Api;
 using Xunit;
 
 namespace TicketMasala.Tests.IntegrationTests.Api;
@@ -45,7 +36,7 @@ public class TicketsApiControllerTests : IClassFixture<CustomWebApplicationFacto
                     options.DefaultAuthenticateScheme = "Test";
                     options.DefaultChallengeScheme = "Test";
                 })
-                .AddScheme<TestAuthOptions, TestAuthHandler>("Test", options => { options.Role = role; });
+                .AddScheme<TestAuthOptions, TestAuthHandler>("Test", options => { options.Role = role; options.NameIdentifier = userId; });
 
                 // Seed test user
                 var sp = services.BuildServiceProvider(new ServiceProviderOptions
@@ -149,9 +140,12 @@ public class TicketsApiControllerTests : IClassFixture<CustomWebApplicationFacto
             Assert.Fail($"Expected JSON response but got: {responseJson}");
         }
         var result = JsonSerializer.Deserialize<ExternalTicketResponse>(responseJson, _jsonOptions);
-        Assert.NotNull(result);
+        if (result == null)
+        {
+            Assert.Fail($"Deserialization returned null. JSON: {responseJson}");
+        }
         Assert.True(result.Success, $"Expected success but got: {result.Message}");
-        Assert.NotNull(result.TicketReference);
+        Assert.NotNull(result.ReferenceNumber);
     }
 
     [Fact(DisplayName = "POST /api/v1/tickets/external - Invalid request returns BadRequest")]
@@ -194,11 +188,10 @@ public class TicketsApiControllerTests : IClassFixture<CustomWebApplicationFacto
         Assert.True(content.StartsWith("[") || content.StartsWith("{"), "Expected JSON response");
     }
 
-    [Fact(DisplayName = "GET /api/v1/tickets/{id} - Returns ticket details for existing ticket")]
-    public async Task GetById_ExistingTicket_ReturnsTicketDetails()
+    [Fact(DisplayName = "GET /api/v1/tickets/{id} - Handles non-existent ticket gracefully")]
+    public async Task GetById_NonExistentTicket_ReturnsNotFoundOrOk()
     {
-        // Arrange - Skip due to dependency on ticket creation which has app bug
-        // This test would need a seeded ticket or working CreateTicketAsync
+        // Arrange - Test with a non-existent ticket to verify graceful handling
         var client = CreateAuthenticatedClient("test-api-emp-2", "test.api.emp2@test.com", "Employee", "test.api.emp2@test.com");
 
         // Use a random GUID - controller should handle not found gracefully
@@ -320,7 +313,7 @@ public class TicketsApiControllerTests : IClassFixture<CustomWebApplicationFacto
         var responseJson = await response.Content.ReadAsStringAsync();
         var result = JsonSerializer.Deserialize<ExternalTicketResponse>(responseJson, _jsonOptions);
         Assert.NotNull(result);
-        Assert.True(result.Success, $"Expected success but got: {result?.Message}");
+        Assert.True(result.Success, $"Expected success but got: {result.Message}");
     }
 }
 
@@ -343,8 +336,10 @@ public class ExternalTicketResponse
 {
     public bool Success { get; set; }
     public string? Message { get; set; }
-    public string? TicketReference { get; set; }
-    public Guid? TicketId { get; set; }
+    [System.Text.Json.Serialization.JsonPropertyName("reference_number")]
+    public string? ReferenceNumber { get; set; }
+    [System.Text.Json.Serialization.JsonPropertyName("ticket_id")]
+    public string? TicketId { get; set; }
 }
 
 /// <summary>

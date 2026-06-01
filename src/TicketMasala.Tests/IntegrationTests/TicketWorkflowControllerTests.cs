@@ -1,19 +1,11 @@
 using System.Net;
 using System.Net.Http.Headers;
-using System.Security.Claims;
-using System.Text.Encodings.Web;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Data;
 using TicketMasala.Domain.Entities;
-using TicketMasala.Web;
-using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.GERDA.Configuration;
 using Xunit;
 
@@ -42,7 +34,7 @@ public class TicketWorkflowControllerTests : IClassFixture<CustomWebApplicationF
                     options.DefaultAuthenticateScheme = "Test";
                     options.DefaultChallengeScheme = "Test";
                 })
-                .AddScheme<TestAuthOptions, TestAuthHandler>("Test", options => { options.Role = role; });
+                .AddScheme<TestAuthOptions, TestAuthHandler>("Test", options => { options.Role = role; options.NameIdentifier = userId; });
 
                 // Mock IDomainUiService
                 var mockDomainUi = new Moq.Mock<IDomainUiService>();
@@ -131,12 +123,12 @@ public class TicketWorkflowControllerTests : IClassFixture<CustomWebApplicationF
     {
         // Arrange
         var client = CreateAuthenticatedClient("test-wf-1", "test.wf1@test.com", "Employee", "test.wf1@test.com");
-        var ticketGuid = await CreateTicketAsync(client, "Ticket for comment test");
+        var ticketGuid = await TestHelpers.CreateTicketAsync(client, _factory, "Ticket for comment test");
 
         var detailPage = await client.GetAsync($"/Ticket/Detail/{ticketGuid}");
         detailPage.EnsureSuccessStatusCode();
         var detailHtml = await detailPage.Content.ReadAsStringAsync();
-        var antiforgeryToken = ExtractAntiforgeryToken(detailHtml);
+        var antiforgeryToken = TestHelpers.ExtractAntiforgeryToken(detailHtml);
 
         var formData = new Dictionary<string, string>
         {
@@ -161,12 +153,12 @@ public class TicketWorkflowControllerTests : IClassFixture<CustomWebApplicationF
     {
         // Arrange
         var client = CreateAuthenticatedClient("test-wf-2", "test.wf2@test.com", "Employee", "test.wf2@test.com");
-        var ticketGuid = await CreateTicketAsync(client, "Ticket for empty comment test");
+        var ticketGuid = await TestHelpers.CreateTicketAsync(client, _factory, "Ticket for empty comment test");
 
         var detailPage = await client.GetAsync($"/Ticket/Detail/{ticketGuid}");
         detailPage.EnsureSuccessStatusCode();
         var detailHtml = await detailPage.Content.ReadAsStringAsync();
-        var antiforgeryToken = ExtractAntiforgeryToken(detailHtml);
+        var antiforgeryToken = TestHelpers.ExtractAntiforgeryToken(detailHtml);
 
         var formData = new Dictionary<string, string>
         {
@@ -192,12 +184,12 @@ public class TicketWorkflowControllerTests : IClassFixture<CustomWebApplicationF
     {
         // Arrange
         var client = CreateAuthenticatedClient("test-wf-3", "test.wf3@test.com", "Employee", "test.wf3@test.com");
-        var ticketGuid = await CreateTicketAsync(client, "Ticket for review test");
+        var ticketGuid = await TestHelpers.CreateTicketAsync(client, _factory, "Ticket for review test");
 
         var detailPage = await client.GetAsync($"/Ticket/Detail/{ticketGuid}");
         detailPage.EnsureSuccessStatusCode();
         var detailHtml = await detailPage.Content.ReadAsStringAsync();
-        var antiforgeryToken = ExtractAntiforgeryToken(detailHtml);
+        var antiforgeryToken = TestHelpers.ExtractAntiforgeryToken(detailHtml);
 
         var formData = new Dictionary<string, string>
         {
@@ -220,12 +212,12 @@ public class TicketWorkflowControllerTests : IClassFixture<CustomWebApplicationF
     {
         // Arrange
         var client = CreateAuthenticatedClient("test-wf-4", "test.wf4@test.com", "Employee", "test.wf4@test.com");
-        var ticketGuid = await CreateTicketAsync(client, "Ticket for submit review test");
+        var ticketGuid = await TestHelpers.CreateTicketAsync(client, _factory, "Ticket for submit review test");
 
         var detailPage = await client.GetAsync($"/Ticket/Detail/{ticketGuid}");
         detailPage.EnsureSuccessStatusCode();
         var detailHtml = await detailPage.Content.ReadAsStringAsync();
-        var antiforgeryToken = ExtractAntiforgeryToken(detailHtml);
+        var antiforgeryToken = TestHelpers.ExtractAntiforgeryToken(detailHtml);
 
         var formData = new Dictionary<string, string>
         {
@@ -276,12 +268,12 @@ public class TicketWorkflowControllerTests : IClassFixture<CustomWebApplicationF
             }
         }
 
-        var ticketGuid = await CreateTicketAsync(client, "Ticket for assignment test");
+        var ticketGuid = await TestHelpers.CreateTicketAsync(client, _factory, "Ticket for assignment test");
 
         var detailPage = await client.GetAsync($"/Ticket/Detail/{ticketGuid}");
         detailPage.EnsureSuccessStatusCode();
         var detailHtml = await detailPage.Content.ReadAsStringAsync();
-        var antiforgeryToken = ExtractAntiforgeryToken(detailHtml);
+        var antiforgeryToken = TestHelpers.ExtractAntiforgeryToken(detailHtml);
 
         var formData = new Dictionary<string, string>
         {
@@ -333,63 +325,4 @@ public class TicketWorkflowControllerTests : IClassFixture<CustomWebApplicationF
             $"Expected Unauthorized or Redirect but got {response.StatusCode}");
     }
 
-    private async Task<Guid> CreateTicketAsync(HttpClient client, string description)
-    {
-        var createPageResponse = await client.GetAsync("/Ticket/Create");
-        createPageResponse.EnsureSuccessStatusCode();
-        var createPageHtml = await createPageResponse.Content.ReadAsStringAsync();
-        var antiforgeryToken = ExtractAntiforgeryToken(createPageHtml);
-
-        var formData = new Dictionary<string, string>
-        {
-            ["Description"] = description,
-            ["CustomerId"] = "11111111-1111-1111-1111-111111111111",
-            ["ResponsibleId"] = "",
-            ["ProjectGuid"] = "",
-            ["CompletionTarget"] = DateTime.UtcNow.AddDays(7).ToString("yyyy-MM-dd"),
-            ["WorkItemTypeCode"] = "INCIDENT",
-            ["DomainId"] = "IT"
-        };
-
-        if (!string.IsNullOrEmpty(antiforgeryToken))
-        {
-            formData["__RequestVerificationToken"] = antiforgeryToken;
-        }
-
-        var response = await client.PostAsync("/Ticket/Create", new FormUrlEncodedContent(formData));
-
-        // Try to find the ticket in the database regardless of response status
-        await Task.Delay(100); // Brief delay for async processing
-
-        using (var scope = _factory.Services.CreateScope())
-        {
-            var context = scope.ServiceProvider.GetRequiredService<MasalaDbContext>();
-            var ticket = await context.Tickets
-                .OrderByDescending(t => t.CreationDate)
-                .FirstOrDefaultAsync(t => t.Description == description);
-
-            if (ticket != null)
-                return ticket.Guid;
-        }
-
-        throw new InvalidOperationException($"Failed to create ticket. Response: {response.StatusCode}");
-    }
-
-    private static string? ExtractAntiforgeryToken(string html)
-    {
-        if (string.IsNullOrEmpty(html))
-            return null;
-
-        const string tokenPattern = "name=\"__RequestVerificationToken\" type=\"hidden\" value=\"";
-        var startIndex = html.IndexOf(tokenPattern, StringComparison.Ordinal);
-        if (startIndex == -1)
-            return null;
-
-        startIndex += tokenPattern.Length;
-        var endIndex = html.IndexOf("\"", startIndex, StringComparison.Ordinal);
-        if (endIndex == -1)
-            return null;
-
-        return html.Substring(startIndex, endIndex - startIndex);
-    }
 }

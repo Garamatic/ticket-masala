@@ -1,19 +1,11 @@
 using System.Net;
 using System.Net.Http.Headers;
-using System.Security.Claims;
-
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Data;
 using TicketMasala.Domain.Entities;
-using TicketMasala.Web;
-using TicketMasala.Web.Data;
 using TicketMasala.Web.Engine.GERDA.Configuration;
 using Xunit;
 
@@ -42,7 +34,7 @@ public class ProjectsControllerTests : IClassFixture<CustomWebApplicationFactory
                     options.DefaultAuthenticateScheme = "Test";
                     options.DefaultChallengeScheme = "Test";
                 })
-                .AddScheme<TestAuthOptions, TestAuthHandler>("Test", options => { options.Role = role; });
+                .AddScheme<TestAuthOptions, TestAuthHandler>("Test", options => { options.Role = role; options.NameIdentifier = userId; });
 
                 // Mock IDomainUiService
                 var mockDomainUi = new Moq.Mock<IDomainUiService>();
@@ -204,27 +196,5 @@ public class ProjectsControllerTests : IClassFixture<CustomWebApplicationFactory
             response.StatusCode == HttpStatusCode.Unauthorized ||
             response.StatusCode == HttpStatusCode.Redirect,
             $"Expected Unauthorized or Redirect but got {response.StatusCode}");
-    }
-
-
-
-
-
-    private static string? ExtractAntiforgeryToken(string html)
-    {
-        if (string.IsNullOrEmpty(html))
-            return null;
-
-        const string tokenPattern = "name=\"__RequestVerificationToken\" type=\"hidden\" value=\"";
-        var startIndex = html.IndexOf(tokenPattern, StringComparison.Ordinal);
-        if (startIndex == -1)
-            return null;
-
-        startIndex += tokenPattern.Length;
-        var endIndex = html.IndexOf("\"", startIndex, StringComparison.Ordinal);
-        if (endIndex == -1)
-            return null;
-
-        return html.Substring(startIndex, endIndex - startIndex);
     }
 }

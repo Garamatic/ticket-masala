@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading;
 using Microsoft.EntityFrameworkCore;
 using RabbitMqConnector;
@@ -332,9 +333,14 @@ public class OutboxPublisher : BackgroundService
             Activity.Current.SetTag("correlation.id", message.CorrelationId);
         }
 
-        // Pass the JsonDocument.RootElement which avoids double-serialization
-        // JsonElement serializes back to the original JSON structure
-        await publisher.PublishAsync(document.RootElement, message.RoutingKey, cancellationToken);
+        // Add event_type to the payload so consumers (e.g. mailing service) can identify the event
+        var payload = JsonNode.Parse(document.RootElement.GetRawText());
+        if (payload is JsonObject payloadObj)
+        {
+            payloadObj["event_type"] = message.EventType;
+        }
+
+        await publisher.PublishAsync(payload, message.RoutingKey, cancellationToken);
     }
 
     public override async Task StopAsync(CancellationToken cancellationToken)

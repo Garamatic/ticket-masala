@@ -85,6 +85,7 @@ namespace TicketMasala.Web.Migrations
                     EventType = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     Payload = table.Column<string>(type: "TEXT", nullable: false),
                     RoutingKey = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    CorrelationId = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     ProcessedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
                     RetryCount = table.Column<int>(type: "INTEGER", nullable: false),

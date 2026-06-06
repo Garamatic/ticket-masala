@@ -126,10 +126,7 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
 
         ticket.SyncStatus();
 
-        if (!string.IsNullOrEmpty(customerId))
-        {
-            ticket.RaiseDomainEvent(new TicketCreatedEvent(ticket.Guid, customerId, ticket.DomainId));
-        }
+        ticket.RaiseDomainEvent(new TicketCreatedEvent(ticket.Guid, customerId ?? string.Empty, ticket.DomainId));
 
         return ticket;
     }
@@ -168,10 +165,7 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         if (completionTarget.HasValue)
             ticket.SetCompletionTarget(completionTarget.Value);
 
-        if (!string.IsNullOrEmpty(customerId))
-        {
-            ticket.RaiseDomainEvent(new TicketCreatedEvent(ticket.Guid, customerId, ticket.DomainId));
-        }
+        ticket.RaiseDomainEvent(new TicketCreatedEvent(ticket.Guid, customerId ?? string.Empty, ticket.DomainId));
 
         return ticket;
     }

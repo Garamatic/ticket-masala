@@ -1,176 +1,895 @@
 {
-    "Admins": [
+  "Admins": [
+    {
+      "UserName": "president.oseary",
+      "Email": "oseary@hennessey.fund",
+      "FirstName": "Oseary",
+      "LastName": "Fonds",
+      "Phone": "+44 20 7946 0101",
+      "Code": "PRES-01"
+    },
+    {
+      "UserName": "admin.hennessey",
+      "Email": "admin@hennessey.fund",
+      "FirstName": "System",
+      "LastName": "Administrator",
+      "Phone": "+44 20 7946 0102",
+      "Code": "ADM-001"
+    }
+  ],
+  "Employees": [
+    {
+      "UserName": "officer.eleanor",
+      "Email": "eleanor@hennessey.fund",
+      "FirstName": "Eleanor",
+      "LastName": "Banks",
+      "Team": "Grant Review Board",
+      "Level": "Lead",
+      "Language": "en-GB",
+      "Specializations": "Oceanography, Policy, International Law, Environmental Science",
+      "MaxCapacityPoints": 40,
+      "Region": "Europe"
+    },
+    {
+      "UserName": "ethics.simone",
+      "Email": "simone@hennessey.fund",
+      "FirstName": "Simone",
+      "LastName": "Weil",
+      "Team": "Ethics Committee",
+      "Level": "Lead",
+      "Language": "fr-FR",
+      "Specializations": "Bioethics, Field Research Safety, Animal Welfare",
+      "MaxCapacityPoints": 35,
+      "Region": "Paris"
+    },
+    {
+      "UserName": "controller.ahmed",
+      "Email": "ahmed@hennessey.fund",
+      "FirstName": "Ahmed",
+      "LastName": "Mansoor",
+      "Team": "Financial Compliance",
+      "Level": "Expert",
+      "Language": "en-AE",
+      "Specializations": "Forensic Accounting, Grant Auditing, Budget Analysis",
+      "MaxCapacityPoints": 55,
+      "Region": "Dubai"
+    },
+    {
+      "UserName": "analyst.klaus",
+      "Email": "klaus@hennessey.fund",
+      "FirstName": "Klaus",
+      "LastName": "Daimler",
+      "Team": "Operations",
+      "Level": "Support",
+      "Language": "de-DE",
+      "Specializations": "Budgeting, Compliance, Reporting",
+      "MaxCapacityPoints": 30,
+      "Region": "Germany"
+    },
+    {
+      "UserName": "reviewer.maria",
+      "Email": "maria@hennessey.fund",
+      "FirstName": "Maria",
+      "LastName": "Sklodowska",
+      "Team": "Grant Review Board",
+      "Level": "Expert",
+      "Language": "pl-PL",
+      "Specializations": "Physics, Materials Science, Peer Review",
+      "MaxCapacityPoints": 45,
+      "Region": "Europe"
+    },
+    {
+      "UserName": "legal.james",
+      "Email": "james@hennessey.fund",
+      "FirstName": "James",
+      "LastName": "Bond",
+      "Team": "Legal Affairs",
+      "Level": "Lead",
+      "Language": "en-GB",
+      "Specializations": "International Law, IP Rights, Contract Review",
+      "MaxCapacityPoints": 40,
+      "Region": "London"
+    },
+    {
+      "UserName": "outreach.priya",
+      "Email": "priya@hennessey.fund",
+      "FirstName": "Priya",
+      "LastName": "Sharma",
+      "Team": "Communications",
+      "Level": "Support",
+      "Language": "en-IN",
+      "Specializations": "Science Communication, PR, Social Media",
+      "MaxCapacityPoints": 25,
+      "Region": "India"
+    },
+    {
+      "UserName": "field.leonard",
+      "Email": "leonard@hennessey.fund",
+      "FirstName": "Leonard",
+      "LastName": "McCoy",
+      "Team": "Field Operations",
+      "Level": "Expert",
+      "Language": "en-US",
+      "Specializations": "Expedition Planning, Logistics, Medical Safety",
+      "MaxCapacityPoints": 50,
+      "Region": "Global"
+    },
+    {
+      "UserName": "data.irina",
+      "Email": "irina@hennessey.fund",
+      "FirstName": "Irina",
+      "LastName": "Volovik",
+      "Team": "Research Analytics",
+      "Level": "Expert",
+      "Language": "ru-RU",
+      "Specializations": "Bibliometrics, Impact Analysis, Data Visualization",
+      "MaxCapacityPoints": 35,
+      "Region": "Russia"
+    },
+    {
+      "UserName": "gerda.system",
+      "Email": "gerda@ticketmasala.ai",
+      "FirstName": "GERDA",
+      "LastName": "AI",
+      "Team": "System Core",
+      "Level": "Lead",
+      "Language": "en-GB",
+      "Specializations": "Budget Compliance, Ethical Flagging, Grant Policy Matching",
+      "MaxCapacityPoints": 999,
+      "Region": "Global"
+    }
+  ],
+  "Customers": [
+    {
+      "UserName": "prof.steve",
+      "Email": "steve@zissou.edu",
+      "FirstName": "Steve",
+      "LastName": "Zissou",
+      "Phone": "+44 20 7946 9999",
+      "Code": "RES-007"
+    },
+    {
+      "UserName": "dr.indiana",
+      "Email": "jones@marshall.edu",
+      "FirstName": "Indiana",
+      "LastName": "Jones",
+      "Phone": "+1 555 4321",
+      "Code": "ARCH-01"
+    },
+    {
+      "UserName": "prof.marie",
+      "Email": "marie@curie.fr",
+      "FirstName": "Marie",
+      "LastName": "Curie",
+      "Phone": "+33 1 44 27 17 01",
+      "Code": "CHEM-42"
+    },
+    {
+      "UserName": "dr.alan",
+      "Email": "alan@turing.ac.uk",
+      "FirstName": "Alan",
+      "LastName": "Turing",
+      "Phone": "+44 20 7946 8888",
+      "Code": "COMP-01"
+    },
+    {
+      "UserName": "prof.darwin",
+      "Email": "darwin@beagle.edu",
+      "FirstName": "Charles",
+      "LastName": "Darwin",
+      "Phone": "+44 20 7946 7777",
+      "Code": "BIO-99"
+    },
+    {
+      "UserName": "dr.lovelace",
+      "Email": "ada@babbage.io",
+      "FirstName": "Ada",
+      "LastName": "Lovelace",
+      "Phone": "+44 20 7946 6666",
+      "Code": "CS-001"
+    }
+  ],
+  "WorkContainers": [
+    {
+      "Name": "Expedition 'Arctic Horizon' - Grant #9088",
+      "Description": "Multi-institutional study on permafrost thawing and ancient pathogen modeling. Led by Prof. Steve Zissou.",
+      "Status": "InProgress",
+      "CustomerEmail": "steve@zissou.edu",
+      "ProjectManagerEmail": "eleanor@hennessey.fund",
+      "CompletionTargetMonths": 18,
+      "WorkItems": [
         {
-            "UserName": "president.oseary",
-            "Email": "oseary@hennessey.fund",
-            "FirstName": "Oseary",
-            "LastName": "Fonds",
-            "Phone": "+44 20 7946 0101",
-            "Code": "PRES-01"
-        }
-    ],
-    "Employees": [
-        {
-            "UserName": "officer.eleanor",
-            "Email": "eleanor@hennessey.fund",
-            "FirstName": "Eleanor",
-            "LastName": "Banks",
-            "Team": "Grant Review Board",
-            "Level": "Lead",
-            "Language": "en-GB",
-            "Specializations": "Oceanography, Policy, International Law",
-            "MaxCapacityPoints": 40,
-            "Region": "Europe"
+          "Description": "Ethics Review: Biological Sample Extraction Protocol",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "simone@hennessey.fund",
+          "CompletionTargetDays": 14,
+          "EstimatedEffortPoints": 13,
+          "PriorityScore": 45,
+          "GerdaTags": "Ethics, Biohazard, High_Risk",
+          "Comments": [
+            {
+              "Body": "The protocol for core drilling in the Svalbard zone lacks clear containment plans for unknown bacterial strains.",
+              "AuthorEmail": "simone@hennessey.fund",
+              "CreatedDaysAgo": 3
+            },
+            {
+              "Body": "🤖 **GERDA Ethics Guard**: Compliance mismatch. 'Pathogen Containment' level 4 required for this region. Recommendation: Update safety equipment budget by 15% and resubmit.",
+              "AuthorEmail": "gerda@ticketmasala.ai",
+              "CreatedDaysAgo": 2
+            }
+          ]
         },
         {
-            "UserName": "ethics.simone",
-            "Email": "simone@hennessey.fund",
-            "FirstName": "Simone",
-            "LastName": "Weil",
-            "Team": "Ethics Committee",
-            "Level": "Lead",
-            "Language": "fr-FR",
-            "Specializations": "Bioethics, Field Research Safety",
-            "MaxCapacityPoints": 35,
-            "Region": "Paris"
+          "Description": "Financial Audit: Submersible Fuel Allocation",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "ahmed@hennessey.fund",
+          "CompletionTargetDays": 7,
+          "EstimatedEffortPoints": 5,
+          "PriorityScore": 20,
+          "GerdaTags": "Audit, Finance, Submersible",
+          "Comments": [
+            {
+              "Body": "Fuel allocation seems 23% higher than comparable expeditions. Need justification for the variance.",
+              "AuthorEmail": "ahmed@hennessey.fund",
+              "CreatedDaysAgo": 1
+            }
+          ]
         },
         {
-            "UserName": "controller.ahmed",
-            "Email": "ahmed@hennessey.fund",
-            "FirstName": "Ahmed",
-            "LastName": "Mansoor",
-            "Team": "Financial Compliance",
-            "Level": "Expert",
-            "Language": "en-AE",
-            "Specializations": "Forensic Accounting, Grant Auditing",
-            "MaxCapacityPoints": 55,
-            "Region": "Dubai"
+          "Description": "Permit Application: Svalbard Research Zone",
+          "Status": "Assigned",
+          "Type": "Task",
+          "ResponsibleEmail": "eleanor@hennessey.fund",
+          "CompletionTargetDays": 21,
+          "EstimatedEffortPoints": 8,
+          "PriorityScore": 35,
+          "GerdaTags": "Permit, Svalbard, Norway"
         },
         {
-            "UserName": "analyst.klaus",
-            "Email": "klaus@hennessey.fund",
-            "FirstName": "Klaus",
-            "LastName": "Daimler",
-            "Team": "Operations",
-            "Level": "Support",
-            "Language": "de-DE",
-            "Specializations": "Budgeting, Compliance",
-            "MaxCapacityPoints": 30,
-            "Region": "Germany"
+          "Description": "Equipment Procurement: Portable PCR Lab",
+          "Status": "Pending",
+          "Type": "Task",
+          "ResponsibleEmail": "klaus@hennessey.fund",
+          "CompletionTargetDays": 30,
+          "EstimatedEffortPoints": 5,
+          "PriorityScore": 18,
+          "GerdaTags": "Procurement, Equipment, PCR"
         },
         {
-            "UserName": "gerda.system",
-            "Email": "gerda@ticketmasala.ai",
-            "FirstName": "GERDA",
-            "LastName": "AI",
-            "Team": "System Core",
-            "Level": "Lead",
-            "Language": "en-GB",
-            "Specializations": "Budget Compliance, Ethical Flagging, Grant Policy Matching",
-            "MaxCapacityPoints": 999,
-            "Region": "Global"
+          "Description": "Risk Assessment: Polar Bear Encounters",
+          "Status": "Completed",
+          "Type": "Task",
+          "ResponsibleEmail": "leonard@hennessey.fund",
+          "CompletionTargetDays": 10,
+          "CompletionDaysAgo": 5,
+          "EstimatedEffortPoints": 8,
+          "PriorityScore": 25,
+          "GerdaTags": "Risk, Safety, PolarBears",
+          "Comments": [
+            {
+              "Body": "Risk assessment complete. All team members trained in polar bear deterrent protocols. Flare guns and electric fences ordered.",
+              "AuthorEmail": "leonard@hennessey.fund",
+              "CreatedDaysAgo": 5
+            }
+          ]
         }
-    ],
-    "Customers": [
+      ]
+    },
+    {
+      "Name": "Grant 'Digital Heritage' - Archaeological Digitization",
+      "Description": "3D digitization and preservation of endangered archaeological sites in the Middle East. Led by Dr. Indiana Jones.",
+      "Status": "InProgress",
+      "CustomerEmail": "jones@marshall.edu",
+      "ProjectManagerEmail": "eleanor@hennessey.fund",
+      "CompletionTargetMonths": 24,
+      "WorkItems": [
         {
-            "UserName": "prof.steve",
-            "Email": "steve@zissou.edu",
-            "FirstName": "Steve",
-            "LastName": "Zissou",
-            "Phone": "+44 20 7946 9999",
-            "Code": "RES-007"
+          "Description": "Ethics Review: Human Remains Handling Protocol",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "simone@hennessey.fund",
+          "CompletionTargetDays": 14,
+          "EstimatedEffortPoints": 8,
+          "PriorityScore": 40,
+          "GerdaTags": "Ethics, HumanRemains, Archaeology",
+          "Comments": [
+            {
+              "Body": "Protocol requires revision. Local community consent must be documented before any remains are moved.",
+              "AuthorEmail": "simone@hennessey.fund",
+              "CreatedDaysAgo": 2
+            }
+          ]
         },
         {
-            "UserName": "dr.indiana",
-            "Email": "jones@marshall.edu",
-            "FirstName": "Indiana",
-            "LastName": "Jones",
-            "Phone": "+1 555 4321",
-            "Code": "ARCH-01"
-        }
-    ],
-    "WorkContainers": [
-        {
-            "Name": "Expedition 'Arctic Horizon' - Grant #9088",
-            "Description": "Multi-institutional study on permafrost thawing and ancient pathogen modeling.",
-            "Status": "Active",
-            "CustomerEmail": "steve@zissou.edu",
-            "ProjectManagerEmail": "eleanor@hennessey.fund",
-            "CompletionTargetMonths": 18,
-            "WorkItems": [
-                {
-                    "Description": "Ethics Review: Biological Sample Extraction Protocol",
-                    "Status": "In_Progress",
-                    "Type": "Task",
-                    "ResponsibleEmail": "simone@hennessey.fund",
-                    "CompletionTargetDays": 14,
-                    "EstimatedEffortPoints": 13,
-                    "PriorityScore": 45,
-                    "GerdaTags": "Ethics, Biohazard, High_Risk",
-                    "Comments": [
-                        {
-                            "Body": "The protocol for core drilling in the Svalbard zone lacks clear containment plans for unknown bacterial strains.",
-                            "AuthorEmail": "simone@hennessey.fund",
-                            "CreatedDaysAgo": 3
-                        },
-                        {
-                            "Body": "🤖 **GERDA Ethics Guard**: Compliance mismatch. 'Pathogen Containment' level 4 required for this region. Recommendation: Update safety equipment budget by 15% and resubmit.",
-                            "AuthorEmail": "gerda@ticketmasala.ai",
-                            "CreatedDaysAgo": 2
-                        }
-                    ]
-                },
-                {
-                    "Description": "Financial Audit: Submersible Fuel Allocation",
-                    "Status": "In_Progress",
-                    "Type": "Task",
-                    "ResponsibleEmail": "ahmed@hennessey.fund",
-                    "CompletionTargetDays": 7,
-                    "EstimatedEffortPoints": 5,
-                    "PriorityScore": 20,
-                    "GerdaTags": "Audit, Finance"
-                }
-            ]
-        }
-    ],
-    "UnassignedWorkItems": [
-        {
-            "Description": "URGENT: Archeological Find at Permafrost Core Station",
-            "Status": "New",
-            "Type": "Incident",
-            "CustomerEmail": "steve@zissou.edu",
-            "CompletionTargetDays": 1,
-            "EstimatedEffortPoints": 34,
-            "PriorityScore": 95,
-            "GerdaTags": "Discovery, Legal_Hold, UNESCO_Protocols",
-            "Comments": [
-                {
-                    "Body": "We found structures that appear to be pre-Holocene. We need an immediate ruling on whether we can continue drilling or if the site must be preserved under UN mandate.",
-                    "AuthorEmail": "steve@zissou.edu",
-                    "CreatedDaysAgo": 0
-                },
-                {
-                    "Body": "🤖 **GERDA Policy Engine**: Automatic Halt Recommended. Coordinates match registered 'UNESCO Heritage Potential' zone. Routing to Ethics Officer and Legal Counsel Indiana Jones.",
-                    "AuthorEmail": "gerda@ticketmasala.ai",
-                    "CreatedDaysAgo": 0
-                }
-            ]
-        }
-    ],
-    "KnowledgeBaseArticles": [
-        {
-            "Title": "Arctic Sovereignty Laws (2025)",
-            "Content": "Summary of research rights in international waters.\n\n**Protocols:**\n* No permanent structures without UN approval.\n* Data sharing mandatory within 6 months of collection.\n* Environmental impact fee: $500 per ton of ice displaced.",
-            "Tags": "Law, Research, International",
-            "AuthorEmail": "eleanor@hennessey.fund",
-            "CreatedDaysAgo": 60
+          "Description": "3D Scanner Calibration and Training",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "leonard@hennessey.fund",
+          "CompletionTargetDays": 21,
+          "EstimatedEffortPoints": 8,
+          "PriorityScore": 22,
+          "GerdaTags": "3D, Scanning, Training",
+          "Comments": [
+            {
+              "Body": "3D scanners calibrated for desert conditions. Team trained on LiDAR and photogrammetry. Ready for field deployment.",
+              "AuthorEmail": "leonard@hennessey.fund",
+              "CreatedDaysAgo": 3
+            }
+          ]
         },
         {
-            "Title": "Bio-Scrubbing Procedures",
-            "Content": "Mandatory decontamination for all field samples.\n\n**Steps:**\n1. UV-C irradiation (120 seconds).\n2. Chemical bath (Solvents A & B).\n3. Vacuum seal for transport.\n\n*Violations result in immediate grant termination.*",
-            "Tags": "Safety, Biology, Procedures",
-            "AuthorEmail": "simone@hennessey.fund",
-            "CreatedDaysAgo": 15
+          "Description": "Budget Allocation: Local Staff and Translators",
+          "Status": "Assigned",
+          "Type": "Task",
+          "ResponsibleEmail": "ahmed@hennessey.fund",
+          "CompletionTargetDays": 7,
+          "EstimatedEffortPoints": 5,
+          "PriorityScore": 15,
+          "GerdaTags": "Budget, LocalStaff, Translation"
+        },
+        {
+          "Description": "UNESCO Permit for Site Documentation",
+          "Status": "Pending",
+          "Type": "Task",
+          "ResponsibleEmail": "james@hennessey.fund",
+          "CompletionTargetDays": 30,
+          "EstimatedEffortPoints": 8,
+          "PriorityScore": 28,
+          "GerdaTags": "UNESCO, Permit, Legal"
+        },
+        {
+          "Description": "Insurance Coverage: High-Risk Archaeological Sites",
+          "Status": "Completed",
+          "Type": "Task",
+          "ResponsibleEmail": "klaus@hennessey.fund",
+          "CompletionTargetDays": 14,
+          "CompletionDaysAgo": 10,
+          "EstimatedEffortPoints": 5,
+          "PriorityScore": 18,
+          "GerdaTags": "Insurance, Risk, Coverage",
+          "Comments": [
+            {
+              "Body": "Insurance secured through Lloyd's of London. Coverage includes equipment, personnel, and site liability. Premium: $45,000.",
+              "AuthorEmail": "klaus@hennessey.fund",
+              "CreatedDaysAgo": 10
+            }
+          ]
         }
-    ]
+      ]
+    },
+    {
+      "Name": "Grant 'Quantum Computing for Climate' - Grant #9102",
+      "Description": "Applying quantum computing algorithms to climate modeling and carbon capture optimization. Led by Dr. Alan Turing.",
+      "Status": "InProgress",
+      "CustomerEmail": "alan@turing.ac.uk",
+      "ProjectManagerEmail": "maria@hennessey.fund",
+      "CompletionTargetMonths": 36,
+      "WorkItems": [
+        {
+          "Description": "Quantum Algorithm Benchmarking",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "maria@hennessey.fund",
+          "CompletionTargetDays": 90,
+          "EstimatedEffortPoints": 21,
+          "PriorityScore": 30,
+          "GerdaTags": "Quantum, Algorithm, Benchmarking",
+          "Comments": [
+            {
+              "Body": "Initial benchmarks on IBM Q System One show 40% improvement over classical algorithms for small molecule simulation.",
+              "AuthorEmail": "maria@hennessey.fund",
+              "CreatedDaysAgo": 2
+            }
+          ]
+        },
+        {
+          "Description": "Compute Budget: AWS Quantum Solutions Lab",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "ahmed@hennessey.fund",
+          "CompletionTargetDays": 14,
+          "EstimatedEffortPoints": 5,
+          "PriorityScore": 18,
+          "GerdaTags": "Budget, Compute, AWS",
+          "Comments": [
+            {
+              "Body": "AWS Quantum Solutions Lab credits approved. $150,000 compute budget allocated for 12 months.",
+              "AuthorEmail": "ahmed@hennessey.fund",
+              "CreatedDaysAgo": 5
+            }
+          ]
+        },
+        {
+          "Description": "Ethics Review: AI/Climate Model Bias",
+          "Status": "Assigned",
+          "Type": "Task",
+          "ResponsibleEmail": "simone@hennessey.fund",
+          "CompletionTargetDays": 21,
+          "EstimatedEffortPoints": 8,
+          "PriorityScore": 22,
+          "GerdaTags": "Ethics, AI, Bias, Climate"
+        },
+        {
+          "Description": "PhD Student Recruitment - 3 positions",
+          "Status": "Pending",
+          "Type": "Task",
+          "ResponsibleEmail": "priya@hennessey.fund",
+          "CompletionTargetDays": 60,
+          "EstimatedEffortPoints": 13,
+          "PriorityScore": 15,
+          "GerdaTags": "Recruitment, PhD, Students"
+        }
+      ]
+    },
+    {
+      "Name": "Expedition 'Galapagos Evolution' - Grant #9105",
+      "Description": "Long-term evolutionary study of Galapagos finches and marine iguanas. Led by Prof. Charles Darwin.",
+      "Status": "InProgress",
+      "CustomerEmail": "darwin@beagle.edu",
+      "ProjectManagerEmail": "eleanor@hennessey.fund",
+      "CompletionTargetMonths": 60,
+      "WorkItems": [
+        {
+          "Description": "Ecuador Research Permit Renewal",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "james@hennessey.fund",
+          "CompletionTargetDays": 30,
+          "EstimatedEffortPoints": 8,
+          "PriorityScore": 25,
+          "GerdaTags": "Permit, Ecuador, Legal",
+          "Comments": [
+            {
+              "Body": "Permit application submitted to Ministerio del Ambiente. Expected approval in 6-8 weeks.",
+              "AuthorEmail": "james@hennessey.fund",
+              "CreatedDaysAgo": 3
+            }
+          ]
+        },
+        {
+          "Description": "Field Station Equipment: Weather Monitoring",
+          "Status": "Completed",
+          "Type": "Task",
+          "ResponsibleEmail": "leonard@hennessey.fund",
+          "CompletionTargetDays": 14,
+          "CompletionDaysAgo": 7,
+          "EstimatedEffortPoints": 5,
+          "PriorityScore": 12,
+          "GerdaTags": "Equipment, Weather, FieldStation",
+          "Comments": [
+            {
+              "Body": "Weather station installed and transmitting data. Solar panels working well. 24/7 data feed active.",
+              "AuthorEmail": "leonard@hennessey.fund",
+              "CreatedDaysAgo": 7
+            }
+          ]
+        },
+        {
+          "Description": "Budget Review: Annual Field Expenses",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "ahmed@hennessey.fund",
+          "CompletionTargetDays": 14,
+          "EstimatedEffortPoints": 5,
+          "PriorityScore": 15,
+          "GerdaTags": "Budget, Field, Expenses"
+        },
+        {
+          "Description": "DNA Sample Collection: Marine Iguanas",
+          "Status": "Assigned",
+          "Type": "Task",
+          "ResponsibleEmail": "leonard@hennessey.fund",
+          "CompletionTargetDays": 21,
+          "EstimatedEffortPoints": 8,
+          "PriorityScore": 18,
+          "GerdaTags": "DNA, MarineIguana, Collection"
+        }
+      ]
+    },
+    {
+      "Name": "Grant 'Analytical Engine' - CS Education Initiative",
+      "Description": "Computational thinking education program for underserved communities. Led by Dr. Ada Lovelace.",
+      "Status": "InProgress",
+      "CustomerEmail": "ada@babbage.io",
+      "ProjectManagerEmail": "priya@hennessey.fund",
+      "CompletionTargetMonths": 12,
+      "WorkItems": [
+        {
+          "Description": "Curriculum Development: Python for Beginners",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "priya@hennessey.fund",
+          "CompletionTargetDays": 30,
+          "EstimatedEffortPoints": 13,
+          "PriorityScore": 20,
+          "GerdaTags": "Curriculum, Python, Education",
+          "Comments": [
+            {
+              "Body": "Curriculum draft complete. 12 modules covering basics to data analysis. Focus on hands-on projects.",
+              "AuthorEmail": "priya@hennessey.fund",
+              "CreatedDaysAgo": 2
+            }
+          ]
+        },
+        {
+          "Description": "Partner Outreach: Community Colleges",
+          "Status": "Assigned",
+          "Type": "Task",
+          "ResponsibleEmail": "priya@hennessey.fund",
+          "CompletionTargetDays": 21,
+          "EstimatedEffortPoints": 8,
+          "PriorityScore": 15,
+          "GerdaTags": "Partnership, Outreach, Education"
+        },
+        {
+          "Description": "Budget: Laptop Procurement for Students",
+          "Status": "Pending",
+          "Type": "Task",
+          "ResponsibleEmail": "klaus@hennessey.fund",
+          "CompletionTargetDays": 14,
+          "EstimatedEffortPoints": 5,
+          "PriorityScore": 12,
+          "GerdaTags": "Budget, Procurement, Laptops"
+        }
+      ]
+    },
+    {
+      "Name": "Grant 'Radioactive Decay' - Marie Curie Fellowship",
+      "Description": "Postdoctoral fellowship program for women in STEM. Named after Marie Curie.",
+      "Status": "InProgress",
+      "CustomerEmail": "marie@curie.fr",
+      "ProjectManagerEmail": "eleanor@hennessey.fund",
+      "CompletionTargetMonths": 36,
+      "WorkItems": [
+        {
+          "Description": "Fellowship Application Review Round 1",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "maria@hennessey.fund",
+          "CompletionTargetDays": 30,
+          "EstimatedEffortPoints": 13,
+          "PriorityScore": 25,
+          "GerdaTags": "Review, Fellowship, Applications",
+          "Comments": [
+            {
+              "Body": "47 applications received. Initial screening complete. 23 advancing to peer review.",
+              "AuthorEmail": "maria@hennessey.fund",
+              "CreatedDaysAgo": 3
+            }
+          ]
+        },
+        {
+          "Description": "Peer Review Panel Coordination",
+          "Status": "Assigned",
+          "Type": "Task",
+          "ResponsibleEmail": "eleanor@hennessey.fund",
+          "CompletionTargetDays": 14,
+          "EstimatedEffortPoints": 8,
+          "PriorityScore": 15,
+          "GerdaTags": "PeerReview, Panel, Coordination"
+        },
+        {
+          "Description": "Budget Allocation: Stipends and Research Funds",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "ahmed@hennessey.fund",
+          "CompletionTargetDays": 14,
+          "EstimatedEffortPoints": 5,
+          "PriorityScore": 18,
+          "GerdaTags": "Budget, Stipends, Fellowship",
+          "Comments": [
+            {
+              "Body": "Budget model approved. 10 fellowships at $75k/year each. Research funds: $25k per fellow.",
+              "AuthorEmail": "ahmed@hennessey.fund",
+              "CreatedDaysAgo": 2
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "UnassignedWorkItems": [
+    {
+      "Description": "URGENT: Archeological Find at Permafrost Core Station",
+      "Status": "Pending",
+      "Type": "Incident",
+      "CustomerEmail": "steve@zissou.edu",
+      "CompletionTargetDays": 1,
+      "EstimatedEffortPoints": 34,
+      "PriorityScore": 95,
+      "GerdaTags": "Discovery, Legal_Hold, UNESCO_Protocols",
+      "Comments": [
+        {
+          "Body": "We found structures that appear to be pre-Holocene. We need an immediate ruling on whether we can continue drilling or if the site must be preserved under UN mandate.",
+          "AuthorEmail": "steve@zissou.edu",
+          "CreatedDaysAgo": 0
+        },
+        {
+          "Body": "🤖 **GERDA Policy Engine**: Automatic Halt Recommended. Coordinates match registered 'UNESCO Heritage Potential' zone. Routing to Ethics Officer and Legal Counsel.",
+          "AuthorEmail": "gerda@ticketmasala.ai",
+          "CreatedDaysAgo": 0
+        }
+      ]
+    },
+    {
+      "Description": "URGENT: Budget Overrun Alert - Grant #9088",
+      "Status": "Pending",
+      "Type": "Incident",
+      "CustomerEmail": "steve@zissou.edu",
+      "CompletionTargetDays": 2,
+      "EstimatedEffortPoints": 21,
+      "PriorityScore": 88,
+      "GerdaTags": "Budget, Overrun, Finance, Grant9088",
+      "Comments": [
+        {
+          "Body": "Our field expenses for the Arctic expedition are 35% over budget. We need an emergency budget review or the expedition may need to be cut short.",
+          "AuthorEmail": "steve@zissou.edu",
+          "CreatedDaysAgo": 1
+        },
+        {
+          "Body": "🤖 **GERDA Budget Monitor**: Variance detected: +35.2% over approved budget. Root cause: Submersible fuel costs. Flagging for Financial Compliance Officer Ahmed.",
+          "AuthorEmail": "gerda@ticketmasala.ai",
+          "CreatedDaysAgo": 1
+        }
+      ]
+    },
+    {
+      "Description": "Ethics Complaint: Animal Testing in Grant #9102",
+      "Status": "Pending",
+      "Type": "Incident",
+      "CustomerEmail": "alan@turing.ac.uk",
+      "CompletionTargetDays": 3,
+      "EstimatedEffortPoints": 18,
+      "PriorityScore": 78,
+      "GerdaTags": "Ethics, AnimalTesting, Complaint",
+      "Comments": [
+        {
+          "Body": "An anonymous complaint was filed regarding animal testing protocols in our quantum computing project. We need an ethics review panel convened immediately.",
+          "AuthorEmail": "alan@turing.ac.uk",
+          "CreatedDaysAgo": 1
+        }
+      ]
+    },
+    {
+      "Description": "Request: Budget Extension for Grant #9105",
+      "Status": "Pending",
+      "Type": "ServiceRequest",
+      "CustomerEmail": "darwin@beagle.edu",
+      "CompletionTargetDays": 14,
+      "EstimatedEffortPoints": 8,
+      "PriorityScore": 25,
+      "GerdaTags": "Budget, Extension, Grant9105",
+      "Comments": [
+        {
+          "Body": "We need a 6-month budget extension for the Galapagos expedition. El Nino delayed our field season by 4 months.",
+          "AuthorEmail": "darwin@beagle.edu",
+          "CreatedDaysAgo": 3
+        }
+      ]
+    },
+    {
+      "Description": "Grant Application: 'Deep Ocean Exploration' - Prof. Zissou",
+      "Status": "Pending",
+      "Type": "ServiceRequest",
+      "CustomerEmail": "steve@zissou.edu",
+      "CompletionTargetDays": 30,
+      "EstimatedEffortPoints": 13,
+      "PriorityScore": 20,
+      "GerdaTags": "Application, Ocean, Exploration",
+      "Comments": [
+        {
+          "Body": "Submitting new grant application for deep ocean exploration using autonomous submersibles. Budget: $2.4M over 3 years.",
+          "AuthorEmail": "steve@zissou.edu",
+          "CreatedDaysAgo": 5
+        }
+      ]
+    },
+    {
+      "Description": "Data Sharing Request: Arctic Expedition Results",
+      "Status": "Pending",
+      "Type": "ServiceRequest",
+      "CustomerEmail": "marie@curie.fr",
+      "CompletionTargetDays": 7,
+      "EstimatedEffortPoints": 5,
+      "PriorityScore": 15,
+      "GerdaTags": "DataSharing, Arctic, Results",
+      "Comments": [
+        {
+          "Body": "Requesting access to permafrost data from Grant #9088 for our radioactivity correlation study. All data will be properly cited.",
+          "AuthorEmail": "marie@curie.fr",
+          "CreatedDaysAgo": 2
+        }
+      ]
+    },
+    {
+      "Description": "Urgent: Field Safety Incident - Galapagos",
+      "Status": "Pending",
+      "Type": "Incident",
+      "CustomerEmail": "darwin@beagle.edu",
+      "CompletionTargetDays": 1,
+      "EstimatedEffortPoints": 28,
+      "PriorityScore": 85,
+      "GerdaTags": "Safety, Incident, Galapagos",
+      "Comments": [
+        {
+          "Body": "A researcher was injured by a marine iguana bite. They are receiving treatment locally. Need to review field safety protocols.",
+          "AuthorEmail": "darwin@beagle.edu",
+          "CreatedDaysAgo": 0
+        }
+      ]
+    },
+    {
+      "Description": "Report Request: Impact Metrics for All Active Grants",
+      "Status": "Pending",
+      "Type": "ServiceRequest",
+      "CustomerEmail": "oseary@hennessey.fund",
+      "CompletionTargetDays": 14,
+      "EstimatedEffortPoints": 13,
+      "PriorityScore": 30,
+      "GerdaTags": "Report, Metrics, Impact, Board",
+      "Comments": [
+        {
+          "Body": "The board needs a comprehensive impact report for all active grants. Include: publications, citations, policy outcomes, and media coverage.",
+          "AuthorEmail": "oseary@hennessey.fund",
+          "CreatedDaysAgo": 3
+        }
+      ]
+    },
+    {
+      "Description": "Grant Application Review: 'Climate AI' - Dr. Turing",
+      "Status": "Pending",
+      "Type": "ServiceRequest",
+      "CustomerEmail": "alan@turing.ac.uk",
+      "CompletionTargetDays": 21,
+      "EstimatedEffortPoints": 18,
+      "PriorityScore": 22,
+      "GerdaTags": "Application, Review, ClimateAI",
+      "Comments": [
+        {
+          "Body": "Submitting application for Phase 2 funding. Phase 1 results are promising. Requesting $1.8M for 24 months.",
+          "AuthorEmail": "alan@turing.ac.uk",
+          "CreatedDaysAgo": 4
+        }
+      ]
+    },
+    {
+      "Description": "Compliance Alert: Missing Financial Report - Grant #9088",
+      "Status": "Pending",
+      "Type": "Incident",
+      "CustomerEmail": "ahmed@hennessey.fund",
+      "CompletionTargetDays": 3,
+      "EstimatedEffortPoints": 8,
+      "PriorityScore": 55,
+      "GerdaTags": "Compliance, FinancialReport, Missing",
+      "Comments": [
+        {
+          "Body": "Q3 financial report for Grant #9088 is overdue by 15 days. This is a compliance violation per grant agreement section 4.2.",
+          "AuthorEmail": "ahmed@hennessey.fund",
+          "CreatedDaysAgo": 1
+        }
+      ]
+    },
+    {
+      "Description": "Equipment Failure: PCR Machine at Field Station",
+      "Status": "Pending",
+      "Type": "Incident",
+      "CustomerEmail": "steve@zissou.edu",
+      "CompletionTargetDays": 5,
+      "EstimatedEffortPoints": 12,
+      "PriorityScore": 45,
+      "GerdaTags": "Equipment, PCR, Failure, Field",
+      "Comments": [
+        {
+          "Body": "The portable PCR machine at our Arctic field station has malfunctioned. We cannot process samples until it's repaired or replaced.",
+          "AuthorEmail": "steve@zissou.edu",
+          "CreatedDaysAgo": 2
+        }
+      ]
+    },
+    {
+      "Description": "Request: Ethics Pre-approval for New Protocol",
+      "Status": "Pending",
+      "Type": "ServiceRequest",
+      "CustomerEmail": "alan@turing.ac.uk",
+      "CompletionTargetDays": 21,
+      "EstimatedEffortPoints": 8,
+      "PriorityScore": 18,
+      "GerdaTags": "Ethics, PreApproval, Protocol",
+      "Comments": [
+        {
+          "Body": "We need ethics pre-approval for our new quantum algorithm testing protocol. No biological subjects involved, but we need to confirm data privacy compliance.",
+          "AuthorEmail": "alan@turing.ac.uk",
+          "CreatedDaysAgo": 3
+        }
+      ]
+    }
+  ],
+  "KnowledgeBaseArticles": [
+    {
+      "Title": "Arctic Sovereignty Laws (2025)",
+      "Content": "Summary of research rights in international waters.\n\n**Protocols:**\n* No permanent structures without UN approval.\n* Data sharing mandatory within 6 months of collection.\n* Environmental impact fee: $500 per ton of ice displaced.\n* Local community consent required for all land-based research.",
+      "Tags": "Law, Research, International, Arctic",
+      "AuthorEmail": "eleanor@hennessey.fund",
+      "CreatedDaysAgo": 60
+    },
+    {
+      "Title": "Bio-Scrubbing Procedures",
+      "Content": "Mandatory decontamination for all field samples.\n\n**Steps:**\n1. UV-C irradiation (120 seconds).\n2. Chemical bath (Solvents A and B).\n3. Vacuum seal for transport.\n\n*Violations result in immediate grant termination.*\n\n**Exceptions:**\n* None. All samples must be processed.",
+      "Tags": "Safety, Biology, Procedures, Field",
+      "AuthorEmail": "simone@hennessey.fund",
+      "CreatedDaysAgo": 15
+    },
+    {
+      "Title": "Grant Budget Guidelines",
+      "Content": "Guidelines for budgeting research grants.\n\n**Allowable Expenses:**\n* Personnel (salaries, benefits).\n* Equipment (under $5k per item).\n* Travel (economy class, per diem).\n* Materials and supplies.\n* Publication fees.\n\n**Non-allowable:**\n* Alcohol.\n* Entertainment.\n* Personal equipment.\n* Overhead > 15%.\n\n**Reporting:**\n* Quarterly financial reports.\n* Annual narrative reports.\n* Final report within 90 days.",
+      "Tags": "Budget, Guidelines, Finance, Grant",
+      "AuthorEmail": "ahmed@hennessey.fund",
+      "CreatedDaysAgo": 45
+    },
+    {
+      "Title": "Ethics Review Process",
+      "Content": "Step-by-step guide to the ethics review process.\n\n**Step 1: Pre-submission**\n* Check if ethics review is required.\n* Complete self-assessment checklist.\n* Consult with Ethics Officer.\n\n**Step 2: Application**\n* Complete ethics application form.\n* Attach all supporting documents.\n* Submit via portal.\n\n**Step 3: Review**\n* Initial screening (5 days).\n* Full committee review (14 days).\n* Possible revisions requested.\n\n**Step 4: Decision**\n* Approved, approved with conditions, or rejected.\n* Appeals process available.",
+      "Tags": "Ethics, Review, Process, Guidelines",
+      "AuthorEmail": "simone@hennessey.fund",
+      "CreatedDaysAgo": 30
+    },
+    {
+      "Title": "Field Research Safety Protocol",
+      "Content": "Safety protocols for all field research expeditions.\n\n**Pre-departure:**\n* Medical clearance (all team members).\n* Emergency contact registration.\n* Insurance verification.\n* Safety equipment check.\n\n**During expedition:**\n* Daily check-ins with base.\n* Weather monitoring.\n* Emergency beacon activation procedures.\n* First aid kit location.\n\n**Emergency contacts:**\n* Base: +44 20 7946 0101\n* Insurance: +44 20 7946 0200\n* Local embassy: varies by location.",
+      "Tags": "Safety, Field, Expedition, Protocol",
+      "AuthorEmail": "leonard@hennessey.fund",
+      "CreatedDaysAgo": 20
+    },
+    {
+      "Title": "Permit Application Guidelines",
+      "Content": "How to apply for research permits in various jurisdictions.\n\n**General Requirements:**\n* Research proposal summary.\n* CV of principal investigator.\n* Institutional affiliation.\n* Insurance certificate.\n* Data management plan.\n\n**Timeline:**\n* Apply minimum 6 months before fieldwork.\n* Some permits require 12 months.\n* Expedited processing available for emergencies ($500 fee).\n\n**Common Permits:**\n* UNESCO World Heritage sites.\n* National parks.\n* Marine protected areas.\n* Indigenous lands.",
+      "Tags": "Permit, Application, Guidelines, Legal",
+      "AuthorEmail": "james@hennessey.fund",
+      "CreatedDaysAgo": 25
+    },
+    {
+      "Title": "Impact Metrics and Reporting",
+      "Content": "How to measure and report research impact.\n\n**Quantitative Metrics:**\n* Publications (peer-reviewed, books, chapters).\n* Citations (Scopus, Web of Science, Google Scholar).\n* H-index.\n* Policy citations.\n* Media mentions.\n\n**Qualitative Metrics:**\n* Policy changes influenced.\n* Technology transfer.\n* Public engagement.\n* Capacity building.\n* Scientific breakthroughs.\n\n**Reporting Tools:**\n* Altmetric.\n* Dimensions.\n* Plum Analytics.",
+      "Tags": "Impact, Metrics, Reporting, Bibliometrics",
+      "AuthorEmail": "irina@hennessey.fund",
+      "CreatedDaysAgo": 18
+    },
+    {
+      "Title": "Grant Compliance Checklist",
+      "Content": "Checklist for maintaining grant compliance.\n\n**Financial:**\n* Quarterly reports submitted on time.\n* Budget variance < 10%.\n* No unallowable expenses.\n* Audit trail maintained.\n\n**Scientific:**\n* Milestones achieved.\n* Publications acknowledged.\n* Data sharing compliance.\n* IP management.\n\n**Administrative:**\n* Institutional approval current.\n* Insurance valid.\n* Permits current.\n* Team members compliant.",
+      "Tags": "Compliance, Checklist, Grant, Administration",
+      "AuthorEmail": "klaus@hennessey.fund",
+      "CreatedDaysAgo": 12
+    },
+    {
+      "Title": "Science Communication Best Practices",
+      "Content": "Guidelines for communicating research to the public.\n\n**Principles:**\n* Accuracy first.\n* Avoid jargon.\n* Use analogies.\n* Show, don't just tell.\n* Be honest about limitations.\n\n**Channels:**\n* Press releases.\n* Social media (Twitter/X, LinkedIn, Instagram).\n* Blog posts.\n* Podcasts.\n* YouTube videos.\n\n**Approval:**\n* All press releases must be approved by Communications Officer.\n* PI approval required for scientific claims.",
+      "Tags": "Communication, Science, PR, Public",
+      "AuthorEmail": "priya@hennessey.fund",
+      "CreatedDaysAgo": 8
+    },
+    {
+      "Title": "Equipment Procurement Process",
+      "Content": "Process for procuring research equipment.\n\n**Under $5,000:**\n* Direct purchase.\n* Three quotes required.\n* Purchase order from Finance.\n\n**$5,000 - $50,000:**\n* Competitive bidding.\n* Minimum 3 vendors.\n* Technical evaluation.\n* Approval from Financial Compliance.\n\n**Over $50,000:**\n* Formal tender process.\n* Independent evaluation committee.\n* Board approval required.\n* 6-month procurement timeline.",
+      "Tags": "Procurement, Equipment, Process, Finance",
+      "AuthorEmail": "klaus@hennessey.fund",
+      "CreatedDaysAgo": 14
+    },
+    {
+      "Title": "International Research Collaboration",
+      "Content": "Guidelines for international research partnerships.\n\n**Agreement Types:**\n* MOU (Memorandum of Understanding).\n* Collaboration Agreement.\n* Data Sharing Agreement.\n* IP Joint Ownership Agreement.\n\n**Key Considerations:**\n* Export control (dual-use technology).\n* Data protection (GDPR, etc.).\n* IP ownership.\n* Publication rights.\n* Conflict of interest.\n\n**Approval:**\n* Legal review mandatory.\n* Board approval for agreements >$100k.",
+      "Tags": "International, Collaboration, Legal, Agreement",
+      "AuthorEmail": "james@hennessey.fund",
+      "CreatedDaysAgo": 10
+    },
+    {
+      "Title": "Fellowship Application Evaluation Criteria",
+      "Content": "Criteria for evaluating fellowship applications.\n\n**Scientific Merit (40%):**\n* Research quality.\n* Innovation.\n* Feasibility.\n* Methodology.\n\n**Candidate Potential (30%):**\n* Academic record.\n* Research experience.\n* Letters of recommendation.\n* Career trajectory.\n\n**Impact (20%):**\n* Potential contribution to field.\n* Broader impacts.\n* Capacity building.\n\n**Diversity (10%):**\n* Underrepresented groups.\n* Geographic diversity.\n* Interdisciplinary approach.",
+      "Tags": "Fellowship, Evaluation, Criteria, Review",
+      "AuthorEmail": "maria@hennessey.fund",
+      "CreatedDaysAgo": 6
+    }
+  ]
 }

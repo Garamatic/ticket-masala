@@ -1,184 +1,923 @@
 {
-    "Admins": [
+  "Admins": [
+    {
+      "UserName": "sysadmin.arthur",
+      "Email": "arthur@liberty.tech",
+      "FirstName": "Arthur",
+      "LastName": "Sys",
+      "Phone": "+1 555 1010",
+      "Code": "OP-01"
+    },
+    {
+      "UserName": "cto.nova",
+      "Email": "nova@liberty.tech",
+      "FirstName": "Nova",
+      "LastName": "Prime",
+      "Phone": "+1 555 2020",
+      "Code": "CTO-001"
+    }
+  ],
+  "Employees": [
+    {
+      "UserName": "scrum.lucinda",
+      "Email": "lucinda@liberty.tech",
+      "FirstName": "Lucinda",
+      "LastName": "Force",
+      "Team": "Squad A",
+      "Level": "Lead",
+      "Language": "en-US",
+      "Specializations": "Agile, Product Support, Incident Command",
+      "MaxCapacityPoints": 80,
+      "Region": "Global"
+    },
+    {
+      "UserName": "sre.miles",
+      "Email": "miles@liberty.tech",
+      "FirstName": "Miles",
+      "LastName": "O'Brien",
+      "Team": "Platform Engineering",
+      "Level": "Expert",
+      "Language": "en-US",
+      "Specializations": "Kubernetes, Fly.io, Terraform, Prometheus",
+      "MaxCapacityPoints": 60,
+      "Region": "Dublin"
+    },
+    {
+      "UserName": "sec.sarah",
+      "Email": "sarah@liberty.tech",
+      "FirstName": "Sarah",
+      "LastName": "Connor",
+      "Team": "Security Audit",
+      "Level": "Lead",
+      "Language": "en-US",
+      "Specializations": "Pentesting, Compliance, RBAC, SOC2",
+      "MaxCapacityPoints": 50,
+      "Region": "Global"
+    },
+    {
+      "UserName": "dev.roebuck",
+      "Email": "roebuck@liberty.tech",
+      "FirstName": "Roebuck",
+      "LastName": "Coder",
+      "Team": "Squad A",
+      "Level": "Support",
+      "Language": "en-US",
+      "Specializations": "React, .NET Core, TypeScript",
+      "MaxCapacityPoints": 40,
+      "Region": "Remote"
+    },
+    {
+      "UserName": "data.ada",
+      "Email": "ada@liberty.tech",
+      "FirstName": "Ada",
+      "LastName": "Lovelace",
+      "Team": "Data Engineering",
+      "Level": "Expert",
+      "Language": "en-US",
+      "Specializations": "ClickHouse, ETL, Data Pipelines, Analytics",
+      "MaxCapacityPoints": 55,
+      "Region": "London"
+    },
+    {
+      "UserName": "design.ada",
+      "Email": "ada.design@liberty.tech",
+      "FirstName": "Ada",
+      "LastName": "Design",
+      "Team": "Design Team",
+      "Level": "Support",
+      "Language": "en-US",
+      "Specializations": "Figma, UI/UX, Design Systems",
+      "MaxCapacityPoints": 35,
+      "Region": "Remote"
+    },
+    {
+      "UserName": "backend.ozymandias",
+      "Email": "ozymandias@liberty.tech",
+      "FirstName": "Ozymandias",
+      "LastName": "Vought",
+      "Team": "Squad B",
+      "Level": "Lead",
+      "Language": "en-US",
+      "Specializations": "Go, Rust, Distributed Systems",
+      "MaxCapacityPoints": 65,
+      "Region": "Dublin"
+    },
+    {
+      "UserName": "mobile.sam",
+      "Email": "sam@liberty.tech",
+      "FirstName": "Sam",
+      "LastName": "Altman",
+      "Team": "Mobile Team",
+      "Level": "Support",
+      "Language": "en-US",
+      "Specializations": "iOS, Swift, React Native",
+      "MaxCapacityPoints": 40,
+      "Region": "Remote"
+    },
+    {
+      "UserName": "qa.pharoah",
+      "Email": "pharoah@liberty.tech",
+      "FirstName": "Pharoah",
+      "LastName": "Sanders",
+      "Team": "Quality Assurance",
+      "Level": "Expert",
+      "Language": "en-US",
+      "Specializations": "Playwright, Cypress, Test Automation",
+      "MaxCapacityPoints": 45,
+      "Region": "Dublin"
+    },
+    {
+      "UserName": "infra.samwise",
+      "Email": "samwise@liberty.tech",
+      "FirstName": "Samwise",
+      "LastName": "Gamgee",
+      "Team": "Infrastructure",
+      "Level": "Support",
+      "Language": "en-US",
+      "Specializations": "AWS, Terraform, Networking",
+      "MaxCapacityPoints": 50,
+      "Region": "Dublin"
+    },
+    {
+      "UserName": "gerda.system",
+      "Email": "gerda@ticketmasala.ai",
+      "FirstName": "GERDA",
+      "LastName": "AI",
+      "Team": "System Core",
+      "Level": "Lead",
+      "Language": "en-US",
+      "Specializations": "Anomaly Detection, Log Analysis, SLO Tracking",
+      "MaxCapacityPoints": 999,
+      "Region": "Global"
+    }
+  ],
+  "Customers": [
+    {
+      "UserName": "client.moses",
+      "Email": "moses@creative.agency",
+      "FirstName": "Moses",
+      "LastName": "Design",
+      "Phone": "+1 555 9999",
+      "Code": "CX-402"
+    },
+    {
+      "UserName": "cto.viktoria",
+      "Email": "viktoria@heavy-metal.io",
+      "FirstName": "Viktoria",
+      "LastName": "Steel",
+      "Phone": "+1 555 7777",
+      "Code": "VIP-01"
+    },
+    {
+      "UserName": "lead.alex",
+      "Email": "alex@startup.io",
+      "FirstName": "Alex",
+      "LastName": "Rapid",
+      "Phone": "+1 555 3333",
+      "Code": "START-99"
+    },
+    {
+      "UserName": "product.mira",
+      "Email": "mira@ecommerce.com",
+      "FirstName": "Mira",
+      "LastName": "Cart",
+      "Phone": "+1 555 4444",
+      "Code": "EC-101"
+    },
+    {
+      "UserName": "dev.ben",
+      "Email": "ben@saas.com",
+      "FirstName": "Ben",
+      "LastName": "Soft",
+      "Phone": "+1 555 5555",
+      "Code": "SAAS-88"
+    },
+    {
+      "UserName": "ops.chris",
+      "Email": "chris@fintech.org",
+      "FirstName": "Chris",
+      "LastName": "Bank",
+      "Phone": "+1 555 6666",
+      "Code": "FIN-202"
+    }
+  ],
+  "WorkContainers": [
+    {
+      "Name": "Operation 'Phoenix' - Cloud Migration",
+      "Description": "Zero-downtime migration of the production cluster from AWS to Fly.io for performance optimization and cost reduction.",
+      "Status": "InProgress",
+      "CustomerEmail": "viktoria@heavy-metal.io",
+      "ProjectManagerEmail": "lucinda@liberty.tech",
+      "CompletionTargetMonths": 3,
+      "WorkItems": [
         {
-            "UserName": "sysadmin.arthur",
-            "Email": "arthur@liberty.tech",
-            "FirstName": "Arthur",
-            "LastName": "Sys",
-            "Phone": "+1 555 1010",
-            "Code": "OP-01"
-        }
-    ],
-    "Employees": [
-        {
-            "UserName": "scrum.lucinda",
-            "Email": "lucinda@liberty.tech",
-            "FirstName": "Lucinda",
-            "LastName": "Force",
-            "Team": "Squad A",
-            "Level": "Lead",
-            "Language": "en-US",
-            "Specializations": "Agile, Product Support, Incident Command",
-            "MaxCapacityPoints": 80,
-            "Region": "Global"
+          "Description": "Terraform State Migration and Provider Update",
+          "Status": "Completed",
+          "Type": "Task",
+          "ResponsibleEmail": "miles@liberty.tech",
+          "CompletionTargetDays": 5,
+          "CompletionDaysAgo": 8,
+          "EstimatedEffortPoints": 13,
+          "PriorityScore": 15,
+          "GerdaTags": "Infra, Automation, Terraform",
+          "Comments": [
+            {
+              "Body": "State file locked and successfully migrated to the new backend. No drift detected.",
+              "AuthorEmail": "miles@liberty.tech",
+              "CreatedDaysAgo": 9
+            }
+          ]
         },
         {
-            "UserName": "sre.miles",
-            "Email": "miles@liberty.tech",
-            "FirstName": "Miles",
-            "LastName": "O'Brien",
-            "Team": "Platform Engineering",
-            "Level": "Expert",
-            "Language": "en-US",
-            "Specializations": "Kubernetes, Fly.io, Terraform",
-            "MaxCapacityPoints": 60,
-            "Region": "Dublin"
+          "Description": "Security Audit of RBAC Policies (New Region)",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "sarah@liberty.tech",
+          "CompletionTargetDays": 7,
+          "EstimatedEffortPoints": 8,
+          "PriorityScore": 12,
+          "GerdaTags": "Compliance, Security, RBAC",
+          "Comments": [
+            {
+              "Body": "Found 3 orphan service accounts. Need cleanup before production rollout.",
+              "AuthorEmail": "sarah@liberty.tech",
+              "CreatedDaysAgo": 1
+            },
+            {
+              "Body": "🤖 **GERDA Insights**: Potential privilege escalation path detected in 'Deployment-Bot' role. Similarity to CVE-2024-XXXX: 88%. Audit recommended for secret exposure.",
+              "AuthorEmail": "gerda@ticketmasala.ai",
+              "CreatedDaysAgo": 0
+            }
+          ]
         },
         {
-            "UserName": "sec.sarah",
-            "Email": "sarah@liberty.tech",
-            "FirstName": "Sarah",
-            "LastName": "Connor",
-            "Team": "Security Audit",
-            "Level": "Lead",
-            "Language": "en-US",
-            "Specializations": "Pentesting, Compliance, RBAC",
-            "MaxCapacityPoints": 50,
-            "Region": "Global"
+          "Description": "Database Migration: ClickHouse Cluster Setup",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "ada@liberty.tech",
+          "CompletionTargetDays": 14,
+          "EstimatedEffortPoints": 13,
+          "PriorityScore": 18,
+          "GerdaTags": "Data, ClickHouse, Migration",
+          "Comments": [
+            {
+              "Body": "ClickHouse cluster is provisioned. Replicating data from old Postgres. Estimated 2TB to migrate.",
+              "AuthorEmail": "ada@liberty.tech",
+              "CreatedDaysAgo": 2
+            }
+          ]
         },
         {
-            "UserName": "dev.roebuck",
-            "Email": "roebuck@liberty.tech",
-            "FirstName": "Roebuck",
-            "LastName": "Coder",
-            "Team": "Squad A",
-            "Level": "Support",
-            "Language": "en-US",
-            "Specializations": "React, .NET Core",
-            "MaxCapacityPoints": 40,
-            "Region": "Remote"
+          "Description": "CDN Cutover and DNS Update",
+          "Status": "Assigned",
+          "Type": "Task",
+          "ResponsibleEmail": "miles@liberty.tech",
+          "CompletionTargetDays": 3,
+          "EstimatedEffortPoints": 5,
+          "PriorityScore": 22,
+          "GerdaTags": "CDN, DNS, Cutover"
         },
         {
-            "UserName": "gerda.system",
-            "Email": "gerda@ticketmasala.ai",
-            "FirstName": "GERDA",
-            "LastName": "AI",
-            "Team": "System Core",
-            "Level": "Lead",
-            "Language": "en-US",
-            "Specializations": "Anomaly Detection, Log Analysis, SLO Tracking",
-            "MaxCapacityPoints": 999,
-            "Region": "Global"
+          "Description": "Load Testing and Performance Validation",
+          "Status": "Pending",
+          "Type": "Task",
+          "ResponsibleEmail": "pharoah@liberty.tech",
+          "CompletionTargetDays": 7,
+          "EstimatedEffortPoints": 8,
+          "PriorityScore": 16,
+          "GerdaTags": "Testing, Performance, LoadTest"
         }
-    ],
-    "Customers": [
+      ]
+    },
+    {
+      "Name": "SaaS Platform v3.0 Release",
+      "Description": "Major platform release with new dashboard, real-time collaboration, and AI-powered search.",
+      "Status": "InProgress",
+      "CustomerEmail": "ben@saas.com",
+      "ProjectManagerEmail": "lucinda@liberty.tech",
+      "CompletionTargetMonths": 4,
+      "WorkItems": [
         {
-            "UserName": "client.moses",
-            "Email": "moses@creative.agency",
-            "FirstName": "Moses",
-            "LastName": "Design",
-            "Phone": "+1 555 9999",
-            "Code": "CX-402"
+          "Description": "Real-time Collaboration Engine (WebSocket)",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "ozymandias@liberty.tech",
+          "CompletionTargetDays": 21,
+          "EstimatedEffortPoints": 21,
+          "PriorityScore": 28,
+          "GerdaTags": "Backend, WebSocket, Real-time",
+          "Comments": [
+            {
+              "Body": "WebSocket server is handling 50k concurrent connections in staging. Need to optimize for production scale.",
+              "AuthorEmail": "ozymandias@liberty.tech",
+              "CreatedDaysAgo": 2
+            }
+          ]
         },
         {
-            "UserName": "cto.viktoria",
-            "Email": "viktoria@heavy-metal.io",
-            "FirstName": "Viktoria",
-            "LastName": "Steel",
-            "Phone": "+1 555 7777",
-            "Code": "VIP-01"
-        }
-    ],
-    "WorkContainers": [
-        {
-            "Name": "Operation 'Phoenix' - Cloud Migration",
-            "Description": "Zero-downtime migration of the production cluster from AWS to Fly.io for performance optimization.",
-            "Status": "Active",
-            "CustomerEmail": "viktoria@heavy-metal.io",
-            "ProjectManagerEmail": "lucinda@liberty.tech",
-            "CompletionTargetMonths": 3,
-            "WorkItems": [
-                {
-                    "Description": "Terraform State Migration & Provider Update",
-                    "Status": "Closed",
-                    "Type": "Task",
-                    "ResponsibleEmail": "miles@liberty.tech",
-                    "CompletionTargetDays": 5,
-                    "CompletionDaysAgo": 8,
-                    "EstimatedEffortPoints": 13,
-                    "PriorityScore": 15,
-                    "GerdaTags": "Infra, Automation",
-                    "Comments": [
-                        {
-                            "Body": "State file locked and successfully migrated to the new backend. No drift detected.",
-                            "AuthorEmail": "miles@liberty.tech",
-                            "CreatedDaysAgo": 9
-                        }
-                    ]
-                },
-                {
-                    "Description": "Security Audit of RBAC Policies (New Region)",
-                    "Status": "In_Progress",
-                    "Type": "Task",
-                    "ResponsibleEmail": "sarah@liberty.tech",
-                    "CompletionTargetDays": 7,
-                    "EstimatedEffortPoints": 8,
-                    "PriorityScore": 12,
-                    "GerdaTags": "Compliance, Security",
-                    "Comments": [
-                        {
-                            "Body": "Found 3 orphan service accounts. Need cleanup before production rollout.",
-                            "AuthorEmail": "sarah@liberty.tech",
-                            "CreatedDaysAgo": 1
-                        },
-                        {
-                            "Body": "🤖 **GERDA Insights**: Potential privilege escalation path detected in 'Deployment-Bot' role. Similarity to CVE-2024-XXXX: 88%. Audit recommended for secret exposure.",
-                            "AuthorEmail": "gerda@ticketmasala.ai",
-                            "CreatedDaysAgo": 0
-                        }
-                    ]
-                }
-            ]
-        }
-    ],
-    "UnassignedWorkItems": [
-        {
-            "Description": "CRITICAL: Latency Spike - API Gateway (p99 > 8s)",
-            "Status": "New",
-            "Type": "Incident",
-            "CustomerEmail": "moses@creative.agency",
-            "CompletionTargetDays": 1,
-            "EstimatedEffortPoints": 21,
-            "PriorityScore": 88,
-            "GerdaTags": "Performance, Blocker, Production",
-            "Comments": [
-                {
-                    "Body": "Our design team is unable to upload assets. The API is timing out constantly. This is blocking our client delivery.",
-                    "AuthorEmail": "moses@creative.agency",
-                    "CreatedDaysAgo": 0
-                },
-                {
-                    "Body": "🤖 **GERDA Anomaly Engine**: Traffic wave detected from IP 192.x.x.x. Correlated with database lock in 'assets_table'. Autoscaling group reached max capacity. Suggesting immediate cache warmup for region 'ams'.",
-                    "AuthorEmail": "gerda@ticketmasala.ai",
-                    "CreatedDaysAgo": 0
-                }
-            ]
-        }
-    ],
-    "KnowledgeBaseArticles": [
-        {
-            "Title": "Fly.io Deployment Best Practices",
-            "Content": "**Core Principles:**\n1. Multi-region deployments are mandatory for tier-1 apps.\n2. Use WireGuard for secure cross-region DB access.\n3. Keep Docker images < 200MB.\n\n**Autoscale Config:**\nAdd `[http_service.concurrency]` to fly.toml with `soft_limit = 20`.",
-            "Tags": "Infra, Deployment, DevOps",
-            "AuthorEmail": "miles@liberty.tech",
-            "CreatedDaysAgo": 15
+          "Description": "AI-Powered Search Implementation",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "ada@liberty.tech",
+          "CompletionTargetDays": 14,
+          "EstimatedEffortPoints": 13,
+          "PriorityScore": 25,
+          "GerdaTags": "AI, Search, Data",
+          "Comments": [
+            {
+              "Body": "Vector search index is built. Embedding model (all-MiniLM-L6-v2) is deployed. Query latency is 120ms.",
+              "AuthorEmail": "ada@liberty.tech",
+              "CreatedDaysAgo": 1
+            }
+          ]
         },
         {
-            "Title": "RBAC Troubleshooting Guide",
-            "Content": "How to debug 'Access Denied' errors in the new portal.\n\n**Steps:**\n* Check user's `OrganizationId` claim.\n* Verify `TenantAdmin` flag in the JWT.\n* Run `just verify-permissions <Email>` in the CLI.",
-            "Tags": "Security, Auth, Support",
-            "AuthorEmail": "sarah@liberty.tech",
-            "CreatedDaysAgo": 30
+          "Description": "New Dashboard UI with Dark Mode",
+          "Status": "Assigned",
+          "Type": "Task",
+          "ResponsibleEmail": "ada.design@liberty.tech",
+          "CompletionTargetDays": 14,
+          "EstimatedEffortPoints": 8,
+          "PriorityScore": 15,
+          "GerdaTags": "UI, Design, Dashboard"
+        },
+        {
+          "Description": "Mobile App v3.0 - iOS Release",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "sam@liberty.tech",
+          "CompletionTargetDays": 21,
+          "EstimatedEffortPoints": 13,
+          "PriorityScore": 20,
+          "GerdaTags": "Mobile, iOS, Release",
+          "Comments": [
+            {
+              "Body": "App is in TestFlight. Beta users reporting positive feedback. One crash on iOS 17 to investigate.",
+              "AuthorEmail": "sam@liberty.tech",
+              "CreatedDaysAgo": 3
+            }
+          ]
+        },
+        {
+          "Description": "E2E Test Suite for v3.0 Features",
+          "Status": "Assigned",
+          "Type": "Task",
+          "ResponsibleEmail": "pharoah@liberty.tech",
+          "CompletionTargetDays": 14,
+          "EstimatedEffortPoints": 8,
+          "PriorityScore": 14,
+          "GerdaTags": "Testing, E2E, QA"
         }
-    ]
+      ]
+    },
+    {
+      "Name": "Security Hardening Q1 2026",
+      "Description": "Comprehensive security hardening initiative including SOC 2 preparation, penetration testing, and infrastructure audit.",
+      "Status": "InProgress",
+      "CustomerEmail": "chris@fintech.org",
+      "ProjectManagerEmail": "sarah@liberty.tech",
+      "CompletionTargetMonths": 6,
+      "WorkItems": [
+        {
+          "Description": "SOC 2 Type II Audit Preparation",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "sarah@liberty.tech",
+          "CompletionTargetDays": 30,
+          "EstimatedEffortPoints": 21,
+          "PriorityScore": 30,
+          "GerdaTags": "SOC2, Compliance, Audit",
+          "Comments": [
+            {
+              "Body": "Documentation is 70% complete. Need to finalize evidence for CC6.1 and CC6.2 controls.",
+              "AuthorEmail": "sarah@liberty.tech",
+              "CreatedDaysAgo": 2
+            }
+          ]
+        },
+        {
+          "Description": "External Penetration Test",
+          "Status": "Assigned",
+          "Type": "Task",
+          "ResponsibleEmail": "sarah@liberty.tech",
+          "CompletionTargetDays": 14,
+          "EstimatedEffortPoints": 5,
+          "PriorityScore": 25,
+          "GerdaTags": "Pentest, Security, External"
+        },
+        {
+          "Description": "Secret Rotation Automation",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "miles@liberty.tech",
+          "CompletionTargetDays": 10,
+          "EstimatedEffortPoints": 8,
+          "PriorityScore": 18,
+          "GerdaTags": "Secrets, Automation, Security",
+          "Comments": [
+            {
+              "Body": "HashiCorp Vault is configured. Auto-rotation policy: 90 days for API keys, 30 days for DB credentials.",
+              "AuthorEmail": "miles@liberty.tech",
+              "CreatedDaysAgo": 1
+            }
+          ]
+        },
+        {
+          "Description": "WAF Rule Optimization",
+          "Status": "Pending",
+          "Type": "Task",
+          "ResponsibleEmail": "samwise@liberty.tech",
+          "CompletionTargetDays": 7,
+          "EstimatedEffortPoints": 5,
+          "PriorityScore": 12,
+          "GerdaTags": "WAF, Security, Networking"
+        }
+      ]
+    },
+    {
+      "Name": "Data Platform Modernization",
+      "Description": "Migration from legacy ETL pipelines to modern streaming architecture with real-time analytics.",
+      "Status": "InProgress",
+      "CustomerEmail": "ben@saas.com",
+      "ProjectManagerEmail": "ada@liberty.tech",
+      "CompletionTargetMonths": 8,
+      "WorkItems": [
+        {
+          "Description": "Kafka Cluster Setup and Configuration",
+          "Status": "Completed",
+          "Type": "Task",
+          "ResponsibleEmail": "ada@liberty.tech",
+          "CompletionTargetDays": 14,
+          "CompletionDaysAgo": 5,
+          "EstimatedEffortPoints": 13,
+          "PriorityScore": 20,
+          "GerdaTags": "Kafka, Streaming, Data",
+          "Comments": [
+            {
+              "Body": "Kafka cluster is live with 3 brokers. Replication factor 3, min ISR 2. Throughput: 150k msg/sec.",
+              "AuthorEmail": "ada@liberty.tech",
+              "CreatedDaysAgo": 5
+            }
+          ]
+        },
+        {
+          "Description": "Real-time Analytics Dashboard",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "roebuck@liberty.tech",
+          "CompletionTargetDays": 21,
+          "EstimatedEffortPoints": 13,
+          "PriorityScore": 18,
+          "GerdaTags": "Analytics, Dashboard, Real-time",
+          "Comments": [
+            {
+              "Body": "Dashboard is consuming Kafka streams. Charts are updating every 5 seconds. Need to add filtering capabilities.",
+              "AuthorEmail": "roebuck@liberty.tech",
+              "CreatedDaysAgo": 2
+            }
+          ]
+        },
+        {
+          "Description": "Data Pipeline Migration: Batch to Streaming",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "ada@liberty.tech",
+          "CompletionTargetDays": 30,
+          "EstimatedEffortPoints": 21,
+          "PriorityScore": 22,
+          "GerdaTags": "ETL, Migration, Streaming"
+        },
+        {
+          "Description": "Data Quality Monitoring Setup",
+          "Status": "Pending",
+          "Type": "Task",
+          "ResponsibleEmail": "ada@liberty.tech",
+          "CompletionTargetDays": 14,
+          "EstimatedEffortPoints": 8,
+          "PriorityScore": 14,
+          "GerdaTags": "DataQuality, Monitoring, Alerts"
+        }
+      ]
+    },
+    {
+      "Name": "Infrastructure Cost Optimization",
+      "Description": "Reduce cloud infrastructure costs by 30% through right-sizing, reserved instances, and spot instance usage.",
+      "Status": "InProgress",
+      "CustomerEmail": "viktoria@heavy-metal.io",
+      "ProjectManagerEmail": "miles@liberty.tech",
+      "CompletionTargetMonths": 3,
+      "WorkItems": [
+        {
+          "Description": "Right-sizing Analysis and Recommendations",
+          "Status": "Completed",
+          "Type": "Task",
+          "ResponsibleEmail": "samwise@liberty.tech",
+          "CompletionTargetDays": 7,
+          "CompletionDaysAgo": 10,
+          "EstimatedEffortPoints": 5,
+          "PriorityScore": 12,
+          "GerdaTags": "Cost, Right-sizing, Analysis",
+          "Comments": [
+            {
+              "Body": "Analysis complete. 25% of instances are over-provisioned. Potential savings: $12k/month.",
+              "AuthorEmail": "samwise@liberty.tech",
+              "CreatedDaysAgo": 10
+            }
+          ]
+        },
+        {
+          "Description": "Reserved Instance Purchase Strategy",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "samwise@liberty.tech",
+          "CompletionTargetDays": 14,
+          "EstimatedEffortPoints": 5,
+          "PriorityScore": 10,
+          "GerdaTags": "Cost, RI, Strategy",
+          "Comments": [
+            {
+              "Body": "Purchased 1-year convertible RIs for baseline compute. Additional savings: $8k/month.",
+              "AuthorEmail": "samwise@liberty.tech",
+              "CreatedDaysAgo": 3
+            }
+          ]
+        },
+        {
+          "Description": "Spot Instance Integration for CI/CD",
+          "Status": "Assigned",
+          "Type": "Task",
+          "ResponsibleEmail": "miles@liberty.tech",
+          "CompletionTargetDays": 7,
+          "EstimatedEffortPoints": 8,
+          "PriorityScore": 14,
+          "GerdaTags": "Cost, Spot, CI/CD"
+        }
+      ]
+    },
+    {
+      "Name": "Customer Support Portal Redesign",
+      "Description": "Complete redesign of the customer support portal with improved self-service, knowledge base integration, and chat.",
+      "Status": "InProgress",
+      "CustomerEmail": "moses@creative.agency",
+      "ProjectManagerEmail": "ada.design@liberty.tech",
+      "CompletionTargetMonths": 4,
+      "WorkItems": [
+        {
+          "Description": "User Research and Wireframing",
+          "Status": "Completed",
+          "Type": "Task",
+          "ResponsibleEmail": "ada.design@liberty.tech",
+          "CompletionTargetDays": 14,
+          "CompletionDaysAgo": 15,
+          "EstimatedEffortPoints": 5,
+          "PriorityScore": 10,
+          "GerdaTags": "Design, Research, UX",
+          "Comments": [
+            {
+              "Body": "User interviews completed with 12 customers. Key insight: 80% want better search in KB.",
+              "AuthorEmail": "ada.design@liberty.tech",
+              "CreatedDaysAgo": 15
+            }
+          ]
+        },
+        {
+          "Description": "High-fidelity Prototypes and Design System",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "ada.design@liberty.tech",
+          "CompletionTargetDays": 14,
+          "EstimatedEffortPoints": 8,
+          "PriorityScore": 12,
+          "GerdaTags": "Design, Prototype, Figma"
+        },
+        {
+          "Description": "Frontend Implementation - React Components",
+          "Status": "Assigned",
+          "Type": "Task",
+          "ResponsibleEmail": "roebuck@liberty.tech",
+          "CompletionTargetDays": 21,
+          "EstimatedEffortPoints": 13,
+          "PriorityScore": 15,
+          "GerdaTags": "Frontend, React, Implementation"
+        },
+        {
+          "Description": "Chat Widget Integration",
+          "Status": "Pending",
+          "Type": "Task",
+          "ResponsibleEmail": "sam@liberty.tech",
+          "CompletionTargetDays": 14,
+          "EstimatedEffortPoints": 8,
+          "PriorityScore": 12,
+          "GerdaTags": "Chat, Widget, Integration"
+        }
+      ]
+    }
+  ],
+  "UnassignedWorkItems": [
+    {
+      "Description": "CRITICAL: Latency Spike - API Gateway (p99 > 8s)",
+      "Status": "Pending",
+      "Type": "Incident",
+      "CustomerEmail": "moses@creative.agency",
+      "CompletionTargetDays": 1,
+      "EstimatedEffortPoints": 21,
+      "PriorityScore": 88,
+      "GerdaTags": "Performance, Blocker, Production",
+      "Comments": [
+        {
+          "Body": "Our design team is unable to upload assets. The API is timing out constantly. This is blocking our client delivery.",
+          "AuthorEmail": "moses@creative.agency",
+          "CreatedDaysAgo": 0
+        },
+        {
+          "Body": "🤖 **GERDA Anomaly Engine**: Traffic wave detected from IP 192.x.x.x. Correlated with database lock in 'assets_table'. Autoscaling group reached max capacity. Suggesting immediate cache warmup for region 'ams'.",
+          "AuthorEmail": "gerda@ticketmasala.ai",
+          "CreatedDaysAgo": 0
+        }
+      ]
+    },
+    {
+      "Description": "CRITICAL: Database Connection Pool Exhaustion",
+      "Status": "Pending",
+      "Type": "Incident",
+      "CustomerEmail": "viktoria@heavy-metal.io",
+      "CompletionTargetDays": 1,
+      "EstimatedEffortPoints": 34,
+      "PriorityScore": 95,
+      "GerdaTags": "Database, Critical, PoolExhaustion",
+      "Comments": [
+        {
+          "Body": "All database connections are exhausted. Application is returning 500 errors. Need immediate intervention.",
+          "AuthorEmail": "viktoria@heavy-metal.io",
+          "CreatedDaysAgo": 0
+        },
+        {
+          "Body": "🤖 **GERDA Crisis Autopilot**: Connection pool saturation detected. 250/250 connections active. 47 queries waiting >30s. Auto-recommendation: restart connection pool and investigate connection leaks.",
+          "AuthorEmail": "gerda@ticketmasala.ai",
+          "CreatedDaysAgo": 0
+        }
+      ]
+    },
+    {
+      "Description": "URGENT: Kubernetes Pod CrashLoop - auth-service",
+      "Status": "Pending",
+      "Type": "Incident",
+      "CustomerEmail": "ben@saas.com",
+      "CompletionTargetDays": 2,
+      "EstimatedEffortPoints": 18,
+      "PriorityScore": 82,
+      "GerdaTags": "Kubernetes, CrashLoop, Auth",
+      "Comments": [
+        {
+          "Body": "auth-service pods are in CrashLoopBackOff. Users cannot log in. This is affecting all customers.",
+          "AuthorEmail": "ben@saas.com",
+          "CreatedDaysAgo": 1
+        },
+        {
+          "Body": "🤖 **GERDA Analysis**: CrashLoop pattern: OOMKilled. Memory limit 256MB insufficient after recent JWT library update. Recommendation: increase memory limit to 512MB.",
+          "AuthorEmail": "gerda@ticketmasala.ai",
+          "CreatedDaysAgo": 1
+        }
+      ]
+    },
+    {
+      "Description": "Feature Request: Webhook retry with exponential backoff",
+      "Status": "Pending",
+      "Type": "ServiceRequest",
+      "CustomerEmail": "alex@startup.io",
+      "CompletionTargetDays": 14,
+      "EstimatedEffortPoints": 13,
+      "PriorityScore": 25,
+      "GerdaTags": "Feature, Webhook, Retry",
+      "Comments": [
+        {
+          "Body": "Our webhook endpoint occasionally goes down for maintenance. We need the platform to retry with exponential backoff instead of immediate failure.",
+          "AuthorEmail": "alex@startup.io",
+          "CreatedDaysAgo": 3
+        }
+      ]
+    },
+    {
+      "Description": "SSL Certificate Expiration Warning - 7 days remaining",
+      "Status": "Pending",
+      "Type": "Incident",
+      "CustomerEmail": "chris@fintech.org",
+      "CompletionTargetDays": 3,
+      "EstimatedEffortPoints": 8,
+      "PriorityScore": 65,
+      "GerdaTags": "SSL, Certificate, Expiration",
+      "Comments": [
+        {
+          "Body": "SSL certificate for api.fintech.org expires in 7 days. Auto-renewal seems to have failed. Please investigate.",
+          "AuthorEmail": "chris@fintech.org",
+          "CreatedDaysAgo": 1
+        }
+      ]
+    },
+    {
+      "Description": "Data Export Request - GDPR Right to Portability",
+      "Status": "Pending",
+      "Type": "ServiceRequest",
+      "CustomerEmail": "mira@ecommerce.com",
+      "CompletionTargetDays": 7,
+      "EstimatedEffortPoints": 13,
+      "PriorityScore": 35,
+      "GerdaTags": "GDPR, Export, DataPortability",
+      "Comments": [
+        {
+          "Body": "Customer requested full data export under GDPR Article 20. Need all personal data in machine-readable format (JSON).",
+          "AuthorEmail": "mira@ecommerce.com",
+          "CreatedDaysAgo": 2
+        }
+      ]
+    },
+    {
+      "Description": "Mobile app crashes on Android 14 - reported by multiple users",
+      "Status": "Pending",
+      "Type": "Incident",
+      "CustomerEmail": "mira@ecommerce.com",
+      "CompletionTargetDays": 3,
+      "EstimatedEffortPoints": 15,
+      "PriorityScore": 58,
+      "GerdaTags": "Mobile, Android, Crash",
+      "Comments": [
+        {
+          "Body": "Our customers are reporting app crashes on Android 14 devices. The crash happens when opening the checkout page.",
+          "AuthorEmail": "mira@ecommerce.com",
+          "CreatedDaysAgo": 1
+        }
+      ]
+    },
+    {
+      "Description": "Request for SOC 2 report access",
+      "Status": "Pending",
+      "Type": "ServiceRequest",
+      "CustomerEmail": "chris@fintech.org",
+      "CompletionTargetDays": 5,
+      "EstimatedEffortPoints": 3,
+      "PriorityScore": 20,
+      "GerdaTags": "SOC2, Compliance, Report",
+      "Comments": [
+        {
+          "Body": "Our auditors need access to your SOC 2 Type II report for our vendor assessment. Can you share it under NDA?",
+          "AuthorEmail": "chris@fintech.org",
+          "CreatedDaysAgo": 3
+        }
+      ]
+    },
+    {
+      "Description": "Feature Request: Role-based access control for team invites",
+      "Status": "Pending",
+      "Type": "ServiceRequest",
+      "CustomerEmail": "alex@startup.io",
+      "CompletionTargetDays": 21,
+      "EstimatedEffortPoints": 18,
+      "PriorityScore": 22,
+      "GerdaTags": "Feature, RBAC, Team",
+      "Comments": [
+        {
+          "Body": "We need the ability to assign roles when inviting team members (Admin, Editor, Viewer). Currently everyone gets Admin.",
+          "AuthorEmail": "alex@startup.io",
+          "CreatedDaysAgo": 5
+        }
+      ]
+    },
+    {
+      "Description": "Email delivery failure - SendGrid reputation drop",
+      "Status": "Pending",
+      "Type": "Incident",
+      "CustomerEmail": "ben@saas.com",
+      "CompletionTargetDays": 2,
+      "EstimatedEffortPoints": 12,
+      "PriorityScore": 72,
+      "GerdaTags": "Email, SendGrid, Delivery",
+      "Comments": [
+        {
+          "Body": "Our transactional emails are bouncing. SendGrid reputation score dropped to 78. Need to investigate bounce rate spike.",
+          "AuthorEmail": "ben@saas.com",
+          "CreatedDaysAgo": 1
+        }
+      ]
+    },
+    {
+      "Description": "API Rate Limit Increase Request",
+      "Status": "Pending",
+      "Type": "ServiceRequest",
+      "CustomerEmail": "viktoria@heavy-metal.io",
+      "CompletionTargetDays": 7,
+      "EstimatedEffortPoints": 5,
+      "PriorityScore": 18,
+      "GerdaTags": "API, RateLimit, Enterprise",
+      "Comments": [
+        {
+          "Body": "We are hitting the 1000 req/min rate limit during our peak hours. Need increase to 5000 req/min for Enterprise tier.",
+          "AuthorEmail": "viktoria@heavy-metal.io",
+          "CreatedDaysAgo": 2
+        }
+      ]
+    },
+    {
+      "Description": "Memory leak in background job processor",
+      "Status": "Pending",
+      "Type": "Incident",
+      "CustomerEmail": "ben@saas.com",
+      "CompletionTargetDays": 5,
+      "EstimatedEffortPoints": 21,
+      "PriorityScore": 68,
+      "GerdaTags": "MemoryLeak, BackgroundJob, Performance",
+      "Comments": [
+        {
+          "Body": "Background job processor memory usage grows 200MB/hour. After 12 hours it OOMs and restarts. Need heap dump analysis.",
+          "AuthorEmail": "ben@saas.com",
+          "CreatedDaysAgo": 2
+        }
+      ]
+    }
+  ],
+  "KnowledgeBaseArticles": [
+    {
+      "Title": "Fly.io Deployment Best Practices",
+      "Content": "**Core Principles:**\n1. Multi-region deployments are mandatory for tier-1 apps.\n2. Use WireGuard for secure cross-region DB access.\n3. Keep Docker images < 200MB.\n\n**Autoscale Config:**\nAdd `[http_service.concurrency]` to fly.toml with `soft_limit = 20`.\n\n**Monitoring:**\n* Use Fly's built-in metrics.\n* Set up external alerting with Prometheus.\n* Health checks: TCP + HTTP endpoint.",
+      "Tags": "Infra, Deployment, DevOps, Fly.io",
+      "AuthorEmail": "miles@liberty.tech",
+      "CreatedDaysAgo": 15
+    },
+    {
+      "Title": "RBAC Troubleshooting Guide",
+      "Content": "How to debug 'Access Denied' errors in the new portal.\n\n**Steps:**\n* Check user's `OrganizationId` claim.\n* Verify `TenantAdmin` flag in the JWT.\n* Run `just verify-permissions <Email>` in the CLI.\n\n**Common Issues:**\n1. Orphan service accounts with old roles.\n2. Missing `ResourceAction` claims.\n3. Caching delay in permission resolution.",
+      "Tags": "Security, Auth, Support, RBAC",
+      "AuthorEmail": "sarah@liberty.tech",
+      "CreatedDaysAgo": 30
+    },
+    {
+      "Title": "Kubernetes Debugging Playbook",
+      "Content": "Common Kubernetes issues and how to debug them.\n\n**Pod CrashLoopBackOff:**\n1. `kubectl logs <pod>` - check application logs.\n2. `kubectl describe pod <pod>` - check events.\n3. `kubectl get events` - cluster-wide events.\n4. Check resource limits (OOMKilled).\n\n**Service Unavailable:**\n1. Verify endpoints: `kubectl get endpoints`.\n2. Check ingress rules.\n3. Verify DNS resolution.\n\n**High Memory Usage:**\n1. Profile application memory.\n2. Check for goroutine leaks.\n3. Review cache sizes.",
+      "Tags": "Kubernetes, Debugging, Playbook, SRE",
+      "AuthorEmail": "miles@liberty.tech",
+      "CreatedDaysAgo": 45
+    },
+    {
+      "Title": "ClickHouse Performance Tuning",
+      "Content": "Performance optimization for ClickHouse analytics.\n\n**Query Optimization:**\n* Use `PREWHERE` instead of `WHERE` for large tables.\n* Avoid `SELECT *` - specify columns.\n* Use `LIMIT` with `ORDER BY`.\n\n**Schema Design:**\n* Use `MergeTree` engine for time-series.\n* Choose partition key carefully (usually date).\n* Use `ORDER BY` for primary key.\n\n**Hardware:**\n* SSD is mandatory for hot data.\n* RAM should be 2x dataset size for caching.\n* CPU: more cores > faster cores.",
+      "Tags": "ClickHouse, Database, Performance, Data",
+      "AuthorEmail": "ada@liberty.tech",
+      "CreatedDaysAgo": 20
+    },
+    {
+      "Title": "React Performance Best Practices",
+      "Content": "Performance optimization for React applications.\n\n**Rendering:**\n* Use `React.memo` for pure components.\n* Use `useMemo` for expensive computations.\n* Use `useCallback` for event handlers.\n\n**State Management:**\n* Keep state close to where it's used.\n* Avoid prop drilling.\n* Use context sparingly.\n\n**Bundle Size:**\n* Tree-shake unused code.\n* Code-split routes.\n* Use dynamic imports.",
+      "Tags": "React, Frontend, Performance, JavaScript",
+      "AuthorEmail": "roebuck@liberty.tech",
+      "CreatedDaysAgo": 35
+    },
+    {
+      "Title": "SOC 2 Compliance Checklist",
+      "Content": "Checklist for SOC 2 Type II compliance preparation.\n\n**CC6.1 - Logical Access Security:**\n* MFA enabled for all users.\n* Role-based access control.\n* Regular access reviews.\n\n**CC6.2 - System Operations:**\n* Change management process.\n* System monitoring and alerting.\n* Incident response procedures.\n\n**CC7.1 - System Monitoring:**\n* Log collection and retention.\n* Audit trail completeness.\n* Anomaly detection.\n\n**CC7.2 - Incident Response:**\n* Documented IR plan.\n* Escalation procedures.\n* Post-incident reviews.",
+      "Tags": "SOC2, Compliance, Security, Audit",
+      "AuthorEmail": "sarah@liberty.tech",
+      "CreatedDaysAgo": 25
+    },
+    {
+      "Title": "API Design Guidelines",
+      "Content": "REST API design guidelines for Liberty Systems.\n\n**URL Structure:**\n* Use nouns, not verbs: `/users` not `/getUsers`.\n* Use plural: `/users` not `/user`.\n* Nest resources: `/users/123/orders`.\n\n**HTTP Methods:**\n* GET - read\n* POST - create\n* PUT - full update\n* PATCH - partial update\n* DELETE - remove\n\n**Response Format:**\n* Always return JSON.\n* Use consistent error format.\n* Include pagination metadata.\n\n**Versioning:**\n* URL versioning: `/v1/users`.\n* Header versioning: `Accept: application/vnd.api.v1+json`.",
+      "Tags": "API, Design, REST, Guidelines",
+      "AuthorEmail": "ozymandias@liberty.tech",
+      "CreatedDaysAgo": 40
+    },
+    {
+      "Title": "Testing Strategy - E2E and Unit",
+      "Content": "Comprehensive testing strategy for the platform.\n\n**Unit Tests:**\n* Jest for JavaScript/TypeScript.\n* xUnit for .NET.\n* Target: 80% coverage.\n* Mock external dependencies.\n\n**Integration Tests:**\n* Test API endpoints.\n* Test database queries.\n* Test message queues.\n\n**E2E Tests:**\n* Playwright for web.\n* Maestro for mobile.\n* Test critical user journeys.\n\n**CI/CD:**\n* Run unit tests on every PR.\n* Run integration tests on merge.\n* Run E2E tests nightly.",
+      "Tags": "Testing, QA, E2E, Unit, Strategy",
+      "AuthorEmail": "pharoah@liberty.tech",
+      "CreatedDaysAgo": 18
+    },
+    {
+      "Title": "Terraform State Management",
+      "Content": "Best practices for managing Terraform state.\n\n**Remote State:**\n* Always use remote state (S3, Terraform Cloud).\n* Enable state locking.\n* Enable versioning.\n\n**State Security:**\n* Encrypt state at rest.\n* Restrict access to state files.\n* Never commit state to Git.\n\n**State Structure:**\n* Use workspaces for environments.\n* Use modules for reuse.\n* Keep state small and focused.",
+      "Tags": "Terraform, IaC, State, DevOps",
+      "AuthorEmail": "samwise@liberty.tech",
+      "CreatedDaysAgo": 22
+    },
+    {
+      "Title": "Mobile App Release Process",
+      "Content": "Process for releasing mobile apps to App Store and Play Store.\n\n**Pre-release:**\n1. Run full E2E test suite.\n2. Check crash analytics (no new crashes).\n3. Verify translations are complete.\n4. Test on physical devices.\n\n**Release:**\n1. Create release branch.\n2. Update version numbers.\n3. Build signed binaries.\n4. Submit to stores.\n5. Monitor rollout (staged release).\n\n**Post-release:**\n1. Monitor crash rate.\n2. Check app store reviews.\n3. Respond to critical issues within 4 hours.",
+      "Tags": "Mobile, Release, iOS, Android",
+      "AuthorEmail": "sam@liberty.tech",
+      "CreatedDaysAgo": 12
+    },
+    {
+      "Title": "Data Pipeline Architecture",
+      "Content": "Architecture overview of the data platform.\n\n**Ingestion:**\n* Kafka for real-time streaming.\n* S3 for batch imports.\n* API for event submission.\n\n**Processing:**\n* Kafka Streams for transformations.\n* dbt for data modeling.\n* Spark for heavy batch jobs.\n\n**Storage:**\n* ClickHouse for analytics.\n* Postgres for transactional.\n* S3 for raw data lake.\n\n**Consumption:**\n* Grafana for dashboards.\n* API for application data.\n* Export for external tools.",
+      "Tags": "Data, Architecture, Pipeline, Analytics",
+      "AuthorEmail": "ada@liberty.tech",
+      "CreatedDaysAgo": 8
+    },
+    {
+      "Title": "Incident Response Playbook",
+      "Content": "Standard incident response procedures.\n\n**Severity Levels:**\n* SEV1: Complete service outage.\n* SEV2: Major functionality degraded.\n* SEV3: Minor impact, workaround available.\n* SEV4: Cosmetic or non-urgent.\n\n**Response Process:**\n1. **Detect**: Alert from monitoring.\n2. **Acknowledge**: Within 5 minutes.\n3. **Assess**: Determine severity and impact.\n4. **Communicate**: Post in #incidents channel.\n5. **Resolve**: Fix the issue.\n6. **Review**: Post-mortem within 48 hours.\n\n**Escalation:**\n* SEV1: Page on-call immediately.\n* SEV2: Notify team lead within 30 min.\n* SEV3: Handle during business hours.",
+      "Tags": "Incident, Response, SRE, Playbook",
+      "AuthorEmail": "miles@liberty.tech",
+      "CreatedDaysAgo": 14
+    }
+  ]
 }

@@ -1,176 +1,875 @@
 {
-    "Admins": [
+  "Admins": [
+    {
+      "UserName": "bourgmestre.gustave",
+      "Email": "gustave@desgoffe.gov",
+      "FirstName": "Gustave",
+      "LastName": "Desgoffe",
+      "Phone": "+32 2 555 01 01",
+      "Code": "ADM-001"
+    },
+    {
+      "UserName": "admin.desgoffe",
+      "Email": "admin@desgoffe.gov",
+      "FirstName": "System",
+      "LastName": "Administrator",
+      "Phone": "+32 2 555 01 02",
+      "Code": "ADM-002"
+    }
+  ],
+  "Employees": [
+    {
+      "UserName": "greffier.serge",
+      "Email": "serge@desgoffe.gov",
+      "FirstName": "Serge",
+      "LastName": "Leclerc",
+      "Team": "Clergé Municipal",
+      "Level": "Manager",
+      "Language": "fr-BE",
+      "Specializations": "Urbanisme, État Civil, Permis de bâtir",
+      "MaxCapacityPoints": 50,
+      "Region": "Desgoffe-Centre"
+    },
+    {
+      "UserName": "archiviste.marcel",
+      "Email": "marcel@desgoffe.gov",
+      "FirstName": "Marcel",
+      "LastName": "Proust",
+      "Team": "Archives et Mémoire",
+      "Level": "Support",
+      "Language": "fr-BE",
+      "Specializations": "Dossiers Historiques, Scan 3D, Patrimoine",
+      "MaxCapacityPoints": 35,
+      "Region": "Vieux-Desgoffe"
+    },
+    {
+      "UserName": "conseiller.claire",
+      "Email": "claire@desgoffe.gov",
+      "FirstName": "Claire",
+      "LastName": "Valmont",
+      "Team": "Affaires Juridiques",
+      "Level": "Lead",
+      "Language": "fr-BE",
+      "Specializations": "Droit Administratif, Expropriation, Contentieux",
+      "MaxCapacityPoints": 45,
+      "Region": "Desgoffe-Centre"
+    },
+    {
+      "UserName": "agent.zero",
+      "Email": "zero@desgoffe.gov",
+      "FirstName": "Agent",
+      "LastName": "Zero",
+      "Team": "Service de la Tranquillité",
+      "Level": "Support",
+      "Language": "fr-BE",
+      "Specializations": "Nuisances Sonores, Voirie, Réglementation",
+      "MaxCapacityPoints": 30,
+      "Region": "Desgoffe-Nord"
+    },
+    {
+      "UserName": "urbaniste.bernard",
+      "Email": "bernard@desgoffe.gov",
+      "FirstName": "Bernard",
+      "LastName": "Foster",
+      "Team": "Urbanisme",
+      "Level": "Expert",
+      "Language": "fr-BE",
+      "Specializations": "Planification, Zonage, Permis d'urbanisme",
+      "MaxCapacityPoints": 40,
+      "Region": "Desgoffe-Centre"
+    },
+    {
+      "UserName": "environnement.madeleine",
+      "Email": "madeleine@desgoffe.gov",
+      "FirstName": "Madeleine",
+      "LastName": "Durand",
+      "Team": "Environnement",
+      "Level": "Lead",
+      "Language": "fr-BE",
+      "Specializations": "Écologie, Natura 2000, Déchets",
+      "MaxCapacityPoints": 35,
+      "Region": "Desgoffe-Sud"
+    },
+    {
+      "UserName": "travaux.rené",
+      "Email": "rene@desgoffe.gov",
+      "FirstName": "René",
+      "LastName": "Magritte",
+      "Team": "Travaux Publics",
+      "Level": "Expert",
+      "Language": "fr-BE",
+      "Specializations": "Voirie, Éclairage, Réseaux",
+      "MaxCapacityPoints": 45,
+      "Region": "Desgoffe-Centre"
+    },
+    {
+      "UserName": "social.jacqueline",
+      "Email": "jacqueline@desgoffe.gov",
+      "FirstName": "Jacqueline",
+      "LastName": "Brel",
+      "Team": "Action Sociale",
+      "Level": "Support",
+      "Language": "fr-BE",
+      "Specializations": "Logement, Aide sociale, Seniors",
+      "MaxCapacityPoints": 30,
+      "Region": "Desgoffe-Est"
+    },
+    {
+      "UserName": "culture.georges",
+      "Email": "georges@desgoffe.gov",
+      "FirstName": "Georges",
+      "LastName": "Simenon",
+      "Team": "Culture et Patrimoine",
+      "Level": "Support",
+      "Language": "fr-BE",
+      "Specializations": "Événements, Musées, Bibliothèques",
+      "MaxCapacityPoints": 25,
+      "Region": "Desgoffe-Centre"
+    },
+    {
+      "UserName": "it.simone",
+      "Email": "simone@desgoffe.gov",
+      "FirstName": "Simone",
+      "LastName": "Veil",
+      "Team": "Informatique",
+      "Level": "Expert",
+      "Language": "fr-BE",
+      "Specializations": "Réseau, Sécurité, Applications",
+      "MaxCapacityPoints": 40,
+      "Region": "Desgoffe-Centre"
+    },
+    {
+      "UserName": "gerda.system",
+      "Email": "gerda@ticketmasala.ai",
+      "FirstName": "GERDA",
+      "LastName": "AI",
+      "Team": "System Core",
+      "Level": "Lead",
+      "Language": "fr-BE",
+      "Specializations": "Sentiment Analysis, Routing, Policy Validation",
+      "MaxCapacityPoints": 999,
+      "Region": "Global"
+    }
+  ],
+  "Customers": [
+    {
+      "UserName": "mme.villeneuve",
+      "Email": "villeneuve@charity.org",
+      "FirstName": "Hortense",
+      "LastName": "Villeneuve",
+      "Phone": "+32 2 555 99 99",
+      "Code": "CIT-777"
+    },
+    {
+      "UserName": "mr.legrand",
+      "Email": "legrand@developpement.be",
+      "FirstName": "Jean-Pierre",
+      "LastName": "Legrand",
+      "Phone": "+32 2 555 12 34",
+      "Code": "DEV-088"
+    },
+    {
+      "UserName": "mme.dubois",
+      "Email": "dubois@commercant.be",
+      "FirstName": "Colette",
+      "LastName": "Dubois",
+      "Phone": "+32 2 555 23 45",
+      "Code": "COM-123"
+    },
+    {
+      "UserName": "mr.devos",
+      "Email": "devos@immo.be",
+      "FirstName": "Philippe",
+      "LastName": "Devos",
+      "Phone": "+32 2 555 34 56",
+      "Code": "IM-456"
+    },
+    {
+      "UserName": "mme.peeters",
+      "Email": "peeters@ecole.be",
+      "FirstName": "Anne",
+      "LastName": "Peeters",
+      "Phone": "+32 2 555 45 67",
+      "Code": "EDU-789"
+    },
+    {
+      "UserName": "mr.mertens",
+      "Email": "mertens@restaurant.be",
+      "FirstName": "Louis",
+      "LastName": "Mertens",
+      "Phone": "+32 2 555 56 78",
+      "Code": "RES-012"
+    }
+  ],
+  "WorkContainers": [
+    {
+      "Name": "Projet 'Le Grand Canal' - Phase 1",
+      "Description": "Réaménagement des berges et transformation des anciens entrepôts en logements sociaux et espaces verts.",
+      "Status": "InProgress",
+      "CustomerEmail": "legrand@developpement.be",
+      "ProjectManagerEmail": "claire@desgoffe.gov",
+      "CompletionTargetMonths": 24,
+      "WorkItems": [
         {
-            "UserName": "bourgmestre.gustave",
-            "Email": "gustave@desgoffe.gov",
-            "FirstName": "Gustave",
-            "LastName": "Desgoffe",
-            "Phone": "+32 2 555 01 01",
-            "Code": "ADM-001"
-        }
-    ],
-    "Employees": [
-        {
-            "UserName": "greffier.serge",
-            "Email": "serge@desgoffe.gov",
-            "FirstName": "Serge",
-            "LastName": "Leclerc",
-            "Team": "Clergé Municipal",
-            "Level": "Manager",
-            "Language": "fr-BE",
-            "Specializations": "Urbanisme, État Civil",
-            "MaxCapacityPoints": 50,
-            "Region": "Desgoffe-Centre"
+          "Description": "Étude d'Impact Environnemental - Faune Aquatique",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "claire@desgoffe.gov",
+          "CompletionTargetDays": 90,
+          "EstimatedEffortPoints": 34,
+          "PriorityScore": 15,
+          "GerdaTags": "Environnement, Écologie, Legal",
+          "Comments": [
+            {
+              "Body": "L'association locale des pêcheurs a déposé un recours. Besoin d'un avis juridique urgent sur la zone Natura 2000.",
+              "AuthorEmail": "legrand@developpement.be",
+              "CreatedDaysAgo": 5
+            },
+            {
+              "Body": "🤖 **Analyse GERDA**: Risque de Contentieux Détecté (Confidence: 85%). Recours administratif identifié. Dossier transféré à Claire Valmont (Affaires Juridiques).",
+              "AuthorEmail": "gerda@ticketmasala.ai",
+              "CreatedDaysAgo": 4
+            }
+          ]
         },
         {
-            "UserName": "archiviste.marcel",
-            "Email": "marcel@desgoffe.gov",
-            "FirstName": "Marcel",
-            "LastName": "Proust",
-            "Team": "Archives & Mémoire",
-            "Level": "Support",
-            "Language": "fr-BE",
-            "Specializations": "Dossiers Historiques, Scan 3D",
-            "MaxCapacityPoints": 35,
-            "Region": "Vieux-Desgoffe"
+          "Description": "Numérisation des plans cadastraux (1880-1920)",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "marcel@desgoffe.gov",
+          "CompletionTargetDays": 30,
+          "EstimatedEffortPoints": 13,
+          "PriorityScore": 8,
+          "GerdaTags": "Archives, Patrimoine, Numérisation",
+          "Comments": [
+            {
+              "Body": "Numérisation de 150 plans cadastraux terminée. 1200 documents restants. Scan 3D en cours pour les plus fragiles.",
+              "AuthorEmail": "marcel@desgoffe.gov",
+              "CreatedDaysAgo": 3
+            }
+          ]
         },
         {
-            "UserName": "conseiller.claire",
-            "Email": "claire@desgoffe.gov",
-            "FirstName": "Claire",
-            "LastName": "Valmont",
-            "Team": "Affaires Juridiques",
-            "Level": "Lead",
-            "Language": "fr-BE",
-            "Specializations": "Droit Administratif, Expropriation",
-            "MaxCapacityPoints": 45,
-            "Region": "Desgoffe-Centre"
+          "Description": "Permis d'urbanisme - Zone A (Entrepôts)",
+          "Status": "Assigned",
+          "Type": "Task",
+          "ResponsibleEmail": "bernard@desgoffe.gov",
+          "CompletionTargetDays": 60,
+          "EstimatedEffortPoints": 21,
+          "PriorityScore": 20,
+          "GerdaTags": "Urbanisme, Permis, Entrepôts"
         },
         {
-            "UserName": "agent.zero",
-            "Email": "zero@desgoffe.gov",
-            "FirstName": "Agent",
-            "LastName": "Zero",
-            "Team": "Service de la Tranquillité",
-            "Level": "Support",
-            "Language": "fr-BE",
-            "Specializations": "Nuisances Sonores, Voirie",
-            "MaxCapacityPoints": 30,
-            "Region": "Desgoffe-Nord"
+          "Description": "Consultation publique - Annonce en ligne",
+          "Status": "Completed",
+          "Type": "Task",
+          "ResponsibleEmail": "georges@desgoffe.gov",
+          "CompletionTargetDays": 7,
+          "CompletionDaysAgo": 10,
+          "EstimatedEffortPoints": 3,
+          "PriorityScore": 10,
+          "GerdaTags": "Consultation, Publique, Communication",
+          "Comments": [
+            {
+              "Body": "Annonce publiée sur le site web et les réseaux sociaux. 247 réponses en ligne reçues. Réunion publique prévue le 15 mars.",
+              "AuthorEmail": "georges@desgoffe.gov",
+              "CreatedDaysAgo": 10
+            }
+          ]
         },
         {
-            "UserName": "gerda.system",
-            "Email": "gerda@ticketmasala.ai",
-            "FirstName": "GERDA",
-            "LastName": "AI",
-            "Team": "System Core",
-            "Level": "Lead",
-            "Language": "fr-BE",
-            "Specializations": "Sentiment Analysis, Routing, Policy Validation",
-            "MaxCapacityPoints": 999,
-            "Region": "Global"
+          "Description": "Étude de sol - Contamination historique",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "madeleine@desgoffe.gov",
+          "CompletionTargetDays": 45,
+          "EstimatedEffortPoints": 13,
+          "PriorityScore": 18,
+          "GerdaTags": "Environnement, Sol, Contamination",
+          "Comments": [
+            {
+              "Body": "Analyse de sol préliminaire montre des traces de métaux lourds. Profondeur: 2m. Pas de risque immédiat mais décontamination nécessaire.",
+              "AuthorEmail": "madeleine@desgoffe.gov",
+              "CreatedDaysAgo": 2
+            }
+          ]
         }
-    ],
-    "Customers": [
+      ]
+    },
+    {
+      "Name": "Rénovation Écoles Primaires - Programme 2026",
+      "Description": "Rénovation énergétique de 5 écoles primaires avec isolation, panneaux solaires, et remplacement des chaudières.",
+      "Status": "InProgress",
+      "CustomerEmail": "peeters@ecole.be",
+      "ProjectManagerEmail": "bernard@desgoffe.gov",
+      "CompletionTargetMonths": 18,
+      "WorkItems": [
         {
-            "UserName": "mme.villeneuve",
-            "Email": "villeneuve@charity.org",
-            "FirstName": "Hortense",
-            "LastName": "Villeneuve",
-            "Phone": "+32 2 555 99 99",
-            "Code": "CIT-777"
+          "Description": "Isolation thermique - École des Lilas",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "rene@desgoffe.gov",
+          "CompletionTargetDays": 60,
+          "EstimatedEffortPoints": 21,
+          "PriorityScore": 18,
+          "GerdaTags": "Rénovation, Isolation, École",
+          "Comments": [
+            {
+              "Body": "Travaux d'isolation extérieure commencés. Façade nord terminée. 40% d'avancement.",
+              "AuthorEmail": "rene@desgoffe.gov",
+              "CreatedDaysAgo": 2
+            }
+          ]
         },
         {
-            "UserName": "mr.legrand",
-            "Email": "legrand@developpement.be",
-            "FirstName": "Jean-Pierre",
-            "LastName": "Legrand",
-            "Phone": "+32 2 555 12 34",
-            "Code": "DEV-088"
-        }
-    ],
-    "WorkContainers": [
-        {
-            "Name": "Projet 'Le Grand Canal' - Phase 1",
-            "Description": "Réaménagement des berges et transformation des anciens entrepôts en logements sociaux.",
-            "Status": "Active",
-            "CustomerEmail": "legrand@developpement.be",
-            "ProjectManagerEmail": "claire@desgoffe.gov",
-            "CompletionTargetMonths": 24,
-            "WorkItems": [
-                {
-                    "Description": "Étude d'Impact Environnemental - Faune Aquatique",
-                    "Status": "In_Progress",
-                    "Type": "Task",
-                    "ResponsibleEmail": "claire@desgoffe.gov",
-                    "CompletionTargetDays": 90,
-                    "EstimatedEffortPoints": 34,
-                    "PriorityScore": 15,
-                    "GerdaTags": "Environnement, Écologie, Legal",
-                    "Comments": [
-                        {
-                            "Body": "L'association locale des pêcheurs a déposé un recours. Besoin d'un avis juridique urgent sur la zone Natura 2000.",
-                            "AuthorEmail": "legrand@developpement.be",
-                            "CreatedDaysAgo": 5
-                        },
-                        {
-                            "Body": "🤖 **Analyse GERDA**: Risque de Contentieux Détecté (Confidence: 85%). Recours administratif identifié. Dossier transféré à Claire Valmont (Affaires Juridiques).",
-                            "AuthorEmail": "gerda@ticketmasala.ai",
-                            "CreatedDaysAgo": 4
-                        }
-                    ]
-                },
-                {
-                    "Description": "Numérisation des plans cadastraux (1880-1920)",
-                    "Status": "In_Progress",
-                    "Type": "Task",
-                    "ResponsibleEmail": "marcel@desgoffe.gov",
-                    "CompletionTargetDays": 30,
-                    "EstimatedEffortPoints": 13,
-                    "PriorityScore": 8,
-                    "GerdaTags": "Archives, Patrimoine"
-                }
-            ]
-        }
-    ],
-    "UnassignedWorkItems": [
-        {
-            "Description": "URGENT: Manifestation contre l'abattage des platanes du Canal",
-            "Status": "New",
-            "Type": "Incident",
-            "CustomerEmail": "villeneuve@charity.org",
-            "CompletionTargetDays": 1,
-            "EstimatedEffortPoints": 21,
-            "PriorityScore": 92,
-            "GerdaTags": "Sentiment:StronglyNegative, Risque_Politique, Media_Alert",
-            "Comments": [
-                {
-                    "Body": "C'est un scandale! Ces arbres ont 200 ans. Nous organisons un sit-in demain matin. Les médias sont prévenus. Desgoffe ne peut pas sacrifier son âme pour du béton!",
-                    "AuthorEmail": "villeneuve@charity.org",
-                    "CreatedDaysAgo": 0
-                },
-                {
-                    "Body": "🤖 **GERDA Autopilot**: Alerte Média Critique. Sentiment 'Fidèle' (98% négatif). Détection de 'Manifestation' et 'Médias'. Notification envoyée au cabinet du Bourgmestre.",
-                    "AuthorEmail": "gerda@ticketmasala.ai",
-                    "CreatedDaysAgo": 0
-                }
-            ]
-        }
-    ],
-    "KnowledgeBaseArticles": [
-        {
-            "Title": "Procédure d'Expropriation pour Utilité Publique",
-            "Content": "Le cadre légal de l'expropriation sous le mandat de Gustave Desgoffe.\n\n**Étapes:**\n1. Déclaration d'utilité publique par le Conseil Municipal.\n2. Enquête publique (15 jours).\n3. Offre d'indemnisation provisionnelle.\n4. Transfert de propriété.\n\n*Note: Tout recours suspend l'exécution de l'acte.*",
-            "Tags": "Legal, Urbanisme, Politique",
-            "AuthorEmail": "claire@desgoffe.gov",
-            "CreatedDaysAgo": 10
+          "Description": "Installation panneaux solaires - École du Parc",
+          "Status": "Assigned",
+          "Type": "Task",
+          "ResponsibleEmail": "rene@desgoffe.gov",
+          "CompletionTargetDays": 30,
+          "EstimatedEffortPoints": 8,
+          "PriorityScore": 15,
+          "GerdaTags": "Énergie, Solaire, École"
         },
         {
-            "Title": "Gestion du Patrimoine Arboré",
-            "Content": "Classification des arbres remarquables de la ville.\n\n**Critères de protection:**\n* Âge supérieur à 100 ans.\n* Intérêt historique ou paysager.\n* Essence rare.\n\nL'abattage nécessite un vote à l'unanimité du clergé municipal.",
-            "Tags": "Environnement, Patrimoine, Archives",
-            "AuthorEmail": "marcel@desgoffe.gov",
-            "CreatedDaysAgo": 45
+          "Description": "Remplacement chaudières - École Centrale",
+          "Status": "Completed",
+          "Type": "Task",
+          "ResponsibleEmail": "rene@desgoffe.gov",
+          "CompletionTargetDays": 14,
+          "CompletionDaysAgo": 5,
+          "EstimatedEffortPoints": 8,
+          "PriorityScore": 12,
+          "GerdaTags": "Chaudière, Énergie, École",
+          "Comments": [
+            {
+              "Body": "Nouvelle chaudière à condensation installée. Efficacité énergétique améliorée de 30%.",
+              "AuthorEmail": "rene@desgoffe.gov",
+              "CreatedDaysAgo": 5
+            }
+          ]
+        },
+        {
+          "Description": "Permis d'urbanisme - École des Lilas",
+          "Status": "Pending",
+          "Type": "Task",
+          "ResponsibleEmail": "bernard@desgoffe.gov",
+          "CompletionTargetDays": 30,
+          "EstimatedEffortPoints": 5,
+          "PriorityScore": 10,
+          "GerdaTags": "Permis, Urbanisme, École"
         }
-    ]
+      ]
+    },
+    {
+      "Name": "Plan de Mobilité 2026 - Desgoffe",
+      "Description": "Plan de mobilité durable incluant pistes cyclables, bus électriques, et zone de rencontre.",
+      "Status": "InProgress",
+      "CustomerEmail": "gustave@desgoffe.gov",
+      "ProjectManagerEmail": "serge@desgoffe.gov",
+      "CompletionTargetMonths": 12,
+      "WorkItems": [
+        {
+          "Description": "Création piste cyclable - Rue de la Loi",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "rene@desgoffe.gov",
+          "CompletionTargetDays": 90,
+          "EstimatedEffortPoints": 21,
+          "PriorityScore": 18,
+          "GerdaTags": "Mobilité, Vélo, Infrastructures",
+          "Comments": [
+            {
+              "Body": "Marquage au sol effectué. Signalisation verticale en cours d'installation. 60% d'avancement.",
+              "AuthorEmail": "rene@desgoffe.gov",
+              "CreatedDaysAgo": 2
+            }
+          ]
+        },
+        {
+          "Description": "Achat bus électriques - 3 unités",
+          "Status": "Assigned",
+          "Type": "Task",
+          "ResponsibleEmail": "serge@desgoffe.gov",
+          "CompletionTargetDays": 60,
+          "EstimatedEffortPoints": 8,
+          "PriorityScore": 15,
+          "GerdaTags": "Transport, Bus, Électrique"
+        },
+        {
+          "Description": "Zone de rencontre - Place du Marché",
+          "Status": "Pending",
+          "Type": "Task",
+          "ResponsibleEmail": "bernard@desgoffe.gov",
+          "CompletionTargetDays": 45,
+          "EstimatedEffortPoints": 13,
+          "PriorityScore": 12,
+          "GerdaTags": "Mobilité, ZoneRencontre, Centre"
+        },
+        {
+          "Description": "Enquête publique - Plan de mobilité",
+          "Status": "Completed",
+          "Type": "Task",
+          "ResponsibleEmail": "georges@desgoffe.gov",
+          "CompletionTargetDays": 21,
+          "CompletionDaysAgo": 15,
+          "EstimatedEffortPoints": 5,
+          "PriorityScore": 10,
+          "GerdaTags": "Consultation, Enquête, Mobilité",
+          "Comments": [
+            {
+              "Body": "Enquête publique terminée. 1.234 réponses. 68% favorable au plan. 15% demandent plus de pistes cyclables.",
+              "AuthorEmail": "georges@desgoffe.gov",
+              "CreatedDaysAgo": 15
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "Archives Numériques - Patrimoine Local",
+      "Description": "Numérisation et mise en ligne des archives municipales pour le public.",
+      "Status": "InProgress",
+      "CustomerEmail": "gustave@desgoffe.gov",
+      "ProjectManagerEmail": "marcel@desgoffe.gov",
+      "CompletionTargetMonths": 36,
+      "WorkItems": [
+        {
+          "Description": "Numérisation registres d'état civil (1800-1900)",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "marcel@desgoffe.gov",
+          "CompletionTargetDays": 180,
+          "EstimatedEffortPoints": 34,
+          "PriorityScore": 15,
+          "GerdaTags": "Archives, ÉtatCivil, Numérisation",
+          "Comments": [
+            {
+              "Body": "50.000 actes numérisés. OCR en cours. Indexation des noms pour recherche en ligne.",
+              "AuthorEmail": "marcel@desgoffe.gov",
+              "CreatedDaysAgo": 3
+            }
+          ]
+        },
+        {
+          "Description": "Mise en ligne portail archives",
+          "Status": "Assigned",
+          "Type": "Task",
+          "ResponsibleEmail": "simone@desgoffe.gov",
+          "CompletionTargetDays": 60,
+          "EstimatedEffortPoints": 13,
+          "PriorityScore": 12,
+          "GerdaTags": "Portail, Web, Archives"
+        },
+        {
+          "Description": "Scan 3D - Objets du musée local",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "marcel@desgoffe.gov",
+          "CompletionTargetDays": 90,
+          "EstimatedEffortPoints": 13,
+          "PriorityScore": 10,
+          "GerdaTags": "3D, Musée, Patrimoine",
+          "Comments": [
+            {
+              "Body": "120 objets scannés en 3D. Modèles disponibles en ligne. Réalité virtuelle en développement.",
+              "AuthorEmail": "marcel@desgoffe.gov",
+              "CreatedDaysAgo": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "Politique de Déchets - Extension Collecte",
+      "Description": "Extension de la collecte sélective à tous les quartiers et mise en place du compostage collectif.",
+      "Status": "InProgress",
+      "CustomerEmail": "gustave@desgoffe.gov",
+      "ProjectManagerEmail": "madeleine@desgoffe.gov",
+      "CompletionTargetMonths": 8,
+      "WorkItems": [
+        {
+          "Description": "Distribution bacs de compostage - Quartier Est",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "jacqueline@desgoffe.gov",
+          "CompletionTargetDays": 30,
+          "EstimatedEffortPoints": 8,
+          "PriorityScore": 12,
+          "GerdaTags": "Déchets, Compostage, Distribution",
+          "Comments": [
+            {
+              "Body": "500 bacs distribués. 350 inscriptions reçues. Formation compostage prévue le 20 mars.",
+              "AuthorEmail": "jacqueline@desgoffe.gov",
+              "CreatedDaysAgo": 2
+            }
+          ]
+        },
+        {
+          "Description": "Installation nouveaux conteneurs recyclage",
+          "Status": "Assigned",
+          "Type": "Task",
+          "ResponsibleEmail": "rene@desgoffe.gov",
+          "CompletionTargetDays": 21,
+          "EstimatedEffortPoints": 8,
+          "PriorityScore": 10,
+          "GerdaTags": "Recyclage, Conteneurs, Installation"
+        },
+        {
+          "Description": "Campagne de sensibilisation - Déchets",
+          "Status": "Pending",
+          "Type": "Task",
+          "ResponsibleEmail": "georges@desgoffe.gov",
+          "CompletionTargetDays": 14,
+          "EstimatedEffortPoints": 5,
+          "PriorityScore": 8,
+          "GerdaTags": "Sensibilisation, Déchets, Communication"
+        }
+      ]
+    },
+    {
+      "Name": "Rénovation Parc des Sources",
+      "Description": "Rénovation complète du parc municipal avec nouveaux jeux, allées, et espaces de détente.",
+      "Status": "InProgress",
+      "CustomerEmail": "gustave@desgoffe.gov",
+      "ProjectManagerEmail": "bernard@desgoffe.gov",
+      "CompletionTargetMonths": 12,
+      "WorkItems": [
+        {
+          "Description": "Installation nouveaux jeux pour enfants",
+          "Status": "InProgress",
+          "Type": "Task",
+          "ResponsibleEmail": "rene@desgoffe.gov",
+          "CompletionTargetDays": 30,
+          "EstimatedEffortPoints": 13,
+          "PriorityScore": 14,
+          "GerdaTags": "Parc, Jeux, Enfants",
+          "Comments": [
+            {
+              "Body": "Équipements livrés. Installation en cours. Normes de sécurité respectées. Ouverture prévue en avril.",
+              "AuthorEmail": "rene@desgoffe.gov",
+              "CreatedDaysAgo": 2
+            }
+          ]
+        },
+        {
+          "Description": "Aménagement espace canin",
+          "Status": "Assigned",
+          "Type": "Task",
+          "ResponsibleEmail": "rene@desgoffe.gov",
+          "CompletionTargetDays": 21,
+          "EstimatedEffortPoints": 5,
+          "PriorityScore": 8,
+          "GerdaTags": "Parc, Chien, Animaux"
+        },
+        {
+          "Description": "Plantation haies et arbustes",
+          "Status": "Pending",
+          "Type": "Task",
+          "ResponsibleEmail": "madeleine@desgoffe.gov",
+          "CompletionTargetDays": 14,
+          "EstimatedEffortPoints": 3,
+          "PriorityScore": 6,
+          "GerdaTags": "Parc, Plantation, Environnement"
+        }
+      ]
+    }
+  ],
+  "UnassignedWorkItems": [
+    {
+      "Description": "URGENT: Manifestation contre l'abattage des platanes du Canal",
+      "Status": "Pending",
+      "Type": "Incident",
+      "CustomerEmail": "villeneuve@charity.org",
+      "CompletionTargetDays": 1,
+      "EstimatedEffortPoints": 21,
+      "PriorityScore": 92,
+      "GerdaTags": "Sentiment:StronglyNegative, Risque_Politique, Media_Alert",
+      "Comments": [
+        {
+          "Body": "C'est un scandale! Ces arbres ont 200 ans. Nous organisons un sit-in demain matin. Les médias sont prévenus. Desgoffe ne peut pas sacrifier son âme pour du béton!",
+          "AuthorEmail": "villeneuve@charity.org",
+          "CreatedDaysAgo": 0
+        },
+        {
+          "Body": "🤖 **GERDA Autopilot**: Alerte Média Critique. Sentiment 'Fidèle' (98% négatif). Détection de 'Manifestation' et 'Médias'. Notification envoyée au cabinet du Bourgmestre.",
+          "AuthorEmail": "gerda@ticketmasala.ai",
+          "CreatedDaysAgo": 0
+        }
+      ]
+    },
+    {
+      "Description": "Nuisance sonore - Restaurant La Frite - Fermeture tardive",
+      "Status": "Pending",
+      "Type": "Incident",
+      "CustomerEmail": "dubois@commercant.be",
+      "CompletionTargetDays": 3,
+      "EstimatedEffortPoints": 8,
+      "PriorityScore": 45,
+      "GerdaTags": "Nuisance, Bruit, Restaurant, Horaires",
+      "Comments": [
+        {
+          "Body": "Le restaurant La Frite reste ouvert jusqu'à 2h du matin. Le bruit des clients et la musique empêchent le sommeil. Cela dure depuis 3 mois.",
+          "AuthorEmail": "dubois@commercant.be",
+          "CreatedDaysAgo": 2
+        }
+      ]
+    },
+    {
+      "Description": "Trottoir dangereux - Rue de la Paix (trous et dégradation)",
+      "Status": "Pending",
+      "Type": "Incident",
+      "CustomerEmail": "legrand@developpement.be",
+      "CompletionTargetDays": 5,
+      "EstimatedEffortPoints": 12,
+      "PriorityScore": 55,
+      "GerdaTags": "Voirie, Trottoir, Danger, Dégradation",
+      "Comments": [
+        {
+          "Body": "Le trottoir de la Rue de la Paix est plein de trous et de dégradations. Plusieurs personnes âgées ont déjà chuté. C'est urgent!",
+          "AuthorEmail": "legrand@developpement.be",
+          "CreatedDaysAgo": 1
+        }
+      ]
+    },
+    {
+      "Description": "Permis d'urbanisme - Construction immeuble résidentiel",
+      "Status": "Pending",
+      "Type": "ServiceRequest",
+      "CustomerEmail": "devos@immo.be",
+      "CompletionTargetDays": 60,
+      "EstimatedEffortPoints": 21,
+      "PriorityScore": 20,
+      "GerdaTags": "Permis, Urbanisme, Construction, Résidentiel",
+      "Comments": [
+        {
+          "Body": "Demande de permis d'urbanisme pour un immeuble de 12 appartements. Plans architecturaux joints. Étude de sol disponible.",
+          "AuthorEmail": "devos@immo.be",
+          "CreatedDaysAgo": 5
+        }
+      ]
+    },
+    {
+      "Description": "Éclairage public défectueux - Rue des Écoles",
+      "Status": "Pending",
+      "Type": "Incident",
+      "CustomerEmail": "peeters@ecole.be",
+      "CompletionTargetDays": 3,
+      "EstimatedEffortPoints": 5,
+      "PriorityScore": 40,
+      "GerdaTags": "Éclairage, Défectueux, Sécurité",
+      "Comments": [
+        {
+          "Body": "5 lampadaires sont éteints sur la Rue des Écoles. Les enfants rentrent dans le noir. C'est dangereux.",
+          "AuthorEmail": "peeters@ecole.be",
+          "CreatedDaysAgo": 2
+        }
+      ]
+    },
+    {
+      "Description": "Demande de subvention - Association des Commerçants",
+      "Status": "Pending",
+      "Type": "ServiceRequest",
+      "CustomerEmail": "dubois@commercant.be",
+      "CompletionTargetDays": 14,
+      "EstimatedEffortPoints": 8,
+      "PriorityScore": 15,
+      "GerdaTags": "Subvention, Commerçants, Économie",
+      "Comments": [
+        {
+          "Body": "L'association des commerçants demande une subvention de 15.000€ pour la Foire de Printemps. 50 exposants attendus.",
+          "AuthorEmail": "dubois@commercant.be",
+          "CreatedDaysAgo": 4
+        }
+      ]
+    },
+    {
+      "Description": "Fuite d'eau - Place du Marché",
+      "Status": "Pending",
+      "Type": "Incident",
+      "CustomerEmail": "mertens@restaurant.be",
+      "CompletionTargetDays": 1,
+      "EstimatedEffortPoints": 15,
+      "PriorityScore": 75,
+      "GerdaTags": "Eau, Fuite, Urgent, Marché",
+      "Comments": [
+        {
+          "Body": "Grosse fuite d'eau sur la Place du Marché. L'eau inonde les terrasses des restaurants. Service des eaux contacté.",
+          "AuthorEmail": "mertens@restaurant.be",
+          "CreatedDaysAgo": 0
+        }
+      ]
+    },
+    {
+      "Description": "Demande d'intervention - Nid de frelons asiatiques",
+      "Status": "Pending",
+      "Type": "Incident",
+      "CustomerEmail": "legrand@developpement.be",
+      "CompletionTargetDays": 2,
+      "EstimatedEffortPoints": 5,
+      "PriorityScore": 35,
+      "GerdaTags": "Frelons, Environnement, Danger",
+      "Comments": [
+        {
+          "Body": "Un nid de frelons asiatiques a été découvert dans le parc des Sources. Danger pour les enfants. Intervention rapide nécessaire.",
+          "AuthorEmail": "legrand@developpement.be",
+          "CreatedDaysAgo": 1
+        }
+      ]
+    },
+    {
+      "Description": "Permis de terrasse - Restaurant Le Gourmet",
+      "Status": "Pending",
+      "Type": "ServiceRequest",
+      "CustomerEmail": "mertens@restaurant.be",
+      "CompletionTargetDays": 21,
+      "EstimatedEffortPoints": 5,
+      "PriorityScore": 12,
+      "GerdaTags": "Permis, Terrasse, Restaurant",
+      "Comments": [
+        {
+          "Body": "Demande de permis de terrasse pour 20 places supplémentaires. Saison estivale.",
+          "AuthorEmail": "mertens@restaurant.be",
+          "CreatedDaysAgo": 3
+        }
+      ]
+    },
+    {
+      "Description": "Problème de connexion internet - Mairie de Desgoffe",
+      "Status": "Pending",
+      "Type": "Incident",
+      "CustomerEmail": "gustave@desgoffe.gov",
+      "CompletionTargetDays": 2,
+      "EstimatedEffortPoints": 8,
+      "PriorityScore": 50,
+      "GerdaTags": "IT, Internet, Mairie, Connexion",
+      "Comments": [
+        {
+          "Body": "La connexion internet de la mairie est instable depuis ce matin. Les services en ligne sont inaccessibles. Le serveur VPN ne répond pas.",
+          "AuthorEmail": "gustave@desgoffe.gov",
+          "CreatedDaysAgo": 1
+        }
+      ]
+    },
+    {
+      "Description": "Demande de logement social - Famille Martin",
+      "Status": "Pending",
+      "Type": "ServiceRequest",
+      "CustomerEmail": "dubois@commercant.be",
+      "CompletionTargetDays": 30,
+      "EstimatedEffortPoints": 8,
+      "PriorityScore": 18,
+      "GerdaTags": "Logement, Social, Demande",
+      "Comments": [
+        {
+          "Body": "La famille Martin (4 enfants) est en situation de précarité. Ils demandent un logement social urgent. Dossier complet à l'appui.",
+          "AuthorEmail": "dubois@commercant.be",
+          "CreatedDaysAgo": 4
+        }
+      ]
+    },
+    {
+      "Description": "Collecte des déchets manquée - Quartier Nord",
+      "Status": "Pending",
+      "Type": "Incident",
+      "CustomerEmail": "devos@immo.be",
+      "CompletionTargetDays": 2,
+      "EstimatedEffortPoints": 3,
+      "PriorityScore": 25,
+      "GerdaTags": "Déchets, Collecte, Manquée, Nord",
+      "Comments": [
+        {
+          "Body": "La collecte des déchets n'a pas eu lieu hier dans le quartier Nord. Les poubelles débordent. Mauvaises odeurs.",
+          "AuthorEmail": "devos@immo.be",
+          "CreatedDaysAgo": 1
+        }
+      ]
+    }
+  ],
+  "KnowledgeBaseArticles": [
+    {
+      "Title": "Procédure d'Expropriation pour Utilité Publique",
+      "Content": "Le cadre légal de l'expropriation sous le mandat de Gustave Desgoffe.\n\n**Étapes:**\n1. Déclaration d'utilité publique par le Conseil Municipal.\n2. Enquête publique (15 jours).\n3. Offre d'indemnisation provisionnelle.\n4. Transfert de propriété.\n\n*Note: Tout recours suspend l'exécution de l'acte.*\n\n**Délais:**\n* Minimum 6 mois pour l'ensemble de la procédure.\n* Recours possible devant le Conseil d'État.",
+      "Tags": "Legal, Urbanisme, Politique, Expropriation",
+      "AuthorEmail": "claire@desgoffe.gov",
+      "CreatedDaysAgo": 10
+    },
+    {
+      "Title": "Gestion du Patrimoine Arboré",
+      "Content": "Classification des arbres remarquables de la ville.\n\n**Critères de protection:**\n* Âge supérieur à 100 ans.\n* Intérêt historique ou paysager.\n* Essence rare.\n\n**Procédure d'abattage:**\n* L'abattage nécessite un vote à l'unanimité du Conseil Municipal.\n* Avis de l'urbaniste obligatoire.\n* Enquête publique si contestation.\n\n**Sanctions:**\n* Amende de 500€ par arbre abattu sans autorisation.",
+      "Tags": "Environnement, Patrimoine, Archives, Arbres",
+      "AuthorEmail": "marcel@desgoffe.gov",
+      "CreatedDaysAgo": 45
+    },
+    {
+      "Title": "Permis d'Urbanisme - Guide du Demandeur",
+      "Content": "Guide complet pour demander un permis d'urbanisme à Desgoffe.\n\n**Documents requis:**\n* Plan de situation.\n* Plans d'architecte.\n* Étude de sol.\n* Attestation d'assurance.\n* Dossier photo.\n\n**Délais:**\n* Délai légal: 60 jours.\n* Avec enquête publique: 105 jours.\n* Permis de lotir: 90 jours.\n\n**Frais:**\n* Taxe d'urbanisme: 1.5% du montant des travaux.\n* Dossier: 250€.",
+      "Tags": "Urbanisme, Permis, Guide, Administratif",
+      "AuthorEmail": "bernard@desgoffe.gov",
+      "CreatedDaysAgo": 30
+    },
+    {
+      "Title": "Plan de Mobilité - Règlementation Vélo",
+      "Content": "Règlementation pour l'utilisation des vélos à Desgoffe.\n\n**Pistes cyclables:**\n* Obligation d'utilisation lorsqu'elles existent.\n* Vitesse max: 30 km/h.\n* Interdiction de circuler sur les trottoirs.\n\n**Stationnement:**\n* Arceaux obligatoires dans les zones commerciales.\n* Stationnement interdit devant les issues de secours.\n* Sanction: 25€ d'amende.\n\n**Vélos partagés:**\n* 3 opérateurs autorisés.\n* Max 100 vélos par opérateur.\n* Zone de stationnement délimitée.",
+      "Tags": "Mobilité, Vélo, Règlementation, Transport",
+      "AuthorEmail": "serge@desgoffe.gov",
+      "CreatedDaysAgo": 20
+    },
+    {
+      "Title": "Gestion des Déchets - Calendrier de Collecte",
+      "Content": "Calendrier de collecte des déchets à Desgoffe.\n\n**Collecte résiduelle (poubelle noire):**\n* Lundi, mercredi, vendredi.\n\n**Collecte recyclage (poubelle bleue):**\n* Mardi et jeudi.\n\n**Collecte organique (compostage):**\n* Lundi et jeudi.\n\n**Déchèterie:**\n* Ouverture: mardi au samedi, 8h-18h.\n* Dimanche: 9h-12h.\n* Gratuit pour les résidents.\n\n**Encombrants:**\n* Sur rendez-vous.\n* Appel au 02 555 01 01.",
+      "Tags": "Déchets, Collecte, Calendrier, Environnement",
+      "AuthorEmail": "madeleine@desgoffe.gov",
+      "CreatedDaysAgo": 15
+    },
+    {
+      "Title": "Subventions Associations - Critères et Demandes",
+      "Content": "Guide pour les associations demandant des subventions.\n\n**Critères d'éligibilité:**\n* Association reconnue depuis minimum 2 ans.\n* Siège social à Desgoffe.\n* Activité au profit de la population locale.\n\n**Types de subventions:**\n* Fonctionnement: max 5.000€.\n* Projet: max 15.000€.\n* Événement: max 3.000€.\n\n**Démarche:**\n1. Dossier de demande (formulaire en ligne).\n2. Présentation au Conseil des Associations.\n3. Décision du Conseil Municipal (délai: 60 jours).\n4. Convention de subvention.\n5. Bilan d'activité à 6 mois.",
+      "Tags": "Subventions, Associations, Critères, Finance",
+      "AuthorEmail": "jacqueline@desgoffe.gov",
+      "CreatedDaysAgo": 25
+    },
+    {
+      "Title": "Procédure Nuisances - Réclamation et Médiation",
+      "Content": "Procédure pour traiter les réclamations de nuisance.\n\n**Types de nuisance:**\n* Bruit (musique, travaux, animaux).\n* Odeurs (restaurants, déchets).\n* Voisinage (clôtures, plantations).\n\n**Étapes:**\n1. Réclamation écrite (formulaire en ligne).\n2. Médiation de quartier (obligatoire).\n3. Procès-verbal de constat (si échec).\n4. Amende administrative (25€ à 250€).\n5. Tribunal de police (si récidive).\n\n**Horaires de tranquillité:**\n* Semaine: 22h-7h.\n* Week-end: 23h-8h.\n* Travaux: 8h-18h (sauf urgence).",
+      "Tags": "Nuisances, Réclamation, Médiation, Règlement",
+      "AuthorEmail": "zero@desgoffe.gov",
+      "CreatedDaysAgo": 18
+    },
+    {
+      "Title": "Archives Municipales - Accès et Recherche",
+      "Content": "Comment accéder aux archives municipales de Desgoffe.\n\n**Accès sur place:**\n* Horaires: mardi au vendredi, 9h-17h.\n* Inscription obligatoire.\n* Carte d'identité requise.\n\n**Accès en ligne:**\n* Portail: archives.desgoffe.gov.\n* Actes d'état civil (1800-1920).\n* Plans cadastraux (1880-1960).\n* Registres de population (1840-1940).\n\n**Reproduction:**\n* Numérisation: 0.50€ par page.\n* Copie certifiée: 5€.\n* Gratuit pour les chercheurs (sur demande).",
+      "Tags": "Archives, Accès, Recherche, Patrimoine",
+      "AuthorEmail": "marcel@desgoffe.gov",
+      "CreatedDaysAgo": 12
+    },
+    {
+      "Title": "Voirie et Travaux Publics - Signalement",
+      "Content": "Comment signaler un problème de voirie.\n\n**Problèmes courants:**\n* Trous dans la route.\n* Trottoirs dégradés.\n* Éclairage défectueux.\n* Signaux de circulation.\n* Nids-de-poule.\n\n**Signalement:**\n* Formulaire en ligne.\n* Appel: 02 555 01 01.\n* Application mobile: Desgoffe Mobile.\n\n**Délais de réponse:**\n* Danger immédiat: 24h.\n* Nuisance: 5 jours ouvrables.\n* Amélioration: 30 jours.\n\n**Urgence (nuit et week-end):**\n* Numéro vert: 0800 12 34 56.",
+      "Tags": "Voirie, Travaux, Signalement, Urgence",
+      "AuthorEmail": "rene@desgoffe.gov",
+      "CreatedDaysAgo": 8
+    },
+    {
+      "Title": "État Civil - Actes et Demandes",
+      "Content": "Guide pour obtenir des actes d'état civil.\n\n**Actes disponibles:**\n* Naissance (depuis 1800).\n* Mariage (depuis 1800).\n* Décès (depuis 1800).\n* Reconnaissance (depuis 1955).\n\n**Demande:**\n* En ligne: etatcivil.desgoffe.gov.\n* Sur place: Hôtel de Ville, bureau 12.\n* Par courrier.\n\n**Délais:**\n* Standard: 5 jours ouvrables.\n* Urgent: 24h (supplément 15€).\n* Gratuit pour les résidents.\n\n**Documents requis:**\n* Pièce d'identité.\n* Justification du lien (si demande pour un tiers).",
+      "Tags": "ÉtatCivil, Actes, Naissance, Décès",
+      "AuthorEmail": "serge@desgoffe.gov",
+      "CreatedDaysAgo": 14
+    },
+    {
+      "Title": "Politique Environnementale - Natura 2000",
+      "Content": "Règlementation pour les zones Natura 2000 à Desgoffe.\n\n**Zones concernées:**\n* Zone humide du Canal (12 hectares).\n* Forêt de la Hestre (45 hectares).\n* Prairie de l'Escaut (8 hectares).\n\n**Restrictions:**\n* Interdiction de construction dans les zones de protection.\n* Limitation des pesticides.\n* Zones de tranquillité pour la faune (15 mars - 15 juillet).\n\n**Autorisations:**\n* Étude d'impact obligatoire.\n* Avis de la Direction Nature et Forêt.\n* Permis spécial du Gouvernement Régional.\n\n**Sanctions:**\n* Amende: 250€ à 50.000€.\n* Restauration écologique obligatoire.",
+      "Tags": "Environnement, Natura2000, Protection, Écologie",
+      "AuthorEmail": "madeleine@desgoffe.gov",
+      "CreatedDaysAgo": 6
+    },
+    {
+      "Title": "Événements et Culture - Demande d'Autorisation",
+      "Content": "Guide pour organiser un événement à Desgoffe.\n\n**Événements nécessitant une autorisation:**\n* Plus de 50 personnes en plein air.\n* Utilisation d'espace public.\n* Vente d'alcool.\n* Musique amplifiée.\n* Feu d'artifice.\n\n**Démarche:**\n1. Demande écrite (minimum 30 jours avant).\n2. Avis des services compétents (police, pompiers, environnement).\n3. Arrêté du Bourgmestre.\n4. Assurance responsabilité civile obligatoire.\n\n**Taxe:**\n* Événement commercial: 2€/participant.\n* Événement associatif: gratuit.\n* Événement culturel: 50% réduction.",
+      "Tags": "Culture, Événements, Autorisation, Organisation",
+      "AuthorEmail": "georges@desgoffe.gov",
+      "CreatedDaysAgo": 10
+    }
+  ]
 }

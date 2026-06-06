@@ -153,6 +153,57 @@ public class PortalsApiController : ControllerBase
     }
 
     /// <summary>
+    /// Get tickets for a customer by email address.
+    /// Anonymous endpoint for citizen portal dashboard.
+    /// </summary>
+    [HttpGet("tickets")]
+    public async Task<ActionResult<IEnumerable<PortalTicketDto>>> GetTicketsByEmail(
+        [FromQuery] string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return BadRequest(new { success = false, message = "Email is required." });
+        }
+
+        try
+        {
+            // Find customer by email
+            var customer = await _userRepository.GetUserByEmailAsync(email);
+            if (customer == null)
+            {
+                // Return empty list for unknown customers — don’t leak whether email exists
+                return Ok(new List<PortalTicketDto>());
+            }
+
+            // Get tickets for this customer
+            var tickets = await _ticketRepository.GetByCustomerIdAsync(customer.Id);
+
+            // Map to DTO
+            var result = tickets.Select(t => new PortalTicketDto
+            {
+                Id = t.Guid.ToString(),
+                Number = t.Guid.ToString().Substring(0, 8).ToUpper(),
+                Type = t.WorkItemTypeCode ?? "DEMANDE",
+                Title = t.Title ?? t.Description?.Substring(0, Math.Min(50, t.Description?.Length ?? 0)) + "..." ?? "Sans titre",
+                Description = t.Description,
+                Status = t.TicketStatus.ToString().ToLower(),
+                Priority = ((int)t.PriorityScore).ToString(),
+                Date = t.CreationDate.ToString("yyyy-MM-dd"),
+                UpdatedAt = (t.CompletionDate ?? t.CreationDate).ToString("yyyy-MM-dd"),
+                Tags = t.GerdaTags,
+                HasAttachment = !string.IsNullOrEmpty(t.GerdaTags) && t.GerdaTags.Contains("Attachment:"),
+            });
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching tickets for email {Email}", email);
+            return StatusCode(500, new { success = false, message = "An error occurred while fetching tickets." });
+        }
+    }
+
+    /// <summary>
     /// Health check endpoint for portals
     /// </summary>
     [HttpGet("health")]
@@ -160,4 +211,22 @@ public class PortalsApiController : ControllerBase
     {
         return Ok(new { status = "healthy", timestamp = _clock.UtcNow });
     }
+}
+
+/// <summary>
+/// Ticket data returned by the portal API
+/// </summary>
+public class PortalTicketDto
+{
+    public string Id { get; set; } = string.Empty;
+    public string Number { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public string Priority { get; set; } = string.Empty;
+    public string Date { get; set; } = string.Empty;
+    public string UpdatedAt { get; set; } = string.Empty;
+    public string? Tags { get; set; }
+    public bool HasAttachment { get; set; }
 }

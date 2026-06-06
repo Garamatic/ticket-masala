@@ -30,6 +30,7 @@ public class PortalsApiController : ControllerBase
     private readonly ILogger<PortalsApiController> _logger;
     private readonly IWebHostEnvironment _environment;
     private readonly ISystemClock _clock;
+    private readonly IConfiguration _configuration;
 
     public PortalsApiController(
         ITicketRepository ticketRepository,
@@ -39,7 +40,8 @@ public class PortalsApiController : ControllerBase
         IDomainConfigurationService domainConfig,
         ILogger<PortalsApiController> logger,
         IWebHostEnvironment environment,
-        ISystemClock clock)
+        ISystemClock clock,
+        IConfiguration configuration)
     {
         _ticketRepository = ticketRepository;
         _userRepository = userRepository;
@@ -49,6 +51,23 @@ public class PortalsApiController : ControllerBase
         _logger = logger;
         _environment = environment;
         _clock = clock;
+        _configuration = configuration;
+    }
+
+    /// <summary>
+    /// Validates the X-Portal-Secret header against the configured secret.
+    /// Returns true if valid or if no secret is configured (dev mode).
+    /// </summary>
+    private bool ValidatePortalSecret()
+    {
+        var configuredSecret = _configuration["Portal:Secret"];
+        if (string.IsNullOrEmpty(configuredSecret))
+            return true; // No secret configured = dev mode, allow all
+
+        if (!Request.Headers.TryGetValue("X-Portal-Secret", out var headerValue))
+            return false;
+
+        return headerValue == configuredSecret;
     }
 
     /// <summary>
@@ -154,12 +173,18 @@ public class PortalsApiController : ControllerBase
 
     /// <summary>
     /// Get tickets for a customer by email address.
-    /// Anonymous endpoint for citizen portal dashboard.
+    /// Requires X-Portal-Secret header to prevent unauthorized enumeration.
     /// </summary>
     [HttpGet("tickets")]
     public async Task<ActionResult<IEnumerable<PortalTicketDto>>> GetTicketsByEmail(
         [FromQuery] string email)
     {
+        if (!ValidatePortalSecret())
+        {
+            _logger.LogWarning("Unauthorized portal ticket lookup attempt from {RemoteIp}", HttpContext.Connection.RemoteIpAddress);
+            return Unauthorized(new { success = false, message = "Invalid or missing portal secret." });
+        }
+
         if (string.IsNullOrWhiteSpace(email))
         {
             return BadRequest(new { success = false, message = "Email is required." });

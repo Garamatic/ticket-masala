@@ -210,7 +210,7 @@ public class PortalsApiController : ControllerBase
                 Number = t.Guid.ToString().Substring(0, 8).ToUpper(),
                 Type = t.WorkItemTypeCode ?? "DEMANDE",
                 Title = t.Title ?? t.Description?.Substring(0, Math.Min(50, t.Description?.Length ?? 0)) + "..." ?? "Sans titre",
-                Description = t.Description,
+                Description = t.Description ?? string.Empty,
                 Status = t.TicketStatus.ToString().ToLower(),
                 Priority = ((int)t.PriorityScore).ToString(),
                 Date = t.CreationDate.ToString("yyyy-MM-dd"),

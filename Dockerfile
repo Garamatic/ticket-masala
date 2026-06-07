@@ -19,9 +19,11 @@ WORKDIR /app
 COPY --from=build /app/publish .
 
 # Create directory structure and copy templates
-RUN mkdir -p /app/inputs/config /app/inputs/data /app/keys \
+# NOTE: /app/config and /app/data are required as mountpoints for the demo compose
+RUN mkdir -p /app/config /app/data /app/inputs/config /app/inputs/data /app/keys \
     /app/tenants/_template/config /app/tenants/_template/data /app/tenants/_template/theme \
-    /app/wwwroot/tenant-theme
+    /app/wwwroot/tenant-theme \
+    && touch /app/config/seed_data.json
 COPY tenants/_template/ /app/tenants/_template/
 
 # Copy all tenant configurations from local config directory

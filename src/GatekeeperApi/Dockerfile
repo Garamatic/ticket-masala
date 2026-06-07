@@ -16,5 +16,10 @@ RUN dotnet publish "GatekeeperApi.csproj" -c Release -o /app/publish /p:UseAppHo
 # Runtime Stage
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
+
+# Install curl for healthcheck support
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "GatekeeperApi.dll"]

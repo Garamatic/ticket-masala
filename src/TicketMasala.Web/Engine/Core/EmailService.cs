@@ -71,18 +71,23 @@ public class EmailService : IEmailService
             }
             message.Body = bodyBuilder.ToMessageBody();
 
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
             using var client = new SmtpClient();
-            await client.ConnectAsync(smtpHost, smtpPort, SecureSocketOptions.StartTls);
+            await client.ConnectAsync(smtpHost, smtpPort, SecureSocketOptions.StartTls, cts.Token);
 
             if (!string.IsNullOrEmpty(smtpUser) && !string.IsNullOrEmpty(smtpPass))
             {
-                await client.AuthenticateAsync(smtpUser, smtpPass);
+                await client.AuthenticateAsync(smtpUser, smtpPass, cts.Token);
             }
 
-            await client.SendAsync(message);
-            await client.DisconnectAsync(true);
+            await client.SendAsync(message, cts.Token);
+            await client.DisconnectAsync(true, cts.Token);
 
             _logger.LogInformation("Email sent successfully to {Recipients}", string.Join(", ", to));
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogWarning("Email send timed out for recipients: {Recipients}", string.Join(", ", to));
         }
         catch (Exception ex)
         {

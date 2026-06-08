@@ -17,7 +17,7 @@ namespace TicketMasala.Web.Controllers.Api.V1;
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/work-items")]
 [ApiController]
-[Authorize]
+[Authorize(AuthenticationSchemes = "Identity.Application,ApiKey")]
 public class WorkItemsController : ControllerBase
 {
     private readonly ITicketLifecycle _ticketLifecycle;

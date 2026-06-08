@@ -145,9 +145,12 @@ public class TicketCreatedEventConsumer : BackgroundService
 
                 // Idempotency: if this ticket was already created, skip it
                 var ticketGuid = Guid.Empty;
-                if (!string.IsNullOrEmpty(ticketId) &&
-                    Guid.TryParse(ticketId, out ticketGuid) &&
-                    await ticketRepository.GetByIdAsync(ticketGuid) is not null)
+                var ticketExists = false;
+                if (!string.IsNullOrEmpty(ticketId) && Guid.TryParse(ticketId, out ticketGuid))
+                {
+                    ticketExists = await ticketRepository.GetByIdAsync(ticketGuid) is not null;
+                }
+                if (ticketExists)
                 {
                     _logger.LogInformation(
                         "Ticket {TicketGuid} already exists; acknowledging duplicate event",

@@ -72,6 +72,11 @@ public static class WebApplicationBuilderExtensions
             .AddDefaultTokenProviders()
             .AddDefaultUI();
 
+        builder.Services.AddAuthentication()
+            .AddScheme<TicketMasala.Web.Security.ApiKeyAuthenticationSchemeOptions, TicketMasala.Web.Security.ApiKeyAuthenticationHandler>(
+                "ApiKey", options => { });
+
+
         // Authorization
         builder.Services.AddAuthorization(options =>
         {

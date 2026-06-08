@@ -18,6 +18,7 @@ using TicketMasala.Web.Engine.Security;
 using TicketMasala.Web.Infrastructure.DomainEvents;
 using TicketMasala.Web.Modules.Tickets;
 using TicketMasala.Web.Observers;
+using RabbitMQ.Client;
 using TicketMasala.Web.Repositories;
 using TicketMasala.Web.Services;
 using TicketMasala.Web.Tenancy;
@@ -203,8 +204,33 @@ public static class WebApplicationBuilderExtensions
     /// </summary>
     private static WebApplicationBuilder AddMasalaMessaging(this WebApplicationBuilder builder)
     {
+        // RabbitMQ connection factory (shared for publisher + consumers)
+        builder.Services.AddSingleton<IConnectionFactory>(sp =>
+        {
+            var config = sp.GetRequiredService<IConfiguration>();
+            var host = config["RabbitMQ:HostName"] ?? config["RabbitMq:HostName"] ?? "localhost";
+            var port = int.TryParse(config["RabbitMQ:Port"] ?? config["RabbitMq:Port"], out var p) ? p : 5672;
+            var username = config["RabbitMQ:UserName"] ?? config["RabbitMq:UserName"] ?? "guest";
+            var password = config["RabbitMQ:Password"] ?? config["RabbitMq:Password"] ?? "guest";
+            var virtualHost = config["RabbitMQ:VirtualHost"] ?? config["RabbitMq:VirtualHost"] ?? "/";
+
+            return new ConnectionFactory
+            {
+                HostName = host,
+                Port = port,
+                UserName = username,
+                Password = password,
+                VirtualHost = virtualHost,
+                AutomaticRecoveryEnabled = true,
+                TopologyRecoveryEnabled = true
+            };
+        });
+
         // RabbitMQ Publisher (outbound events) - lazy connection, shared library
         builder.Services.AddSingleton<RabbitMqConnector.IRabbitMqPublisher, RabbitMqConnector.RabbitMqPublisher>();
+
+        // Inbound RabbitMQ consumer: creates tickets from event.ticket.created
+        builder.Services.AddHostedService<TicketMasala.Web.Infrastructure.RabbitMq.TicketCreatedEventConsumer>();
 
         // Outbox Publisher (Background Service)
         builder.Services.AddSingleton<OutboxPublisherOptions>(sp =>

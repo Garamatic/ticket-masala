@@ -6,20 +6,20 @@ WORKDIR /src
 COPY ["src/GatekeeperApi/GatekeeperApi.csproj", "GatekeeperApi/"]
 COPY ["src/TicketMasala.Domain/TicketMasala.Domain.csproj", "TicketMasala.Domain/"]
 COPY ["src/RabbitMqConnector/RabbitMqConnector/RabbitMqConnector.csproj", "RabbitMqConnector/RabbitMqConnector/"]
-RUN dotnet restore "GatekeeperApi/GatekeeperApi.csproj"
+RUN dotnet restore "GatekeeperApi/GatekeeperApi.csproj" -r linux-x64
 
 # Copy everything and publish
 COPY src/ .
 WORKDIR "/src/GatekeeperApi"
-RUN dotnet publish "GatekeeperApi.csproj" -c Release -o /app/publish /p:UseAppHost=false --no-restore
+RUN dotnet publish "GatekeeperApi.csproj" -c Release -r linux-x64 -o /app/publish /p:UseAppHost=false /p:DebugSymbols=false /p:DebugType=none --no-restore
 
-# Runtime Stage
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+# Runtime Stage (Chiseled — minimal attack surface)
+FROM mcr.microsoft.com/dotnet/nightly/aspnet:10.0-noble-chiseled-extra AS final
 WORKDIR /app
 
-# Install curl for healthcheck support
-RUN apt-get update && apt-get install -y --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/*
-
 COPY --from=build /app/publish .
+
+# Use the built-in non-root app user (UID 1654)
+USER 1654
+
 ENTRYPOINT ["dotnet", "GatekeeperApi.dll"]

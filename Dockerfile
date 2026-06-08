@@ -6,17 +6,21 @@ WORKDIR /src
 COPY ["src/TicketMasala.Domain/TicketMasala.Domain.csproj", "src/TicketMasala.Domain/"]
 COPY ["src/RabbitMqConnector/RabbitMqConnector/RabbitMqConnector.csproj", "src/RabbitMqConnector/RabbitMqConnector/"]
 COPY ["src/TicketMasala.Web/TicketMasala.Web.csproj", "src/TicketMasala.Web/"]
-RUN dotnet restore "src/TicketMasala.Web/TicketMasala.Web.csproj"
+RUN dotnet restore "src/TicketMasala.Web/TicketMasala.Web.csproj" -r linux-x64
 
 # Copy everything else and publish
 COPY . .
 WORKDIR "/src/src/TicketMasala.Web"
-RUN dotnet publish "TicketMasala.Web.csproj" -c Release -o /app/publish /p:UseAppHost=false --no-restore
+RUN dotnet publish "TicketMasala.Web.csproj" -c Release -r linux-x64 -o /app/publish /p:UseAppHost=false /p:DebugSymbols=false /p:DebugType=none --no-restore
 
 # STAGE 2: Prepare Layout (Chiseled has no shell/mkdir, so we do it here)
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS prepare
 WORKDIR /app
 COPY --from=build /app/publish .
+
+# Strip native debug symbols and documentation files to reduce image size
+RUN find /app/publish -name "*.dbg" -delete && \
+    find /app/publish -maxdepth 1 -name "*.xml" -delete
 
 # Create directory structure and copy templates
 # NOTE: /app/config and /app/data are required as mountpoints for the demo compose

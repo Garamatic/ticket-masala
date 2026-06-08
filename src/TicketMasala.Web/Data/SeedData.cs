@@ -49,6 +49,11 @@ public class SeedWorkItem
     public string Description { get; set; } = string.Empty;
     public Status Status { get; set; }
     public TicketType Type { get; set; } = TicketType.Subtask;
+    /// <summary>
+    /// Domain-specific work item type code (e.g., PLAINTE, PERMIS, DEMANDE, NUISANCE).
+    /// Takes precedence over the generic Type enum when both are set.
+    /// </summary>
+    public string? WorkItemTypeCode { get; set; }
     public string? ResponsibleEmail { get; set; }
     public int CompletionTargetDays { get; set; }
     public int? CompletionDaysAgo { get; set; }

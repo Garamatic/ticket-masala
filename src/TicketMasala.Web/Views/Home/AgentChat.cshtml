@@ -5,11 +5,10 @@
 
 @section Styles {
 <style>
-    /* ─── Chat Container ─── */
-    .chat-container {
+    /* ─── Layout ─── */
+    .agent-layout {
         display: flex;
-        flex-direction: column;
-        height: calc(100vh - 140px);
+        height: calc(100vh - 100px);
         min-height: 500px;
         background: var(--bg-primary);
         border-radius: var(--border-radius-lg);
@@ -18,16 +17,167 @@
         overflow: hidden;
     }
 
-    /* ─── Header ─── */
+    /* ─── Sidebar ─── */
+    .agent-sidebar {
+        width: 260px;
+        flex-shrink: 0;
+        background: var(--bg-secondary);
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        transition: width 0.3s ease;
+    }
+    .agent-sidebar.collapsed {
+        width: 0;
+        overflow: hidden;
+        border-right: none;
+    }
+    .sidebar-header {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .sidebar-new-btn {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border-radius: var(--border-radius);
+        border: 1px dashed var(--border-color);
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        font-size: 0.85rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.375rem;
+        transition: all 0.2s;
+    }
+    .sidebar-new-btn:hover {
+        border-color: var(--color-primary);
+        color: var(--color-primary);
+        background: rgba(99, 102, 241, 0.05);
+    }
+    .sidebar-threads {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0.5rem;
+    }
+    .sidebar-threads::-webkit-scrollbar {
+        width: 4px;
+    }
+    .sidebar-threads::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 2px;
+    }
+    .thread-item {
+        padding: 0.625rem 0.75rem;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        transition: all 0.15s;
+        margin-bottom: 0.25rem;
+        position: relative;
+        user-select: none;
+    }
+    .thread-item:hover {
+        background: var(--bg-primary);
+    }
+    .thread-item.active {
+        background: rgba(99, 102, 241, 0.08);
+        border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+    .thread-item.active .thread-title {
+        color: var(--color-primary);
+        font-weight: 500;
+    }
+    .thread-title {
+        font-size: 0.8rem;
+        color: var(--text-primary);
+        line-height: 1.4;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding-right: 1.5rem;
+    }
+    .thread-meta {
+        font-size: 0.7rem;
+        color: var(--text-tertiary);
+        margin-top: 0.125rem;
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+    }
+    .thread-delete {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: none;
+        background: transparent;
+        color: var(--text-tertiary);
+        font-size: 0.65rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    .thread-item:hover .thread-delete {
+        opacity: 1;
+    }
+    .thread-delete:hover {
+        background: var(--color-danger);
+        color: white;
+    }
+    .sidebar-empty {
+        padding: 2rem 1rem;
+        text-align: center;
+        color: var(--text-tertiary);
+        font-size: 0.8rem;
+    }
+    .sidebar-empty i {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    .sidebar-toggle {
+        display: none;
+        position: absolute;
+        top: 50%;
+        left: 0;
+        width: 20px;
+        height: 40px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-left: none;
+        border-radius: 0 4px 4px 0;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 100;
+        color: var(--text-secondary);
+        font-size: 0.65rem;
+    }
+
+    /* ─── Main Chat Area ─── */
+    .agent-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        position: relative;
+    }
     .chat-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 1rem 1.5rem;
+        padding: 0.75rem 1.25rem;
         background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
         color: white;
         position: relative;
         overflow: hidden;
+        flex-shrink: 0;
     }
     .chat-header::before {
         content: '';
@@ -40,26 +190,32 @@
         border-radius: 50%;
         pointer-events: none;
     }
+    .chat-header-left {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        z-index: 1;
+    }
     .chat-header-avatar {
-        width: 40px;
-        height: 40px;
+        width: 36px;
+        height: 36px;
         border-radius: 50%;
         background: rgba(255,255,255,0.15);
         border: 2px solid rgba(255,255,255,0.3);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.2rem;
-        margin-right: 0.75rem;
+        font-size: 1rem;
         flex-shrink: 0;
     }
     .chat-header-title {
         font-weight: 600;
-        font-size: 1.1rem;
+        font-size: 1rem;
         margin: 0;
+        line-height: 1.3;
     }
     .chat-header-subtitle {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         opacity: 0.8;
         margin: 0;
     }
@@ -71,6 +227,7 @@
         background: rgba(255,255,255,0.15);
         padding: 0.25rem 0.75rem;
         border-radius: 999px;
+        z-index: 1;
     }
     .status-dot {
         width: 6px;
@@ -83,28 +240,52 @@
         0%, 100% { opacity: 1; }
         50% { opacity: 0.5; }
     }
+    .chat-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        z-index: 1;
+    }
+    .chat-header-btn {
+        background: rgba(255,255,255,0.1);
+        border: none;
+        color: white;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 0.75rem;
+        transition: background 0.2s;
+    }
+    .chat-header-btn:hover {
+        background: rgba(255,255,255,0.25);
+    }
 
     /* ─── Quick Actions ─── */
     .quick-actions {
-        padding: 0.75rem 1.5rem;
+        padding: 0.625rem 1.25rem;
         background: var(--bg-secondary);
         border-bottom: 1px solid var(--border-color);
+        flex-shrink: 0;
     }
     .quick-actions-label {
-        font-size: 0.7rem;
+        font-size: 0.65rem;
         text-transform: uppercase;
         letter-spacing: 0.08em;
         color: var(--text-tertiary);
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.375rem;
         font-weight: 600;
     }
     .quick-action-chip {
         display: inline-flex;
         align-items: center;
         gap: 0.375rem;
-        padding: 0.375rem 0.75rem;
+        padding: 0.35rem 0.625rem;
         border-radius: 999px;
-        font-size: 0.8rem;
+        font-size: 0.78rem;
         border: 1px solid var(--border-color);
         background: var(--bg-primary);
         color: var(--text-secondary);
@@ -120,16 +301,17 @@
         transform: translateY(-1px);
     }
     .quick-action-chip i {
-        font-size: 0.7rem;
+        font-size: 0.65rem;
     }
 
     /* ─── Chat History ─── */
     .chat-history {
         flex: 1;
         overflow-y: auto;
-        padding: 1.5rem;
+        padding: 1.25rem;
         background: var(--bg-secondary);
         scroll-behavior: smooth;
+        position: relative;
     }
     .chat-history::-webkit-scrollbar {
         width: 6px;
@@ -174,7 +356,7 @@
         color: white;
     }
     .message-body {
-        max-width: 75%;
+        max-width: 80%;
         display: flex;
         flex-direction: column;
     }
@@ -224,6 +406,51 @@
     .message-copy.copied {
         opacity: 1;
         color: var(--color-success);
+    }
+
+    /* ─── Tool Call Indicators ─── */
+    .tool-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        background: rgba(99, 102, 241, 0.06);
+        border: 1px solid rgba(99, 102, 241, 0.15);
+        border-radius: 0.5rem;
+        margin-bottom: 0.75rem;
+        font-size: 0.8rem;
+        color: var(--color-primary);
+        max-width: 80%;
+        animation: fadeIn 0.3s ease-out;
+    }
+    .tool-indicator i {
+        font-size: 0.75rem;
+    }
+    .tool-indicator .tool-spinner {
+        width: 12px;
+        height: 12px;
+        border: 2px solid rgba(99, 102, 241, 0.2);
+        border-top-color: var(--color-primary);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+    @@keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .tool-indicator.done {
+        background: rgba(74, 222, 128, 0.06);
+        border-color: rgba(74, 222, 128, 0.2);
+        color: var(--color-success);
+    }
+    .tool-indicator.done .tool-spinner {
+        border: none;
+        width: auto;
+        height: auto;
+        animation: none;
     }
 
     /* ─── Typing Indicator ─── */
@@ -294,9 +521,10 @@
 
     /* ─── Input Area ─── */
     .chat-input-area {
-        padding: 0.75rem 1.5rem;
+        padding: 0.75rem 1.25rem;
         background: var(--bg-primary);
         border-top: 1px solid var(--border-color);
+        flex-shrink: 0;
     }
     .chat-input-wrapper {
         display: flex;
@@ -363,6 +591,7 @@
     .chat-toolbar-left {
         display: flex;
         gap: 0.75rem;
+        align-items: center;
     }
     .chat-toolbar-btn {
         background: none;
@@ -376,6 +605,11 @@
     }
     .chat-toolbar-btn:hover {
         color: var(--color-primary);
+    }
+    .chat-toolbar-divider {
+        width: 1px;
+        height: 10px;
+        background: var(--border-color);
     }
 
     /* ─── Markdown in messages ─── */
@@ -456,8 +690,8 @@
     /* ─── Scroll to bottom ─── */
     .scroll-bottom-btn {
         position: absolute;
-        bottom: 100px;
-        right: 2rem;
+        bottom: 80px;
+        right: 1.5rem;
         width: 36px;
         height: 36px;
         border-radius: 50%;
@@ -485,16 +719,34 @@
 
     /* ─── Responsive ─── */
     @@media (max-width: 767px) {
-        .chat-container {
-            height: calc(100vh - 100px);
+        .agent-layout {
+            height: calc(100vh - 60px);
             border-radius: 0;
             border: none;
+        }
+        .agent-sidebar {
+            position: absolute;
+            z-index: 50;
+            height: 100%;
+            box-shadow: var(--shadow-lg);
+        }
+        .agent-sidebar.collapsed {
+            width: 0;
+            overflow: hidden;
+        }
+        .sidebar-toggle {
+            display: flex;
         }
         .message-body { max-width: 85%; }
         .quick-action-chip { font-size: 0.75rem; padding: 0.25rem 0.5rem; }
         .chat-header { padding: 0.75rem 1rem; }
         .chat-history { padding: 1rem; }
         .chat-input-area { padding: 0.5rem 1rem; }
+    }
+    @@media (max-width: 991px) {
+        .agent-sidebar {
+            width: 220px;
+        }
     }
 
     /* ─── Reduced motion ─── */
@@ -503,107 +755,137 @@
         .typing-dot { animation: none; }
         .status-dot { animation: none; }
         .chat-history { scroll-behavior: auto; }
+        .tool-spinner { animation: none; }
     }
 </style>
 }
 
 <div class="container-fluid py-4">
     <div class="row justify-content-center">
-        <div class="col-lg-10 col-xl-9">
-            <div class="chat-container" id="chatContainer">
-                <!-- Header -->
-                <div class="chat-header">
-                    <div class="d-flex align-items-center">
-                        <div class="chat-header-avatar">
-                            <i class="fas fa-brain"></i>
-                        </div>
-                        <div>
-                            <h5 class="chat-header-title">Garamatic AI</h5>
-                            <p class="chat-header-subtitle">Powered by MCP · Model Context Protocol</p>
-                        </div>
+        <div class="col-12 col-xl-11">
+            <div class="agent-layout" id="agentLayout">
+                <!-- Sidebar -->
+                <div class="agent-sidebar" id="agentSidebar">
+                    <div class="sidebar-header">
+                        <button type="button" class="sidebar-new-btn" id="newChatBtn">
+                            <i class="fas fa-plus"></i> New chat
+                        </button>
                     </div>
-                    <div class="d-flex align-items-center gap-3">
-                        @if (hasTicket)
-                        {
-                            <span class="badge bg-white text-primary">
-                                <i class="fas fa-ticket-alt me-1"></i> #@ViewBag.TicketId.ToString().Substring(0, 8)
-                            </span>
-                        }
-                        <div class="chat-header-status">
-                            <span class="status-dot"></span>
-                            <span>Online</span>
+                    <div class="sidebar-threads" id="sidebarThreads">
+                        <div class="sidebar-empty" id="sidebarEmpty">
+                            <i class="fas fa-comments"></i>
+                            <div>No conversations yet</div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Quick Actions -->
-                <div class="quick-actions">
-                    <div class="quick-actions-label">Quick actions</div>
-                    <div class="d-flex flex-wrap">
-                        <button type="button" class="quick-action-chip" data-prompt="What tickets does alice@example.com have?">
-                            <i class="fas fa-search"></i> Customer tickets
-                        </button>
-                        <button type="button" class="quick-action-chip" data-prompt="Show me Alice Johnson's full context">
-                            <i class="fas fa-user"></i> Customer context
-                        </button>
-                        <button type="button" class="quick-action-chip" data-prompt="Create a €200 invoice for ticket #123">
-                            <i class="fas fa-file-invoice"></i> Create invoice
-                        </button>
-                        <button type="button" class="quick-action-chip" data-prompt="What is the invoice status for ticket #123?">
-                            <i class="fas fa-check-circle"></i> Invoice status
-                        </button>
-                        @if (hasTicket)
-                        {
-                            <button type="button" class="quick-action-chip" data-prompt="I'm looking at ticket #@ViewBag.TicketId. What can you tell me about it?">
-                                <i class="fas fa-ticket-alt"></i> This ticket
-                            </button>
-                            <button type="button" class="quick-action-chip" data-prompt="Create an invoice for ticket #@ViewBag.TicketId with amount €150">
-                                <i class="fas fa-euro-sign"></i> Invoice this ticket
-                            </button>
-                        }
-                    </div>
-                </div>
-
-                <!-- Chat History -->
-                <div class="chat-history" id="chatHistory">
-                    <div class="chat-empty" id="chatEmpty">
-                        <div class="chat-empty-icon">
-                            <i class="fas fa-robot"></i>
-                        </div>
-                        <div class="chat-empty-title">How can I help you today?</div>
-                        <div class="chat-empty-text">
-                            I can look up tickets, check customer context, create invoices, and send emails.
-                            Use the quick actions above or type your question below.
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Scroll to bottom -->
-                <button type="button" class="scroll-bottom-btn" id="scrollBottomBtn" title="Scroll to bottom">
-                    <i class="fas fa-chevron-down"></i>
+                <button type="button" class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-chevron-right"></i>
                 </button>
 
-                <!-- Input Area -->
-                <div class="chat-input-area">
-                    <div class="chat-input-wrapper">
-                        <textarea
-                            id="chatInput"
-                            class="chat-input"
-                            placeholder="Ask the agent..."
-                            rows="1"
-                            autocomplete="off"
-                        ></textarea>
-                        <button type="button" class="chat-send-btn" id="sendBtn" title="Send (Ctrl+Enter)">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                    </div>
-                    <div class="chat-toolbar">
-                        <div class="chat-toolbar-left">
-                            <span><kbd>Ctrl</kbd>+<kbd>Enter</kbd> to send</span>
+                <!-- Main Chat Area -->
+                <div class="agent-main">
+                    <!-- Header -->
+                    <div class="chat-header">
+                        <div class="chat-header-left">
+                            <button type="button" class="chat-header-btn d-lg-none" id="sidebarToggleBtn" title="Toggle sidebar">
+                                <i class="fas fa-bars"></i>
+                            </button>
+                            <div class="chat-header-avatar">
+                                <i class="fas fa-brain"></i>
+                            </div>
+                            <div>
+                                <h5 class="chat-header-title">Garamatic AI</h5>
+                                <p class="chat-header-subtitle">Qwen 3.5 · 2B · Ollama</p>
+                            </div>
                         </div>
-                        <button type="button" class="chat-toolbar-btn" id="clearChat">
-                            <i class="fas fa-trash-alt me-1"></i> Clear chat
-                        </button>
+                        <div class="chat-header-actions">
+                            @if (hasTicket)
+                            {
+                                <span class="badge bg-white text-primary">
+                                    <i class="fas fa-ticket-alt me-1"></i> #@ViewBag.TicketId.ToString().Substring(0, 8)
+                                </span>
+                            }
+                            <div class="chat-header-status">
+                                <span class="status-dot"></span>
+                                <span>Online</span>
+                            </div>
+                            <button type="button" class="chat-header-btn" id="exportBtn" title="Export chat">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="quick-actions">
+                        <div class="quick-actions-label">Quick actions</div>
+                        <div class="d-flex flex-wrap">
+                            <button type="button" class="quick-action-chip" data-prompt="What tickets does alice@example.com have?">
+                                <i class="fas fa-search"></i> Customer tickets
+                            </button>
+                            <button type="button" class="quick-action-chip" data-prompt="Show me Alice Johnson's full context">
+                                <i class="fas fa-user"></i> Customer context
+                            </button>
+                            <button type="button" class="quick-action-chip" data-prompt="Create a €200 invoice for ticket #123">
+                                <i class="fas fa-file-invoice"></i> Create invoice
+                            </button>
+                            <button type="button" class="quick-action-chip" data-prompt="What is the invoice status for ticket #123?">
+                                <i class="fas fa-check-circle"></i> Invoice status
+                            </button>
+                            @if (hasTicket)
+                            {
+                                <button type="button" class="quick-action-chip" data-prompt="I'm looking at ticket #@ViewBag.TicketId. What can you tell me about it?">
+                                    <i class="fas fa-ticket-alt"></i> This ticket
+                                </button>
+                                <button type="button" class="quick-action-chip" data-prompt="Create an invoice for ticket #@ViewBag.TicketId with amount €150">
+                                    <i class="fas fa-euro-sign"></i> Invoice this ticket
+                                </button>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Chat History -->
+                    <div class="chat-history" id="chatHistory">
+                        <div class="chat-empty" id="chatEmpty">
+                            <div class="chat-empty-icon">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="chat-empty-title">How can I help you today?</div>
+                            <div class="chat-empty-text">
+                                I can look up tickets, check customer context, create invoices, and send emails.
+                                Use the quick actions above or type your question below.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scroll to bottom -->
+                    <button type="button" class="scroll-bottom-btn" id="scrollBottomBtn" title="Scroll to bottom">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+
+                    <!-- Input Area -->
+                    <div class="chat-input-area">
+                        <div class="chat-input-wrapper">
+                            <textarea
+                                id="chatInput"
+                                class="chat-input"
+                                placeholder="Ask the agent..."
+                                rows="1"
+                                autocomplete="off"
+                            ></textarea>
+                            <button type="button" class="chat-send-btn" id="sendBtn" title="Send (Ctrl+Enter)">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                        <div class="chat-toolbar">
+                            <div class="chat-toolbar-left">
+                                <span><kbd>Ctrl</kbd>+<kbd>Enter</kbd> to send</span>
+                                <span class="chat-toolbar-divider"></span>
+                                <button type="button" class="chat-toolbar-btn" id="clearChat">
+                                    <i class="fas fa-trash-alt me-1"></i> Clear
+                                </button>
+                            </div>
+                            <span id="modelStatus">qwen3.5:2b-q4_K_M</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -619,13 +901,23 @@
     const chatInput = document.getElementById('chatInput');
     const sendBtn = document.getElementById('sendBtn');
     const scrollBottomBtn = document.getElementById('scrollBottomBtn');
-    const chatContainer = document.getElementById('chatContainer');
+    const sidebarThreads = document.getElementById('sidebarThreads');
+    const sidebarEmpty = document.getElementById('sidebarEmpty');
+    const agentSidebar = document.getElementById('agentSidebar');
+    const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+    const sidebarToggle = document.getElementById('sidebarToggle');
 
     // ─── State ───
-    const threadId = 'web-' + Math.random().toString(36).slice(2, 10);
     const ticketId = '@(ViewBag.TicketId?.ToString() ?? "")';
     const agenticUrl = window.__AGENTIC_URL__ || 'http://localhost:3001';
+    let currentThreadId = localStorage.getItem('agentchat_thread_id') || ('web-' + Math.random().toString(36).slice(2, 10));
     let isTyping = false;
+    let currentEventSource = null;
+    let activeToolIndicators = {};
+    let messages = []; // Local message history for export
+
+    // Save thread ID
+    localStorage.setItem('agentchat_thread_id', currentThreadId);
 
     // ─── Auto-resize textarea ───
     chatInput.addEventListener('input', () => {
@@ -633,7 +925,7 @@
         chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
     });
 
-    // ─── Scroll to bottom button ───
+    // ─── Scroll to bottom ───
     chatHistory.addEventListener('scroll', () => {
         const nearBottom = chatHistory.scrollHeight - chatHistory.scrollTop - chatHistory.clientHeight < 100;
         scrollBottomBtn.classList.toggle('visible', !nearBottom);
@@ -641,15 +933,18 @@
     scrollBottomBtn.addEventListener('click', () => {
         chatHistory.scrollTo({ top: chatHistory.scrollHeight, behavior: 'smooth' });
     });
-
     function scrollToBottom() {
         chatHistory.scrollTo({ top: chatHistory.scrollHeight, behavior: 'smooth' });
     }
 
     // ─── Timestamp ───
     function formatTime() {
-        const now = new Date();
-        return now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+        return new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    }
+    function formatDate(ts) {
+        if (!ts) return '';
+        const d = new Date(ts * 1000);
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
 
     // ─── Render Markdown ───
@@ -679,7 +974,6 @@
             return escapeHtml(text);
         }
     }
-
     function escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
@@ -687,10 +981,13 @@
     }
 
     // ─── Add Message ───
-    function addMessage(role, text) {
-        // Hide empty state on first message
+    function addMessage(role, text, skipHistory = false) {
         const emptyState = document.getElementById('chatEmpty');
         if (emptyState) emptyState.style.display = 'none';
+
+        if (!skipHistory) {
+            messages.push({ role, content: text, time: new Date().toISOString() });
+        }
 
         const isUser = role === 'user';
         const messageDiv = document.createElement('div');
@@ -714,7 +1011,6 @@
         chatHistory.appendChild(messageDiv);
         scrollToBottom();
 
-        // Copy handler
         const copyBtn = messageDiv.querySelector('.message-copy');
         if (copyBtn) {
             copyBtn.addEventListener('click', () => {
@@ -728,6 +1024,41 @@
                 });
             });
         }
+        return messageDiv;
+    }
+
+    // ─── Tool Indicator ───
+    function addToolIndicator(tool) {
+        const id = 'tool-' + tool + '-' + Date.now();
+        const div = document.createElement('div');
+        div.id = id;
+        div.className = 'tool-indicator';
+        div.innerHTML = `
+            <div class="tool-spinner"></div>
+            <i class="fas fa-cogs"></i>
+            <span>Using <strong>${tool}</strong>...</span>
+        `;
+        chatHistory.appendChild(div);
+        scrollToBottom();
+        activeToolIndicators[tool] = id;
+        return id;
+    }
+    function markToolDone(tool) {
+        const id = activeToolIndicators[tool];
+        if (!id) return;
+        const el = document.getElementById(id);
+        if (el) {
+            el.classList.add('done');
+            el.innerHTML = `<i class="fas fa-check"></i> <span><strong>${tool}</strong> done</span>`;
+        }
+        delete activeToolIndicators[tool];
+    }
+    function clearActiveTools() {
+        Object.values(activeToolIndicators).forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        });
+        activeToolIndicators = {};
     }
 
     // ─── Typing Indicator ───
@@ -753,45 +1084,127 @@
         scrollToBottom();
         return id;
     }
-
     function removeTyping(id) {
         const el = document.getElementById(id);
         if (el) el.remove();
     }
 
-    // ─── Send Message ───
+    // ─── Send Message (Streaming) ───
     async function sendMessage(message) {
         if (isTyping) return;
         isTyping = true;
         sendBtn.disabled = true;
+        clearActiveTools();
+
+        // Abort any existing stream
+        if (currentEventSource) {
+            currentEventSource.close();
+            currentEventSource = null;
+        }
+
         const typingId = addTyping();
+        let currentAgentBubble = null;
+        let currentAgentText = '';
 
         try {
-            const response = await fetch(`${agenticUrl}/agent/chat`, {
+            const response = await fetch(`${agenticUrl}/agent/chat/stream`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message, thread_id: threadId })
+                body: JSON.stringify({ message, thread_id: currentThreadId })
             });
 
             removeTyping(typingId);
 
             if (!response.ok) {
                 const err = await response.json().catch(() => ({}));
-                const msg = err.detail?.message || err.error || 'The agent is unavailable. Is OPENAI_API_KEY set?';
+                const msg = err.detail?.error || err.error || 'The agent is unavailable.';
                 addMessage('agent', '⚠️ ' + msg);
                 return;
             }
 
-            const data = await response.json();
-            addMessage('agent', data.response);
+            // Read the SSE stream
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n\n');
+                buffer = lines.pop() || '';
+
+                for (const chunk of lines) {
+                    if (!chunk.trim()) continue;
+                    const eventMatch = chunk.match(/^event: (.+)$/m);
+                    const dataMatch = chunk.match(/^data: (.+)$/m);
+                    if (!eventMatch || !dataMatch) continue;
+
+                    const eventType = eventMatch[1];
+                    const eventData = JSON.parse(dataMatch[1]);
+
+                    handleStreamEvent(eventType, eventData, currentAgentBubble, currentAgentText,
+                        (bubble) => { currentAgentBubble = bubble; },
+                        (text) => { currentAgentText = text; });
+                }
+            }
+
+            // Handle remaining buffer
+            if (buffer.trim()) {
+                const eventMatch = buffer.match(/^event: (.+)$/m);
+                const dataMatch = buffer.match(/^data: (.+)$/m);
+                if (eventMatch && dataMatch) {
+                    const eventData = JSON.parse(dataMatch[1]);
+                    handleStreamEvent(eventMatch[1], eventData, currentAgentBubble, currentAgentText,
+                        (bubble) => { currentAgentBubble = bubble; },
+                        (text) => { currentAgentText = text; });
+                }
+            }
+
         } catch (e) {
             removeTyping(typingId);
-            addMessage('agent', '⚠️ Failed to reach the agent. Make sure the agentic service is running at ' + agenticUrl);
+            clearActiveTools();
+            addMessage('agent', '⚠️ Failed to reach the agent. ' + e.message);
         } finally {
             isTyping = false;
             sendBtn.disabled = false;
             chatInput.focus();
+            // Refresh thread list
+            loadThreads();
         }
+    }
+
+    function handleStreamEvent(type, data, currentBubble, currentText, setBubble, setText) {
+        switch (type) {
+            case 'tool_call':
+                addToolIndicator(data.tool);
+                break;
+            case 'tool_result':
+                markToolDone(data.tool);
+                break;
+            case 'content':
+                if (!currentBubble) {
+                    currentBubble = addMessage('agent', data.text, true);
+                    setBubble(currentBubble);
+                } else {
+                    const contentDiv = currentBubble.querySelector('.markdown-content');
+                    if (contentDiv) {
+                        contentDiv.innerHTML = renderMarkdown(data.text);
+                    }
+                }
+                setText(data.text);
+                break;
+            case 'error':
+                clearActiveTools();
+                addMessage('agent', '⚠️ ' + (data.error || 'Unknown error'));
+                break;
+            case 'done':
+                clearActiveTools();
+                // Final content already rendered
+                break;
+        }
+        scrollToBottom();
     }
 
     // ─── Submit handler ───
@@ -806,13 +1219,10 @@
 
     // ─── Event listeners ───
     sendBtn.addEventListener('click', submit);
-
     chatInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            if (e.ctrlKey || e.metaKey) {
-                e.preventDefault();
-                submit();
-            }
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+            e.preventDefault();
+            submit();
         }
     });
 
@@ -835,7 +1245,185 @@
                 <div class="chat-empty-text">Ask me about tickets, customers, or invoices.</div>
             </div>
         `;
+        messages = [];
     });
+
+    // Export chat
+    document.getElementById('exportBtn').addEventListener('click', () => {
+        if (messages.length === 0) {
+            alert('No messages to export.');
+            return;
+        }
+        let md = `# Garamatic AI Chat\n\n**Thread:** ${currentThreadId}\n**Date:** ${new Date().toLocaleString()}\n\n---\n\n`;
+        messages.forEach(m => {
+            const role = m.role === 'user' ? '**You**' : '**Garamatic AI**';
+            md += `${role} (${new Date(m.time).toLocaleTimeString()}):\n\n${m.content}\n\n---\n\n`;
+        });
+        const blob = new Blob([md], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `garamatic-chat-${currentThreadId}.md`;
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+
+    // ─── Sidebar: Thread Management ───
+    async function loadThreads() {
+        try {
+            const resp = await fetch(`${agenticUrl}/agent/threads`);
+            if (!resp.ok) return;
+            const data = await resp.json();
+            const threads = data.threads || [];
+            renderThreadList(threads);
+        } catch (e) {
+            console.warn('Failed to load threads:', e);
+        }
+    }
+
+    function renderThreadList(threads) {
+        if (threads.length === 0) {
+            sidebarThreads.innerHTML = `
+                <div class="sidebar-empty" id="sidebarEmpty">
+                    <i class="fas fa-comments"></i>
+                    <div>No conversations yet</div>
+                </div>
+            `;
+            return;
+        }
+
+        sidebarThreads.innerHTML = '';
+        threads.forEach(t => {
+            const div = document.createElement('div');
+            div.className = 'thread-item' + (t.thread_id === currentThreadId ? ' active' : '');
+            div.dataset.threadId = t.thread_id;
+            div.innerHTML = `
+                <div class="thread-title">${escapeHtml(t.title || 'New conversation')}</div>
+                <div class="thread-meta">
+                    <span>${formatDate(t.updated_at)}</span>
+                    <span>·</span>
+                    <span>${t.message_count || 0} msg</span>
+                </div>
+                <button class="thread-delete" title="Delete" data-thread-id="${t.thread_id}">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            div.addEventListener('click', (e) => {
+                if (e.target.closest('.thread-delete')) return;
+                switchToThread(t.thread_id);
+            });
+            const delBtn = div.querySelector('.thread-delete');
+            delBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteThread(t.thread_id);
+            });
+            sidebarThreads.appendChild(div);
+        });
+    }
+
+    async function switchToThread(threadId) {
+        if (isTyping) return;
+        currentThreadId = threadId;
+        localStorage.setItem('agentchat_thread_id', threadId);
+        messages = [];
+
+        // Clear chat area
+        chatHistory.innerHTML = `
+            <div class="chat-empty">
+                <div class="chat-empty-icon"><i class="fas fa-robot"></i></div>
+                <div class="chat-empty-title">Loading conversation...</div>
+                <div class="chat-empty-text">Please wait while I retrieve the chat history.</div>
+            </div>
+        `;
+
+        // Load messages
+        try {
+            const resp = await fetch(`${agenticUrl}/agent/threads/${encodeURIComponent(threadId)}`);
+            if (resp.ok) {
+                const data = await resp.json();
+                const msgs = data.messages || [];
+                chatHistory.innerHTML = '';
+                if (msgs.length === 0) {
+                    chatHistory.innerHTML = `
+                        <div class="chat-empty">
+                            <div class="chat-empty-icon"><i class="fas fa-robot"></i></div>
+                            <div class="chat-empty-title">New conversation</div>
+                            <div class="chat-empty-text">Ask me about tickets, customers, or invoices.</div>
+                        </div>
+                    `;
+                } else {
+                    msgs.forEach(m => {
+                        addMessage(m.role, m.content, false);
+                    });
+                }
+            }
+        } catch (e) {
+            chatHistory.innerHTML = `
+                <div class="chat-empty">
+                    <div class="chat-empty-icon"><i class="fas fa-robot"></i></div>
+                    <div class="chat-empty-title">Error loading chat</div>
+                    <div class="chat-empty-text">Could not load conversation history.</div>
+                </div>
+            `;
+        }
+
+        // Update sidebar active state
+        renderThreadList(Array.from(sidebarThreads.querySelectorAll('.thread-item')).map(el => ({
+            thread_id: el.dataset.threadId,
+            title: el.querySelector('.thread-title').textContent,
+            updated_at: 0,
+            message_count: 0
+        })));
+        loadThreads();
+    }
+
+    async function deleteThread(threadId) {
+        if (!confirm('Delete this conversation?')) return;
+        try {
+            const resp = await fetch(`${agenticUrl}/agent/threads/${encodeURIComponent(threadId)}`, {
+                method: 'DELETE'
+            });
+            if (resp.ok) {
+                if (threadId === currentThreadId) {
+                    startNewChat();
+                } else {
+                    loadThreads();
+                }
+            }
+        } catch (e) {
+            console.warn('Failed to delete thread:', e);
+        }
+    }
+
+    function startNewChat() {
+        if (isTyping) return;
+        currentThreadId = 'web-' + Math.random().toString(36).slice(2, 10);
+        localStorage.setItem('agentchat_thread_id', currentThreadId);
+        messages = [];
+        chatHistory.innerHTML = `
+            <div class="chat-empty">
+                <div class="chat-empty-icon"><i class="fas fa-robot"></i></div>
+                <div class="chat-empty-title">New conversation</div>
+                <div class="chat-empty-text">Ask me about tickets, customers, or invoices.</div>
+            </div>
+        `;
+        loadThreads();
+    }
+
+    document.getElementById('newChatBtn').addEventListener('click', startNewChat);
+
+    // ─── Mobile sidebar toggle ───
+    function toggleSidebar() {
+        agentSidebar.classList.toggle('collapsed');
+        const icon = sidebarToggle.querySelector('i');
+        if (agentSidebar.classList.contains('collapsed')) {
+            icon.className = 'fas fa-chevron-right';
+        } else {
+            icon.className = 'fas fa-chevron-left';
+        }
+    }
+    if (sidebarToggleBtn) sidebarToggleBtn.addEventListener('click', toggleSidebar);
+    if (sidebarToggle) sidebarToggle.addEventListener('click', toggleSidebar);
 
     // ─── Pre-seed ticket context ───
     if (ticketId) {
@@ -848,5 +1436,8 @@
         addMessage('user', contextMsg);
         sendMessage(contextMsg);
     }
+
+    // ─── Init ───
+    loadThreads();
 </script>
 }

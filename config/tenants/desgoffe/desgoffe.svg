@@ -1,69 +1,57 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="desgoffe-title desgoffe-desc">
-  <title id="desgoffe-title">Ville de Desgoffe logo</title>
-  <desc id="desgoffe-desc">Original municipal seal for Desgoffe-sur-Semois, with a civic shield, Semois river, Ardennes pines, wheat, oak, and municipal colors.</desc>
+  <title id="desgoffe-title">Ville de Desgoffe Logo (Simplified)</title>
+  <desc id="desgoffe-desc">A modernized, minimalist version of the municipal seal for Desgoffe-sur-Semois.</desc>
 
   <defs>
-    <path id="desgoffe-shield" d="M256 116C226 135 195 143 158 149V232C158 292 196 342 256 379C316 342 354 292 354 232V149C317 143 286 135 256 116Z" />
-    <clipPath id="desgoffe-shield-clip">
-      <use href="#desgoffe-shield" />
+    <!-- Original shield shape -->
+    <path id="shield" d="M256 116C226 135 195 143 158 149V232C158 292 196 342 256 379C316 342 354 292 354 232V149C317 143 286 135 256 116Z" />
+    <clipPath id="shield-clip">
+      <use href="#shield" />
     </clipPath>
   </defs>
 
-  <circle cx="256" cy="256" r="236" fill="#FDF5E6" stroke="#5D3A5D" stroke-width="10" />
+  <!-- Scale up the shield to better fill the space -->
+  <g transform="translate(256 256) scale(1.6) translate(-256 -256)">
+    
+    <g clip-path="url(#shield-clip)">
+      <!-- Gold Base -->
+      <rect x="0" y="0" width="512" height="512" fill="#D4A574" />
+      
+      <!-- Green Top -->
+      <rect x="0" y="0" width="512" height="235" fill="#2D5A3D" />
+      
+      <!-- Blue River (Wavy) -->
+      <path d="M0 235 C 100 210, 160 260, 256 250 C 352 240, 412 210, 512 235 V 285 C 412 260, 352 290, 256 300 C 160 310, 100 260, 0 285 Z" fill="#2F6F8F" />
 
-  <g transform="translate(256 256) scale(1.24) translate(-256 -256)">
-  <g stroke-linecap="round" stroke-linejoin="round">
-    <g fill="none" stroke="#D4A574" stroke-width="7">
-      <path d="M177 342C144 299 139 242 158 191" />
-      <path d="M335 342C368 299 373 242 354 191" />
-    </g>
-    <g fill="#D4A574" stroke="#8B6508" stroke-width="2">
-      <path d="M161 212C146 200 142 183 150 169C164 181 168 198 161 212Z" />
-      <path d="M151 252C135 242 129 225 135 210C150 220 158 237 151 252Z" />
-      <path d="M160 293C143 286 134 271 137 255C154 263 164 277 160 293Z" />
-      <path d="M351 212C366 200 370 183 362 169C348 181 344 198 351 212Z" />
-      <path d="M361 252C377 242 383 225 377 210C362 220 354 237 361 252Z" />
-      <path d="M352 293C369 286 378 271 375 255C358 263 348 277 352 293Z" />
-    </g>
-    <g fill="#2D5A3D" stroke="#163D28" stroke-width="2">
-      <path d="M181 197C165 191 154 177 155 160C172 166 183 181 181 197Z" />
-      <path d="M172 240C154 237 141 225 139 208C157 212 170 224 172 240Z" />
-      <path d="M181 282C163 282 148 271 143 255C162 256 177 266 181 282Z" />
-      <path d="M331 197C347 191 358 177 357 160C340 166 329 181 331 197Z" />
-      <path d="M340 240C358 237 371 225 373 208C355 212 342 224 340 240Z" />
-      <path d="M331 282C349 282 364 271 369 255C350 256 335 266 331 282Z" />
-    </g>
-  </g>
+      <!-- Minimalist Castle -->
+      <g fill="#FDF5E6">
+        <!-- Main block -->
+        <rect x="215" y="175" width="82" height="60" />
+        <!-- Top block (below roof) -->
+        <rect x="233" y="145" width="46" height="30" />
+        <!-- Pointy Roof -->
+        <path d="M225 145 L 256 115 L 287 145 Z" />
+      </g>
+      <!-- Base step (gold) -->
+      <rect x="221" y="220" width="70" height="15" fill="#D4A574" />
+      
+      <!-- Door -->
+      <path d="M246 235 V 205 C 246 195, 266 195, 266 205 V 235 Z" fill="#5D3A5D" />
+      <!-- Windows -->
+      <rect x="226" y="185" width="12" height="16" rx="6" fill="#5D3A5D" />
+      <rect x="274" y="185" width="12" height="16" rx="6" fill="#5D3A5D" />
+      <circle cx="256" cy="155" r="6" fill="#5D3A5D" />
 
-  <use href="#desgoffe-shield" fill="#FFFAF0" stroke="#5D3A5D" stroke-width="8" />
-
-  <g clip-path="url(#desgoffe-shield-clip)">
-    <rect x="148" y="108" width="216" height="283" fill="#FFFAF0" />
-    <path d="M148 156C185 144 212 131 256 150C300 131 327 144 364 156V230H148Z" fill="#2D5A3D" />
-    <path d="M148 242C181 217 211 218 239 245C266 271 292 271 320 247C337 232 352 229 364 235V286C337 273 318 278 296 298C263 329 225 318 197 288C180 270 162 268 148 277Z" fill="#2F6F8F" />
-    <path d="M148 294C184 277 209 287 235 309C263 334 300 333 328 309C342 297 354 292 364 293V391H148Z" fill="#D4A574" />
-    <path d="M148 258C182 232 213 234 239 260C265 287 296 285 322 262C338 248 352 245 364 251" fill="none" stroke="#FDF5E6" stroke-width="9" opacity=".95" />
-
-    <g fill="#FDF5E6" stroke="#5D3A5D" stroke-width="5">
-      <path d="M215 220V174H297V220Z" />
-      <path d="M233 174V145H279V174Z" />
-      <path d="M225 145L256 119L287 145Z" />
-      <path d="M221 220V202H291V220Z" fill="#D4A574" />
-      <path d="M247 220V198C247 189 265 189 265 198V220Z" fill="#5D3A5D" stroke="none" />
-      <rect x="226" y="185" width="13" height="14" rx="2" fill="#5D3A5D" stroke="none" />
-      <rect x="273" y="185" width="13" height="14" rx="2" fill="#5D3A5D" stroke="none" />
-      <circle cx="256" cy="159" r="8" fill="#5D3A5D" stroke="none" />
+      <!-- Two Minimalist Pines -->
+      <g fill="#163D28">
+        <path d="M190 235 L 205 185 L 220 235 Z" />
+        <path d="M292 235 L 307 185 L 322 235 Z" />
+      </g>
     </g>
 
-    <g fill="#163D28">
-      <path d="M193 230L213 198L233 230Z" />
-      <rect x="207" y="228" width="12" height="25" />
-      <path d="M289 230L309 198L329 230Z" />
-      <rect x="303" y="228" width="12" height="25" />
-    </g>
-  </g>
-
-  <use href="#desgoffe-shield" fill="none" stroke="#5D3A5D" stroke-width="8" />
-  <use href="#desgoffe-shield" fill="none" stroke="#D4A574" stroke-width="2" />
+    <!-- Thick Outer Border -->
+    <use href="#shield" fill="none" stroke="#5D3A5D" stroke-width="12" />
+    <!-- Inner Accent Border -->
+    <use href="#shield" fill="none" stroke="#FDF5E6" stroke-width="4" />
   </g>
 </svg>

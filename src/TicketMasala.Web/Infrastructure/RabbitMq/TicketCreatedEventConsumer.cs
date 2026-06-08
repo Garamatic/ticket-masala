@@ -4,7 +4,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using TicketMasala.Domain.Common;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Domain.Repositories;
 using TicketMasala.Web.Repositories;
@@ -13,16 +12,23 @@ namespace TicketMasala.Web.Infrastructure.RabbitMq;
 
 /// <summary>
 /// RabbitMQ consumer that listens for <c>event.ticket.created</c> messages and
-/// creates tickets in the database. This closes the ingestion loop: the gatekeeper
-/// publishes <c>ticket.created</c> events, and this consumer materialises them.
+/// creates tickets in the database. Uses a dedicated retry queue with TTL so
+/// transient failures do not cause duplicate delivery to other consumers.
 /// </summary>
 public class TicketCreatedEventConsumer : BackgroundService
 {
     private const int MaxRetries = 3;
+    private const int RetryDelayMs = 30000;
+
     private const string ExchangeName = "event_exchange";
+    private const string RetryExchangeName = "ticketmasala.ticket.created.retry.exchange";
+
     private const string QueueName = "ticketmasala.ticket.created";
+    private const string RetryQueue = "ticketmasala.ticket.created.retry";
+
     private const string RoutingKey = "event.ticket.created";
-    private const string DlxExchangeName = "event_exchange.dlx";
+    private const string RetryRoutingKey = "ticket.created.retry";
+    private const string RetryReturnRoutingKey = "ticket.created.retry.return";
 
     private readonly IConnectionFactory _connectionFactory;
     private readonly IServiceProvider _serviceProvider;
@@ -45,13 +51,16 @@ public class TicketCreatedEventConsumer : BackgroundService
         _connection = await _connectionFactory.CreateConnectionAsync(stoppingToken);
         _channel = await _connection.CreateChannelAsync();
 
-        // Declare exchange
+        // Fair dispatch: one message at a time
+        await _channel.BasicQosAsync(0, 1, false, cancellationToken: stoppingToken);
+
+        // Main exchange (topic)
         await _channel.ExchangeDeclareAsync(ExchangeName, ExchangeType.Topic, durable: true, cancellationToken: stoppingToken);
 
-        // Declare dead-letter exchange
-        await _channel.ExchangeDeclareAsync(DlxExchangeName, ExchangeType.Topic, durable: true, cancellationToken: stoppingToken);
+        // Retry exchange (messages routed here go to the retry queue)
+        await _channel.ExchangeDeclareAsync(RetryExchangeName, ExchangeType.Topic, durable: true, cancellationToken: stoppingToken);
 
-        // Declare main queue with DLX
+        // Main queue: failed messages go to retry exchange first
         await _channel.QueueDeclareAsync(
             queue: QueueName,
             durable: true,
@@ -59,17 +68,33 @@ public class TicketCreatedEventConsumer : BackgroundService
             autoDelete: false,
             arguments: new Dictionary<string, object?>
             {
-                ["x-dead-letter-exchange"] = DlxExchangeName,
-                ["x-dead-letter-routing-key"] = $"{QueueName}.dlq"
+                ["x-dead-letter-exchange"] = RetryExchangeName,
+                ["x-dead-letter-routing-key"] = RetryRoutingKey
             },
             cancellationToken: stoppingToken);
 
-        // Bind to ticket.created routing key
+        // Retry queue: messages sit here for RetryDelayMs, then route back to main queue
+        await _channel.QueueDeclareAsync(
+            queue: RetryQueue,
+            durable: true,
+            exclusive: false,
+            autoDelete: false,
+            arguments: new Dictionary<string, object?>
+            {
+                ["x-message-ttl"] = RetryDelayMs,
+                ["x-dead-letter-exchange"] = ExchangeName,
+                ["x-dead-letter-routing-key"] = RetryReturnRoutingKey
+            },
+            cancellationToken: stoppingToken);
+
+        // Bindings
         await _channel.QueueBindAsync(QueueName, ExchangeName, RoutingKey, cancellationToken: stoppingToken);
+        await _channel.QueueBindAsync(QueueName, ExchangeName, RetryReturnRoutingKey, cancellationToken: stoppingToken);
+        await _channel.QueueBindAsync(RetryQueue, RetryExchangeName, RetryRoutingKey, cancellationToken: stoppingToken);
 
         _logger.LogInformation(
-            "TicketCreatedEventConsumer started on queue {Queue} bound to {Exchange}/{RoutingKey}",
-            QueueName, ExchangeName, RoutingKey);
+            "TicketCreatedEventConsumer started on {Queue}. Retry: {RetryQueue} ({RetryDelayMs}ms TTL)",
+            QueueName, RetryQueue, RetryDelayMs);
 
         await base.StartAsync(stoppingToken);
     }
@@ -91,20 +116,45 @@ public class TicketCreatedEventConsumer : BackgroundService
                     : body;
 
                 var ticketId = GetString(eventData, "ticket_id");
+                var source = GetString(eventData, "source");
                 var customerEmail = GetString(eventData, "customer_email");
                 var customerName = GetString(eventData, "customer_name");
                 var description = GetString(eventData, "description");
                 var priority = GetString(eventData, "priority");
                 var tags = GetString(eventData, "tags");
 
+                // Prevent circular dependency: outbox events from this system
+                // must not trigger another ticket creation.
+                if (source == "ticket-masala")
+                {
+                    _logger.LogInformation(
+                        "Skipping internal outbox event (source=ticket-masala) for ticket {TicketId}",
+                        ticketId);
+                    await _channel!.BasicAckAsync(args.DeliveryTag, multiple: false);
+                    return;
+                }
+
                 _logger.LogInformation(
-                    "Processing ticket.created event: TicketId={TicketId}, Email={Email}, Name={Name}",
-                    ticketId, customerEmail, customerName);
+                    "Processing ticket.created event: TicketId={TicketId}, Source={Source}, Email={Email}",
+                    ticketId, source, customerEmail);
 
                 using var scope = _serviceProvider.CreateScope();
                 var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
                 var ticketRepository = scope.ServiceProvider.GetRequiredService<ITicketRepository>();
                 var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+
+                // Idempotency: if this ticket was already created, skip it
+                var ticketGuid = Guid.Empty;
+                if (!string.IsNullOrEmpty(ticketId) &&
+                    Guid.TryParse(ticketId, out ticketGuid) &&
+                    await ticketRepository.GetByIdAsync(ticketGuid) is not null)
+                {
+                    _logger.LogInformation(
+                        "Ticket {TicketGuid} already exists; acknowledging duplicate event",
+                        ticketGuid);
+                    await _channel!.BasicAckAsync(args.DeliveryTag, multiple: false);
+                    return;
+                }
 
                 // Find or create customer
                 ApplicationUser? customer = null;
@@ -144,13 +194,14 @@ public class TicketCreatedEventConsumer : BackgroundService
                     _ => 5.0
                 };
 
-                // Create ticket
+                // Create ticket, preserving the external ticket_id for idempotency
                 var ticket = Ticket.CreateFromPortal(
                     description,
                     customer?.Id,
                     priorityScore: priorityScore,
                     tags: tags,
-                    completionTarget: DateTime.UtcNow.AddDays(7));
+                    completionTarget: DateTime.UtcNow.AddDays(7),
+                    guid: ticketGuid != Guid.Empty ? ticketGuid : null);
 
                 await ticketRepository.AddAsync(ticket);
                 await unitOfWork.CommitAsync();
@@ -172,10 +223,9 @@ public class TicketCreatedEventConsumer : BackgroundService
                 if (retryCount < MaxRetries)
                 {
                     _logger.LogWarning(ex,
-                        "Error processing ticket.created event; retrying ({RetryCount}/{MaxRetries})",
+                        "Error processing ticket.created event; routing to retry ({RetryCount}/{MaxRetries})",
                         retryCount + 1, MaxRetries);
 
-                    // Republish with incremented retry count
                     var props = new BasicProperties
                     {
                         Headers = new Dictionary<string, object?> { ["x-retry-count"] = retryCount + 1 },
@@ -185,15 +235,25 @@ public class TicketCreatedEventConsumer : BackgroundService
                         MessageId = args.BasicProperties.MessageId
                     };
 
-                    await _channel!.BasicPublishAsync(
-                        exchange: ExchangeName,
-                        routingKey: RoutingKey,
-                        mandatory: false,
-                        basicProperties: props,
-                        body: args.Body,
-                        cancellationToken: CancellationToken.None);
+                    try
+                    {
+                        await _channel!.BasicPublishAsync(
+                            exchange: RetryExchangeName,
+                            routingKey: RetryRoutingKey,
+                            mandatory: false,
+                            basicProperties: props,
+                            body: args.Body,
+                            cancellationToken: CancellationToken.None);
 
-                    await _channel!.BasicAckAsync(args.DeliveryTag, multiple: false);
+                        await _channel!.BasicAckAsync(args.DeliveryTag, multiple: false);
+                    }
+                    catch (Exception publishEx)
+                    {
+                        _logger.LogError(publishEx,
+                            "Failed to route to retry for {MessageId}; dead-lettering",
+                            args.BasicProperties.MessageId);
+                        await _channel!.BasicNackAsync(args.DeliveryTag, multiple: false, requeue: false);
+                    }
                 }
                 else
                 {
@@ -217,6 +277,9 @@ public class TicketCreatedEventConsumer : BackgroundService
     {
         _logger.LogInformation("TicketCreatedEventConsumer stopping...");
 
+        // Cancel the stopping token and wait for ExecuteAsync to complete
+        await base.StopAsync(cancellationToken);
+
         if (_channel is not null)
         {
             try { await _channel.CloseAsync(); } catch { /* ignore */ }
@@ -228,8 +291,6 @@ public class TicketCreatedEventConsumer : BackgroundService
             try { await _connection.CloseAsync(); } catch { /* ignore */ }
             try { await _connection.DisposeAsync(); } catch { /* ignore */ }
         }
-
-        await base.StopAsync(cancellationToken);
     }
 
     private static string GetString(JsonElement element, string propertyName)

@@ -147,9 +147,6 @@ builder.Services.AddHttpClient("OpenRouter", client =>
     .WaitAndRetryAsync(3, retryAttempt =>
         TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
 
-// RabbitMQ Publisher (shared library, reads from configuration)
-builder.Services.AddRabbitMqPublisher();
-
 // Register OpenAI service for explainability
 // AI Generation Port (Domain-facing, provider-agnostic)
 builder.Services.AddTransient<TicketMasala.Domain.Ports.IAIGenerationPort>(sp =>

@@ -137,7 +137,8 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
         string? customerId,
         double? priorityScore = null,
         string? tags = null,
-        DateTime? completionTarget = null)
+        DateTime? completionTarget = null,
+        Guid? guid = null)
     {
         var title = description.Length > 50
             ? description[..47] + "..."
@@ -145,6 +146,7 @@ public partial class Ticket : BaseModel, IAggregateRoot, IHasDomainEvents
 
         var ticket = new Ticket
         {
+            Guid = guid ?? Guid.NewGuid(),
             Description = description.Trim(),
             Title = title.Trim(),
             CustomerId = customerId,

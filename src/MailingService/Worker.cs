@@ -253,6 +253,9 @@ public class Worker : BackgroundService
     {
         _logger.LogInformation("Worker stopping...");
 
+        // Cancel the stopping token and wait for ExecuteAsync to complete
+        await base.StopAsync(cancellationToken);
+
         if (_channel is not null)
         {
             try { await _channel.CloseAsync(); } catch { /* ignore */ }
@@ -264,7 +267,5 @@ public class Worker : BackgroundService
             try { await _connection.CloseAsync(); } catch { /* ignore */ }
             try { await _connection.DisposeAsync(); } catch { /* ignore */ }
         }
-
-        await base.StopAsync(cancellationToken);
     }
 }

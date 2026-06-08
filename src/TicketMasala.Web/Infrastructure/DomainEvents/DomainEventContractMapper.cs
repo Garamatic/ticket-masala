@@ -92,6 +92,7 @@ public sealed class TicketCreatedContractMapper : IDomainEventContractMapper
         {
             Payload = new RabbitMqConnector.Contracts.TicketCreatedEvent
             {
+                Source = "ticket-masala",
                 TicketId = created.TicketGuid.ToString(),
                 CustomerEmail = customerEmail,
                 CustomerName = customerName,
@@ -108,11 +109,9 @@ public sealed class TicketCreatedContractMapper : IDomainEventContractMapper
 
     private static string MapPriorityScore(double score) => score switch
     {
-        <= 0 => "medium",
-        <= 5 => "low",
-        <= 10 => "medium",
-        <= 15 => "high",
-        _ => "urgent"
+        < 3 => "low",
+        < 7 => "medium",
+        _ => "high"
     };
 }
 

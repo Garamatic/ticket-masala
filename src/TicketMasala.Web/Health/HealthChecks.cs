@@ -103,15 +103,18 @@ public class BackgroundQueueHealthCheck : IHealthCheck
         CancellationToken cancellationToken = default)
     {
         var count = _queue.QueuedCount;
+        var dropped = _queue.DroppedCount;
         var data = new Dictionary<string, object>
         {
-            { "QueuedCount", count }
+            { "QueuedCount", count },
+            { "DroppedCount", dropped }
         };
 
-        if (count > 500)
+        // Queue capacity is 100; degrade when >80% full or items have been dropped
+        if (count > 80 || dropped > 0)
         {
             return Task.FromResult(HealthCheckResult.Degraded(
-                $"Background queue backlog high ({count} items)", null, data));
+                $"Background queue backlog high ({count} queued, {dropped} dropped)", null, data));
         }
 
         return Task.FromResult(HealthCheckResult.Healthy(

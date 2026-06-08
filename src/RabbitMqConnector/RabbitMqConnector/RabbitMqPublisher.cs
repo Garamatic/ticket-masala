@@ -26,7 +26,7 @@ public interface IRabbitMqPublisher
 /// </summary>
 public class RabbitMqPublisher : IRabbitMqPublisher, IAsyncDisposable
 {
-    private const string ConfigSection = "RabbitMq";
+    private const string ConfigSection = "RabbitMQ";
     private const string ExchangeNameKey = "ExchangeName";
     public const string DefaultExchangeName = "event_exchange";
 

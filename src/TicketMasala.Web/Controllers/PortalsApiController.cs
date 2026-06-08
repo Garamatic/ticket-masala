@@ -77,7 +77,8 @@ public class PortalsApiController : ControllerBase
     [HttpPost("submit")]
     [Consumes("multipart/form-data")]
     public async Task<ActionResult<PortalSubmissionResponse>> Submit(
-        [FromForm] PortalSubmissionViewModel model)
+        [FromForm] PortalSubmissionViewModel model,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -148,7 +149,7 @@ public class PortalsApiController : ControllerBase
 
             // Save to database
             await _ticketRepository.AddAsync(ticket);
-            await _unitOfWork.CommitAsync();
+            await _unitOfWork.CommitAsync(cancellationToken);
 
             _logger.LogInformation("Portal ticket created: {TicketGuid}", ticket.Guid);
 
@@ -158,6 +159,15 @@ public class PortalsApiController : ControllerBase
                 Message = "Your request has been submitted successfully",
                 TicketGuid = ticket.Guid,
                 TicketNumber = $"#{ticket.Guid}" // Using Guid instead of non-existent Id
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogWarning("Portal submission cancelled by client or timeout");
+            return StatusCode(504, new PortalSubmissionResponse
+            {
+                Success = false,
+                Message = "Request timed out. Please try again."
             });
         }
         catch (Exception ex)

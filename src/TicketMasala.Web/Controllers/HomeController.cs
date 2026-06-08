@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using TicketMasala.Web.Configuration;
 using TicketMasala.Web.Engine.Core;
 using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.ViewModels.Shared;
@@ -12,21 +14,26 @@ public class HomeController : Controller
     private readonly ILogger<HomeController> _logger;
     private readonly ITicketReadService _ticketReadService;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly MasalaOptions _options;
 
     public HomeController(
         ILogger<HomeController> logger,
         ITicketReadService ticketReadService,
-        IHttpContextAccessor httpContextAccessor)
+        IHttpContextAccessor httpContextAccessor,
+        IOptions<MasalaOptions> options)
     {
         _logger = logger;
         _ticketReadService = ticketReadService;
         _httpContextAccessor = httpContextAccessor;
+        _options = options.Value;
     }
 
     [Authorize]
     public IActionResult AgentChat(Guid? ticketId = null)
     {
         ViewBag.TicketId = ticketId;
+        ViewBag.FastModel = _options.Gerda.OpenAiModelFast;
+        ViewBag.QualityModel = _options.Gerda.OpenAiModel;
         return View();
     }
 

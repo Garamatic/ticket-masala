@@ -14,6 +14,7 @@ using TicketMasala.Domain.Repositories;
 using TicketMasala.Web.Abstractions;
 using TicketMasala.Web.AI;
 using TicketMasala.Web.Common;
+using TicketMasala.Web.Areas.Admin.Controllers;
 using TicketMasala.Web.Controllers;
 using TicketMasala.Web.Engine.Compiler;
 using TicketMasala.Web.Engine.Core;
@@ -59,42 +60,24 @@ namespace TicketMasala.Tests.Robustness
         }
 
         [Fact]
-        public async Task ApplicationUsersController_Create_WithNullRole_ShouldHandleGracefully()
+        public async Task UsersController_ToggleLock_NonExistentId_ShouldReturnNotFound()
         {
             // Arrange
             var store = new Mock<IUserStore<ApplicationUser>>();
             var userManager = new Mock<UserManager<ApplicationUser>>(store.Object, null!, null!, null!, null!, null!, null!, null!, null!);
+            userManager.Setup(u => u.FindByIdAsync(It.IsAny<string>())).ReturnsAsync((ApplicationUser?)null);
+
             var roleManager = new Mock<RoleManager<IdentityRole>>(new Mock<IRoleStore<IdentityRole>>().Object, null!, null!, null!, null!);
-            var logger = new Mock<ILogger<ApplicationUsersController>>();
+            var logger = new Mock<ILogger<UsersController>>();
+            var clock = new Mock<ISystemClock>();
 
-            var controller = new ApplicationUsersController(userManager.Object, roleManager.Object, logger.Object);
-
-            // Bypass ModelState check to test logic resilience (though ModelState usually catches this)
-            // But if we construct the model manually with nulls...
-            var model = new UserCreateViewModel
-            {
-                Role = null!, // Unexpected null
-                Email = "crash@test.com",
-                FirstName = "Crash",
-                LastName = "Test",
-                Password = "Pwd",
-                ConfirmPassword = "Pwd"
-            };
+            var controller = new UsersController(userManager.Object, roleManager.Object, logger.Object, clock.Object);
 
             // Act
-            // We want to verify it doesn't throw NullReferenceException
-            try
-            {
-                await controller.Create(model);
-            }
-            catch (NullReferenceException)
-            {
-                Assert.Fail("Controller threw NullReferenceException on null Role");
-            }
-            catch (Exception)
-            {
-                // specific exceptions might be okay, but we want to avoid total crash
-            }
+            var result = await controller.ToggleLock("non-existent-id");
+
+            // Assert
+            Assert.IsType<NotFoundResult>(result);
         }
 
         [Fact]
@@ -165,7 +148,7 @@ namespace TicketMasala.Tests.Robustness
         }
 
         [Fact]
-        public async Task ApplicationUsersController_Edit_NonExistentId_ShouldReturnNotFound()
+        public async Task UsersController_ToggleLock_NullId_ShouldReturnNotFound()
         {
             // Arrange
             var store = new Mock<IUserStore<ApplicationUser>>();
@@ -173,15 +156,16 @@ namespace TicketMasala.Tests.Robustness
             userManager.Setup(u => u.FindByIdAsync(It.IsAny<string>())).ReturnsAsync((ApplicationUser?)null);
 
             var roleManager = new Mock<RoleManager<IdentityRole>>(new Mock<IRoleStore<IdentityRole>>().Object, null!, null!, null!, null!);
-            var logger = new Mock<ILogger<ApplicationUsersController>>();
+            var logger = new Mock<ILogger<UsersController>>();
+            var clock = new Mock<ISystemClock>();
 
-            var controller = new ApplicationUsersController(userManager.Object, roleManager.Object, logger.Object);
+            var controller = new UsersController(userManager.Object, roleManager.Object, logger.Object, clock.Object);
 
             // Act
-            var result = await controller.Edit("non-existent-id");
+            var result = await controller.ToggleLock(null!);
 
             // Assert
-            var notFoundResult = Assert.IsType<NotFoundResult>(result);
+            Assert.IsType<NotFoundResult>(result);
         }
     }
 }

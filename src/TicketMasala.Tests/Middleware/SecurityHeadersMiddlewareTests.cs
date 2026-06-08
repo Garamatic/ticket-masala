@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using TicketMasala.Web.Middleware;
 using Xunit;
 
@@ -6,12 +7,22 @@ namespace TicketMasala.Tests.Middleware;
 
 public class SecurityHeadersMiddlewareTests
 {
+    private static IConfiguration GetEmptyConfiguration()
+    {
+        return new ConfigurationBuilder().Build();
+    }
+
+    private static SecurityHeadersMiddleware CreateMiddleware(RequestDelegate next)
+    {
+        return new SecurityHeadersMiddleware(next, GetEmptyConfiguration());
+    }
+
     [Fact(DisplayName = "InvokeAsync adds Content-Security-Policy header")]
     public async Task InvokeAsync_Adds_Content_Security_Policy_Header()
     {
         // Arrange
         var context = new DefaultHttpContext();
-        var middleware = new SecurityHeadersMiddleware(next: (innerHttpContext) => Task.CompletedTask);
+        var middleware = CreateMiddleware(next: (innerHttpContext) => Task.CompletedTask);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -29,7 +40,7 @@ public class SecurityHeadersMiddlewareTests
     {
         // Arrange
         var context = new DefaultHttpContext();
-        var middleware = new SecurityHeadersMiddleware(next: (innerHttpContext) => Task.CompletedTask);
+        var middleware = CreateMiddleware(next: (innerHttpContext) => Task.CompletedTask);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -44,7 +55,7 @@ public class SecurityHeadersMiddlewareTests
     {
         // Arrange
         var context = new DefaultHttpContext();
-        var middleware = new SecurityHeadersMiddleware(next: (innerHttpContext) => Task.CompletedTask);
+        var middleware = CreateMiddleware(next: (innerHttpContext) => Task.CompletedTask);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -59,7 +70,7 @@ public class SecurityHeadersMiddlewareTests
     {
         // Arrange
         var context = new DefaultHttpContext();
-        var middleware = new SecurityHeadersMiddleware(next: (innerHttpContext) => Task.CompletedTask);
+        var middleware = CreateMiddleware(next: (innerHttpContext) => Task.CompletedTask);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -74,7 +85,7 @@ public class SecurityHeadersMiddlewareTests
     {
         // Arrange
         var context = new DefaultHttpContext();
-        var middleware = new SecurityHeadersMiddleware(next: (innerHttpContext) => Task.CompletedTask);
+        var middleware = CreateMiddleware(next: (innerHttpContext) => Task.CompletedTask);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -89,7 +100,7 @@ public class SecurityHeadersMiddlewareTests
     {
         // Arrange
         var context = new DefaultHttpContext();
-        var middleware = new SecurityHeadersMiddleware(next: (innerHttpContext) => Task.CompletedTask);
+        var middleware = CreateMiddleware(next: (innerHttpContext) => Task.CompletedTask);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -107,7 +118,7 @@ public class SecurityHeadersMiddlewareTests
         // Arrange
         var context = new DefaultHttpContext();
         var nextCalled = false;
-        var middleware = new SecurityHeadersMiddleware(next: (innerHttpContext) =>
+        var middleware = CreateMiddleware(next: (innerHttpContext) =>
         {
             nextCalled = true;
             return Task.CompletedTask;
@@ -118,5 +129,26 @@ public class SecurityHeadersMiddlewareTests
 
         // Assert
         Assert.True(nextCalled);
+    }
+
+    [Fact(DisplayName = "InvokeAsync includes Agentic URL in connect-src when configured")]
+    public async Task InvokeAsync_Includes_Agentic_Url_In_Connect_Src()
+    {
+        // Arrange
+        var context = new DefaultHttpContext();
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                { "Agentic:ApiUrl", "https://agent.example.com/" }
+            })
+            .Build();
+        var middleware = new SecurityHeadersMiddleware(next: (innerHttpContext) => Task.CompletedTask, config);
+
+        // Act
+        await middleware.InvokeAsync(context);
+
+        // Assert
+        var csp = context.Response.Headers["Content-Security-Policy"].ToString();
+        Assert.Contains("connect-src 'self' https://agent.example.com", csp);
     }
 }

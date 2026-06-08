@@ -30,19 +30,41 @@ RUN mkdir -p /app/config /app/data /app/inputs/config /app/inputs/data /app/keys
     && touch /app/config/seed_data.json
 COPY tenants/_template/ /app/tenants/_template/
 
-# Copy all tenant configurations from local config directory
+# Copy tenant configurations that exist in the repo.
+# Other tenants are mounted at runtime via docker-compose volumes.
 COPY config/tenants/desgoffe /app/tenants/desgoffe
-COPY config/tenants/whitman /app/tenants/whitman
-COPY config/tenants/liberty /app/tenants/liberty
-COPY config/tenants/hennessey /app/tenants/hennessey
 
 # Sync tenant assets from canonical config/tenants/ to wwwroot/tenants/
 # (single source of truth: config/tenants/ owns the theme and logo)
+# Skip gracefully if tenant files are missing — they are runtime-mounted in demo compose.
 RUN for tenant in desgoffe whitman liberty hennessey; do \
     mkdir -p /app/wwwroot/tenants/$tenant && \
-    cp /app/tenants/$tenant/theme/style.css /app/wwwroot/tenants/$tenant/style.css && \
-    cp /app/tenants/$tenant/$tenant.png /app/wwwroot/tenants/$tenant/logo.png; \
+    if [ -f /app/tenants/$tenant/theme/style.css ]; then \
+        cp /app/tenants/$tenant/theme/style.css /app/wwwroot/tenants/$tenant/style.css; \
+    fi && \
+    if [ -f /app/tenants/$tenant/$tenant.png ]; then \
+        cp /app/tenants/$tenant/$tenant.png /app/wwwroot/tenants/$tenant/logo.png; \
+    elif [ -f /app/tenants/$tenant/$tenant.svg ]; then \
+        cp /app/tenants/$tenant/$tenant.svg /app/wwwroot/tenants/$tenant/logo.svg; \
+    fi; \
     done
+
+# Build a minimal healthcheck probe for the chiseled runtime (no shell/curl)
+WORKDIR /tmp/healthcheck
+RUN dotnet new console --force && \
+    cat <<'EOF' > Program.cs
+using System.Net.Http;
+class Program {
+    static int Main() {
+        try {
+            var client = new HttpClient { Timeout = System.TimeSpan.FromSeconds(5) };
+            var resp = client.GetAsync("http://localhost:8080/health").Result;
+            return resp.IsSuccessStatusCode ? 0 : 1;
+        } catch { return 1; }
+    }
+}
+EOF
+RUN dotnet publish -c Release -o /app/healthcheck --no-restore
 
 # STAGE 3: Runtime (Chiseled Noble Extra - Includes ICU, Minimal surface)
 FROM mcr.microsoft.com/dotnet/nightly/aspnet:10.0-noble-chiseled-extra AS final
@@ -60,6 +82,11 @@ ENV MASALA_TENANT="desgoffe" \
     DOTNET_RUNNING_IN_CONTAINER=true
 
 EXPOSE 8080
+
+# Healthcheck for the chiseled runtime (no shell available)
+# Uses a minimal .NET probe that hits the app's /health endpoint
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+    CMD ["dotnet", "/app/healthcheck/healthcheck.dll"]
 
 # Use the built-in app user
 USER 1654

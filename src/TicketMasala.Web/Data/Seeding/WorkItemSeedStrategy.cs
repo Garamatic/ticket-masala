@@ -161,13 +161,18 @@ public class WorkItemSeedStrategy : ISeedStrategy
             return;
         }
 
+        // Determine work item type: prefer domain-specific code, fall back to generic enum
+        var workItemTypeCode = !string.IsNullOrWhiteSpace(itemDto.WorkItemTypeCode)
+            ? itemDto.WorkItemTypeCode
+            : itemDto.Type.ToString();
+
         // Use factory method for creation (seeding uses SetPropertyForSeeding for non-standard scenarios)
-        var ticket = Ticket.Create(itemDto.Description, title, null, "IT", projectId, itemDto.Type.ToString());
+        var ticket = Ticket.Create(itemDto.Description, title, null, "IT", projectId, workItemTypeCode);
 
         // Apply seeding-specific properties via the legacy compatibility method
         ticket.SetPropertyForSeeding(t =>
         {
-            t.TicketType = itemDto.Type;
+            t.WorkItemTypeCode = workItemTypeCode;
             t.TicketStatus = itemDto.Status;
             t.CreationDate = _clock.UtcNow.AddDays(-itemDto.CompletionDaysAgo ?? 0);
             t.PriorityScore = itemDto.PriorityScore ?? 0;

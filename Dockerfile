@@ -32,6 +32,14 @@ COPY config/tenants/whitman /app/tenants/whitman
 COPY config/tenants/liberty /app/tenants/liberty
 COPY config/tenants/hennessey /app/tenants/hennessey
 
+# Sync tenant assets from canonical config/tenants/ to wwwroot/tenants/
+# (single source of truth: config/tenants/ owns the theme and logo)
+RUN for tenant in desgoffe whitman liberty hennessey; do \
+    mkdir -p /app/wwwroot/tenants/$tenant && \
+    cp /app/tenants/$tenant/theme/style.css /app/wwwroot/tenants/$tenant/style.css && \
+    cp /app/tenants/$tenant/$tenant.png /app/wwwroot/tenants/$tenant/logo.png; \
+    done
+
 # STAGE 3: Runtime (Chiseled Noble Extra - Includes ICU, Minimal surface)
 FROM mcr.microsoft.com/dotnet/nightly/aspnet:10.0-noble-chiseled-extra AS final
 WORKDIR /app

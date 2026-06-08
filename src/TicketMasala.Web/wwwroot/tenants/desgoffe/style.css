@@ -4,7 +4,7 @@
    Typography: Slab Serif feel, rounded corners
    ══════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Rockwell:wght@400;700&family=Courier+Prime&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&family=Courier+Prime&display=swap');
 
 :root {
     /* Desgoffe Color Palette */
@@ -18,7 +18,7 @@
     --color-text: #3d3d3d;
 
     /* Typography */
-    --font-family-heading: 'Rockwell', 'Roboto Slab', serif;
+    --font-family-heading: 'Roboto Slab', serif;
     --font-family-base: 'Georgia', 'Times New Roman', serif;
     --font-family-mono: 'Courier Prime', 'Courier New', monospace;
 

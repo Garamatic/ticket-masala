@@ -96,7 +96,7 @@ public class TicketsApiController : ControllerBase
 
         var createResult = await _ticketLifecycle.ExecuteAsync(
             new CreateTicketCommand(body, customer.Id),
-            new TicketContext("external"));
+            new TicketContext(customer.Id));
 
         if (!createResult.Success)
             return StatusCode(StatusCodes.Status500InternalServerError,
@@ -172,7 +172,7 @@ public class TicketsApiController : ControllerBase
 
         var createResult = await _ticketLifecycle.ExecuteAsync(
             new CreateTicketCommand(body, customer.Id),
-            new TicketContext("external"));
+            new TicketContext(customer.Id));
 
         if (!createResult.Success)
         {

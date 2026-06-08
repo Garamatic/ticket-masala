@@ -152,7 +152,7 @@ Passwords are configurable via environment variables:
 | Role                | Domain   | Email                   | Password       | Context                                 |
 | ------------------- | -------- | ----------------------- | -------------- | --------------------------------------- |
 | **The Bureaucrat**  | Desgoffe | `gustave@desgoffe.gov`  | `Admin123!`    | Mayor. Can stamp permits. Strict view.  |
-| **The Citizen**     | Desgoffe | `jean.dupont@email.com` | `Customer123!` | Can only file complaints. No dashboard. |
+| **The Citizen**     | Desgoffe | `jean.dupont@citoyen.be` | `Customer123!` | Can only file complaints. No dashboard. |
 | **The DevOps Lead** | Liberty  | `arthur@liberty.tech`   | `Employee123!` | Sees PRs, Bugs, and CI/CD pipelines.    |
 | **The Support Rep** | Liberty  | `sarah@liberty.tech`    | `Employee123!` | Sees Customer Tickets and SLAs.         |
 | **The Foreman**     | Whitman  | `jack@whitman.infra`    | `Employee123!` | High contrast UI. Big buttons.          |

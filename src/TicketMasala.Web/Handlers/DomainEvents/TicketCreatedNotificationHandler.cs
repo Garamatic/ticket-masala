@@ -11,14 +11,14 @@ namespace TicketMasala.Web.Handlers.DomainEvents;
 public class TicketCreatedNotificationHandler : IDomainEventHandler<TicketCreatedEvent>
 {
     private readonly ILogger<TicketCreatedNotificationHandler> _logger;
-    private readonly INotificationService _notificationService;
+    private readonly IServiceScopeFactory _scopeFactory;
 
     public TicketCreatedNotificationHandler(
         ILogger<TicketCreatedNotificationHandler> logger,
-        INotificationService notificationService)
+        IServiceScopeFactory scopeFactory)
     {
         _logger = logger;
-        _notificationService = notificationService;
+        _scopeFactory = scopeFactory;
     }
 
     public async Task HandleAsync(TicketCreatedEvent @event, CancellationToken cancellationToken = default)
@@ -33,7 +33,10 @@ public class TicketCreatedNotificationHandler : IDomainEventHandler<TicketCreate
         // In production, this could queue a background job or send real-time notifications
         try
         {
-            await _notificationService.NotifyUserAsync(
+            using var scope = _scopeFactory.CreateScope();
+            var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
+
+            await notificationService.NotifyUserAsync(
                 @event.CustomerId,
                 $"Your ticket has been created (ID: {@event.TicketGuid:N}). We'll get back to you shortly!",
                 linkUrl: $"/Tickets/Details/{@event.TicketGuid}",

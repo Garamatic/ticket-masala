@@ -19,8 +19,13 @@
 
     // Tenant Theme Logic
     var themePath = env.WebRootPath != null ? System.IO.Path.Combine(env.WebRootPath, "tenant-theme", "style.css") : null;
-    var logoFileSystemPath = env.WebRootPath != null ? System.IO.Path.Combine(env.WebRootPath, "tenant-theme", "logo.png") : null;
-    var logoUrl = (logoFileSystemPath != null && System.IO.File.Exists(logoFileSystemPath)) ? "~/tenant-theme/logo.png" : "~/images/logo.png";
+    var logoSvgPath = env.WebRootPath != null ? System.IO.Path.Combine(env.WebRootPath, "tenant-theme", "logo.svg") : null;
+    var logoPngPath = env.WebRootPath != null ? System.IO.Path.Combine(env.WebRootPath, "tenant-theme", "logo.png") : null;
+    var logoUrl = (logoSvgPath != null && System.IO.File.Exists(logoSvgPath))
+        ? "~/tenant-theme/logo.svg"
+        : (logoPngPath != null && System.IO.File.Exists(logoPngPath))
+            ? "~/tenant-theme/logo.png"
+            : "~/images/logo.png";
 
     // Domain UI Logic
     var currentDomainId = DomainUi.GetCurrentDomainId();

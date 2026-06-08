@@ -19,13 +19,16 @@
     // Determine tenant-specific paths
     string tenantThemePath = "";
     string tenantLogoPath = "~/images/logo.png"; // Default fallback
-    
+
     if (!string.IsNullOrEmpty(tenantId))
     {
         var tenantThemeFile = env.WebRootPath != null
             ? System.IO.Path.Combine(env.WebRootPath, "tenants", tenantId, "style.css")
             : null;
-        var tenantLogoFile = env.WebRootPath != null
+        var tenantLogoSvg = env.WebRootPath != null
+            ? System.IO.Path.Combine(env.WebRootPath, "tenants", tenantId, "logo.svg")
+            : null;
+        var tenantLogoPng = env.WebRootPath != null
             ? System.IO.Path.Combine(env.WebRootPath, "tenants", tenantId, "logo.png")
             : null;
 
@@ -34,7 +37,11 @@
             tenantThemePath = $"/tenants/{tenantId}/style.css";
         }
 
-        if (tenantLogoFile != null && System.IO.File.Exists(tenantLogoFile))
+        if (tenantLogoSvg != null && System.IO.File.Exists(tenantLogoSvg))
+        {
+            tenantLogoPath = $"/tenants/{tenantId}/logo.svg";
+        }
+        else if (tenantLogoPng != null && System.IO.File.Exists(tenantLogoPng))
         {
             tenantLogoPath = $"/tenants/{tenantId}/logo.png";
         }
@@ -43,14 +50,19 @@
     {
         // Fallback to old tenant-theme directory for backward compatibility
         var themePath = env.WebRootPath != null ? System.IO.Path.Combine(env.WebRootPath, "tenant-theme", "style.css") : null;
-        var logoFileSystemPath = env.WebRootPath != null ? System.IO.Path.Combine(env.WebRootPath, "tenant-theme", "logo.png") : null;
+        var logoSvgPath = env.WebRootPath != null ? System.IO.Path.Combine(env.WebRootPath, "tenant-theme", "logo.svg") : null;
+        var logoPngPath = env.WebRootPath != null ? System.IO.Path.Combine(env.WebRootPath, "tenant-theme", "logo.png") : null;
 
         if (themePath != null && System.IO.File.Exists(themePath))
         {
             tenantThemePath = "/tenant-theme/style.css";
         }
 
-        if (logoFileSystemPath != null && System.IO.File.Exists(logoFileSystemPath))
+        if (logoSvgPath != null && System.IO.File.Exists(logoSvgPath))
+        {
+            tenantLogoPath = "/tenant-theme/logo.svg";
+        }
+        else if (logoPngPath != null && System.IO.File.Exists(logoPngPath))
         {
             tenantLogoPath = "/tenant-theme/logo.png";
         }

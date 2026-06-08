@@ -19,8 +19,8 @@ WORKDIR /app
 COPY --from=build /app/publish .
 
 # Strip native debug symbols and documentation files to reduce image size
-RUN find /app/publish -name "*.dbg" -delete && \
-    find /app/publish -maxdepth 1 -name "*.xml" -delete
+RUN find /app -name "*.dbg" -delete && \
+    find /app -maxdepth 1 -name "*.xml" -delete
 
 # Create directory structure and copy templates
 # NOTE: /app/config and /app/data are required as mountpoints for the demo compose

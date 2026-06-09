@@ -1,5 +1,9 @@
 using System.IO;
 using System.Text.Json;
+using OpenTelemetry;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using Prometheus;
 
 namespace GatekeeperApi;
 
@@ -15,6 +19,29 @@ public class Program
 
         // Register the shared RabbitMQ publisher for direct event publishing
         builder.Services.AddSingleton<RabbitMqConnector.IRabbitMqPublisher, RabbitMqConnector.RabbitMqPublisher>();
+
+        // OpenTelemetry tracing
+        builder.Services.AddOpenTelemetry()
+            .ConfigureResource(r => r.AddService(
+                serviceName: "GatekeeperApi",
+                serviceVersion: typeof(Program).Assembly.GetName().Version?.ToString() ?? "1.0.0"))
+            .WithTracing(t =>
+            {
+                t.AddAspNetCoreInstrumentation(options =>
+                {
+                    options.RecordException = true;
+                    options.Filter = httpContext =>
+                    {
+                        var path = httpContext.Request.Path.Value ?? "";
+                        return !path.StartsWith("/health", StringComparison.OrdinalIgnoreCase);
+                    };
+                });
+                t.AddHttpClientInstrumentation(options =>
+                {
+                    options.RecordException = true;
+                });
+                t.AddOtlpExporter();
+            });
 
         var app = builder.Build();
 
@@ -115,6 +142,8 @@ public class Program
 
         app.MapPost("/api/ingest", ProcessIngestionRequestAsync);
         app.MapPost("/ingest", ProcessIngestionRequestAsync);
+
+        app.MapMetrics();
 
         app.Run();
     }

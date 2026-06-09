@@ -120,6 +120,7 @@ public class UserSeedStrategy : ISeedStrategy
                 // Create new
                 user = new ApplicationUser
                 {
+                    Id = userDto.Id ?? Guid.NewGuid().ToString(),
                     UserName = userDto.UserName,
                     Email = userDto.Email,
                     EmailConfirmed = true,
@@ -190,6 +191,7 @@ public class UserSeedStrategy : ISeedStrategy
                 // Create new employee
                 var employee = new Employee
                 {
+                    Id = empDto.Id ?? Guid.NewGuid().ToString(),
                     UserName = empDto.UserName,
                     Email = empDto.Email,
                     EmailConfirmed = true,

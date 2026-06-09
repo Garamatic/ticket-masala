@@ -126,8 +126,8 @@ public static class WebApplicationExtensions
             }
         }).AllowAnonymous();
 
-        // Metrics endpoint
-        app.MapGet("/metrics", async (IServiceProvider sp) =>
+        // Runtime metrics endpoint (JSON) — moved from /metrics to avoid conflicting with Prometheus
+        app.MapGet("/runtime-metrics", async (IServiceProvider sp) =>
         {
             var metrics = new
             {

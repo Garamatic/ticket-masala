@@ -37,7 +37,7 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
         }
 
         var claims = new[] {
-            new Claim(ClaimTypes.NameIdentifier, "agentic-service"),
+            new Claim(ClaimTypes.NameIdentifier, "system"),
             new Claim(ClaimTypes.Name, "Agentic Service"),
             new Claim(ClaimTypes.Role, "System")
         };

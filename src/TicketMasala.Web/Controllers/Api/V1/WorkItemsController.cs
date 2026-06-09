@@ -202,7 +202,14 @@ public class WorkItemsController : ControllerBase
 
         if (!success)
         {
-            return NotFound();
+            if (resolveResult.ErrorMessage?.Contains("not found", StringComparison.OrdinalIgnoreCase) == true)
+                return NotFound();
+            if (resolveResult.ErrorMessage?.Contains("unauthorized", StringComparison.OrdinalIgnoreCase) == true)
+                return Unauthorized();
+            return Problem(
+                detail: resolveResult.ErrorMessage,
+                statusCode: StatusCodes.Status500InternalServerError,
+                title: "Resolve failed");
         }
 
         var ticket = await _ticketRepository.GetByIdAsync(id, includeRelations: true);

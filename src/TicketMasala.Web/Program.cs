@@ -116,8 +116,8 @@ builder.Services.AddOpenTelemetry()
         {
             options.RecordException = true;
         });
-        // OTLP exporter for production telemetry
-        // t.AddOtlpExporter();
+        // OTLP exporter for distributed tracing
+        t.AddOtlpExporter();
     });
 
 // Configure OpenRouter HTTP client with retry policy

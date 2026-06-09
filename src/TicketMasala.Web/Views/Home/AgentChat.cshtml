@@ -947,7 +947,7 @@
     const sidebarEmpty = document.getElementById('sidebarEmpty');
     const agentSidebar = document.getElementById('agentSidebar');
     const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
-    const sidebarToggle = document.getElementById('sidebarToggle');
+    const chatSidebarToggle = document.getElementById('sidebarToggle');
 
     // ─── State ───
     const ticketId = '@(ViewBag.TicketId?.ToString() ?? "")';
@@ -1475,7 +1475,7 @@
     // ─── Mobile sidebar toggle ───
     function toggleSidebar() {
         agentSidebar.classList.toggle('collapsed');
-        const icon = sidebarToggle.querySelector('i');
+        const icon = chatSidebarToggle.querySelector('i');
         if (agentSidebar.classList.contains('collapsed')) {
             icon.className = 'fas fa-chevron-right';
         } else {
@@ -1483,7 +1483,7 @@
         }
     }
     if (sidebarToggleBtn) sidebarToggleBtn.addEventListener('click', toggleSidebar);
-    if (sidebarToggle) sidebarToggle.addEventListener('click', toggleSidebar);
+    if (chatSidebarToggle) chatSidebarToggle.addEventListener('click', toggleSidebar);
 
     // ─── Pre-seed ticket context ───
     if (ticketId) {

@@ -11,10 +11,16 @@ public record InvoiceCreatedEvent : IEvent
     public string InvoiceId { get; init; } = string.Empty;
 
     [JsonPropertyName("odoo_invoice_id")]
-    public string OdooInvoiceId { get; init; } = string.Empty;
+    public int OdooInvoiceId { get; init; }
 
     [JsonPropertyName("ticket_id")]
     public string TicketId { get; init; } = string.Empty;
+
+    [JsonPropertyName("timestamp")]
+    public string Timestamp { get; init; } = DateTime.UtcNow.ToString("o");
+
+    [JsonPropertyName("source")]
+    public string Source { get; init; } = "odoo-integration";
 
     [JsonPropertyName("customer_email")]
     public string CustomerEmail { get; init; } = string.Empty;

@@ -11,7 +11,7 @@ public record PaymentReceivedEvent : IEvent
     public string InvoiceId { get; init; } = string.Empty;
 
     [JsonPropertyName("odoo_invoice_id")]
-    public string OdooInvoiceId { get; init; } = string.Empty;
+    public int OdooInvoiceId { get; init; }
 
     [JsonPropertyName("customer_email")]
     public string CustomerEmail { get; init; } = string.Empty;

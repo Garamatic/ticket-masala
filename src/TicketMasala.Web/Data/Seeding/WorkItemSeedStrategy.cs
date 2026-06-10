@@ -166,8 +166,31 @@ public class WorkItemSeedStrategy : ISeedStrategy
             ? itemDto.WorkItemTypeCode
             : itemDto.Type.ToString();
 
+        // Resolve Customer (Reporter) BEFORE ticket creation so the domain event
+        // carries the correct customer ID for downstream consumers (mailing, agentic).
+        string? customerId = null;
+        if (!string.IsNullOrEmpty(itemDto.CustomerEmail))
+        {
+            var customer = await _context.Users.FirstOrDefaultAsync(u => u.Email == itemDto.CustomerEmail);
+            if (customer != null)
+            {
+                customerId = customer.Id;
+            }
+        }
+
+        // Resolve Responsible (AssignedTo)
+        string? responsibleId = null;
+        if (!string.IsNullOrEmpty(itemDto.ResponsibleEmail))
+        {
+            var responsible = await _context.Users.FirstOrDefaultAsync(u => u.Email == itemDto.ResponsibleEmail);
+            if (responsible != null)
+            {
+                responsibleId = responsible.Id;
+            }
+        }
+
         // Use factory method for creation (seeding uses SetPropertyForSeeding for non-standard scenarios)
-        var ticket = Ticket.Create(itemDto.Description, title, null, "IT", projectId, workItemTypeCode);
+        var ticket = Ticket.Create(itemDto.Description, title, customerId, "IT", projectId, workItemTypeCode);
 
         // Apply seeding-specific properties via the legacy compatibility method
         ticket.SetPropertyForSeeding(t =>
@@ -180,24 +203,9 @@ public class WorkItemSeedStrategy : ISeedStrategy
             t.GerdaTags = itemDto.GerdaTags;
         });
 
-        // Resolve Responsible (AssignedTo)
-        if (!string.IsNullOrEmpty(itemDto.ResponsibleEmail))
+        if (!string.IsNullOrEmpty(responsibleId))
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == itemDto.ResponsibleEmail);
-            if (user != null)
-            {
-                ticket.SetPropertyForSeeding(t => t.ResponsibleId = user.Id);
-            }
-        }
-
-        // Resolve Customer (Reporter)
-        if (!string.IsNullOrEmpty(itemDto.CustomerEmail))
-        {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == itemDto.CustomerEmail);
-            if (user != null)
-            {
-                ticket.SetPropertyForSeeding(t => t.CustomerId = user.Id);
-            }
+            ticket.SetPropertyForSeeding(t => t.ResponsibleId = responsibleId);
         }
 
         _context.Tickets.Add(ticket);

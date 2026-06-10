@@ -43,6 +43,9 @@ public static class GerdaServiceExtensions
         if (!config.GerdaAI.IsEnabled)
         {
             services.AddSingleton<IGerda, NoOpGerda>();
+            services.TryAddScoped<ITicketDispatcher, NoOpDispatcher>();
+            services.TryAddScoped<IEstimatingService, NoOpEstimatingService>();
+            services.TryAddScoped<IKnowledgeService, NoOpKnowledgeService>();
             return services;
         }
 
@@ -63,6 +66,11 @@ public static class GerdaServiceExtensions
         {
             services.AddHostedService<GerdaMaintenanceService>();
         }
+
+        // Fallback registrations for dependencies needed by other components
+        services.TryAddScoped<ITicketDispatcher, NoOpDispatcher>();
+        services.TryAddScoped<IEstimatingService, NoOpEstimatingService>();
+        services.TryAddScoped<IKnowledgeService, NoOpKnowledgeService>();
 
         return services;
     }

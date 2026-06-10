@@ -48,20 +48,46 @@ public class TicketCreatedEventConsumer : BackgroundService
 
     public override async Task StartAsync(CancellationToken stoppingToken)
     {
-        _connection = await _connectionFactory.CreateConnectionAsync(stoppingToken);
-        _channel = await _connection.CreateChannelAsync();
+        var retries = 10;
+        var retryDelayMs = 2000;
+        IChannel? channel = null;
+        for (int i = 0; i < retries; i++)
+        {
+            try
+            {
+                _connection = await _connectionFactory.CreateConnectionAsync(stoppingToken);
+                channel = await _connection.CreateChannelAsync();
+                _channel = channel;
+                break;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to connect to RabbitMQ (attempt {Attempt}/{MaxRetries})", i + 1, retries);
+                if (i == retries - 1)
+                {
+                    _logger.LogCritical("Could not connect to RabbitMQ after {MaxRetries} attempts. Consumer stopping.", retries);
+                    throw;
+                }
+                await Task.Delay(retryDelayMs, stoppingToken);
+            }
+        }
+
+        if (channel == null)
+        {
+            throw new InvalidOperationException("RabbitMQ channel could not be created.");
+        }
 
         // Fair dispatch: one message at a time
-        await _channel.BasicQosAsync(0, 1, false, cancellationToken: stoppingToken);
+        await channel.BasicQosAsync(0, 1, false, cancellationToken: stoppingToken);
 
         // Main exchange (topic)
-        await _channel.ExchangeDeclareAsync(ExchangeName, ExchangeType.Topic, durable: true, cancellationToken: stoppingToken);
+        await channel.ExchangeDeclareAsync(ExchangeName, ExchangeType.Topic, durable: true, cancellationToken: stoppingToken);
 
         // Retry exchange (messages routed here go to the retry queue)
-        await _channel.ExchangeDeclareAsync(RetryExchangeName, ExchangeType.Topic, durable: true, cancellationToken: stoppingToken);
+        await channel.ExchangeDeclareAsync(RetryExchangeName, ExchangeType.Topic, durable: true, cancellationToken: stoppingToken);
 
         // Main queue: failed messages go to retry exchange first
-        await _channel.QueueDeclareAsync(
+        await channel.QueueDeclareAsync(
             queue: QueueName,
             durable: true,
             exclusive: false,
@@ -74,7 +100,7 @@ public class TicketCreatedEventConsumer : BackgroundService
             cancellationToken: stoppingToken);
 
         // Retry queue: messages sit here for RetryDelayMs, then route back to main queue
-        await _channel.QueueDeclareAsync(
+        await channel.QueueDeclareAsync(
             queue: RetryQueue,
             durable: true,
             exclusive: false,
@@ -88,9 +114,9 @@ public class TicketCreatedEventConsumer : BackgroundService
             cancellationToken: stoppingToken);
 
         // Bindings
-        await _channel.QueueBindAsync(QueueName, ExchangeName, RoutingKey, cancellationToken: stoppingToken);
-        await _channel.QueueBindAsync(QueueName, ExchangeName, RetryReturnRoutingKey, cancellationToken: stoppingToken);
-        await _channel.QueueBindAsync(RetryQueue, RetryExchangeName, RetryRoutingKey, cancellationToken: stoppingToken);
+        await channel.QueueBindAsync(QueueName, ExchangeName, RoutingKey, cancellationToken: stoppingToken);
+        await channel.QueueBindAsync(QueueName, ExchangeName, RetryReturnRoutingKey, cancellationToken: stoppingToken);
+        await channel.QueueBindAsync(RetryQueue, RetryExchangeName, RetryRoutingKey, cancellationToken: stoppingToken);
 
         _logger.LogInformation(
             "TicketCreatedEventConsumer started on {Queue}. Retry: {RetryQueue} ({RetryDelayMs}ms TTL)",

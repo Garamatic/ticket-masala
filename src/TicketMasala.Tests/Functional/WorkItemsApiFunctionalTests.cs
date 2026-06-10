@@ -5,12 +5,14 @@ using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Moq;
 using TicketMasala.Domain.Data;
 using TicketMasala.Domain.Entities;
 using TicketMasala.Tests.IntegrationTests;
@@ -18,29 +20,6 @@ using TicketMasala.Web.ViewModels.Api;
 using Xunit;
 
 namespace TicketMasala.Tests.Functional;
-
-public class WorkItemTestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
-{
-    public WorkItemTestAuthHandler(IOptionsMonitor<AuthenticationSchemeOptions> options,
-        ILoggerFactory logger, UrlEncoder encoder)
-        : base(options, logger, encoder)
-    {
-    }
-
-    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
-    {
-        var claims = new[] {
-            new Claim(ClaimTypes.Name, "WorkItem Tester"),
-            new Claim(ClaimTypes.NameIdentifier, "work-item-test-user-id"),
-            new Claim(ClaimTypes.Role, "Customer")
-        };
-        var identity = new ClaimsIdentity(claims, "Test");
-        var principal = new ClaimsPrincipal(identity);
-        var ticket = new AuthenticationTicket(principal, "Test");
-
-        return Task.FromResult(AuthenticateResult.Success(ticket));
-    }
-}
 
 public class WorkItemsApiFunctionalTests : IClassFixture<CustomWebApplicationFactory>
 {
@@ -62,12 +41,22 @@ public class WorkItemsApiFunctionalTests : IClassFixture<CustomWebApplicationFac
         {
             builder.ConfigureTestServices(services =>
             {
-                services.AddAuthentication(options =>
-                {
-                    options.DefaultAuthenticateScheme = "Test";
-                    options.DefaultChallengeScheme = "Test";
-                })
-                .AddScheme<AuthenticationSchemeOptions, WorkItemTestAuthHandler>("Test", options => { });
+                var authServiceMock = new Mock<IAuthenticationService>();
+                authServiceMock
+                    .Setup(a => a.AuthenticateAsync(It.IsAny<HttpContext>(), It.IsAny<string>()))
+                    .ReturnsAsync((HttpContext context, string scheme) =>
+                    {
+                        var claims = new[] {
+                            new Claim(ClaimTypes.Name, "WorkItem Tester"),
+                            new Claim(ClaimTypes.NameIdentifier, "work-item-test-user-id"),
+                            new Claim(ClaimTypes.Role, "Customer")
+                        };
+                        var identity = new ClaimsIdentity(claims, scheme);
+                        var principal = new ClaimsPrincipal(identity);
+                        var ticket = new AuthenticationTicket(principal, scheme);
+                        return AuthenticateResult.Success(ticket);
+                    });
+                services.AddScoped(sp => authServiceMock.Object);
 
                 // Ensure test user exists
                 var sp = services.BuildServiceProvider();

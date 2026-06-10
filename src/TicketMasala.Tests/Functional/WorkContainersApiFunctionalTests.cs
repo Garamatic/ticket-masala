@@ -1,12 +1,19 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Security.Claims;
+using System.Text.Encodings.Web;
 using System.Text.Json;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Moq;
 using TicketMasala.Web.ViewModels.Api;
 using Xunit;
 
@@ -26,8 +33,22 @@ public class WorkContainersApiFunctionalTests : IClassFixture<WebApplicationFact
             builder.UseEnvironment("Testing");
             builder.ConfigureTestServices(services =>
             {
-                // Bypass strict auth for testing
-                services.Configure<AuthorizationOptions>(options => options.FallbackPolicy = null);
+                var authServiceMock = new Mock<IAuthenticationService>();
+                authServiceMock
+                    .Setup(a => a.AuthenticateAsync(It.IsAny<HttpContext>(), It.IsAny<string>()))
+                    .ReturnsAsync((HttpContext context, string scheme) =>
+                    {
+                        var claims = new[] {
+                            new Claim(ClaimTypes.Name, "WorkContainer Tester"),
+                            new Claim(ClaimTypes.NameIdentifier, "work-container-test-user-id"),
+                            new Claim(ClaimTypes.Role, "Customer")
+                        };
+                        var identity = new ClaimsIdentity(claims, scheme);
+                        var principal = new ClaimsPrincipal(identity);
+                        var ticket = new AuthenticationTicket(principal, scheme);
+                        return AuthenticateResult.Success(ticket);
+                    });
+                services.AddScoped(sp => authServiceMock.Object);
 
                 // Ensure schema is created
                 var sp = services.BuildServiceProvider();
@@ -55,6 +76,7 @@ public class WorkContainersApiFunctionalTests : IClassFixture<WebApplicationFact
         try
         {
             _client = _factory.CreateClient();
+            _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Test");
         }
         catch (Exception ex)
         {

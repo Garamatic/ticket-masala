@@ -133,7 +133,7 @@ public class Program
             "ticket.resolved" => ValidateRequiredStringFields(root,
                 "ticket_id"),
             "invoice.created" => ValidateRequiredStringFields(root,
-                "invoice_id", "customer_id"),
+                "invoice_id", "customer_email"),
             _ => null // Unknown/future event types pass through
         };
     }

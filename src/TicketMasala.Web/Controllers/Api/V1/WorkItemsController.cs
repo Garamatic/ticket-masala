@@ -1,7 +1,9 @@
 using System.Security.Claims;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using TicketMasala.Domain.Entities;
 using TicketMasala.Web.Engine.GERDA.Tickets;
 using TicketMasala.Web.Engine.GERDA.Tickets.Lifecycle;
 using TicketMasala.Web.Extensions;
@@ -24,21 +26,25 @@ public class WorkItemsController : ControllerBase
     private readonly ITicketRepository _ticketRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IJsonParsingService _jsonParsingService;
+    private readonly UserManager<ApplicationUser> _userManager;
 
     public WorkItemsController(
         ITicketLifecycle ticketLifecycle,
         ITicketRepository ticketRepository,
         IUnitOfWork unitOfWork,
-        IJsonParsingService jsonParsingService)
+        IJsonParsingService jsonParsingService,
+        UserManager<ApplicationUser> userManager)
     {
         _ticketLifecycle = ticketLifecycle;
         _ticketRepository = ticketRepository;
         _unitOfWork = unitOfWork;
         _jsonParsingService = jsonParsingService;
+        _userManager = userManager;
     }
 
     /// <summary>
     /// Get all work items, optionally filtered by customer.
+    /// Accepts either a user ID (GUID) or an email address.
     /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<WorkItemDto>), StatusCodes.Status200OK)]
@@ -47,7 +53,19 @@ public class WorkItemsController : ControllerBase
         IReadOnlyList<Ticket> tickets;
         if (!string.IsNullOrWhiteSpace(customerId))
         {
-            tickets = await _ticketRepository.GetByCustomerIdAsync(customerId);
+            // If customerId contains '@', treat it as an email and resolve to user ID
+            string resolvedId = customerId;
+            if (customerId.Contains('@'))
+            {
+                var user = await _userManager.FindByEmailAsync(customerId);
+                if (user != null)
+                {
+                    resolvedId = user.Id;
+                }
+                // If email not found, resolvedId stays as the email and query returns empty
+                // which is the correct behavior
+            }
+            tickets = await _ticketRepository.GetByCustomerIdAsync(resolvedId);
         }
         else
         {

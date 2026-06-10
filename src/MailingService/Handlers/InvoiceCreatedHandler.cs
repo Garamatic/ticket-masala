@@ -18,7 +18,7 @@ public class InvoiceCreatedHandler : IEventHandler<InvoiceCreatedEvent>
     {
         var html = _templateService.BuildInvoiceCreatedTemplate(
             message.InvoiceId,
-            message.OdooInvoiceId,
+            message.OdooInvoiceId.ToString(),
             message.TicketId,
             message.Amount,
             message.Currency,

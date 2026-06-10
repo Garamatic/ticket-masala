@@ -38,13 +38,21 @@ public class WorkItemsController : ControllerBase
     }
 
     /// <summary>
-    /// Get all work items.
+    /// Get all work items, optionally filtered by customer.
     /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<WorkItemDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] string? customerId)
     {
-        var tickets = await _ticketRepository.GetAllAsync();
+        IReadOnlyList<Ticket> tickets;
+        if (!string.IsNullOrWhiteSpace(customerId))
+        {
+            tickets = await _ticketRepository.GetByCustomerIdAsync(customerId);
+        }
+        else
+        {
+            tickets = await _ticketRepository.GetAllAsync();
+        }
         return Ok(tickets.Select(t => t.ToWorkItemDto(_jsonParsingService)));
     }
 

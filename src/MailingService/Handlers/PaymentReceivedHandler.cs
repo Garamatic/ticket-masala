@@ -18,7 +18,7 @@ public class PaymentReceivedHandler : IEventHandler<PaymentReceivedEvent>
     {
         var html = _templateService.BuildPaymentReceivedTemplate(
             message.InvoiceId,
-            message.OdooInvoiceId,
+            message.OdooInvoiceId.ToString(),
             message.Amount,
             message.PaymentMethod,
             message.PaidAt

@@ -18,7 +18,7 @@ public class InvoiceOverdueHandler : IEventHandler<InvoiceOverdueEvent>
     {
         var html = _templateService.BuildInvoiceOverdueTemplate(
             message.InvoiceId,
-            message.OdooInvoiceId,
+            message.OdooInvoiceId.ToString(),
             message.Amount,
             message.DaysOverdue
         );

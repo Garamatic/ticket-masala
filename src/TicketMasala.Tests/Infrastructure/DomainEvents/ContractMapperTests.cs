@@ -86,7 +86,9 @@ public class ContractMapperTests
     [Fact]
     public void TicketResolvedMapper_ReturnsNull_ForWrongEventType()
     {
-        var mapper = new TicketResolvedContractMapper(CreateMockContext());
+        var mapper = new TicketResolvedContractMapper(
+            CreateMockContext(),
+            Mock.Of<ITenantContext>());
         Assert.Null(mapper.Map(Mock.Of<IDomainEvent>()));
     }
 
@@ -102,7 +104,12 @@ public class ContractMapperTests
             resolvedAt: now,
             resolvedByUserId: "user-1");
 
-        var mapper = new TicketResolvedContractMapper(CreateMockContext());
+        var tenantMock = new Mock<ITenantContext>();
+        tenantMock.Setup(t => t.TenantId).Returns("desgoffe");
+
+        var mapper = new TicketResolvedContractMapper(
+            CreateMockContext(),
+            tenantMock.Object);
         var result = mapper.Map(domainEvent);
 
         Assert.NotNull(result);
@@ -114,5 +121,6 @@ public class ContractMapperTests
         Assert.Equal(domainEvent.TicketGuid.ToString(), payload.TicketId);
         Assert.Equal(150.00m, payload.Amount);
         Assert.Equal("Fixed the issue", payload.ResolutionNotes);
+        Assert.Equal("desgoffe", payload.TenantId);
     }
 }

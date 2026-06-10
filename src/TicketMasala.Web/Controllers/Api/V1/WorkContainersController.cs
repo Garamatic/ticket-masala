@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TicketMasala.Domain.Common;
 using TicketMasala.Web.Engine.Projects;
@@ -15,6 +16,7 @@ namespace TicketMasala.Web.Controllers.Api.V1;
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/work-containers")]
 [ApiController]
+[Authorize(AuthenticationSchemes = "Identity.Application,ApiKey")]
 public class WorkContainersController : ControllerBase
 {
     private readonly IProjectWorkflowService _projectWorkflowService;

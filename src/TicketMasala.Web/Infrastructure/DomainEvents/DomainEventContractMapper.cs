@@ -172,10 +172,12 @@ public sealed class TicketAssignedContractMapper : IDomainEventContractMapper
 public sealed class TicketResolvedContractMapper : IDomainEventContractMapper
 {
     private readonly MasalaDbContext _context;
+    private readonly ITenantContext _tenantContext;
 
-    public TicketResolvedContractMapper(MasalaDbContext context)
+    public TicketResolvedContractMapper(MasalaDbContext context, ITenantContext tenantContext)
     {
         _context = context;
+        _tenantContext = tenantContext;
     }
 
     public IntegrationEventMapping? Map(IDomainEvent @event)
@@ -209,7 +211,7 @@ public sealed class TicketResolvedContractMapper : IDomainEventContractMapper
                 CustomerName = customerName,
                 ServiceDescription = serviceDescription,
                 Amount = resolved.BillableAmount ?? 0m,
-                TenantId = string.Empty,
+                TenantId = _tenantContext.TenantId ?? string.Empty,
                 ResolvedAt = resolved.ResolvedAt.ToString("O"),
                 ResolutionNotes = resolved.ResolutionNotes,
                 EventId = resolved.EventId.ToString()
